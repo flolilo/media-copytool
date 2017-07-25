@@ -1,4 +1,4 @@
-﻿#requires -version 3
+#requires -version 3
 
 <#
     .SYNOPSIS
@@ -87,7 +87,7 @@
         3 - additional speedtest
 
     .INPUTS
-        "media_copytool_filehistory.json" if -HistoryFile is set to "use".
+        "media_copytool_filehistory.json" if -HistoryFile = "use".
 
     .OUTPUTS
         "media_copytool_progress.txt" & "media_copytool_filehistory.json", both in the script's directory.
@@ -1084,7 +1084,7 @@ Function Start-FileCopy(){
 
     # setting up robocopy:
     [array]$rc_command = @()
-    [string]$rc_suffix = " /R:5 /W:15 /MT:4 /NJH /NC /J"
+    [string]$rc_suffix = " /R:5 /W:15 /MT:4 /XO /XC /XN /NJH /NC /J"
     [string]$rc_inter_inpath = ""
     [string]$rc_inter_outpath = ""
     [string]$rc_inter_files = ""
