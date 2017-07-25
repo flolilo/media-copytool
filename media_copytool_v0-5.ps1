@@ -9,7 +9,6 @@
 
     .NOTES
         Version:        0.5 Alpha
-        Author:         Florian Dolzer
         Creation Date:  25.7.2017
         Legal stuff: This program is free software. It comes without any warranty, to the extent permitted by
         applicable law. Most of the script was written by myself (or heavily modified by me when searching for solutions
@@ -274,7 +273,7 @@ Function Get-UserValues(){
             $separator = ","
             $option = [System.StringSplitOptions]::RemoveEmptyEntries
             $script:PresetFormats = (Read-Host "Which preset file-formats would you like to copy? Options: `"Can`",`"Nik`",`"Son`",`"Jpg`",`"Mov`",`"Aud`", or leave empty for none. For multiple selection, separate with commata.").Split($separator,$option)
-            if(!($script:PresetFormats.Length -ne 0 -and $script:PresetFormats -notin ("Can","Nik","Son","Jpeg","Jpg","Mov","Aud"))){
+            if(!($script:PresetFormats.Length -ne 0 -and ("Can" -notin $script:PresetFormats -and "Nik" -notin $script:PresetFormats -and "Son" -notin $script:PresetFormats -and "Jpeg" -notin $script:PresetFormats -and "Jpg" -notin $script:PresetFormats -and "Mov" -notin $script:PresetFormats -and "Aud" -notin $script:PresetFormats))){
                 Write-Host "Invalid selection!" -ForegroundColor Magenta
                 continue
             }else{
@@ -310,7 +309,7 @@ Function Get-UserValues(){
         # subfolder-style
         while($true){
             $script:OutputSubfolderStyle = Read-Host "Which subfolder-style should be used in the output-path? Options: `"none`",`"yyyy-mm-dd`",`"yyyy_mm_dd`",`"yy-mm-dd`",`"yy_mm_dd`" (all w/o quotes)."
-            if($script:OutputSubfolderStyle.Length -eq 0 -or $script:OutputSubfolderStyle -notin ("none","yyyy-mm-dd","yyyy_mm_dd","yy-mm-dd","yy_mm_dd")){
+            if($script:OutputSubfolderStyle.Length -eq 0 -or ("none" -notin $script:OutputSubfolderStyle -and "yyyy-mm-dd" -notin $script:OutputSubfolderStyle -and "yyyy_mm_dd" -notin $script:OutputSubfolderStyle -and "yy-mm-dd" -notin $script:OutputSubfolderStyle -and "yy_mm_dd" -notin $script:OutputSubfolderStyle)){
                 Write-Host "Invalid choice!" -ForegroundColor Magenta
                 continue
             }else{
@@ -320,7 +319,7 @@ Function Get-UserValues(){
         # history-file
         while($true){
             $script:HistoryFile = Read-Host "How to treat history-file? Options: `"Use`",`"Delete`",`"Ignore`" (all w/o quotes)."
-            if($script:HistoryFile.Length -eq 0 -or $script:HistoryFile -notin ("Use","Delete","Ignore")){
+            if($script:HistoryFile.Length -eq 0 -or ("Use" -notin $script:HistoryFile -and "Delete" -notin $script:HistoryFile -and "Ignore" -notin $script:HistoryFile)){
                 Write-Host "Invalid choice!" -ForegroundColor Magenta
                 continue
             }else{
@@ -1416,8 +1415,10 @@ Function Start-Everything(){
 
 if($GUI_CLI_Direct -eq "GUI"){
     # DEFINITION: Setting up GUI:
-    # CREDIT: code (except from content of inputXML and small modifications) by
-    # https://foxdeploy.com/series/learning-gui-toolmaking-series/
+    <# CREDIT:
+        code of this section (except from content of inputXML and small modifications) by
+        https://foxdeploy.com/series/learning-gui-toolmaking-series/
+    #>
 $inputXML = @"
 <Window x:Class="MediaCopytool.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
