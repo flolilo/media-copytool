@@ -4,14 +4,13 @@ PowerShell-based, GUI-including script that not only copies your files, but also
 ## ENGLISH - DEUTSCHE VERSION UNTERHALB
 
 ### FEATURES:
-#### Basic explanation:
 * First things first: It has a GUI. ;-)
-* ...But you can also do everything from the PowerShell - See "PARAMETERS". Comes in handy if you can't install .NET Framework.
+    * ...But you can also do everything from the PowerShell - See "PARAMETERS". Comes in handy if you can't install .NET Framework.
 * User-Decision of file-formats to search for in the input-path (and all of its subfolders) - some are pre-specified, but you can also manually add formats (see "PARAMETERS", -CustomFormatsEnable & -CustomFormats)
-* User-Decision of Subfolder-Style (None vs. some date-formatted styles, see  "PARAMETERS", -OutputSubfolderStyle))
+* User-Decision of Subfolder-Style (None vs. some date-formatted styles, see  "PARAMETERS", `-OutputSubfolderStyle`))
 * Ability to "remember" already (successfully) copied files by maintaining a JSON-Sheet, thus preventing duplicates
-* User-Decision if this history-file should be used, ignored, resetted (see "PARAMETERS", -HistoryFile & -WriteHist)
-* Additionally, the output-path (and all of its subfolders) can be checked for already copied files, effetively preventing duplicates even if other copying-methods are used regularly/sometimes/simultaneously. (see "PARAMETERS", -CheckOutputDupli).
+* User-Decision if this history-file should be used, ignored, resetted (see "PARAMETERS", `-HistoryFile` & `-WriteHist`)
+* Additionally, the output-path (and all of its subfolders) can be checked for already copied files, effetively preventing duplicates even if other copying-methods are used regularly/sometimes/simultaneously. (see "PARAMETERS", `-CheckOutputDupli`).
 * Copies files without caching the files in RAM - when it's done, it's done.
 * If file with the same name and path is already there, it will rename the new file to "copyXYZ" (where XYZ is the first free number >= 1)
 * Verifies the files afterwards by generating SHA1-hashes and comparing them.
@@ -23,12 +22,9 @@ PowerShell-based, GUI-including script that not only copies your files, but also
 * This means that it is impossible* to lose files with this script. ( * ... I tried my hardest to get it to delete anything and couldn't achieve it - if you can, you're either very clever or extremely stupid ;-) )
 * Comes with a handy standby-preventing script named "preventsleep.ps1" - even if you copy 128 TB of files, you won't need to change the idle-time of your computer.
 
-#### Step-by-step:
-* 1-999) Open the .ps1-script and see for yourself - especially watch for the "DEFINITION"-tags.
-
 ### STARTING:
 * Open Powershell (Win + R -> `powershell` or via Start-menu).
-* Either navigate to the folder containing the script via Set-Location (e.g. `Set-Location "D:\script_folder"`) and then start it via .\scriptname 
+* Either navigate to the folder containing the script via Set-Location (e.g. `Set-Location "D:\script_folder"`) and then start it via `.\scriptname.ps1`
 * Or specify all at the same time: `"D:\script_folder\script_name.ps1"` (quotes only neccessary if path contains spaces)
 * If you want help, try `Get-Help "D:\script_folder\script_name.ps1" -detailed` or `"D:\script_folder\script_name.ps1" -showparams 1`
 If it won't work: most likely you need to adjust the execution-policy for PowerShell:
@@ -41,47 +37,64 @@ Parameters are easily-changeable values. Media-Copytool will take them via CLI o
 
 Explanation of parameters:
 
-`-showparams`    :    Show the parameters as the script has saved them.
+* `-showparams` : Show the parameters as the script has saved them.
 
-`-GUI_CLI_Direct`    :    "GUI"    = Start Graphical User Interface
-                        "CLI"    = Start Interactive selection of options
-				"Direct"    = Start with values as set in parameters.
-`-InputPath`		:	Input-path
-`-OutputPath`		:	Output-path
-`-MirrorEnable`		:	Value of 1 enables additional output-path
-`-MirrorPath`		:	Additional output-path
-`-PresetFormats`	:	Formats to search for.
+* `-GUI_CLI_Direct` : `"GUI"` = Start Graphical User Interface; `"CLI"`    = Start Interactive selection of options; `"Direct"`    = Start with values as set in parameters.
+				
+* `-InputPath`		:	Input-path
+
+* `-OutputPath`		:	Output-path
+
+* `-MirrorEnable`		:	Value of 1 enables additional output-path
+
+* `-MirrorPath`		:	Additional output-path
+
+* `-PresetFormats`	:	Formats to search for.
 				Can = *.cr2,
 				Nik = *.nrw & *.nef,
 				Son = *.arw,
 				Jpg = *.jpg & *.jpeg,
 				Mov = *.mov & *.mp4,
 				Aud = *.wav & *.mp3 & *.m4a
-`-CustomFormatsEnable`:	Enable / disable custom formats to search for.  1 enables, 0 				disables.
-`-CustomFormats`	:	Specify custom formats, separated by commata.
+				
+* `-CustomFormatsEnable`:	Enable / disable custom formats to search for. 1 enables, 0 disables.
+
+* `-CustomFormats`	:	Specify custom formats, separated by commata.
 				"*" will search and copy ALL files,
-				"*.ext1","*.ext2" will search and copy all files with 					specified formats,
-				"media*" will copy all files starting with "media", regardless 				their format.
-`-OutputSubfolderStyle`:	"none" = No Subfolder(s)
+				"*.ext1","*.ext2" will search and copy all files with specified formats,
+				"media*" will copy all files starting with "media", regardless their format.
+				
+* `-OutputSubfolderStyle`:	"none" = No Subfolder(s)
 				"yyyy-mm-dd"	= e.g. 2017-01-31
 				"yyyy_mm_dd"	= e.g. 2017_01_31
 				"yy-mm-dd"	= e.g. 17-01-31
 				"yy_mm_dd"	= e.g. 17_01_31
-`-HistoryFile`		:	"use"		: Check history-file for already imported files.
+				
+* `-HistoryFile`		:	"use"		: Check history-file for already imported files.
 				"delete"	: Delete/overwrite the file.
 				"ignore"	: Ignore it for checking.
-`-WriteHist`		:	Enable / disable writing stats of newly copied file to history-				file. 1 enables, 0 disables.
-`-InputSubfolderSearch`:	Enable / disable searching in subfolders in the input-path.
+				
+* `-WriteHist`		:	Enable / disable writing stats of newly copied file to history-	file. 1 enables, 0 disables.
+
+* `-InputSubfolderSearch`:	Enable / disable searching in subfolders in the input-path.
 				1 enables, 0 disables.
-`-DupliCompareHashes`	:	Enable / disable comparing all hashes for duplicate-					verification. This will take up more time, especially with many 				files. 1 enables, 0 disables.
-`-CheckOutputDupli`	:	Enable / Disable additional duplicate-verification by searching 				for similar files in the output-path. 1 enables, 0 disables 					feature.
-`-PreventStandby`	:   	Prevent standby by starting additional script 						preventsleep.ps1. 1 enables, 0 disables.
-`-RememberInPath`	:	Remember input-path. 1 enables, 0 disables feature.
-`-RememberOutPath`	:	Remember output-path. 1 enables, 0 disables feature.
-`-RememberMirrorPath`	:	Remember additional out-path. 1 enables, 0 disables feature.
-`-RememberSettings`	:	Remember parameters (excl. Remember-Parameters).
+				
+* `-DupliCompareHashes`	:	Enable / disable comparing all hashes for duplicate-verification. This will take up more time, especially with many files. 1 enables, 0 disables.
+
+* `-CheckOutputDupli`	:	Enable / Disable additional duplicate-verification by searching for similar files in the output-path. 1 enables, 0 disables feature.
+
+* `-PreventStandby`	:   	Prevent standby by starting additional script `preventsleep.ps1`. 1 enables, 0 disables.
+
+* `-RememberInPath`	:	Remember input-path. 1 enables, 0 disables feature.
+
+* `-RememberOutPath`	:	Remember output-path. 1 enables, 0 disables feature.
+
+* `-RememberMirrorPath`	:	Remember additional out-path. 1 enables, 0 disables feature.
+
+* `-RememberSettings`	:	Remember parameters (excl. Remember-Parameters).
 				1 enables, 0 disables feature.
-`-debug`			:	1 Shows additional verbose, 2 enables pausing after each 				step of the script. Default is 0.
+
+* `-debug`			:	1 Shows additional verbose, 2 enables pausing after each step of the script. Default is 0.
 
 You don't have to specify all parameters all the time: if you don't specify them, they will fall back to their remembered setting (-showparams 1 will show them to you). A few examples:
 
