@@ -1,11 +1,11 @@
-﻿#requires -version 3
+#requires -version 3
 
 <#
     .SYNOPSIS
-        Copy (and verify) user-defined filetypes from A to B (and optionally C).
+        Prevents idle-standby while CPU is working or while specified processes are running.
 
     .DESCRIPTION
-        Uses Windows' Robocopy and Xcopy for file-copy, then uses PowerShell's Get-FileHash (SHA1) for verifying that files were copied without errors.
+        Will simulate F15-key-press to prevent computer from entering standby. 
 
     .NOTES
         Version:        1.4
@@ -17,39 +17,46 @@
         the "CREDIT"-tags to find them.
 
     .PARAMETER fileToCheck
-        String. Path to file of script that uses process-mode. 
+        String. Path to file of script that uses -fileModeEnable. 
     .PARAMETER fileModeEnable
-        Integer. Value of 1 enables file-mode.
+        Integer. Value of 1 enables file-mode. Only recommended for use with other sripts.
     .PARAMETER mode
-        String.
+        String. Valid options:
+            "Process"   - Script will close after certain process(es) are finished.
+            "CPU"       - Script will close when certain CPU-usage-percentage is no longer topped.
+            "None"      - Only valid if -fileModeEnable = 1. Sript will close after -fileToCheck's value is 1.
     .PARAMETER userProcessCount
-        Integer.
+        Integer. Only valid when -mode = "process". Value specifies how many processes the script will look for.
     .PARAMETER userProcess
-        Array.
+        Array. Specifies processes that the user wants the script to watch for.
     .PARAMETER userCPUlimit
-        Integer.
+        Integer. Specifies threshold of CPU-usage that the script should watch for.
     .PARAMETER timeBase
-        Integer.
+        Integer. Value of time (in seconds) that has to pass between to iterations of the script - different steps of the script will use from $timeBase/2 to $timeBase/10 as their values.
     .PARAMETER counterMax
-        Integer.
+        Integer. Maximum time of iterations between criteria for closing the script are met and the atual closing of the script.
     .PARAMETER shutdown
-        Integer.
+        Integer. Value of 1 will initiate shutdown of computer after finishing the script. Value of -1 (default) will ask if shutdown should be initiated or not.
 
     .INPUTS
-        .\fertig.txt
+        -fileToCheck's file if -fileModeEnable is enabled.
     .OUTPUTS
         None.
 
     .EXAMPLE
-        TODO: all of these.
+        Run forever:
+        preventsleep.ps1 -mode "CPU" -userCPUlimit -1 -shutdown 0
+    .EXAMPLE
+        Check if robocopy is runnning and shut down afterwards:
+        preventsleep.ps1 -mode "process" -userProcessCount 1 -userProcess "robocopy" -shutdown 1
 #>
 param(
     [string]$fileToCheck = "$PSScriptRoot\fertig.txt",
     [ValidateRange(0,1)][int]$fileModeEnable = 0,
-    [ValidateSet("process","specify","cpu","none")][string]$mode = "specify", # process, CPU, none, specify
+    [ValidateSet("process","specify","cpu","none")][string]$mode = "specify",
     [ValidateRange(-1,1)][int]$userProcessCount = -1,
     [array]$userProcess = @(),
-    [ValidateRange(-1,99)][int]$userCPUlimit = -1,
+    [ValidateRange(-1,99)][int]$userCPUlimit = -10,
     [ValidateRange(10,3000)][int]$timeBase = 300,
     [ValidateRange(1,100)][int]$counterMax = 10,
     [ValidateRange(-1,1)][int]$shutdown = -1
@@ -89,7 +96,7 @@ if($mode -eq "specify"){
     }
 }
 if($mode -eq "cpu"){
-    if($userCPUlimit -eq -1){
+    if($userCPUlimit -eq -10){
         while($true){
             Write-Host "Enter the CPU-threshold in %. (enter w/o %-sign) - Recommendation: 90%, -1% to run script forever: /" -NoNewline
             Write-Host "/ Grenzwert der CPU-AUslastung in % angeben? (Angabe ohne %-Zeichen) Empfehlung: 90%, -1% falls Skript ewig laufen soll:" -ForegroundColor DarkGray
