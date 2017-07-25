@@ -1,51 +1,40 @@
 # media-copytool
 PowerShell-based, GUI-including script that not only copies your files, but also verifies them afterwards.
 
-ENGLISH - DEUTSCHE VERSION UNTERHALB
+## ENGLISH - DEUTSCHE VERSION UNTERHALB
 
-Flo's Media-Copytool v0.5 by Florian Dolzer, 2017
-A word in advance: Things written in Arial and without highlighting are regular text, while things written in Consolas and highlighted in grey are code. E.g.: This resembles the simplest "Hello-World"-Script in PowerShell that i can think of: Write-Host "Hello, World!"
-
-LEGAL STUFF:
-I can't stress enough that this script should be regarded with some suspicion - I successfully tested it on my own computers in various scenarios (and use it in my production-workflow); however, I will not be responsible if it deletes all your precious memories, your one-time-selfie with George Clooney naked on the beach, or if it sets fire to your cat.
-
-This program is free software. It comes without any warranty, to the extent permitted by applicable law.
-This script is open-source (as far as my contributions are concerned, see below) - However, I would really appreciate it if users would give me (and all the others mentioned) some credit. Also, if you want to contribute something or you want to tell me how sh**ty this script is: get in touch with me.
-Most of the script was written by myself (or heavily modified by me when searching for solutions on the WWW). However, some parts are copies or modifications of very genuine code - see the "CREDIT"-tags to find them.
-
-
-FEATURES:
+### FEATURES:
 Basic explanation:
-⦁	First things first: It has a GUI. ;-)
-⦁	...But you can also do everything from the PowerShell - See "PARAMETERS". Comes in handy if you can't install .NET Framework (so it should work on PS 6, even on Linux*/OSX*! [ * ... Not tested yet, though. Possibly the paths could be a problem, xcopy most certainly will be a problem...in good time, I will check ;-) ])
-⦁	User-Decision of file-formats to search for in the input-path (and all of its subfolders) - some are pre-specified, but you can also manually add formats (see "PARAMETERS", -CustomFormatsEnable & -CustomFormats)
-⦁	User-Decision of Subfolder-Style (None vs. some date-formatted styles, see  "PARAMETERS", -OutputSubfolderStyle))
-⦁	Ability to "remember" already (successfully) copied files by maintaining a JSON-Sheet, thus preventing duplicates
-⦁	User-Decision if this history-file should be used, ignored, resetted (see "PARAMETERS", -HistoryFile & -WriteHist)
-⦁	Additionally, the output-path (and all of its subfolders) can be checked for already copied files, effetively preventing duplicates even if other copying-methods are used regularly/sometimes/simultaneously. (see "PARAMETERS", -CheckOutputDupli).
-⦁	Copies files without caching the files in RAM - when it's done, it's done.
-⦁	If file with the same name and path is already there, it will rename the new file to "copyXYZ" (where XYZ is the first free number >= 1)
-⦁	Verifies the files afterwards by generating SHA1-hashes and comparing them.
-⦁	If verification fails, a second attempt to copy the malcopied files can be started.
-⦁	If verification succeeds, all gathered file-attributes are added to the JSON.
-⦁	If verification fails (twice), the malcopied files can be found as "filename.ext_broken", thus making it easier to find them.
-⦁	Ability to remember all settings.
-⦁	No files are deleted in the input-path (and all of its subfolders), only "filename.ext_broken"-files will be deleted on first attempt in the output-folder (and all of its subfolders)
-⦁	This means that it is impossible* to lose files with this script. ( * ... I tried my hardest to get it to delete anything and couldn't achieve it - if you can, you're either very clever or extremely stupid ;-) )
-⦁	Comes with a handy standby-preventing script named "preventsleep.ps1" - even if you copy 128 TB of files, you won't need to change the idle-time of your computer.
+* First things first: It has a GUI. ;-)
+* ...But you can also do everything from the PowerShell - See "PARAMETERS". Comes in handy if you can't install .NET Framework (so it should work on PS 6, even on Linux*/OSX*! [ * ... Not tested yet, though. Possibly the paths could be a problem, xcopy most certainly will be a problem...in good time, I will check ;-) ])
+* User-Decision of file-formats to search for in the input-path (and all of its subfolders) - some are pre-specified, but you can also manually add formats (see "PARAMETERS", -CustomFormatsEnable & -CustomFormats)
+* User-Decision of Subfolder-Style (None vs. some date-formatted styles, see  "PARAMETERS", -OutputSubfolderStyle))
+* Ability to "remember" already (successfully) copied files by maintaining a JSON-Sheet, thus preventing duplicates
+* User-Decision if this history-file should be used, ignored, resetted (see "PARAMETERS", -HistoryFile & -WriteHist)
+* Additionally, the output-path (and all of its subfolders) can be checked for already copied files, effetively preventing duplicates even if other copying-methods are used regularly/sometimes/simultaneously. (see "PARAMETERS", -CheckOutputDupli).
+* Copies files without caching the files in RAM - when it's done, it's done.
+* If file with the same name and path is already there, it will rename the new file to "copyXYZ" (where XYZ is the first free number >= 1)
+* Verifies the files afterwards by generating SHA1-hashes and comparing them.
+* If verification fails, a second attempt to copy the malcopied files can be started.
+* If verification succeeds, all gathered file-attributes are added to the JSON.
+* If verification fails (twice), the malcopied files can be found as "filename.ext_broken", thus making it easier to find them.
+* Ability to remember all settings.
+* No files are deleted in the input-path (and all of its subfolders), only "filename.ext_broken"-files will be deleted on first attempt in the output-folder (and all of its subfolders)
+* This means that it is impossible* to lose files with this script. ( * ... I tried my hardest to get it to delete anything and couldn't achieve it - if you can, you're either very clever or extremely stupid ;-) )
+* Comes with a handy standby-preventing script named "preventsleep.ps1" - even if you copy 128 TB of files, you won't need to change the idle-time of your computer.
 
 Step-by-step:
-⦁	1-999) Open the script and see for yourself - especially watch for the "DEFINITION"-tags.
+* 1-999) Open the .ps1-script and see for yourself - especially watch for the "DEFINITION"-tags.
 
 STARTING:
-⦁	Open Powershell (<Win>+<R> -> powershell or via Start-menu).
-⦁	Either navigate to the folder containing the script via Set-Location (e.g. Set-Location "D:\script_folder") and then start it via .\scriptname 
-⦁	Or specify all at the same time: "D:\script_folder\script_name.ps1" (quotes only neccessary if path contains spaces)
-⦁	If you want help, try Get-Help "D:\script_folder\script_name.ps1" -detailed or "D:\script_folder\script_name.ps1" -showparams 1
+* Open Powershell (<Win>+<R> -> powershell or via Start-menu).
+* Either navigate to the folder containing the script via Set-Location (e.g. Set-Location "D:\script_folder") and then start it via .\scriptname 
+* Or specify all at the same time: "D:\script_folder\script_name.ps1" (quotes only neccessary if path contains spaces)
+* If you want help, try Get-Help "D:\script_folder\script_name.ps1" -detailed or "D:\script_folder\script_name.ps1" -showparams 1
 If it won't work: most likely you need to adjust the execution-policy for PowerShell:
-⦁	see https://superuser.com/a/106363/703240
-⦁	Go to Start-Menu, search for PowerShell, right-click it -> "Run as Administrator"
-⦁	Type set-executionpolicy remotesigned - done!
+* see https://superuser.com/a/106363/703240
+* Go to Start-Menu, search for PowerShell, right-click it -> "Run as Administrator"
+* Type set-executionpolicy remotesigned - done!
 
 If you would like to start the script by double-clicking, there's a script named "powershell_doubleclick-behavior.ps1" in the package. Start it and gasp. ;-)
 
@@ -118,51 +107,40 @@ NOTES:
 
 
 
-DEUTSCH - ENGLISH VERSION ABOVE
+## DEUTSCH - ENGLISH VERSION ABOVE
 
-Flos Media-Copytool v0.5 by Florian Dolzer, 2017
-Kurzes Vorwort: Sachen in Arial und ohne Markierung sind regulärer Text, während Sachen in Consolas und mit grauer Markierung Code sind. Z.B.: Das hier ist das schnellste "Hello-World"-Script in PowerShell, das mir einfällt: Write-Host "Hello, World!"
-
-RECHTLICHES:
-Ich möchte ausdrücklich betonen, dass dieses Skript mit einer gewissen Vorsicht bedient werden sollte - ich habe es zwar selbst ausgiebig getestet (und nutze es auch im produktiven Bereich), aber von mir übersehene Fehler, die zum Löschen all eurer wertvollen Erinnerungen (inklusive, aber nicht beschränkt auf das Nackt-Selfie mit George Clooney am Strand) oder zur Spontanentzündung eurer Katze führen, sind weder auszuschließen, noch hafte ich für eben jene.
-
-Es handelt sich beim Programm um freie Software ohne irgendeine Garantie.
-Das Skript ist Open-Source (zumindest die von mir erstellten Teile, dazu gleich) - Es wäre allerdings nett, wenn bei Nutzung in anderen Programmen durch euch eine Referenz zu meinem "Werk" (und dem der von mir genannten Dritten) gesetzt wird. Außerdem würde ich mich über Verbesserungsvorschläge freuen.
-Der Großeil des Skripts wurde von mir ("höchstpersönlich" <- personal pun ;-) ) geschrieben - einige Inhalte kommen aus dem WWW, sind aber stark ("bis zur Unkenntlichkeit") modifiziert worden. Teile, die eindeutig noch ihrem Ursprung treu sind, wurden im Skript mit "CREDIT"-Tags versehen.
-
-
-FEATURES:
+### FEATURES:
 Einfach erklärt:
-⦁	Zu allererst: es gibt eine GUI (also graphische Benutzeroberfläche). ;-)
-⦁	...Es kann aber auch alles via PowerShell selbst eingestellt werden - Siehe "PARAMETER". Gut, falls man .NET Framework nicht installieren kann (theoretisch funktioniert es so auch mit PS 6, auch auf Linux*/OSX*! [ * ... Ist aber nicht getestet. Vermutlich sind die Pfade ein Problem, xcopy dürfte auch hapern...wenn mal Zeit ist werde ich mir das ansehen. ;-) ])
-⦁	Benutzer-Entscheidung bez. der zu suchenden Datei-Formate im Quellverzeichnis (und allen seinen Unterordnern) - es gibt ein paar voreingestellte Varianten, es können aber auch manuell Formate hinzugefügt werden (siehe "PARAMETER", -CustomFormatsEnable & -CustomFormats)
-⦁	Benutzer-Entscheidung bez. Unterordner-Stil (Keine Unterordner oder einige Datums-basierte Vorlagen, siehe "PARAMETER", -OutputSubfolderStyle)
-⦁	Fähigkeit, sich bereits (erfolgreich) kopierte Dateien durch die Pflege einer JSON-Tabelle zu "merken", somit Verhinderung von Duplikaten.
-⦁	Benutzer-Entscheidung bez. dieser History-Datei: benutzen, ignorieren, löschen (siehe "PARAMETER", -HistoryFile & -WriteHist)
-⦁	Zusätzlich kann der Zielpfad (und seine Unterordner) auf bereits früher kopierte Dateien untersucht werden, um Duplikate selbst dann zu vermeiden, wenn andere Kopier-Techniken eingesetzt werden/wurden (siehe "PARAMETER", -CheckOutputDupli).
-⦁	Kopiert die Dateien ohne System-Cache - das Programm ist wirklich fertig, wenn es fertig ist.
-⦁	Falls bereits eine Datei mit gleichem Namen vorhanden ist, wird an die neue Datei "copyXYZ" angehängt (XYZ entspricht der ersten freien Zahl >= 1).
-⦁	Verifiziert die kopierten Dateien nach dem Kopieren mit SHA1-Hashes und vergleicht diese.
-⦁	Falls die Verifikation scheitert kann ein zweiter Versuch gestartet werden.
-⦁	Falls die Verifikation gelingt werden alle gesammelten Datei-Attribute in die History-Datei geschrieben.
-⦁	Falls die Verifikation (nochmals) scheitert werden die fehlerhaften Dateien in "dateiname.ext_broken" umbenannt - so sind sie leicht auffindbar.
-⦁	Fähigkeit, alle Einstellungen für künftige Durchläufe zu speichern.
-⦁	Es werden keine Dateien im Quellverzeichnis (und seinen Unterordnern) gelöscht, während im Zielverzeichnis (samt Unterordnern) nur "dateiname.ext_broken"-Dateien vor dem zweiten Kopier-Versuch gelöscht werden.
-⦁	Somit ist es unmöglich*, durch dieses Programm Dateien zu verlieren. ( * ... Ich habe mein Bestes gegeben, dieses Programm zum Löschen der Dateien zu bringen - und bin gescheitert. Falls ihr es schafft seid ihr entweder genial - oder sehr dumm. ;-) )
-⦁	Das "beigelegte" Skript "preventsleep.ps1" verhindert einne Standby während der Ausführung - somit braucht man die Energieeinstellungen des Rechners nicht mal dann überprüfen, wenn man 128TB an Dateien kopieren möchte.
+* Zu allererst: es gibt eine GUI (also graphische Benutzeroberfläche). ;-)
+* ...Es kann aber auch alles via PowerShell selbst eingestellt werden - Siehe "PARAMETER". Gut, falls man .NET Framework nicht installieren kann (theoretisch funktioniert es so auch mit PS 6, auch auf Linux*/OSX*! [ * ... Ist aber nicht getestet. Vermutlich sind die Pfade ein Problem, xcopy dürfte auch hapern...wenn mal Zeit ist werde ich mir das ansehen. ;-) ])
+* Benutzer-Entscheidung bez. der zu suchenden Datei-Formate im Quellverzeichnis (und allen seinen Unterordnern) - es gibt ein paar voreingestellte Varianten, es können aber auch manuell Formate hinzugefügt werden (siehe "PARAMETER", -CustomFormatsEnable & -CustomFormats)
+* Benutzer-Entscheidung bez. Unterordner-Stil (Keine Unterordner oder einige Datums-basierte Vorlagen, siehe "PARAMETER", -OutputSubfolderStyle)
+* Fähigkeit, sich bereits (erfolgreich) kopierte Dateien durch die Pflege einer JSON-Tabelle zu "merken", somit Verhinderung von Duplikaten.
+* Benutzer-Entscheidung bez. dieser History-Datei: benutzen, ignorieren, löschen (siehe "PARAMETER", -HistoryFile & -WriteHist)
+* Zusätzlich kann der Zielpfad (und seine Unterordner) auf bereits früher kopierte Dateien untersucht werden, um Duplikate selbst dann zu vermeiden, wenn andere Kopier-Techniken eingesetzt werden/wurden (siehe "PARAMETER", -CheckOutputDupli).
+* Kopiert die Dateien ohne System-Cache - das Programm ist wirklich fertig, wenn es fertig ist.
+* Falls bereits eine Datei mit gleichem Namen vorhanden ist, wird an die neue Datei "copyXYZ" angehängt (XYZ entspricht der ersten freien Zahl >= 1).
+* Verifiziert die kopierten Dateien nach dem Kopieren mit SHA1-Hashes und vergleicht diese.
+* Falls die Verifikation scheitert kann ein zweiter Versuch gestartet werden.
+* Falls die Verifikation gelingt werden alle gesammelten Datei-Attribute in die History-Datei geschrieben.
+* Falls die Verifikation (nochmals) scheitert werden die fehlerhaften Dateien in "dateiname.ext_broken" umbenannt - so sind sie leicht auffindbar.
+* Fähigkeit, alle Einstellungen für künftige Durchläufe zu speichern.
+* Es werden keine Dateien im Quellverzeichnis (und seinen Unterordnern) gelöscht, während im Zielverzeichnis (samt Unterordnern) nur "dateiname.ext_broken"-Dateien vor dem zweiten Kopier-Versuch gelöscht werden.
+* Somit ist es unmöglich*, durch dieses Programm Dateien zu verlieren. ( * ... Ich habe mein Bestes gegeben, dieses Programm zum Löschen der Dateien zu bringen - und bin gescheitert. Falls ihr es schafft seid ihr entweder genial - oder sehr dumm. ;-) )
+* Das "beigelegte" Skript "preventsleep.ps1" verhindert einne Standby während der Ausführung - somit braucht man die Energieeinstellungen des Rechners nicht mal dann überprüfen, wenn man 128TB an Dateien kopieren möchte.
 
 Schritt für Schritt:
-⦁	1-999) Einfach selbst ins Skript schauen - vor allem die "DEFINITION"-Tags dürften interessant sein.
+* 1-999) Einfach selbst ins .ps1-Skript schauen - vor allem die "DEFINITION"-Tags dürften interessant sein.
 
 STARTEN:
-⦁	Powershell öffnen (<Win>+<R> -> powershell oder  via Start-Menü).
-⦁	Entweder zum das Skript enthaltenden Pfad via Set-Location (e.g. Set-Location "D:\skript_ordner") navigieren und dann via .\skriptname starten...
-⦁	...oder gleich den ganzen Pfad angeben: "D:\skript_ordner\skript name.ps1" (Anführungszeichen nur notwendig, falls Pfad Leerzeichen beinhaltet)
+* Powershell öffnen (<Win>+<R> -> powershell oder  via Start-Menü).
+* Entweder zum das Skript enthaltenden Pfad via Set-Location (e.g. Set-Location "D:\skript_ordner") navigieren und dann via .\skriptname starten...
+* ...oder gleich den ganzen Pfad angeben: "D:\skript_ordner\skript name.ps1" (Anführungszeichen nur notwendig, falls Pfad Leerzeichen beinhaltet)
 
 Falls das nicht funktioniert muss vermutlich erst noch die execution-policy in PowerShell eingestellt werden:
-⦁	siehe https://superuser.com/a/106363/703240
-⦁	Im Start-Menü die PowerShell suchen, Rechtsklick -> "Als Administrator ausführen"
-⦁	set-executionpolicy remotesigned eingeben - fertig!
+* siehe https://superuser.com/a/106363/703240
+* Im Start-Menü die PowerShell suchen, Rechtsklick -> "Als Administrator ausführen"
+* set-executionpolicy remotesigned eingeben - fertig!
 
 Es ist auch möglich, das Skript via Doppelklick zu öffnen - dazu das beigelegte Skript "powershell_doubleclick-behavior.ps1" öffnen. Starten und Staunen! ;-)
 
@@ -227,9 +205,9 @@ Tipp: Falls .\media_copytool_v0-5.ps1 die GUI nicht anzeigt, folgendes versuchen
 
 
 SONSTIGES:
-⦁	Um korrekt zu funktionieren benötigt das Skript Schreibrechte in seinem Verzeichnis - C:\ sollte daher nicht verwendet werden. ;-)
-⦁	Dieses Skript sucht alle für die Funktion benötigten Dateien in seinem eigenen Verzeichnis (z.B. D:\skript ordner\).
-⦁	Das Skript selbst (media_copytool_v0-5.ps1) kann man umbenennen - nicht aber preventsleep.ps1, media_copytool_README_v0-5.rtf und media_copytool_fileshistory.json
-⦁	Das Skript kann jederzeit in ein anderes Verzeichnis verschoben werden - aber bitte die anderen Dateien mitübersiedeln.
-⦁	Falls das Skript nicht (mehr) funktioniert (komische Fehlermeldungen,...), bitte die Pfade auf Leerzeichen überprüfen und diese ggf. mit Unterstrichen ersetzen. (Leerzeichen sind böse!). Falls es dann geht, bitte die Fehlermeldung und den Pfad-Namen (mit Leerzeichen) an mich senden.
-⦁	Bitte keine eckigen Klammern [ ] in den Pfaden oder anderem Text verwenden - das Skript kann damit nicht umgehen. Normale Klammern ( ) sind kein Problem.  (Ist auf der Fix-Liste!)
+* Um korrekt zu funktionieren benötigt das Skript Schreibrechte in seinem Verzeichnis - C:\ sollte daher nicht verwendet werden. ;-)
+* Dieses Skript sucht alle für die Funktion benötigten Dateien in seinem eigenen Verzeichnis (z.B. D:\skript ordner\).
+* Das Skript selbst (media_copytool_v0-5.ps1) kann man umbenennen - nicht aber preventsleep.ps1, media_copytool_README_v0-5.rtf und media_copytool_fileshistory.json
+* Das Skript kann jederzeit in ein anderes Verzeichnis verschoben werden - aber bitte die anderen Dateien mitübersiedeln.
+* Falls das Skript nicht (mehr) funktioniert (komische Fehlermeldungen,...), bitte die Pfade auf Leerzeichen überprüfen und diese ggf. mit Unterstrichen ersetzen. (Leerzeichen sind böse!). Falls es dann geht, bitte die Fehlermeldung und den Pfad-Namen (mit Leerzeichen) an mich senden.
+* Bitte keine eckigen Klammern [ ] in den Pfaden oder anderem Text verwenden - das Skript kann damit nicht umgehen. Normale Klammern ( ) sind kein Problem.  (Ist auf der Fix-Liste!)
