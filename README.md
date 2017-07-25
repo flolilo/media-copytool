@@ -6,7 +6,7 @@ PowerShell-based, GUI-including script that not only copies your files, but also
 ### FEATURES:
 #### Basic explanation:
 * First things first: It has a GUI. ;-)
-* ...But you can also do everything from the PowerShell - See "PARAMETERS". Comes in handy if you can't install .NET Framework (so it should work on PS 6, even on Linux*/OSX*! [ * ... Not tested yet, though. Possibly the paths could be a problem, xcopy most certainly will be a problem...in good time, I will check ;-) ])
+* ...But you can also do everything from the PowerShell - See "PARAMETERS". Comes in handy if you can't install .NET Framework.
 * User-Decision of file-formats to search for in the input-path (and all of its subfolders) - some are pre-specified, but you can also manually add formats (see "PARAMETERS", -CustomFormatsEnable & -CustomFormats)
 * User-Decision of Subfolder-Style (None vs. some date-formatted styles, see  "PARAMETERS", -OutputSubfolderStyle))
 * Ability to "remember" already (successfully) copied files by maintaining a JSON-Sheet, thus preventing duplicates
@@ -27,83 +27,86 @@ PowerShell-based, GUI-including script that not only copies your files, but also
 * 1-999) Open the .ps1-script and see for yourself - especially watch for the "DEFINITION"-tags.
 
 ### STARTING:
-* Open Powershell (<Win>+<R> -> powershell or via Start-menu).
-* Either navigate to the folder containing the script via Set-Location (e.g. Set-Location "D:\script_folder") and then start it via .\scriptname 
-* Or specify all at the same time: "D:\script_folder\script_name.ps1" (quotes only neccessary if path contains spaces)
-* If you want help, try Get-Help "D:\script_folder\script_name.ps1" -detailed or "D:\script_folder\script_name.ps1" -showparams 1
+* Open Powershell (Win + R -> `powershell` or via Start-menu).
+* Either navigate to the folder containing the script via Set-Location (e.g. `Set-Location "D:\script_folder"`) and then start it via .\scriptname 
+* Or specify all at the same time: `"D:\script_folder\script_name.ps1"` (quotes only neccessary if path contains spaces)
+* If you want help, try `Get-Help "D:\script_folder\script_name.ps1" -detailed` or `"D:\script_folder\script_name.ps1" -showparams 1`
 If it won't work: most likely you need to adjust the execution-policy for PowerShell:
 * see https://superuser.com/a/106363/703240
 * Go to Start-Menu, search for PowerShell, right-click it -> "Run as Administrator"
-* Type set-executionpolicy remotesigned - done!
-
-If you would like to start the script by double-clicking, there's a script named "powershell_doubleclick-behavior.ps1" in the package. Start it and gasp. ;-)
-
+* Type `set-executionpolicy remotesigned` - done!
 
 ### PARAMETERS:
 Parameters are easily-changeable values. Media-Copytool will take them via CLI or via GUI and can even remember them (if wanted) for the next run. This is a handy feature if you often use it for the same things (e.g. copying RAW-images from a SD-Card in "J:\" to "D:\My_Images".)
 
-Explanation of parameters (CLI - the GUI has tooltips ;-) ):
--showparams		:	Show the parameters as the script has saved them.
--GUI_CLI_Direct	:	"GUI"		= Start Graphical User Interface
-				"CLI"		= Start Interactive selection of options
-				"Direct"	= Start with values as set in parameters.
--InputPath		:	Input-path
--OutputPath		:	Output-path
--MirrorEnable		:	Value of 1 enables additional output-path
--MirrorPath		:	Additional output-path
--PresetFormats	:	Formats to search for.
+Explanation of parameters:
+
+`-showparams`    :    Show the parameters as the script has saved them.
+
+`-GUI_CLI_Direct`    :    "GUI"    = Start Graphical User Interface
+                        "CLI"    = Start Interactive selection of options
+				"Direct"    = Start with values as set in parameters.
+`-InputPath`		:	Input-path
+`-OutputPath`		:	Output-path
+`-MirrorEnable`		:	Value of 1 enables additional output-path
+`-MirrorPath`		:	Additional output-path
+`-PresetFormats`	:	Formats to search for.
 				Can = *.cr2,
 				Nik = *.nrw & *.nef,
 				Son = *.arw,
 				Jpg = *.jpg & *.jpeg,
 				Mov = *.mov & *.mp4,
 				Aud = *.wav & *.mp3 & *.m4a
--CustomFormatsEnable:	Enable / disable custom formats to search for.  1 enables, 0 				disables.
--CustomFormats	:	Specify custom formats, separated by commata.
+`-CustomFormatsEnable`:	Enable / disable custom formats to search for.  1 enables, 0 				disables.
+`-CustomFormats`	:	Specify custom formats, separated by commata.
 				"*" will search and copy ALL files,
 				"*.ext1","*.ext2" will search and copy all files with 					specified formats,
 				"media*" will copy all files starting with "media", regardless 				their format.
--OutputSubfolderStyle:	"none" = No Subfolder(s)
+`-OutputSubfolderStyle`:	"none" = No Subfolder(s)
 				"yyyy-mm-dd"	= e.g. 2017-01-31
 				"yyyy_mm_dd"	= e.g. 2017_01_31
 				"yy-mm-dd"	= e.g. 17-01-31
 				"yy_mm_dd"	= e.g. 17_01_31
--HistoryFile		:	"use"		: Check history-file for already imported files.
+`-HistoryFile`		:	"use"		: Check history-file for already imported files.
 				"delete"	: Delete/overwrite the file.
 				"ignore"	: Ignore it for checking.
--WriteHist		:	Enable / disable writing stats of newly copied file to history-				file. 1 enables, 0 disables.
--InputSubfolderSearch:	Enable / disable searching in subfolders in the input-path.
+`-WriteHist`		:	Enable / disable writing stats of newly copied file to history-				file. 1 enables, 0 disables.
+`-InputSubfolderSearch`:	Enable / disable searching in subfolders in the input-path.
 				1 enables, 0 disables.
--DupliCompareHashes	:	Enable / disable comparing all hashes for duplicate-					verification. This will take up more time, especially with many 				files. 1 enables, 0 disables.
--CheckOutputDupli	:	Enable / Disable additional duplicate-verification by searching 				for similar files in the output-path. 1 enables, 0 disables 					feature.
--PreventStandby	:   	Prevent standby by starting additional script 						preventsleep.ps1. 1 enables, 0 disables.
--RememberInPath	:	Remember input-path. 1 enables, 0 disables feature.
--RememberOutPath	:	Remember output-path. 1 enables, 0 disables feature.
--RememberMirrorPath	:	Remember additional out-path. 1 enables, 0 disables feature.
--RememberSettings	:	Remember parameters (excl. Remember-Parameters).
+`-DupliCompareHashes`	:	Enable / disable comparing all hashes for duplicate-					verification. This will take up more time, especially with many 				files. 1 enables, 0 disables.
+`-CheckOutputDupli`	:	Enable / Disable additional duplicate-verification by searching 				for similar files in the output-path. 1 enables, 0 disables 					feature.
+`-PreventStandby`	:   	Prevent standby by starting additional script 						preventsleep.ps1. 1 enables, 0 disables.
+`-RememberInPath`	:	Remember input-path. 1 enables, 0 disables feature.
+`-RememberOutPath`	:	Remember output-path. 1 enables, 0 disables feature.
+`-RememberMirrorPath`	:	Remember additional out-path. 1 enables, 0 disables feature.
+`-RememberSettings`	:	Remember parameters (excl. Remember-Parameters).
 				1 enables, 0 disables feature.
--debug			:	1 Shows additional verbose, 2 enables pausing after each 				step of the script. Default is 0.
+`-debug`			:	1 Shows additional verbose, 2 enables pausing after each 				step of the script. Default is 0.
 
 You don't have to specify all parameters all the time: if you don't specify them, they will fall back to their remembered setting (-showparams 1 will show them to you). A few examples:
 
 Copy Canon-RAWs, JPEGs, Movies and XMLs from F:\ to D:\ -- Delete the history-file -- Don't check the output-folder for duplicates -- Copy all items to yyyy-mm-dd - subfolders -- Show GUI -- Remember output-path and settings, but don't remember input-path:
 
+```
 .\media_copytool_v0-5.ps1 -InputPath "F:\" -OutputPath "D:\" -PresetFormats "Can","Jpg","Mov" -CustomFormatsEnable 1 -CustomFormats "*.xml" -CheckOutputDupli 0 -HistoryFile 1 -OutputSubfolderStyle 1 -GUI_CLI_Direct "GUI" -RememberInPath 0 -RememberOutPath 1 -RememberSettings 1
+```
 
 Coming from that, doing the exact same operation but with G:\ as input-path and without the GUI (and without remembering anything):
 
+```
 .\media_copytool_v0-5.ps1 -InputPath "G:\" -GUI_CLI_Direct "direct"
+```
 
 Hint: If .\media_copytool_v0-5.ps1 won't bring up the GUI, just try:
-.\media_copytool_v0-5.ps1 -GUI_CLI_Direct "GUI" -RememberSettings = 1
+`.\media_copytool_v0-5.ps1 -GUI_CLI_Direct "GUI" -RememberSettings = 1`
 
 ### NOTES:
 ⦁	To function properly, this script will need write-access to the directory it is located in - so it's not wise to use C:\ for it. ;-)
-⦁	This script will search for all needed files in its own path (e.g. D:\script folder\).+
-⦁	You can rename the script itself (media_copytool_v0-4.ps1) to any name you like - but to function properly, preventsleep.ps1, media_copytool_README_v0-5.rtf, and media_copytool_fileshistory.json must not be renamed.
+⦁	This script will search for all needed files in its own path (e.g. D:\script_folder\).
+⦁	You can rename the script itself (media_copytool_v*-*.ps1) to any name you like - but to function properly, preventsleep.ps1, media_copytool_README_v0-5.rtf, and media_copytool_fileshistory.json must not be renamed.
 ⦁	You can move the script any time you want - but again, please also copy all other needed files to the new directory.
 ⦁	If the script won't work any more (weird errors,...), please check if the path contains any spaces (spaces are the devil's work!). If the spaces prevent it from working, please send the error-message plus your script's path to me for mending it.
-⦁	Please don't use brackets [ ] in paths or any text - they will most likely screw up everything. Parentheses ( ) will work without any problem. (It's on the fix-list!)
+⦁	Please don't use brackets `[ ]` in paths or any text - they will most likely screw up everything. Parentheses ( ) will work without any problem. (It's on the fix-list!)
 
 
 
