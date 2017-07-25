@@ -4,7 +4,7 @@ PowerShell-based, GUI-including script that not only copies your files, but also
 ## ENGLISH - DEUTSCHE VERSION UNTERHALB
 
 ### FEATURES:
-Basic explanation:
+#### Basic explanation:
 * First things first: It has a GUI. ;-)
 * ...But you can also do everything from the PowerShell - See "PARAMETERS". Comes in handy if you can't install .NET Framework (so it should work on PS 6, even on Linux*/OSX*! [ * ... Not tested yet, though. Possibly the paths could be a problem, xcopy most certainly will be a problem...in good time, I will check ;-) ])
 * User-Decision of file-formats to search for in the input-path (and all of its subfolders) - some are pre-specified, but you can also manually add formats (see "PARAMETERS", -CustomFormatsEnable & -CustomFormats)
@@ -23,10 +23,10 @@ Basic explanation:
 * This means that it is impossible* to lose files with this script. ( * ... I tried my hardest to get it to delete anything and couldn't achieve it - if you can, you're either very clever or extremely stupid ;-) )
 * Comes with a handy standby-preventing script named "preventsleep.ps1" - even if you copy 128 TB of files, you won't need to change the idle-time of your computer.
 
-Step-by-step:
+#### Step-by-step:
 * 1-999) Open the .ps1-script and see for yourself - especially watch for the "DEFINITION"-tags.
 
-STARTING:
+### STARTING:
 * Open Powershell (<Win>+<R> -> powershell or via Start-menu).
 * Either navigate to the folder containing the script via Set-Location (e.g. Set-Location "D:\script_folder") and then start it via .\scriptname 
 * Or specify all at the same time: "D:\script_folder\script_name.ps1" (quotes only neccessary if path contains spaces)
@@ -39,7 +39,7 @@ If it won't work: most likely you need to adjust the execution-policy for PowerS
 If you would like to start the script by double-clicking, there's a script named "powershell_doubleclick-behavior.ps1" in the package. Start it and gasp. ;-)
 
 
-PARAMETERS:
+### PARAMETERS:
 Parameters are easily-changeable values. Media-Copytool will take them via CLI or via GUI and can even remember them (if wanted) for the next run. This is a handy feature if you often use it for the same things (e.g. copying RAW-images from a SD-Card in "J:\" to "D:\My_Images".)
 
 Explanation of parameters (CLI - the GUI has tooltips ;-) ):
@@ -97,7 +97,7 @@ Coming from that, doing the exact same operation but with G:\ as input-path and 
 Hint: If .\media_copytool_v0-5.ps1 won't bring up the GUI, just try:
 .\media_copytool_v0-5.ps1 -GUI_CLI_Direct "GUI" -RememberSettings = 1
 
-NOTES:
+### NOTES:
 ⦁	To function properly, this script will need write-access to the directory it is located in - so it's not wise to use C:\ for it. ;-)
 ⦁	This script will search for all needed files in its own path (e.g. D:\script folder\).+
 ⦁	You can rename the script itself (media_copytool_v0-4.ps1) to any name you like - but to function properly, preventsleep.ps1, media_copytool_README_v0-5.rtf, and media_copytool_fileshistory.json must not be renamed.
@@ -110,7 +110,7 @@ NOTES:
 ## DEUTSCH - ENGLISH VERSION ABOVE
 
 ### FEATURES:
-Einfach erklärt:
+#### Einfach erklärt:
 * Zu allererst: es gibt eine GUI (also graphische Benutzeroberfläche). ;-)
 * ...Es kann aber auch alles via PowerShell selbst eingestellt werden - Siehe "PARAMETER". Gut, falls man .NET Framework nicht installieren kann (theoretisch funktioniert es so auch mit PS 6, auch auf Linux*/OSX*! [ * ... Ist aber nicht getestet. Vermutlich sind die Pfade ein Problem, xcopy dürfte auch hapern...wenn mal Zeit ist werde ich mir das ansehen. ;-) ])
 * Benutzer-Entscheidung bez. der zu suchenden Datei-Formate im Quellverzeichnis (und allen seinen Unterordnern) - es gibt ein paar voreingestellte Varianten, es können aber auch manuell Formate hinzugefügt werden (siehe "PARAMETER", -CustomFormatsEnable & -CustomFormats)
@@ -145,7 +145,7 @@ Falls das nicht funktioniert muss vermutlich erst noch die execution-policy in P
 Es ist auch möglich, das Skript via Doppelklick zu öffnen - dazu das beigelegte Skript "powershell_doubleclick-behavior.ps1" öffnen. Starten und Staunen! ;-)
 
 
-PARAMETER:
+### PARAMETER:
 Parameter sind leicht zu ändernde Werte. Das Media-Copytool kann diese via Kommandozeile oder graphischem Benutzerinterface aufnehmen und sie (falls gewünscht) auch für die Zukunft speichern. Letzteres ist besonders dann nützlich, wenn man oft/immer dieselben Pfade und/oder Optionen benötigt (z.B. RAW-Bilder von einer SD-Karte in "J:\" nach "D:\Meine_Bilder" kopieren.)
 
 Erklärung der Parameter (CLI - die GUI hat Tooltips ;-) ):
@@ -204,7 +204,7 @@ Tipp: Falls .\media_copytool_v0-5.ps1 die GUI nicht anzeigt, folgendes versuchen
 .\media_copytool_v0-5.ps1 -GUI_CLI_Direct "GUI" -RememberSettings 1
 
 
-SONSTIGES:
+### SONSTIGES:
 * Um korrekt zu funktionieren benötigt das Skript Schreibrechte in seinem Verzeichnis - C:\ sollte daher nicht verwendet werden. ;-)
 * Dieses Skript sucht alle für die Funktion benötigten Dateien in seinem eigenen Verzeichnis (z.B. D:\skript ordner\).
 * Das Skript selbst (media_copytool_v0-5.ps1) kann man umbenennen - nicht aber preventsleep.ps1, media_copytool_README_v0-5.rtf und media_copytool_fileshistory.json
