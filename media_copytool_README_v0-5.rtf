@@ -1,0 +1,308 @@
+{\rtf1\ansi\ansicpg1252\deff0\nouicompat\deflang3079\deflangfe3079{\fonttbl{\f0\fnil\fcharset0 Arial;}{\f1\fnil\fcharset0 Consolas;}{\f2\fnil\fcharset2 Symbol;}}
+{\colortbl ;\red192\green192\blue192;\red0\green0\blue255;}
+{\*\generator Riched20 10.0.15063}{\*\mmathPr\mdispDef1\mwrapIndent1440 }\viewkind4\uc1 
+\pard\widctlpar\sa160\sl252\slmult1\qc\ul\b\fs28 ENGLISH - DEUTSCHE VERSION UNTERHALB\par
+\ulnone\b0\fs22\par
+\b Flo's Media-Copytool v0.5 by Florian Dolzer, 2017\par
+
+\pard\widctlpar\sa160\sl252\slmult1\qj\fs20 A word in advance: \b0 Things written in Arial and without highlighting are regular text, while things written in Consolas and highlighted in grey are code. E.g.: This resembles the simplest "Hello-World"-Script in PowerShell that i can think of: \highlight1\f1\fs22 Write-Host "Hello, World!"\fs20\par
+\highlight0\f0\fs22\par
+
+\pard\widctlpar\sl240\slmult1\qj\ul\b\fs24 LEGAL STUFF:\par
+\ulnone\b0\fs20 I can't stress enough that this script should be regarded with some suspicion - I successfully tested it on my own computers in various scenarios (and use it in my production-workflow); however, I will not be responsible if it deletes all your precious memories, your one-time-selfie with George Clooney naked on the beach, or if it sets fire to your cat.\par
+\par
+\b This program is free software. It comes without any warranty, to the extent permitted by applicable law.\par
+\b0 This script is open-source (as far as my contributions are concerned, see below) - However, I would really appreciate it if users would give me (and all the others mentioned) some credit. Also, if you want to contribute something or you want to tell me how sh**ty this script is: get in touch with me.\par
+Most of the script was written by myself (or heavily modified by me when searching for solutions on the WWW). However, some parts are copies or modifications of very genuine code - see the "\highlight1\f1\fs22 CREDIT\highlight0\f0\fs20 "-tags to find them.\par
+\par
+\par
+\ul\b\fs24 FEATURES:\ulnone\b0\fs20\par
+Basic explanation:\par
+
+\pard{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-360\li720\sl240\slmult1\qj First things first: It has a GUI. ;-)\par
+
+\pard{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-360\li1080\sl240\slmult1\qj ...But you can also do everything from the PowerShell - See "PARAMETERS". Comes in handy if you can't install .NET Framework (so it should work on PS 6, even on Linux*/OSX*! [ * ... Not tested yet, though. Possibly the paths could be a problem, xcopy most certainly will be a problem...in good time, I will check ;-) ])\par
+
+\pard{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-360\li720\sl240\slmult1\qj User-Decision of file-formats to search for in the input-path (and all of its subfolders) - some are pre-specified, but you can also manually add formats (see "PARAMETERS", \highlight1\f1 -CustomFormatsEnable\highlight0\f0  & \highlight1\f1 -CustomFormats\highlight0\f0 )\par
+{\pntext\f2\'B7\tab}User-Decision of Subfolder-Style (None vs. some date-formatted styles, see  "PARAMETERS", \highlight1\f1 -OutputSubfolderStyle\highlight0\f0 ))\par
+{\pntext\f2\'B7\tab}Ability to "remember" already (successfully) copied files by maintaining a JSON-Sheet, thus preventing duplicates\par
+
+\pard{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-360\li1080\sl240\slmult1\qj User-Decision if this history-file should be used, ignored, resetted (see "PARAMETERS", \highlight1\f1 -HistoryFile\highlight0\f0  & \highlight1\f1 -WriteHist\highlight0\f0 )\par
+
+\pard{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-360\li720\sl240\slmult1\qj Additionally, the output-path (and all of its subfolders) can be checked for already copied files, effetively preventing duplicates even if other copying-methods are used regularly/sometimes/simultaneously. (see "PARAMETERS", \highlight1\f1 -CheckOutputDupli\highlight0\f0 ).\par
+{\pntext\f2\'B7\tab}Copies files without caching the files in RAM - when it's done, it's done.\par
+
+\pard{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-360\li1080\sl240\slmult1\qj If file with the same name and path is already there, it will rename the new file to "copyXYZ" (where XYZ is the first free number >= 1)\par
+
+\pard{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-360\li720\sl240\slmult1\qj Verifies the files afterwards by generating SHA1-hashes and comparing them.\par
+
+\pard{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-360\li1080\sl240\slmult1\qj If verification fails, a second attempt to copy the malcopied files can be started.\par
+{\pntext\f2\'B7\tab}If verification succeeds, all gathered file-attributes are added to the JSON.\par
+{\pntext\f2\'B7\tab}If verification fails (twice), the malcopied files can be found as "filename.ext_broken", thus making it easier to find them.\par
+
+\pard{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-360\li720\sl240\slmult1\qj Ability to remember all settings.\par
+{\pntext\f2\'B7\tab}No files are deleted in the input-path (and all of its subfolders), \b only\b0  "filename.ext_broken"-files will be deleted on first attempt in the output-folder (and all of its subfolders)\par
+
+\pard{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-360\li1080\sl240\slmult1\qj This means that it is impossible* to lose files with this script. ( * ... I tried my hardest to get it to delete anything and couldn't achieve it - if you can, you're either very clever or extremely stupid ;-) )\par
+
+\pard{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-360\li720\sl240\slmult1\qj Comes with a handy standby-preventing script named "preventsleep.ps1" - even if you copy 128 TB of files, you won't need to change the idle-time of your computer.\par
+
+\pard\sl240\slmult1\qj\par
+
+\pard\widctlpar\sl240\slmult1\qj Step-by-step:\par
+
+\pard{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-360\li720\sl240\slmult1\qj 1-999) Open the script and see for yourself - especially watch for the "\highlight1\f1\fs22 DEFINITION\highlight0\f0\fs20 "-tags.\par
+
+\pard\widctlpar\sl240\slmult1\qj\par
+\ul\b\fs24 STARTING:\ulnone\b0\fs20\par
+
+\pard{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-360\li720\sl240\slmult1\qj Open Powershell (<Win>+<R> -> \highlight1\f1 powershell\highlight0  \f0 or via Start-menu).\par
+
+\pard{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-360\li1080\sl240\slmult1\qj Either navigate to the folder containing the script via Set-Location (e.g. \highlight1\f1 Set-Location "D:\\script_folder"\highlight0\f0 ) and then start it via \highlight1\f1 .\\scriptname \highlight0\f0\par
+{\pntext\f2\'B7\tab}Or specify all at the same time: \highlight1\f1 "D:\\script_folder\\script_name.ps1"\highlight0\f0  (quotes only neccessary if path contains spaces)\par
+{\pntext\f2\'B7\tab}If you want help, try \highlight1\f1 Get-Help "D:\\script_folder\\script_name.ps1" -detailed\highlight0\f0  or \highlight1\f1 "D:\\script_folder\\script_name.ps1" -showparams 1\highlight0\f0\par
+
+\pard\widctlpar\sl240\slmult1\qj If it won't work: most likely you need to adjust the execution-policy for PowerShell:\par
+
+\pard{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-360\li720\sl240\slmult1\qj see {{\field{\*\fldinst{HYPERLINK https://superuser.com/a/106363/703240 }}{\fldrslt{https://superuser.com/a/106363/703240\ul0\cf0}}}}\f0\fs20\par
+{\pntext\f2\'B7\tab}Go to Start-Menu, search for PowerShell, right-click it -> "Run as Administrator"\par
+{\pntext\f2\'B7\tab}Type \highlight1\f1 set-executionpolicy remotesigned\highlight0\f0  - done!\par
+
+\pard\widctlpar\sl240\slmult1\qj\par
+If you would like to start the script by double-clicking, there's a script named "powershell_doubleclick-behavior.ps1" in the package. Start it and gasp. ;-)\par
+\par
+\par
+\ul\b\fs24 PARAMETERS:\ulnone\b0\fs20\par
+Parameters are easily-changeable values. Media-Copytool will take them via CLI or via GUI and can even remember them (if wanted) for the next run. This is a handy feature if you often use it for the same things (e.g. copying RAW-images from a SD-Card in "J:\\" to "D:\\My_Images".)\par
+\par
+
+\pard\widctlpar\ri-22\sl240\slmult1\qj Explanation of parameters (CLI - the GUI has tooltips ;-) ):\par
+\highlight1\f1 -showparams\highlight0\f0\tab\tab :\tab Show the parameters as the script has saved them.\par
+\highlight1\f1 -GUI_CLI_Direct\highlight0\f0\tab :\tab\highlight1\f1 "GUI"\highlight0\f0\tab\tab = Start Graphical User Interface\par
+\tab\tab\tab\tab\highlight1\f1 "CLI"\highlight0\f0\tab\tab = Start Interactive selection of options\par
+\tab\tab\tab\tab\highlight1\f1 "Direct"\highlight0\f0\tab = Start with values as set in parameters.\par
+\highlight1\f1 -InputPath\highlight0\f0\tab\tab :\tab Input-path\par
+\highlight1\f1 -OutputPath\highlight0\f0\tab\tab :\tab Output-path\par
+\highlight1\f1 -MirrorEnable\tab\highlight0\f0\tab :\tab Value of \highlight1\f1 1\highlight0\f0  enables additional output-path\par
+\highlight1\f1 -MirrorPath\highlight0\f0\tab\tab :\tab Additional output-path\par
+\highlight1\f1 -PresetFormats\highlight0\f0\tab :\tab Formats to search for.\par
+\tab\tab\tab\tab\highlight1\f1 Can\highlight0\f0  = *.cr2,\par
+\tab\tab\tab\tab\highlight1\f1 Nik\highlight0\f0  = *.nrw & *.nef,\par
+\tab\tab\tab\tab\highlight1\f1 Son\highlight0\f0  = *.arw,\par
+\tab\tab\tab\tab\highlight1\f1 Jpg\highlight0\f0  = *.jpg & *.jpeg,\par
+\tab\tab\tab\tab\highlight1\f1 Mov\highlight0\f0  = *.mov & *.mp4,\par
+\tab\tab\tab\tab\highlight1\f1 Aud\highlight0\f0  = *.wav & *.mp3 & *.m4a\par
+\highlight1\f1 -CustomFormatsEnable\highlight0\f0 :\tab Enable / disable custom formats to search for.  \highlight1\f1 1\highlight0\f0  enables, \highlight1\f1 0\highlight0\f0  \tab\tab\tab\tab disables.\par
+\highlight1\f1 -CustomFormats\highlight0\f0\tab :\tab Specify custom formats, separated by commata.\par
+\tab\tab\tab\tab\highlight1\f1 "*"\highlight0\f0  will search and copy ALL files,\par
+\tab\tab\tab\tab\highlight1\f1 "*.ext1","*.ext2"\highlight0\f0  will search and copy all files with \tab\tab\tab\tab\tab specified formats,\par
+\tab\tab\tab\tab\highlight1\f1 "media*"\highlight0\f0  will copy all files starting with "media", regardless \tab\tab\tab\tab their format.\par
+\highlight1\f1 -OutputSubfolderStyle\highlight0\f0 :\tab\highlight1\f1 "none"\highlight0\f0  = No Subfolder(s)\par
+\tab\tab\tab\tab\highlight1\f1 "yyyy-mm-dd"\highlight0\f0\tab = e.g. 2017-01-31\par
+\tab\tab\tab\tab\highlight1\f1 "yyyy_mm_dd"\highlight0\f0\tab = e.g. 2017_01_31\par
+\tab\tab\tab\tab\highlight1\f1 "yy-mm-dd"\highlight0\f0\tab = e.g. 17-01-31\par
+\tab\tab\tab\tab\highlight1\f1 "yy_mm_dd"\highlight0\f0\tab = e.g. 17_01_31\par
+\highlight1\f1 -HistoryFile\highlight0\f0\tab\tab :\tab\highlight1\f1 "use"\highlight0\f0\tab\tab : Check history-file for already imported files.\par
+\tab\tab\tab\tab\highlight1\f1 "delete"\highlight0\f0\tab : Delete/overwrite the file.\par
+\tab\tab\tab\tab\highlight1\f1 "ignore"\highlight0\f0\tab : Ignore it for checking.\par
+\highlight1\f1 -WriteHist\highlight0\f0\tab\tab :\tab Enable / disable writing stats of newly copied file to history-\tab\tab\tab\tab file. \highlight1\f1 1\highlight0\f0  enables, \highlight1\f1 0\highlight0\f0  disables.\par
+\highlight1\f1 -InputSubfolderSearch\highlight0\f0 :\tab Enable / disable searching in subfolders in the input-path.\par
+\tab\tab\tab\tab\highlight1\f1 1\highlight0\f0  enables, \highlight1\f1 0\highlight0\f0  disables.\par
+\highlight1\f1 -DupliCompareHashes\highlight0\f0\tab :\tab Enable / disable comparing all hashes for duplicate-\tab\tab\tab\tab\tab verification. This will take up more time, especially with many \tab\tab\tab\tab files. \highlight1\f1 1\highlight0\f0  enables, \highlight1\f1 0\highlight0\f0  disables.\par
+\highlight1\f1 -CheckOutputDupli\highlight0\f0\tab :\tab Enable / Disable additional duplicate-verification by searching \tab\tab\tab\tab for similar files in the output-path. \highlight1\f1 1\highlight0\f0  enables, \highlight1\f1 0\highlight0\f0  disables \tab\tab\tab\tab\tab feature.\par
+\highlight1\f1 -PreventStandby\highlight0\f0\tab :   \tab Prevent standby by starting additional script \tab\tab\tab\tab\tab\tab preventsleep.ps1. \highlight1\f1 1\highlight0\f0  enables, \highlight1\f1 0\highlight0\f0  disables.\par
+\highlight1\f1 -RememberInPath\highlight0\f0\tab :\tab Remember input-path. \highlight1\f1 1\highlight0\f0  enables, \highlight1\f1 0\highlight0\f0  disables feature.\par
+\highlight1\f1 -RememberOutPath\highlight0\tab\f0 :\tab Remember output-path. \highlight1\f1 1\highlight0\f0  enables, \highlight1\f1 0\highlight0\f0  disables feature.\par
+\highlight1\f1 -RememberMirrorPath\highlight0\tab\f0 :\tab Remember additional out-path. \highlight1\f1 1\highlight0\f0  enables, \highlight1\f1 0\highlight0\f0  disables feature.\par
+\highlight1\f1 -RememberSettings\highlight0\tab\f0 :\tab Remember parameters (excl. Remember-Parameters).\par
+\tab\tab\tab\tab\highlight1\f1 1\highlight0\f0  enables, \highlight1\f1 0\highlight0\f0  disables feature.\par
+\highlight1\f1 -debug\highlight0\f0\tab\tab\tab :\tab\highlight1\f1 1\highlight0  \f0 Shows additional verbose, \highlight1\f1 2\highlight0\f0  enables pausing after each \tab\tab\tab\tab step of the script. Default is \highlight1\f1 0\highlight0\f0 .\par
+\par
+You don't have to specify all parameters all the time: if you don't specify them, they will fall back to their remembered setting (\highlight1\f1 -showparams 1\highlight0\f0  will show them to you). A few examples:\par
+\par
+Copy Canon-RAWs, JPEGs, Movies and XMLs from F:\\ to D:\\ -- Delete the history-file -- Don't check the output-folder for duplicates -- Copy all items to yyyy-mm-dd - subfolders -- Show GUI -- Remember output-path and settings, but don't remember input-path:\par
+\par
+
+\pard\widctlpar\ri-22\sl240\slmult1\qc\highlight1\f1 .\\media_copytool_v0-5.ps1 -InputPath "F:\\" -OutputPath "D:\\" -PresetFormats "Can","Jpg","Mov" -CustomFormatsEnable 1 -CustomFormats "*.xml" -CheckOutputDupli 0 -HistoryFile 1 -OutputSubfolderStyle 1 -GUI_CLI_Direct "GUI" -RememberInPath 0 -RememberOutPath 1 -RememberSettings 1\par
+
+\pard\widctlpar\ri-22\sl240\slmult1\qj\highlight0\f0\par
+Coming from that, doing the exact same operation but with G:\\ as input-path and without the GUI (and without remembering anything):\par
+\par
+
+\pard\widctlpar\ri-22\sl240\slmult1\qc\highlight1\f1 .\\media_copytool_v0-5.ps1 -InputPath "G:\\" -GUI_CLI_Direct "direct"\par
+
+\pard\widctlpar\ri-22\sl240\slmult1\qj\par
+\highlight0\b\f0 Hint: \b0 If \highlight1\f1 .\\media_copytool_v0-5.ps1\highlight0\f0  won't bring up the GUI, just try:\par
+
+\pard\widctlpar\ri-22\sl240\slmult1\qc\highlight1\f1 .\\media_copytool_v0-5.ps1 -GUI_CLI_Direct "GUI" -RememberSettings = 1\highlight0\f0\par
+
+\pard\widctlpar\ri-22\sl240\slmult1\qj\fs22\par
+
+\pard\widctlpar\sl240\slmult1\qj\ul\b\fs24 NOTES:\ulnone\b0\fs20\par
+
+\pard{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-360\li720\sl252\slmult1\qj To function properly, this script will need write-access to the directory it is located in - so it's not wise to use C:\\ for it. ;-)\fs22\par
+{\pntext\f2\'B7\tab}\fs20 This script will search for all needed files in its own path (e.g. D:\\script folder\\).+\fs22\par
+{\pntext\f2\'B7\tab}\fs20 You can rename the script itself (media_copytool_v0-4.ps1) to any name you like - but to function properly, preventsleep.ps1, media_copytool_README_v0-5.rtf, and media_copytool_fileshistory.json must not be renamed.\par
+{\pntext\f2\'B7\tab}You can move the script any time you want - but again, please also copy all other needed files to the new directory.\par
+
+\pard{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-360\li1080\sl252\slmult1\qj If the script won't work any more (weird errors,...), please check if the path contains any spaces (spaces are the devil's work!). If the spaces prevent it from working, please send the error-message plus your script's path to me for mending it.\fs22\par
+
+\pard{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-360\li720\sl252\slmult1\qj\fs20 Please don't use brackets \highlight1\f1 [ ]\highlight0\f0  in paths or any text - they will most likely screw up everything. Parentheses \highlight1\f1 ( )\highlight0\f0  will work without any problem. (It's on the fix-list!)\fs22\par
+
+\pard\widctlpar\sa160\sl252\slmult1\qj\par
+\par
+\par
+
+\pard\widctlpar\sa160\sl252\slmult1\qc\ul\b\fs28 DEUTSCH - ENGLISH VERSION ABOVE\ulnone\b0\fs22\lang7\par
+
+\pard\sa200\sl276\slmult1\par
+
+\pard\widctlpar\sa160\sl252\slmult1\qc\b\lang3079 Flos Media-Copytool v0.5 by Florian Dolzer, 2017\par
+
+\pard\widctlpar\sa160\sl252\slmult1\qj\fs20 Kurzes Vorwort: \b0 Sachen in Arial und ohne Markierung sind regul\'e4rer Text, w\'e4hrend Sachen in Consolas und mit grauer Markierung Code sind. Z.B.: Das hier ist das schnellste "Hello-World"-Script in PowerShell, das mir einf\'e4llt: \highlight1\f1\fs22 Write-Host "Hello, World!"\fs20\par
+\highlight0\f0\fs22\par
+
+\pard\widctlpar\sl240\slmult1\qj\ul\b\fs24 RECHTLICHES:\par
+\ulnone\b0\fs20 Ich m\'f6chte ausdr\'fccklich betonen, dass dieses Skript mit einer gewissen Vorsicht bedient werden sollte - ich habe es zwar selbst ausgiebig getestet (und nutze es auch im produktiven Bereich), aber von mir \'fcbersehene Fehler, die zum L\'f6schen all eurer wertvollen Erinnerungen (inklusive, aber nicht beschr\'e4nkt auf das Nackt-Selfie mit George Clooney am Strand) oder zur Spontanentz\'fcndung eurer Katze f\'fchren, sind weder auszuschlie\'dfen, noch hafte ich f\'fcr eben jene.\par
+\b\par
+Es handelt sich beim Programm um freie Software ohne irgendeine Garantie.\par
+\b0 Das Skript ist Open-Source (zumindest die von mir erstellten Teile, dazu gleich) - Es w\'e4re allerdings nett, wenn bei Nutzung in anderen Programmen durch euch eine Referenz zu meinem "Werk" (und dem der von mir genannten Dritten) gesetzt wird. Au\'dferdem w\'fcrde ich mich \'fcber Verbesserungsvorschl\'e4ge freuen.\par
+Der Gro\'dfeil des Skripts wurde von mir ("h\'f6chstpers\'f6nlich" <- personal pun ;-) ) geschrieben - einige Inhalte kommen aus dem WWW, sind aber stark ("bis zur Unkenntlichkeit") modifiziert worden. Teile, die eindeutig noch ihrem Ursprung treu sind, wurden im Skript mit "\highlight1\f1\fs22 CREDIT\highlight0\f0\fs20 "-Tags versehen.\par
+\par
+\par
+\ul\b\fs24 FEATURES:\ulnone\b0\fs20\par
+Einfach erkl\'e4rt:\par
+
+\pard{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-360\li720\sl240\slmult1\qj Zu allererst: es gibt eine GUI (also graphische Benutzeroberfl\'e4che). ;-)\par
+
+\pard{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-360\li1080\sl240\slmult1\qj ...Es kann aber auch alles via PowerShell selbst eingestellt werden - Siehe "PARAMETER". Gut, falls man .NET Framework nicht installieren kann (theoretisch funktioniert es so auch mit PS 6, auch auf Linux*/OSX*! [ * ... Ist aber nicht getestet. Vermutlich sind die Pfade ein Problem, xcopy d\'fcrfte auch hapern...wenn mal Zeit ist werde ich mir das ansehen. ;-) ])\par
+
+\pard{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-360\li720\sl240\slmult1\qj Benutzer-Entscheidung bez. der zu suchenden Datei-Formate im Quellverzeichnis (und allen seinen Unterordnern) - es gibt ein paar voreingestellte Varianten, es k\'f6nnen aber auch manuell Formate hinzugef\'fcgt werden (siehe "PARAMETER", \highlight1\f1 -CustomFormatsEnable\highlight0\f0  & \highlight1\f1 -CustomFormats\highlight0\f0 )\fs22\par
+{\pntext\f2\'B7\tab}\fs20 Benutzer-Entscheidung bez. Unterordner-Stil (Keine Unterordner oder einige Datums-basierte Vorlagen, siehe "PARAMETER", \highlight1\f1 -OutputSubfolderStyle\highlight0\f0 )\par
+{\pntext\f2\'B7\tab}F\'e4higkeit, sich bereits (erfolgreich) kopierte Dateien durch die Pflege einer JSON-Tabelle zu "merken", somit Verhinderung von Duplikaten.\par
+
+\pard{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-360\li1080\sl240\slmult1\qj Benutzer-Entscheidung bez. dieser History-Datei: benutzen, ignorieren, l\'f6schen (siehe "PARAMETER", \highlight1\f1 -HistoryFile\highlight0\f0  & \highlight1\f1 -WriteHist\highlight0\f0 )\par
+{\pntext\f2\'B7\tab}Zus\'e4tzlich kann der Zielpfad (und seine Unterordner) auf bereits fr\'fcher kopierte Dateien untersucht werden, um Duplikate selbst dann zu vermeiden, wenn andere Kopier-Techniken eingesetzt werden/wurden (siehe "PARAMETER", \highlight1\f1 -CheckOutputDupli\highlight0\f0 ).\par
+
+\pard{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-360\li720\sl240\slmult1\qj Kopiert die Dateien ohne System-Cache - das Programm ist wirklich fertig, wenn es fertig ist.\par
+
+\pard{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-360\li1080\sl240\slmult1\qj Falls bereits eine Datei mit gleichem Namen vorhanden ist, wird an die neue Datei "copyXYZ" angeh\'e4ngt (XYZ entspricht der ersten freien Zahl >= 1).\par
+
+\pard{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-360\li720\sl240\slmult1\qj Verifiziert die kopierten Dateien nach dem Kopieren mit SHA1-Hashes und vergleicht diese.\par
+
+\pard{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-360\li1080\sl240\slmult1\qj Falls die Verifikation scheitert kann ein zweiter Versuch gestartet werden.\par
+{\pntext\f2\'B7\tab}Falls die Verifikation gelingt werden alle gesammelten Datei-Attribute in die History-Datei geschrieben.\par
+{\pntext\f2\'B7\tab}Falls die Verifikation (nochmals) scheitert werden die fehlerhaften Dateien in "dateiname.ext_broken" umbenannt - so sind sie leicht auffindbar.\par
+
+\pard{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-360\li720\sl240\slmult1\qj F\'e4higkeit, alle Einstellungen f\'fcr k\'fcnftige Durchl\'e4ufe zu speichern.\par
+{\pntext\f2\'B7\tab}Es werden keine Dateien im Quellverzeichnis (und seinen Unterordnern) gel\'f6scht, w\'e4hrend im Zielverzeichnis (samt Unterordnern) \b nur\b0  "dateiname.ext_broken"-Dateien vor dem zweiten Kopier-Versuch gel\'f6scht werden.\par
+
+\pard{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-360\li1080\sl240\slmult1\qj Somit ist es unm\'f6glich*, durch dieses Programm Dateien zu verlieren. ( * ... Ich habe mein Bestes gegeben, dieses Programm zum L\'f6schen der Dateien zu bringen - und bin gescheitert. Falls ihr es schafft seid ihr entweder genial - oder sehr dumm. ;-) )\par
+
+\pard{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-360\li720\sl240\slmult1\qj Das "beigelegte" Skript "preventsleep.ps1" verhindert einne Standby w\'e4hrend der Ausf\'fchrung - somit braucht man die Energieeinstellungen des Rechners nicht mal dann \'fcberpr\'fcfen, wenn man 128TB an Dateien kopieren m\'f6chte.\par
+
+\pard\sl240\slmult1\qj\par
+
+\pard\widctlpar\sl240\slmult1\qj Schritt f\'fcr Schritt:\par
+
+\pard{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-360\li720\sl240\slmult1\qj 1-999) Einfach selbst ins Skript schauen - vor allem die "\highlight1\f1\fs22 DEFINITION\highlight0\f0\fs20 "-Tags d\'fcrften interessant sein.\par
+
+\pard\widctlpar\sl240\slmult1\qj\par
+\ul\b\fs24 STARTEN:\ulnone\b0\fs20\par
+
+\pard{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-360\li720\sl240\slmult1\qj Powershell \'f6ffnen (<Win>+<R> -> \highlight1\f1 powershell\highlight0  \f0 oder  via Start-Men\'fc).\par
+
+\pard{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-360\li1080\sl240\slmult1\qj Entweder zum das Skript enthaltenden Pfad via Set-Location (e.g. \highlight1\f1 Set-Location "D:\\skript_ordner"\highlight0\f0 ) navigieren und dann via \highlight1\f1 .\\skriptname\highlight0\f0  starten...\par
+{\pntext\f2\'B7\tab}...oder gleich den ganzen Pfad angeben: \highlight1\f1 "D:\\skript_ordner\\skript name.ps1"\highlight0\f0  (Anf\'fchrungszeichen nur notwendig, falls Pfad Leerzeichen beinhaltet)\par
+
+\pard\sl240\slmult1\qj\par
+
+\pard\widctlpar\sl240\slmult1\qj Falls das nicht funktioniert muss vermutlich erst noch die execution-policy in PowerShell eingestellt werden:\par
+
+\pard{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-360\li720\sl240\slmult1\qj siehe {{\field{\*\fldinst{HYPERLINK https://superuser.com/a/106363/703240 }}{\fldrslt{https://superuser.com/a/106363/703240\ul0\cf0}}}}\f0\fs20\par
+{\pntext\f2\'B7\tab}Im Start-Men\'fc die PowerShell suchen, Rechtsklick -> "Als Administrator ausf\'fchren"\par
+{\pntext\f2\'B7\tab}\highlight1\f1 set-executionpolicy remotesigned\highlight0\f0  eingeben - fertig!\par
+
+\pard\widctlpar\sl240\slmult1\qj\par
+Es ist auch m\'f6glich, das Skript via Doppelklick zu \'f6ffnen - dazu das beigelegte Skript "powershell_doubleclick-behavior.ps1" \'f6ffnen. Starten und Staunen! ;-)\par
+\par
+\par
+\ul\b\fs24 PARAMETER:\ulnone\b0\fs20\par
+Parameter sind leicht zu \'e4ndernde Werte. Das Media-Copytool kann diese via Kommandozeile oder graphischem Benutzerinterface aufnehmen und sie (falls gew\'fcnscht) auch f\'fcr die Zukunft speichern. Letzteres ist besonders dann n\'fctzlich, wenn man oft/immer dieselben Pfade und/oder Optionen ben\'f6tigt (z.B. RAW-Bilder von einer SD-Karte in "J:\\" nach "D:\\Meine_Bilder" kopieren.)\par
+\par
+
+\pard\widctlpar\ri-22\sl240\slmult1\qj Erkl\'e4rung der Parameter (CLI - die GUI hat Tooltips ;-) ):\par
+\par
+\highlight1\f1 -showparams\highlight0\f0\tab\tab :\tab Zeigt die Parameter an, wie sie im Skript gespeichert sind. \highlight1\f1 1\highlight0\f0  \tab\tab\tab\tab aktiviert, \highlight1\f1 0\highlight0\f0  deaktiviert.\par
+\highlight1\f1 -GUI_CLI_Direct\highlight0\f0\tab :\tab\highlight1\f1 "GUI"\highlight0\f0\tab\tab = Graphische Benutzeroberfl\'e4che\par
+\tab\tab\tab\tab\highlight1\f1 "CLI"\highlight0\f0\tab\tab = Interktive Kommandozeilen-Eingabe\par
+\tab\tab\tab\tab\highlight1\f1 "Direct"\highlight0\f0\tab = Start mit den (vor)gegebenen Parametern.\par
+\highlight1\f1 -InputPath\highlight0\f0\tab\tab :\tab Quell-Pfad\par
+\highlight1\f1 -OutputPath\highlight0\f0\tab\tab :\tab Ziel-Pfad\par
+\highlight1\f1 -MirrorEnable\tab\highlight0\f0\tab :\tab Wert \highlight1\f1 1\highlight0\f0  aktiviert zus\'e4tzlichen Ziel-Pfad.\par
+\highlight1\f1 -MirrorPath\highlight0\f0\tab\tab :\tab Zus\'e4tzlicher Ziel-Pfad\par
+\highlight1\f1 -PresetFormats\highlight0\f0\tab :\tab Formate, nach denen gesucht werden soll.\par
+\tab\tab\tab\tab\highlight1\f1 Can\highlight0\f0  = *.cr2,\par
+\tab\tab\tab\tab\highlight1\f1 Nik\highlight0\f0  = *.nrw & *.nef,\par
+\tab\tab\tab\tab\highlight1\f1 Son\highlight0\f0  = *.arw,\par
+\tab\tab\tab\tab\highlight1\f1 Jpg\highlight0\f0  = *.jpg & *.jpeg,\par
+\tab\tab\tab\tab\highlight1\f1 Mov\highlight0\f0  = *.mov & *.mp4,\par
+\tab\tab\tab\tab\highlight1\f1 Aud\highlight0\f0  = *.wav & *.mp3 & *.m4a\par
+\highlight1\f1 -CustomFormatsEnable\highlight0\f0 :\tab (De)aktiviere zus\'e4tzliche benutzerdefinierte Formate.  \highlight1\f1 1\highlight0\f0  \tab\tab\tab\tab\tab aktiviert, \highlight1\f1 0\highlight0\f0  deaktiviert.\par
+\highlight1\f1 -CustomFormats\highlight0\f0\tab :\tab Benutzerdefinierte Formate, mit Kommata getrennt.\par
+\tab\tab\tab\tab\highlight1\f1 "*"\highlight0\f0  sucht nach ALLEN Dateien,\par
+\tab\tab\tab\tab\highlight1\f1 "*.ext1","*.ext2"\highlight0\f0  sucht nach Dateien mit den \tab\tab\tab\tab\tab entsprechenden Endungen,\par
+\tab\tab\tab\tab\highlight1\f1 "media*"\highlight0\f0  sucht alle dateien, die mit "media" beginnen, \tab\tab\tab\tab\tab unabh\'e4ngig von ihrem Format und was nach "media" kommt.\par
+\highlight1\f1 -OutputSubfolderStyle\highlight0\f0 :\tab\highlight1\f1 "none"\highlight0\f0  = Kein(e) Unterordner\par
+\tab\tab\tab\tab\highlight1\f1 "yyyy-mm-dd"\highlight0\f0\tab = z.B. 2017-01-31\par
+\tab\tab\tab\tab\highlight1\f1 "yyyy_mm_dd"\highlight0\f0\tab = z.B. 2017_01_31\par
+\tab\tab\tab\tab\highlight1\f1 "yy-mm-dd"\highlight0\f0\tab = z.B. 17-01-31\par
+\tab\tab\tab\tab\highlight1\f1 "yy_mm_dd"\highlight0\f0\tab = z.B. 17_01_31\par
+\highlight1\f1 -HistoryFile\highlight0\f0\tab\tab :\tab\highlight1\f1 "use"\highlight0\f0\tab\tab : History-Datei nach bereits kopierten \tab\tab\tab\tab\tab\tab\tab   Dateien durchsuchen.\par
+\tab\tab\tab\tab\highlight1\f1 "delete"\highlight0\f0\tab : History-Datei l\'f6schen/\'fcberschreiben.\par
+\tab\tab\tab\tab\highlight1\f1 "ignore"\highlight0\f0\tab : History-Datei ignorieren.\par
+\highlight1\f1 -WriteHist\highlight0\f0\tab\tab :\tab (De)aktiviere Schreiben von Eigenschaften der neuen \tab\tab\tab\tab\tab Dateien in History-Datei. \highlight1\f1 1\highlight0\f0  aktiviert, \highlight1\f1 0\highlight0\f0  deaktiviert.\par
+\highlight1\f1 -InputSubfolderSearch\highlight0\f0 :\tab (De)aktiviere suche nach Dateien in Unterordnern des \tab\tab\tab\tab\tab Quellpfads. \highlight1\f1 1\highlight0\f0  aktiviert, \highlight1\f1 0\highlight0\f0  deaktiviert.\par
+\highlight1\f1 -DupliCompareHashes\highlight0\f0\tab :\tab (De)aktiviere Vergleich von Hashes aller gefundenen \tab\tab\tab\tab\tab Dateien - der Vorgang wird hierdurch gerade bei vielen \tab\tab\tab\tab\tab Dateien langsamer werden. \highlight1\f1 1\highlight0\f0  aktiviert, \highlight1\f1 0\highlight0\f0  deaktiviert.\par
+\highlight1\f1 -CheckOutputDupli\highlight0\f0\tab :\tab (De)aktiviere zus\'e4tzliche Duplikats-Verifikation (Vergleich mit \tab\tab\tab\tab bereits im Zielpfad vorhandenen Dateien). \highlight1\f1 1\highlight0\f0  aktiviert, \highlight1\f1 0\highlight0\f0  \tab\tab\tab\tab\tab deaktiviert.\par
+\highlight1\f1 -PreventStandby\highlight0\f0\tab :   \tab Verhindert Standby durch Ausf\'fchrung des Skripts \tab\tab\tab\tab\tab preventsleep.ps1. \highlight1\f1 1\highlight0\f0  aktiviert, \highlight1\f1 0\highlight0\f0  deaktiviert..\par
+\highlight1\f1 -RememberInPath\highlight0\f0\tab :\tab Quellpfad merken. \highlight1\f1 1\highlight0\f0  aktiviert, \highlight1\f1 0\highlight0\f0  deaktiviert.\par
+\highlight1\f1 -RememberOutPath\highlight0\tab\f0 :\tab Zielpfad merken. \highlight1\f1 1\highlight0\f0  aktiviert, \highlight1\f1 0\highlight0\f0  deaktiviert.\par
+\highlight1\f1 -RememberMirrorPath\highlight0\tab\f0 :\tab Zus\'e4tzlichen Zielpfad merken. \highlight1\f1 1\highlight0\f0  aktiviert, \highlight1\f1 0\highlight0\f0  deaktiviert.\par
+\highlight1\f1 -RememberSettings\highlight0\tab\f0 :\tab Einstellungen merken (exkl. Remember-Parameter).\par
+\tab\tab\tab\tab\highlight1\f1 1\highlight0\f0  aktiviert, \highlight1\f1 0\highlight0\f0  deaktiviert.\par
+\highlight1\f1 -debug\highlight0\f0\tab\tab\tab :\tab\highlight1\f1 1\highlight0  \f0 Zeigt zus\'e4tzliche Infos in der Konsole, \highlight1\f1 2\highlight0\f0  pausiert nach \tab\tab\tab\tab\tab jedem Schritt im Skript. Standard ist \highlight1\f1 0\highlight0\f0 .\par
+\par
+Man muss nicht alle Parameter immer angeben: werden sie nicht spezifiziert, so rufen sie die letzte gespeicherte Einstellung ab (\highlight1\f1 -showparams 1\highlight0\f0  zeigt diese an). Ein paar Beispiele:\par
+\par
+Canon-RAWs, JPEGs, Movies und XMLs von F:\\ nach D:\\ kopieren -- History-Datei l\'f6schen -- Nicht nach Duplikaten suchen im Zielpfad -- Alle Dateien in Unterordner des Schemas jjjj-mm-dd kopieren -- Zeige GUI (in Deutsch) -- Zielverzeichnis und Einstellungen merken, nicht aber das Quellverzeichnis:\par
+\par
+
+\pard\widctlpar\ri-22\sl240\slmult1\qc\highlight1\f1 .\\media_copytool_v0-5.ps1 -InputPath "F:\\" -OutputPath "D:\\" -PresetFormats "Can","Jpg","Mov" -CustomFormatsEnable 1 -CustomFormats "*.xml" -CheckOutputDupli 0 -HistoryFile 1 -OutputSubfolderStyle 1 -GUI_CLI_Direct "GUI" -RememberInPath 0 -RememberOutPath 1 -RememberSettings 1\par
+\highlight0\f0\par
+
+\pard\widctlpar\ri-22\sl240\slmult1\qj Will man nun alles gleich machen, nur den Quellpfad auf G:\\ setzen und die GUI deaktivieren, so gen\'fcgt:\par
+\par
+
+\pard\widctlpar\ri-22\sl240\slmult1\qc\highlight1\f1 .\\media_copytool_v0-5.ps1 -InputPath "G:\\" -GUI_CLI_Direct "direct"\par
+
+\pard\widctlpar\ri-22\sl240\slmult1\qj\par
+\highlight0\b\f0 Tipp: \b0 Falls \highlight1\f1 .\\media_copytool_v0-5.ps1\highlight0\f0  die GUI nicht anzeigt, folgendes versuchen:\par
+
+\pard\widctlpar\ri-22\sl240\slmult1\qc\highlight1\f1 .\\media_copytool_v0-5.ps1 -GUI_CLI_Direct "GUI" -RememberSettings 1\highlight0\f0\par
+
+\pard\widctlpar\ri-22\sl240\slmult1\qj\par
+\fs22\par
+
+\pard\widctlpar\sl240\slmult1\qj\ul\b\fs24 SONSTIGES:\ulnone\b0\fs20\par
+
+\pard{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-360\li720\sl252\slmult1\qj Um korrekt zu funktionieren ben\'f6tigt das Skript Schreibrechte in seinem Verzeichnis - C:\\ sollte daher nicht verwendet werden. ;-)\fs22\par
+{\pntext\f2\'B7\tab}\fs20 Dieses Skript sucht alle f\'fcr die Funktion ben\'f6tigten Dateien in seinem eigenen Verzeichnis (z.B. D:\\skript ordner\\).\fs22\par
+{\pntext\f2\'B7\tab}\fs20 Das Skript selbst (media_copytool_v0-5.ps1) kann man umbenennen - nicht aber preventsleep.ps1, media_copytool_README_v0-5.rtf und media_copytool_fileshistory.json\par
+{\pntext\f2\'B7\tab}Das Skript kann jederzeit in ein anderes Verzeichnis verschoben werden - aber bitte die anderen Dateien mit\'fcbersiedeln.\par
+
+\pard{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-360\li1080\sl252\slmult1\qj Falls das Skript nicht (mehr) funktioniert (komische Fehlermeldungen,...), bitte die Pfade auf Leerzeichen \'fcberpr\'fcfen und diese ggf. mit Unterstrichen ersetzen. (Leerzeichen sind b\'f6se!). Falls es dann geht, bitte die Fehlermeldung und den Pfad-Namen (mit Leerzeichen) an mich senden.\par
+
+\pard{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-360\li720\sa200\sl276\slmult1 Bitte keine eckigen Klammern \highlight1\f1 [ ]\highlight0\f0  in den Pfaden oder anderem Text verwenden - das Skript kann damit nicht umgehen. Normale Klammern \highlight1\f1 ( )\highlight0\f0  sind kein Problem.  (Ist auf der Fix-Liste!)\fs22\lang7\par
+}
+ 
