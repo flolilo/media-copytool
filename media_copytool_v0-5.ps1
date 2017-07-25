@@ -87,10 +87,10 @@
         3 - additional speedtest
 
     .INPUTS
-        None.
+        "media_copytool_filehistory.json" if -HistoryFile is set to "use".
 
     .OUTPUTS
-        "media_copytool_progress.txt" & "media_copytool_filehistory.csv", both in the script's directory.
+        "media_copytool_progress.txt" & "media_copytool_filehistory.json", both in the script's directory.
     
     .EXAMPLE
         Start Media-Copytool with the Graphical user interface:
