@@ -10,86 +10,104 @@
     .NOTES
         Version:        0.5 Alpha
         Creation Date:  25.7.2017
-        Legal stuff: This program is free software. It comes without any warranty, to the extent permitted by
-        applicable law. Most of the script was written by myself (or heavily modified by me when searching for solutions
-        on the WWW). However, some parts are copies or modifications of very genuine code - see
-        the "CREDIT"-tags to find them.
+        Legal stuff:    Some parts are copies or modifications of very genuine code - see the "CREDIT:"-tags to find them.
 
     .PARAMETER showparams
-        Integer. Value of 1 shows the pre-set parameters.
+        Valid range: 0 (deactivate), 1 (activate)
+        If enabled, it shows the pre-set parameters, so you can see what would happen if you e.g. try 'media_copytool.ps1 -GUI_CLI_Direct "direct"'
     .PARAMETER GUI_CLI_Direct
-        String. Sets the mode in which the script will guide the user.
-        "GUI" - Graphical User Interface
-        "CLI" - interactive console
-        "direct" - instant execution with given parameters.
+        Sets the mode in which the script will guide the user.
+        Valid options:
+            "GUI" - Graphical User Interface (default)
+            "CLI" - interactive console
+            "direct" - instant execution with given parameters.
     .PARAMETER InputPath
-        String. Path from which files should be copied.
+        Path from which files will be copied. At the moment, paths (as well as files) that contain brackets [ ] are not allowed.
     .PARAMETER OutputPath
-        String. Path to which files should be copied.
+        Path to copy the files to. ATM, paths that contain brackets [ ] are not allowed.
     .PARAMETER MirrorEnable
-        Integer. Value of 1 enables copy to second path.
+        Valid range: 0 (deactivate), 1 (activate)
+        If enabled, it enables copying to a second output-path that is specified with -MirrorPath.
     .PARAMETER MirrorPath
-        String. Second path to which files should be copied.
+        Second path to which files will  be copied. Only used if -MirrorEnable is set to 1
     .PARAMETER PresetFormats
-        Array. Preset formats for some manufacturers and file-types.
+        Preset formats for some common file-types.
         Valid options:
-        "Can" (Canon, .CR2),
-        "Nik" (Nikon, .NRW, .NEF)
-        "Son" (Sony, .ARW)
-        "Jpeg" (.JPG, .JPEG)
-        "Mov" (Movies, .MP4, .MOV)
-        "Aud" (Audio, .WAV, .MP3, .M4A)
-        For multiple choices, separate with commata.
+            "Can" - *.CR2
+            "Nik" - *.NRW + *.NEF
+            "Son" - *.ARW
+            "Jpg" - *.JPG + *.JPEG
+            "Mov" - *.MP4 + *.MOV
+            "Aud" - *.WAV + *.MP3 + *.M4A
+        For multiple choices, separate them with commata, e.g. '-PresetFormats "Can","Nik"'.
     .PARAMETER CustomFormatsEnable
-        Integer. Value of 1 enables input of custom formats
+        Valid range: 0 (deactivate), 1 (activate)
+        If enabled, it enables the use of custom formats specified with -CustomFormats.
     .PARAMETER CustomFormats
-        Array. User-defined, custom formats. Asterisks * are wildcards.
-        Specify in quotes and separate multiple entries with commata.
+        User-defined, custom search-terms. Asterisks * are wildcards.
+        Examples:
+            "*" will look for all files inside -InputPath
+            "media*" will look for all files inside -InputPath that start with "media", regardless their extension. E.g. media_copytool.ps1, media123.ini,...
+        Specify your terms inside quotes and separate multiple entries with commata.
     .PARAMETER OutputSubfolderStyle
-        String. Sets the creation of subfolders in the output-path(s) with the last edit time of each file.
+        Creation-style of subfolders for files in -OutputPath. The date will be taken from the files' last edit time.
         Valid options:
-        "none"
-        "yyyy-mm-dd"
-        "yyyy_mm_dd"
-        "yy-mm-dd"
-        "yy_mm_dd"
-    .PARAMETER HistoryFile
-        String. Sets the usage of the history-file for checking for duplicates before copying.
+            "none"          -   No subfolders in -OutputPath.
+            "yyyy-mm-dd"    -   E.g. 2017-01-31
+            "yyyy_mm_dd"    -   E.g. 2017_01_31
+            "yy-mm-dd"      -   E.g. 17-01-31
+            "yy_mm_dd"      -   E.g. 17_01_31
+    .PARAMETER UseHistFile
+        Valid range: 0 (deactivate), 1 (activate)
+        The history-file is a fast way to rule out the creation of duplicates by comparing the files from -InputPath against the values stored earlier.
+        If enabled, it will use the history-file to prevent duplicates.
+    .PARAMETER WriteHistFile
+        The history-file is a fast way to rule out the creation of duplicates by comparing the files from -InputPath against the values stored earlier.
         Valid options:
-        "use"
-        "delete"
-        "ignore"
-    .PARAMETER WriteHist
-        Integer. Value of 1 adds newly copied files to history-file.
+            "No"        -   New values will NOT be added to the history-file, the old values will remain.
+            "Yes"       -   Old + new values will be added to the history-file, with old values still saved.
+            "Overwrite" -   Old values will be deleted, new values will be written. Best to use after the card got formatted, as it will make the history-file smaller and therefore faster.
     .PARAMETER InputSubfolderSearch
-        Integer. Value of 1 enables file-search in subfolders of the input-path.
+        Valid range: 0 (deactivate), 1 (activate)
+        If enabled, it enables file-search in subfolders of the input-path.
     .PARAMETER DupliCompareHashes
-        Integer. Value of 1 additionally checks for duplicates via hash-calculation of all input-files (slow!)
+        Valid range: 0 (deactivate), 1 (activate)
+        If enabled, it additionally checks for duplicates via hash-calculation of all input-files (slow!)
     .PARAMETER CheckOutputDupli
-        Integer. Value of 1 checks for already copied files in the output-path (and its subfolders).
+        Valid range: 0 (deactivate), 1 (activate)
+        If enabled, it checks for already copied files in the output-path (and its subfolders).
     .PARAMETER PreventStandby
-        Integer. Value of 1 runs additional script to prevent automatic standby or shutdown as long as media-copytool is running.
+        Valid range: 0 (deactivate), 1 (activate)
+        If enabled, it runs additional script to prevent automatic standby or shutdown as long as media-copytool is running.
     .PARAMETER RememberInPath
-        Integer. Value of 1 remembers the input-path for future script-executions.
+        Valid range: 0 (deactivate), 1 (activate)
+        If enabled, it remembers the value of -InputPath for future script-executions.
     .PARAMETER RememberOutPath
-        Integer. Value of 1 remembers the output-path for future script-executions.
+        Valid range: 0 (deactivate), 1 (activate)
+        If enabled, it remembers the value of -OutputPath for future script-executions.
     .PARAMETER RememberMirrorPath
-        Integer. Value of 1 remembers the mirror-path for future script-executions.
+        Valid range: 0 (deactivate), 1 (activate)
+        If enabled, it remembers the value of -MirrorPath for future script-executions.
     .PARAMETER RememberSettings
-        Integer. Value of 1 remembers all settings (excl. remember-parameters, help, and paths) for future script-executions.
+        Valid range: 0 (deactivate), 1 (activate)
+        If enabled, it remembers all parameters (excl. '-Remember*', '-showparams', and '-*Path') for future script-executions.
     .PARAMETER debug
-        Integer. Does what it says: gives more verbose so one can see what is happening (and where it goes wrong).
+        Gives more verbose so one can see what is happening (and where it goes wrong).
         Valid options:
-        0 - no debug (default)
-        1 - only stop on end
-        2 - pause after every function
-        3 - additional speedtest
+            0 - no debug (default)
+            1 - only stop on end
+            2 - pause after every function
+            3 - additional speedtest (ATM not implemented)
 
     .INPUTS
-        "media_copytool_filehistory.json" if -HistoryFile = "use".
+        "preventsleep.ps1" if '-PreventStandby 1',
+        "media_copytool_filehistory.json" if '-UseHistFile 1'
+        Files must be located in the script's directory.
 
     .OUTPUTS
-        "media_copytool_progress.txt" & "media_copytool_filehistory.json", both in the script's directory.
+        "media_copytool_progress.txt" if '-PreventStandby 1',
+        "media_copytool_filehistory.json" if '-WriteHistFile "Yes"' or '-WriteHistFile "Overwrite"'
+        Files will be located in the script's directory.
     
     .EXAMPLE
         Start Media-Copytool with the Graphical user interface:
@@ -98,20 +116,20 @@
 param(
     [int]$showparams=0,
     [string]$GUI_CLI_Direct="GUI",
-    [string]$InputPath="D:\Temp\powershell\in-pfad",
-    [string]$OutputPath="D:\Temp\powershell\out ( ) pfad",
+    [string]$InputPath="G:\",
+    [string]$OutputPath="D:\Eigene_Bilder\_CANON",
     [int]$MirrorEnable=0,
     [string]$MirrorPath="D:\Temp\powershell\mirr ( ) pfad",
-    [array]$PresetFormats=("Can","Jpg"),
+    [array]$PresetFormats=("Can","Jpg","Mov"),
     [int]$CustomFormatsEnable=0,
     [array]$CustomFormats=("*.xml","*.xmp"),
     [string]$OutputSubfolderStyle="yyyy-MM-dd",
-    [string]$HistoryFile="use",
-    [int]$WriteHist=1,
+    [int]$UseHistFile=1,
+    [string]$WriteHistFile="Yes",
     [int]$InputSubfolderSearch=1,
     [int]$DupliCompareHashes=0,
     [int]$CheckOutputDupli=0,
-    [int]$PreventStandby=1,
+    [int]$PreventStandby=0,
     [int]$RememberInPath=0,
     [int]$RememberOutPath=0,
     [int]$RememberMirrorPath=0,
@@ -119,17 +137,17 @@ param(
     [int]$debug=0
 )
 # First line of "param" (for remembering/restoring parameters):
-[int]$paramline = 99
+[int]$paramline = 120
 
 # Get all error-outputs in English:
 [Threading.Thread]::CurrentThread.CurrentUICulture = 'en-US'
 
-# Usual ErrorAction: Stop: https://stackoverflow.com/a/21260623/8013879
-# Set standard ErrorAction to 'Stop':
-$PSDefaultParameterValues = @{}
-$PSDefaultParameterValues += @{'*:ErrorAction' = 'Stop'}
-$ErrorActionPreference = 'Stop'
-
+# CREDIT: Set default ErrorAction to Stop: https://stackoverflow.com/a/21260623/8013879
+if($debug -eq 0){
+    $PSDefaultParameterValues = @{}
+    $PSDefaultParameterValues += @{'*:ErrorAction' = 'Stop'}
+    $ErrorActionPreference = 'Stop'
+}
 
 if($showparams -ne 0){
     Write-Host "Flo's Media-Copytool Parameters:`r`n" -ForegroundColor Green
@@ -151,10 +169,10 @@ if($showparams -ne 0){
     Write-Host $CustomFormats -ForegroundColor Yellow
     Write-Host "-OutputSubfolderStyle`t=`t" -NoNewline -ForegroundColor Cyan
     Write-Host $OutputSubfolderStyle -ForegroundColor Yellow
-    Write-Host "-HistoryFile`t`t=`t" -NoNewline -ForegroundColor Cyan
-    Write-Host $HistoryFile -ForegroundColor Yellow
-    Write-Host "-WriteHist`t`t=`t" -NoNewline -ForegroundColor Cyan
-    Write-Host $WriteHist -ForegroundColor Yellow
+    Write-Host "-UseHistFile`t`t=`t" -NoNewline -ForegroundColor Cyan
+    Write-Host $UseHistFile -ForegroundColor Yellow
+    Write-Host "-WriteHistFile`t`t=`t" -NoNewline -ForegroundColor Cyan
+    Write-Host $WriteHistFile -ForegroundColor Yellow
     Write-Host "-InputSubfolderSearch`t=`t" -NoNewline -ForegroundColor Cyan
     Write-Host $InputSubfolderSearch -ForegroundColor Yellow
     Write-Host "-CheckOutputDupli`t=`t" -NoNewline -ForegroundColor Cyan
@@ -316,10 +334,20 @@ Function Get-UserValues(){
                 break
             }
         }
-        # history-file
+        # use history-file
         while($true){
-            $script:HistoryFile = Read-Host "How to treat history-file? Options: `"Use`",`"Delete`",`"Ignore`" (all w/o quotes)."
-            if($script:HistoryFile.Length -eq 0 -or ("Use" -notin $script:HistoryFile -and "Delete" -notin $script:HistoryFile -and "Ignore" -notin $script:HistoryFile)){
+            $script:UseHistFile = Read-Host "How to treat history-file? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+            if($script:UseHistFile -notin (0..1)){
+                Write-Host "Invalid choice!" -ForegroundColor Magenta
+                continue
+            }else{
+                break
+            }
+        }
+        # write history-file
+        while($true){
+            $script:WriteHistFile = Read-Host "Write newly copied files to history-file? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+            if($script:WriteHistFile.Length -eq 0 -or ("yes" -notin $script:WriteHistFile -and "no" -notin $script:WriteHistFile -and "overwrite" -notin $script:WriteHistFile)){
                 Write-Host "Invalid choice!" -ForegroundColor Magenta
                 continue
             }else{
@@ -350,16 +378,6 @@ Function Get-UserValues(){
         while($true){
             $script:CheckOutputDupli = Read-Host "Additionally check output-path for already copied files? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
             if($script:CheckOutputDupli -notin (0..1)){
-                Write-Host "Invalid choice!" -ForegroundColor Magenta
-                continue
-            }else{
-                break
-            }
-        }
-        # write to history-file
-        while($true){
-            $script:WriteHist = Read-Host "Write newly copied files to history-file? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
-            if($script:WriteHist -notin (0..1)){
                 Write-Host "Invalid choice!" -ForegroundColor Magenta
                 continue
             }else{
@@ -444,16 +462,16 @@ Function Get-UserValues(){
             $script:CustomFormats = $script:WPFtextBoxCustom.Text.Replace(" ",'').Split($separator,$option)
             # subfolder-style
             $script:OutputSubfolderStyle = $(if($script:WPFcomboBoxOutSubStyle.SelectedIndex -eq 0){"none"}elseif($script:WPFcomboBoxOutSubStyle.SelectedIndex -eq 1){"yyyy-mm-dd"}elseif($script:WPFcomboBoxOutSubStyle.SelectedIndex -eq 2){"yyyy_mm_dd"}elseif($script:WPFcomboBoxOutSubStyle.SelectedIndex -eq 3){"yy-mm-dd"}elseif($script:WPFcomboBoxOutSubStyle.SelectedIndex -eq 4){"yy_mm_dd"})
-            # history-file
-            $script:HistoryFile = $(if($script:WPFcomboBoxHistFile.SelectedIndex -eq 0){"use"}elseif($script:WPFcomboBoxHistFile.SelectedIndex -eq 1){"delete"}elseif($script:WPFcomboBoxHistFile.SelectedIndex -eq 2){"ignore"})
+            # use history-file
+            $script:UseHistFile = $(if($script:WPFcheckBoxUseHistFile.IsChecked -eq $true){1}else{0})
+            # write history-file
+            $script:WriteHistFile = $(if($script:WPFradioButtonWriteHistFileYes.IsChecked -eq $true){"yes"}elseif($script:WPFradioButtonWriteHistFileNo.IsChecked -eq $true){"no"}elseif($script:WPFradioButtonWriteHistFileOverwrite.IsChecked -eq $true){"Overwrite"})
             # search subfolders in input-path
             $script:InputSubfolderSearch = $(if($script:WPFcheckBoxInSubSearch.IsChecked -eq $true){1}else{0})
             # check all hashes
             $script:DupliCompareHashes = $(if($script:WPFcheckBoxCheckInHash.IsChecked -eq $true){1}else{0})
             # check duplis in output-path
             $script:CheckOutputDupli = $(if($script:WPFcheckBoxOutputDupli.IsChecked -eq $true){1}else{0})
-            # write to history-file
-            $script:WriteHist = $(if($script:WPFcheckBoxWriteHist.IsChecked -eq $true){1}else{0})
             # prevent standby
             $script:PreventStandby = $(if($script:WPFcheckBoxPreventStandby.IsChecked -eq $true){1}else{0})
             # remember input
@@ -482,8 +500,12 @@ Function Get-UserValues(){
                 Write-Host "Invalid choice of -OutputSubfolderStyle." -ForegroundColor Red
                 return $false
             }
-            if("use" -notin $script:HistoryFile -and "delete" -notin $script:HistoryFile -and "ignore" -notin $script:HistoryFile){
-                Write-Host "Invalid choice of -HistoryFile." -ForegroundColor Red
+            if($script:UseHistFile -notin (0..1)){
+                Write-Host "Invalid choice of -UseHistFile." -ForegroundColor Red
+                return $false
+            }
+            if("yes" -notin $script:WriteHistFile -and "no" -notin $script:WriteHistFile -and "Overwrite" -notin $script:WriteHistFile){
+                Write-Host "Invalid choice of -WriteHistFile." -ForegroundColor Red
                 return $false
             }
             if($script:InputSubfolderSearch -notin (0..1)){
@@ -496,10 +518,6 @@ Function Get-UserValues(){
             }
             if($script:CheckOutputDupli -notin (0..1)){
                 Write-Host "Invalid choice of -CheckOutputDupli." -ForegroundColor Red
-                return $false
-            }
-            if($script:WriteHist -notin (0..1)){
-                Write-Host "Invalid choice of -WriteHist." -ForegroundColor Red
                 return $false
             }
             if($script:PreventStandby -notin (0..1)){
@@ -633,11 +651,11 @@ Function Get-UserValues(){
         Write-Host "CustomFormatsEnable:`t$script:CustomFormatsEnable"
         Write-Host "allChosenFormats:`t$script:allChosenFormats"
         Write-Host "OutputSubfolderStyle:`t$script:OutputSubfolderStyle"
-        Write-Host "HistoryFile:`t`t$script:HistoryFile"
+        Write-Host "UseHistFile:`t`t$script:UseHistFile"
+        Write-Host "WriteHistFile:`t`t$script:WriteHistFile"
         Write-Host "InputSubfolderSearch:`t$script:InputSubfolderSearch"
         Write-Host "DupliCompareHashes:`t$script:DupliCompareHashes"
         Write-Host "CheckOutputDupli:`t$script:CheckOutputDupli"
-        Write-Host "WriteHist:`t`t$script:WriteHist"
         Write-Host "PreventStandby:`t`t$script:PreventStandby"
     }
 
@@ -701,10 +719,10 @@ Function Start-Remembering(){
         $lines_new[$($script:paramline + 8)] = '    [array]$CustomFormats=(' + "$inter" + '),'
         # $OutputSubfolderStyle
         $lines_new[$($script:paramline + 9)] = '    [string]$OutputSubfolderStyle="' + "$script:OutputSubfolderStyle" + '",'
-        # $HistoryFile
-        $lines_new[$($script:paramline + 10)] = '    [string]$HistoryFile="' + "$script:HistoryFile" + '",'
-        # $WriteHist
-        $lines_new[$($script:paramline + 11)] = '    [int]$WriteHist=' + "$script:WriteHist" + ','
+        # $UseHistFile
+        $lines_new[$($script:paramline + 10)] = '    [int]$UseHistFile="' + "$script:UseHistFile" + '",'
+        # $WriteHistFile
+        $lines_new[$($script:paramline + 11)] = '    [string]$WriteHistFile=' + "$script:WriteHistFile" + ','
         # $InputSubfolderSearch
         $lines_new[$($script:paramline + 12)] = '    [int]$InputSubfolderSearch=' + "$script:InputSubfolderSearch" + ','
         # $DupliCompareHashes
@@ -727,64 +745,59 @@ Function Start-Remembering(){
 }
 
 # DEFINITION: Get History-File
-Function Get-Historyfile(){
+Function Get-HistFile(){
     param([string]$HistFilePath="$PSScriptRoot\media_copytool_filehistory.json")
     Write-Host "$(Get-Date -Format "dd.MM.yy HH:mm:ss")" -NoNewline
-    if($script:HistoryFile -eq "use"){
-        Write-Host "`t- Checking for history-file, importing values..." -ForegroundColor Cyan
-        while($true){
-            if(Test-Path -Path $HistFilePath -PathType Leaf){
-                $JSONFile = Get-Content -Path $HistFilePath -Raw | ConvertFrom-Json
-                $JSONFile | Out-Null
-                $files_history = $JSONFile | ForEach-Object {
-                    [PSCustomObject]@{
-                        name = $_.inname
-                        date = $_.date
-                        size = $_.size
-                        hash = $_.hash
-                    }
+    Write-Host "`t- Checking for history-file, importing values..." -ForegroundColor Cyan
+    while($true){
+        if(Test-Path -Path $HistFilePath -PathType Leaf){
+            $JSONFile = Get-Content -Path $HistFilePath -Raw | ConvertFrom-Json
+            $JSONFile | Out-Null
+            $files_history = $JSONFile | ForEach-Object {
+                [PSCustomObject]@{
+                    name = $_.inname
+                    date = $_.date
+                    size = $_.size
+                    hash = $_.hash
                 }
-                if($script:debug -ne 0){
-                    Write-Host "Found values:" -ForegroundColor Yellow
-                    for($i = 0; $i -lt $files_history.name.Length; $i++){
-                        Write-Host "$($files_history[$i].name)`t" -ForegroundColor Green -NoNewline
-                        Write-Host "$($files_history[$i].date)`t" -ForegroundColor White -NoNewline
-                        Write-Host "$($files_history[$i].size)`t" -ForegroundColor White -NoNewline
-                        Write-Host $files_history[$i].hash -ForegroundColor Magenta
-                    }
+            }
+            if($script:debug -ne 0){
+                Write-Host "Found values:" -ForegroundColor Yellow
+                for($i = 0; $i -lt $files_history.name.Length; $i++){
+                    Write-Host "$($files_history[$i].name)`t" -ForegroundColor Green -NoNewline
+                    Write-Host "$($files_history[$i].date)`t" -ForegroundColor White -NoNewline
+                    Write-Host "$($files_history[$i].size)`t" -ForegroundColor White -NoNewline
+                    Write-Host $files_history[$i].hash -ForegroundColor Magenta
                 }
-                Break
+            }
+            Break
+        }else{
+            Write-Host "History-File $HistFilePath could not be found. This means it's possible that duplicates get copied." -ForegroundColor Magenta
+            if((Read-Host "Is that okay? Type '1' (without quotes) to confirm or any other number to abort. Confirm by pressing Enter") -eq 1){
+                $script:UseHistFile = 0
+                $script:WriteHistFile = "Overwrite"
+                break
             }else{
-                Write-Host "History-File $HistFilePath could not be found. This means it's possible that duplicates get copied." -ForegroundColor Magenta
-                if((Read-Host "Is that okay? Type '1' (without quotes) to confirm or any other number to abort. Confirm by pressing Enter") -eq 1){
-                    # Out-File -InputObject "Name,Date,Size,Hash" -Encoding utf8 -FilePath $HistFilePath
-                    $script:HistoryFile = "ignore"
-                    break
-                }else{
-                    Write-Host "`r`nAborting.`r`n" -ForegroundColor Magenta
-                    Invoke-Close
-                }
+                Write-Host "`r`nAborting.`r`n" -ForegroundColor Magenta
+                Invoke-Close
             }
         }
-        while($true){
-            if("null" -in $files_history -or $files_history.name.Length -ne $files_history.date.Length -or $files_history.name.Length -ne $files_history.size.Length -or $files_history.name.Length -ne $files_history.hash.Length -or $files_history.name.Length -eq 0){
-                Write-Host "Some values in the history-file $HistFilePath seem wrong - it's safest to delete the whole file." -ForegroundColor Magenta
-                if((Read-Host "Is that okay? Type '1' (without quotes) to confirm or any other number to abort. Confirm by pressing Enter") -eq 1){
-                    # Out-File -InputObject "Name,Date,Size,Hash" -Encoding utf8 -FilePath $HistFilePath
-                    $script:HistoryFile = "delete"
-                    break
-                }else{
-                    Write-Host "`r`nAborting.`r`n" -ForegroundColor Magenta
-                    Invoke-Close
-                }
-            }
-        }
-
-        return $files_history
-
-    }else{
-        Write-Host "`t- History-file will be ignored." -ForegroundColor Cyan
     }
+    while($true){
+        if("null" -in $files_history -or $files_history.name.Length -ne $files_history.date.Length -or $files_history.name.Length -ne $files_history.size.Length -or $files_history.name.Length -ne $files_history.hash.Length -or $files_history.name.Length -eq 0){
+            Write-Host "Some values in the history-file $HistFilePath seem wrong - it's safest to delete the whole file." -ForegroundColor Magenta
+            if((Read-Host "Is that okay? Type '1' (without quotes) to confirm or any other number to abort. Confirm by pressing Enter") -eq 1){
+                $script:UseHistFile = 0
+                $script:WriteHistFile = "Overwrite"
+                break
+            }else{
+                Write-Host "`r`nAborting.`r`n" -ForegroundColor Magenta
+                Invoke-Close
+            }
+        }
+    }
+
+    return $files_history
 }
 
 # DEFINITION: Searching for selected formats in Input-Path, getting Path, Name, Time, and calculating Hash:
@@ -841,7 +854,7 @@ Function Start-FileSearchAndCheck(){
 
     # dupli-check via history-file:
     [array]$dupliindex_hist = @()
-    if($script:HistoryFile -eq "use"){
+    if($script:UseHistFile -eq 1){
         # Comparing Files between History-File and Input-Folder via history-file:
         Write-Host "Comparing to already copied files (history-file).." -ForegroundColor Yellow
         Write-Host "New, " -ForegroundColor Gray -NoNewline
@@ -1223,7 +1236,7 @@ Function Start-FileVerification(){
 }
 
 # DEFINITION: Write new file-attributes to history-file:
-Function Set-Historyfile(){
+Function Set-HistFile(){
     param(
         [array]$InFiles,
         [string]$HistFilePath="$PSScriptRoot\media_copytool_filehistory.json"
@@ -1233,7 +1246,7 @@ Function Set-Historyfile(){
 
     $results = ($InFiles | Where-Object {$_.tocopy -eq 0 -and $_.hash -ne "ZYX"} | Select-Object -Property inname,date,size,hash)
 
-    if($script:HistoryFile -ne "delete"){
+    if($script:WriteHistFile -eq "Yes"){
         $JSON = Get-Content -Path $HistFilePath -Raw | ConvertFrom-Json
         $JSON | Out-Null
         $results += $JSON | ForEach-Object {
@@ -1305,15 +1318,18 @@ Function Start-Everything(){
         if($script:PreventStandby -eq 1){
             "0" | Out-File -FilePath $preventStandbyFile -Encoding utf8
             if((Test-Path -Path $PSScriptRoot\preventsleep.ps1) -eq $true){
-                Start-Process powershell -ArgumentList "$PSScriptRoot\preventsleep.ps1 -fileToCheck `"$preventStandbyFile`" -mode 0 -userProcessCount 2 -userProcess `"xcopy`",`"robocopy`" -timeBase 150 -shutdown 0 -counterMax 5" -WindowStyle Hidden
+                Start-Process powershell -ArgumentList "$PSScriptRoot\preventsleep.ps1 -fileToCheck `"$preventStandbyFile`" -mode `"process`" -userProcessCount 2 -userProcess `"xcopy`",`"robocopy`" -timeBase 150 -shutdown 0 -counterMax 5" -WindowStyle Hidden
             }else{
                 Write-Host "Couldn't find .\preventsleep.ps1, so can't prevent standby." -ForegroundColor Magenta
                 Start-Sleep -Seconds 3
             }
         }
         if($script:debug -lt 3){
-            $histfiles = Get-Historyfile
-            Invoke-Pause
+            [array]$histfiles = @()
+            if($script:UseHistFile -eq 1){
+                $histfiles = Get-HistFile
+                Invoke-Pause
+            }
             $inputfiles = (Start-FileSearchAndCheck -InPath $script:InputPath -OutPath $script:OutputPath -HistFiles $histfiles)
             Invoke-Pause
             if(1 -notin $inputfiles.tocopy){
@@ -1346,12 +1362,11 @@ Function Start-Everything(){
                 Invoke-Pause
                 $j++
             }
-            if($script:WriteHist -eq 1){
-                Set-Historyfile -InFiles $inputfiles
+            if($script:WriteHistFile -ne "no"){
+                Set-HistFile -InFiles $inputfiles
                 Invoke-Pause
             }
             if($script:MirrorEnable -ne 0){
-                Write-Host "MIRRORING"
                 for($i=0; $i -lt $inputfiles.fullpath.length; $i++){
                     if($inputfiles[$i].tocopy -eq 1){
                         $inputfiles[$i].tocopy = 0
@@ -1362,7 +1377,6 @@ Function Start-Everything(){
                     $inputfiles[$i].inpath = (Split-Path -Path $inputfiles[$i].fullpath -Parent)
                     $inputfiles[$i].outname = "$($inputfiles[$i].basename)$($inputfiles[$i].extension)"
                 }
-                Write-Host "BLA"
                 $j = 1
                 while(1 -in $inputfiles.tocopy){
                     if($j -gt 1){
@@ -1381,7 +1395,8 @@ Function Start-Everything(){
                 }
             }
         }else{
-            Write-Host "-Debug 3 not defined at the moment."
+            Write-Host "-Debug 3 not defined at the moment. Sorry!"
+            # TODO: Implement Measure-Command or ditch $debug=3
         }
         break
     }
@@ -1426,7 +1441,7 @@ $inputXML = @"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="Flo's Media-Copytool v0.5 ALPHA" Height="276" Width="800" ResizeMode="CanMinimize">
+        Title="Flo's Media-Copytool v0.5 Alpha" Height="276" Width="800" ResizeMode="CanMinimize">
     <Grid Background="#FFB3B6B5">
         <TextBlock x:Name="textBlockInput" Text="Input-path:" HorizontalAlignment="Left" Margin="20,23,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="70" TextAlignment="Right"/>
         <TextBox x:Name="textBoxInput" Text="Input-path, e.g. D:\input_path" ToolTip="Brackets [ ] lead to errors!" HorizontalAlignment="Left" Height="22" Margin="100,20,0,0" VerticalAlignment="Top" Width="500" VerticalScrollBarVisibility="Disabled" VerticalContentAlignment="Center"/>
@@ -1442,45 +1457,48 @@ $inputXML = @"
         <CheckBox x:Name="checkBoxRememberMirror" Content="Remember" ToolTip="Remember the Output-Path." HorizontalAlignment="Right" Margin="0,85,15,0" VerticalAlignment="Top" Width="80" Foreground="#FFC90000" VerticalContentAlignment="Center" Padding="4,-2,0,0" Height="22"/>
         <Rectangle Fill="#FFB3B6B5" HorizontalAlignment="Left" Height="2" Stroke="#FF878787" VerticalAlignment="Top" Width="794" Panel.ZIndex="-1" Margin="0,115,0,0"/>
         <ComboBox x:Name="comboBoxPresetFormats" HorizontalAlignment="Left" Margin="50,126,0,0" VerticalAlignment="Top" Width="210" SelectedIndex="0" VerticalContentAlignment="Center">
-            <ComboBoxItem Content=" - - - Preset formats to copy - - - "/>
-            <CheckBox x:Name="checkBoxCan" Content="Canon - CR2"/>
-            <CheckBox x:Name="checkBoxNik" Content="Nikon - NEF, NRW"/>
-            <CheckBox x:Name="checkBoxSon" Content="Sony - ARW"/>
-            <CheckBox x:Name="checkBoxJpg" Content="JPEG - JPG, JPEG"/>
-            <CheckBox x:Name="checkBoxMov" Content="Movies - MOV, MP4"/>
-            <CheckBox x:Name="checkBoxAud" Content="Audio - WAV, MP3, M4A"/>
+            <ComboBoxItem Content="- - - Preset formats to copy - - -"/>
+            <CheckBox x:Name="checkBoxCan" Content="Canon   - CR2" FontFamily="Consolas"/>
+            <CheckBox x:Name="checkBoxNik" Content="Nikon   - NEF + NRW" FontFamily="Consolas"/>
+            <CheckBox x:Name="checkBoxSon" Content="Sony    - ARW" FontFamily="Consolas"/>
+            <CheckBox x:Name="checkBoxJpg" Content="JPEG    - JPG + JPEG" FontFamily="Consolas"/>
+            <CheckBox x:Name="checkBoxMov" Content="Movies  - MOV + MP4" FontFamily="Consolas"/>
+            <CheckBox x:Name="checkBoxAud" Content="Audio   - WAV + MP3 + M4A" FontFamily="Consolas"/>
         </ComboBox>
         <CheckBox x:Name="checkBoxCustom" Content="Custom:" ToolTip="Enable to copy customised file-formats." HorizontalAlignment="Left" Margin="50,159,0,0" VerticalAlignment="Top" VerticalContentAlignment="Center" Height="22" Padding="4,-2,0,0"/>
-        <TextBox x:Name="textBoxCustom" Text="custom-formats" ToolTip="*.ext1,*.ext2,*.ext3 - Brackets [ ] lead to errors!"  HorizontalAlignment="Left" Height="22" Margin="120,158,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="140" VerticalContentAlignment="Center" VerticalScrollBarVisibility="Disabled"/>
+        <TextBox x:Name="textBoxCustom" Text="custom-formats" FontFamily="Consolas" ToolTip="*.ext1,*.ext2,*.ext3 - Brackets [ ] lead to errors!"  HorizontalAlignment="Left" Height="22" Margin="120,158,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="140" VerticalContentAlignment="Center" VerticalScrollBarVisibility="Disabled"/>
         <TextBlock x:Name="textBlockOutSubStyle" Text="Subfolder-Style:" HorizontalAlignment="Center" Margin="0,129,140,0" VerticalAlignment="Top" Width="90" TextAlignment="Right"/>
-        <ComboBox x:Name="comboBoxOutSubStyle" ToolTip="Choose your favorite subfolder-style." HorizontalAlignment="Center" Margin="100,126,0,0" VerticalAlignment="Top" Width="120" SelectedIndex="1" Height="23" VerticalContentAlignment="Center">
+        <ComboBox x:Name="comboBoxOutSubStyle" ToolTip="Choose your favorite subfolder-style." HorizontalAlignment="Center" Margin="100,126,0,0" VerticalAlignment="Top" Width="120" SelectedIndex="1" Height="23" VerticalContentAlignment="Center" FontFamily="Consolas">
             <ComboBoxItem Content="No subfolders"/>
-            <ComboBoxItem Content="yyyy-mm-dd" ToolTip="e.g.: 2017-12-31"/>
-            <ComboBoxItem Content="yyyy_mm_dd" ToolTip="e.g.: 2017_12_31" Width="120"/>
-            <ComboBoxItem Content="yy-mm-dd" ToolTip="e.g.: 17-12-31"/>
-            <ComboBoxItem Content="yy_mm_dd" ToolTip="e.g.: 17_12_31"/>
+            <ComboBoxItem Content="yyyy-mm-dd" FontFamily="Consolas" ToolTip="e.g.: 2017-12-31"/>
+            <ComboBoxItem Content="yyyy_mm_dd" FontFamily="Consolas" ToolTip="e.g.: 2017_12_31" Width="120"/>
+            <ComboBoxItem Content="yy-mm-dd" FontFamily="Consolas" ToolTip="e.g.: 17-12-31"/>
+            <ComboBoxItem Content="yy_mm_dd" FontFamily="Consolas" ToolTip="e.g.: 17_12_31"/>
         </ComboBox>
-        <TextBlock x:Name="textBlockHistFile" Text="History-File:" HorizontalAlignment="Center" Margin="0,162,140,0" VerticalAlignment="Top" Width="90" TextAlignment="Right" Height="16"/>
-        <ComboBox x:Name="comboBoxHistFile" HorizontalAlignment="Center" Margin="100,158,0,0" VerticalAlignment="Top" Width="120" SelectedIndex="0" Height="22" VerticalContentAlignment="Center">
-            <ComboBoxItem Content="Use"/>
-            <ComboBoxItem Content="Delete (before)" ToolTip="Deletes the history-file before copying. w/o additional verification possible to duplicate files. Best practise: use after formatting card."/>
-            <ComboBoxItem Content="Ignore" ToolTip="If you want duplicates, but you want to keep the history-file."/>
+        <ComboBox x:Name="comboBoxHistFile" HorizontalAlignment="Center" Margin="282,158,287,0" VerticalAlignment="Top" Width="225" SelectedIndex="0" Height="22" VerticalContentAlignment="Center">
+            <ComboBoxItem Content="- - - Histoy-file options - - -"/>
+            <CheckBox x:Name="checkBoxUseHistFile" Content="Use hist-file to prevent duplis" ToolTip="Default. Fast way to prevent already copied files from being copied again." Foreground="#FF00A22C"/>
+            <ComboBoxItem Content="- - - Writing the history-file - - -"/>
+            <RadioButton x:Name="radioButtonWriteHistFileYes" Content="Write old + new files to history-file" ToolTip="Default. Adds new values to the old ones." GroupName="WriteHistFile"/>
+            <RadioButton x:Name="radioButtonWriteHistFileNo" Content="Don't add new files" ToolTip="Does not touch the history-file." GroupName="WriteHistFile"/>
+            <RadioButton x:Name="radioButtonWriteHistFileOverwrite" Content="Delete old files, write new ones" ToolTip="Deletes the old values and only writes the new one to the history-file." GroupName="WriteHistFile"/>
         </ComboBox>
         <ComboBox x:Name="comboBoxOptions" HorizontalAlignment="Right" Margin="0,126,50,0" VerticalAlignment="Top" Width="200" SelectedIndex="0" VerticalContentAlignment="Center">
             <ComboBoxItem Content="Select some options"/>
-            <CheckBox x:Name="checkBoxInSubSearch" Content="Include subfolders in in-path" ToolTip="E.g. not only searching files in E:\DCIM, but also in E:\DCIM\abc"/>
+            <CheckBox x:Name="checkBoxInSubSearch" Content="Include subfolders in in-path" ToolTip="Default. E.g. not only searching files in E:\DCIM, but also in E:\DCIM\abc"/>
             <CheckBox x:Name="checkBoxCheckInHash" Content="Check hashes of in-files (slow)" ToolTip="For history-check: If unchecked, dupli-check is done via name, size, date. If checked, hash is added. Dupli-Check in out-path disables this function."/>
             <CheckBox x:Name="checkBoxOutputDupli" Content="Check for duplis in out-path" ToolTip="Ideal if you have used LR or other import-tools since the last card-formatting."/>
-            <CheckBox x:Name="checkBoxWriteHist" Content="Write to history-file" ToolTip="When activated, newly copied files will be added in the history-file." Foreground="#FFFF6800"/>
+            <!-- <CheckBox x:Name="checkBoxPreventDupli" Content="Prevent duplicates from in-path" ToolTip="Prevent duplicates from the input-path (e.g. same file in two folders)."/> -->
             <CheckBox x:Name="checkBoxPreventStandby" Content="Prevent standby w/ script" ToolTip="Prevents system from hibernating by starting a small script." Foreground="#FF0080FF"/>
         </ComboBox>
         <CheckBox x:Name="checkBoxRememberSettings" Content=":Remember settings" ToolTip="Remember all parameters (excl. Remember-Params)" HorizontalAlignment="Right" Margin="0,158,50,0" VerticalAlignment="Top" Foreground="#FFC90000" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Padding="4,-2,0,0" Height="22" FlowDirection="RightToLeft"/>
-        <Button x:Name="buttonStart" Content="START" HorizontalAlignment="Center" Margin="0,0,0,20" VerticalAlignment="Bottom" Width="100" IsDefault="True"/>
+        <Button x:Name="buttonStart" Content="START" HorizontalAlignment="Center" Margin="0,0,0,20" VerticalAlignment="Bottom" Width="100" IsDefault="True" FontWeight="Bold"/>
         <Button x:Name="buttonClose" Content="EXIT" HorizontalAlignment="Right" Margin="0,0,40,20" VerticalAlignment="Bottom" Width="100"/>
         <Button x:Name="buttonAbout" Content="About / Help" HorizontalAlignment="Left" Margin="40,0,0,20" VerticalAlignment="Bottom" Width="90"/>
     </Grid>
 </Window>
 "@
+
     [void][System.Reflection.Assembly]::LoadWithPartialName('presentationframework')
     [xml]$xaml = $inputXML -replace 'mc:Ignorable="d"','' -replace "x:Name",'Name'  -replace '^<Win.*', '<Window'
     $reader=(New-Object System.Xml.XmlNodeReader $xaml)
@@ -1488,7 +1506,7 @@ $inputXML = @"
     catch{
         Write-Host "Unable to load Windows.Markup.XamlReader. Usually this means that you haven't installed .NET Framework. Please download and install the latest .NET Framework Web-Installer for your OS: " -NoNewline -ForegroundColor Red
         Write-Host "https://www.google.com/webhp?q=net+framework+web+installer"
-        Write-Host "Alternatively, start this script with '-GUI_CLI_Direct `"CLI`"' (w/o single-quotes) to run it via CLI (find other parameters via '-Help 2' or via README-File ('-Help 1')." -ForegroundColor Yellow
+        Write-Host "Alternatively, start this script with '-GUI_CLI_Direct `"CLI`"' (w/o single-quotes) to run it via CLI (find other parameters via '-showparams 1' '-Get-Help media_copytool.ps1 -detailed'." -ForegroundColor Yellow
         Pause
         Exit
     }
@@ -1501,7 +1519,7 @@ $inputXML = @"
         Exit
     }
 
-    # Fill the TextBoxes with user parameters:
+    # Fill the TextBoxes and buttons with user parameters:
     $WPFtextBoxInput.Text = $InputPath
     $WPFtextBoxOutput.Text = $OutputPath
     $WPFcheckBoxMirror.IsChecked = $MirrorEnable
@@ -1515,11 +1533,13 @@ $inputXML = @"
     $WPFcheckBoxCustom.IsChecked = $CustomFormatsEnable
     $WPFtextBoxCustom.Text = $CustomFormats -join ","
     $WPFcomboBoxOutSubStyle.SelectedIndex = $(if("none" -eq $OutputSubfolderStyle){0}elseif("yyyy-mm-dd" -eq $OutputSubfolderStyle){1}elseif("yyyy_mm_dd" -eq $OutputSubfolderStyle){2}elseif("yy-mm-dd" -eq $OutputSubfolderStyle){3}elseif("yy_mm_dd" -eq $OutputSubfolderStyle){4})
-    $WPFcomboBoxHistFile.SelectedIndex = $(if("use" -eq $HistoryFile){0}elseif("delete" -eq $HistoryFile){1}elseif("ignore" -eq $HistoryFile){2})
+    $WPFcheckBoxUseHistFile.IsChecked = $UseHistFile
+    $WPFradioButtonWriteHistFileYes.IsChecked = $(if($WriteHistFile -eq "yes"){1}else{0})
+    $WPFradioButtonWriteHistFileNo.IsChecked = $(if($WriteHistFile -eq "no"){1}else{0})
+    $WPFradioButtonWriteHistFileOverwrite.IsChecked = $(if($WriteHistFile -eq "Overwrite"){1}else{0})
     $WPFcheckBoxInSubSearch.IsChecked = $InputSubfolderSearch
     $WPFcheckBoxCheckInHash.IsChecked = $DupliCompareHashes
     $WPFcheckBoxOutputDupli.IsChecked = $CheckOutputDupli
-    $WPFcheckBoxWriteHist.IsChecked = $WriteHist
     $WPFcheckBoxPreventStandby.IsChecked = $PreventStandby
     $WPFcheckBoxRememberIn.IsChecked = $RememberInPath
     $WPFcheckBoxRememberOut.IsChecked = $RememberOutPath
