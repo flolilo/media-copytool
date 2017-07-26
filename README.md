@@ -21,4 +21,4 @@ If you cannot start the script:
 :de: Die Readme-Datei hat auch einen deutschsprachigen Teil (anders als der Befehl `Get-Help .\media_copytool.ps1 -detailed`). :de:
 
 ## To do
-[ ] Will follow soon
+- [ ] Will follow soon
