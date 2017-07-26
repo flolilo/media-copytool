@@ -12,10 +12,13 @@ To run the GUI, .Net Framework 4.6+ is needed. (The script will tell you need it
 
 ### Troubleshooting
 If you cannot start the script:
-    * Check if PowerShells `Set-ExecutionPolicy` is set correctly
-    * Check if prerequisites are met
+* Check if PowerShells `Set-ExecutionPolicy` is set correctly
+* Check if prerequisites are met
 
-## Readme:
+## Readme
 :uk: :us: I recommend using the readme-file `README.rtf` (fill in * according to the version you are using) or using `Get-Help .\media_copytool.ps1 -detailed` in PowerShell - as of now, I still have to get used to GitHub's styling (and its limitations for a complete readme). :us: :uk:
 
 :de: Die Readme-Datei hat auch einen deutschsprachigen Teil (anders als der Befehl `Get-Help .\media_copytool.ps1 -detailed`). :de:
+
+## To do
+[ ] Will follow soon
