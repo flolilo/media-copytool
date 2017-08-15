@@ -4,8 +4,9 @@ PowerShell-based, GUI-including script that not only copies your files, but also
 ## Prerequisites
 At the moment:
 - Windows >= XP (Robocopy and Xcopy are used)
-- [PowerShell v3+](https://www.microsoft.com/en-us/download/details.aspx?id=50395)
-- For GUI, [.NET Framework 4.6+](https://www.microsoft.com/en-us/download/details.aspx?id=55170) is needed. (The script will tell you if you need it.)
+    - For XP, you need the [Windows Server 2003 Resource Kit Tools](https://www.microsoft.com/en-us/download/details.aspx?id=17657) to get Robocopy.
+- [PowerShell >= Version 3](https://www.microsoft.com/en-us/download/details.aspx?id=50395)
+- For the GUI: [.NET Framework >= 4.6](https://www.microsoft.com/en-us/download/details.aspx?id=55170) is needed.
 
 ## Installing
 * [Download the zip](https://github.com/flolilo/media-copytool/archive/master.zip)
