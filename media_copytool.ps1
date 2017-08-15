@@ -8,7 +8,7 @@
         Uses Windows' Robocopy and Xcopy for file-copy, then uses PowerShell's Get-FileHash (SHA1) for verifying that files were copied without errors.
 
     .NOTES
-        Version:        0.5 (Beta)
+        Version:        0.5.1 (Beta)
         Author:         flolilo
         Creation Date:  15.8.2017
         Legal stuff: This program is free software. It comes without any warranty, to the extent permitted by
@@ -1508,7 +1508,7 @@ $inputXML = @"
     try{$Form=[Windows.Markup.XamlReader]::Load($reader)}
     catch{
         Write-Host "Unable to load Windows.Markup.XamlReader. Usually this means that you haven't installed .NET Framework. Please download and install the latest .NET Framework Web-Installer for your OS: " -NoNewline -ForegroundColor Red
-        Write-Host "https://www.google.com/webhp?q=net+framework+web+installer"
+        Write-Host "https://duckduckgo.com/?q=net+framework+web+installer&t=h_&ia=web"
         Write-Host "Alternatively, start this script with '-GUI_CLI_Direct `"CLI`"' (w/o single-quotes) to run it via CLI (find other parameters via '-showparams 1' '-Get-Help media_copytool.ps1 -detailed'." -ForegroundColor Yellow
         Pause
         Exit
