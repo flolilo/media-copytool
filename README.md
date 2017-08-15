@@ -21,4 +21,10 @@ If you cannot start the script:
 :de: Die Readme-Datei hat auch einen deutschsprachigen Teil (anders als der Befehl `Get-Help .\media_copytool.ps1 -detailed`). :de:
 
 ## To do
-- [ ] Will follow soon
+- [ ] Option to avoid copying a file that exists more than once in the input more than one time. (E.g. .\DCIM\File_1.jpeg & .\DCIM\Sub\File_1.jpeg -> .\Out\File_1.jpeg)
+- [ ] Making the output look nice(r)
+- [ ] Option to create a 7zip-archive for mirror-copying
+- [ ] Option to unmount USB drives after finishing (first) copy
+- [ ] Checking if the volume exists if output-path(s) are not found (instead of looking for the parent directory)
+- [ ] Multithreading Get-FileHash operations
+- [ ] Multithreading the GUI

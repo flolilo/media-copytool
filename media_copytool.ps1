@@ -8,9 +8,9 @@
         Uses Windows' Robocopy and Xcopy for file-copy, then uses PowerShell's Get-FileHash (SHA1) for verifying that files were copied without errors.
 
     .NOTES
-        Version:        0.5 Alpha
-        Author:         Florian Dolzer
-        Creation Date:  25.7.2017
+        Version:        0.5 (Beta)
+        Author:         flolilo
+        Creation Date:  15.8.2017
         Legal stuff: This program is free software. It comes without any warranty, to the extent permitted by
         applicable law. Most of the script was written by myself (or heavily modified by me when searching for solutions
         on the WWW). However, some parts are copies or modifications of very genuine code - see
