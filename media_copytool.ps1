@@ -9,8 +9,12 @@
 
     .NOTES
         Version:        0.5 Alpha
+        Author:         Florian Dolzer
         Creation Date:  25.7.2017
-        Legal stuff:    Some parts are copies or modifications of very genuine code - see the "CREDIT:"-tags to find them.
+        Legal stuff: This program is free software. It comes without any warranty, to the extent permitted by
+        applicable law. Most of the script was written by myself (or heavily modified by me when searching for solutions
+        on the WWW). However, some parts are copies or modifications of very genuine code - see
+        the "CREDIT:"-tags to find them.
 
     .PARAMETER showparams
         Valid range: 0 (deactivate), 1 (activate)
@@ -119,7 +123,7 @@ param(
     [string]$InputPath="G:\",
     [string]$OutputPath="D:\Eigene_Bilder\_CANON",
     [int]$MirrorEnable=0,
-    [string]$MirrorPath="D:\Temp\powershell\mirr ( ) pfad",
+    [string]$MirrorPath="F:\emergency-backups",
     [array]$PresetFormats=("Can","Jpg","Mov"),
     [int]$CustomFormatsEnable=0,
     [array]$CustomFormats=("*.xml","*.xmp"),
@@ -235,6 +239,8 @@ Function Get-UserValues(){
             if($script:OutputPath.Length -gt 1 -and (Test-Path -Path $script:OutputPath -PathType Container) -eq $true){
                 break
             }elseif((Split-Path -Parent -Path $script:OutputPath).Length -gt 1 -and (Test-Path -Path $(Split-Path -Parent -Path $script:OutputPath) -PathType Container) -eq $true){
+                # TODO: (Get-Item .\your\path\to\file.ext).PSDrive.Name instead of split-path TODO:
+                # CREDIT: https://stackoverflow.com/a/28967236/8013879
                 [int]$request = Read-Host "Output-path not found, but parent directory of it was found. Create chosen directory? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
                 if($request -eq 1){
                     New-Item -ItemType Directory -Path $script:OutputPath | Out-Null
@@ -783,17 +789,14 @@ Function Get-HistFile(){
             }
         }
     }
-    while($true){
-        if("null" -in $files_history -or $files_history.name.Length -ne $files_history.date.Length -or $files_history.name.Length -ne $files_history.size.Length -or $files_history.name.Length -ne $files_history.hash.Length -or $files_history.name.Length -eq 0){
-            Write-Host "Some values in the history-file $HistFilePath seem wrong - it's safest to delete the whole file." -ForegroundColor Magenta
-            if((Read-Host "Is that okay? Type '1' (without quotes) to confirm or any other number to abort. Confirm by pressing Enter") -eq 1){
-                $script:UseHistFile = 0
-                $script:WriteHistFile = "Overwrite"
-                break
-            }else{
-                Write-Host "`r`nAborting.`r`n" -ForegroundColor Magenta
-                Invoke-Close
-            }
+    if("null" -in $files_history -or $files_history.name.Length -ne $files_history.date.Length -or $files_history.name.Length -ne $files_history.size.Length -or $files_history.name.Length -ne $files_history.hash.Length -or $files_history.name.Length -eq 0){
+        Write-Host "Some values in the history-file $HistFilePath seem wrong - it's safest to delete the whole file." -ForegroundColor Magenta
+        if((Read-Host "Is that okay? Type '1' (without quotes) to confirm or any other number to abort. Confirm by pressing Enter") -eq 1){
+            $script:UseHistFile = 0
+            $script:WriteHistFile = "Overwrite"
+        }else{
+            Write-Host "`r`nAborting.`r`n" -ForegroundColor Magenta
+            Invoke-Close
         }
     }
 
@@ -860,20 +863,20 @@ Function Start-FileSearchAndCheck(){
         Write-Host "New, " -ForegroundColor Gray -NoNewline
         Write-Host "already existing." -ForegroundColor DarkGreen
         for($i = 0; $i -lt $files_in.fullpath.Length; $i++){
-            $j = 0
+            $j = $HistFiles.name.Length
             while($true){
                 # check resemblance between in_files and hist_files:
-                if($files_in[$i].inname -eq $HistFiles.name[$j] -and $files_in[$i].date -eq $HistFiles.date[$j] -and $files_in[$i].size -eq $HistFiles.size[$j] -and ($script:DupliCompareHashes -eq 1 -and $files_in[$i].hash -eq $HistFiles.Hash[$j] -or $script:DupliCompareHashes -eq 0)){
+                if($files_in[$i].inname -eq $HistFiles[$j].name -and $files_in[$i].date -eq $HistFiles[$j].date -and $files_in[$i].size -eq $HistFiles[$j].size -and ($script:DupliCompareHashes -eq 0 -or ($script:DupliCompareHashes -eq 1 -and $files_in[$i].hash -eq $HistFiles[$j].Hash))){
                     Write-Host "$($i + 1) " -NoNewline -ForegroundColor DarkGreen
                     $dupliindex_hist += $i
                     $files_in[$i].tocopy = 0
                     break
                 }else{
-                    if($j -ge $HistFiles.name.Length){
+                    if($j -le 0){
                         Write-Host "$($i + 1) " -NoNewline -ForegroundColor Gray
                         break
                     }
-                    $j++
+                    $j--
                     continue
                 }
                 
