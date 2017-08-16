@@ -143,6 +143,8 @@ param(
 # First line of "param" (for remembering/restoring parameters):
 [int]$paramline = 120
 
+
+
 # Get all error-outputs in English:
 [Threading.Thread]::CurrentThread.CurrentUICulture = 'en-US'
 
@@ -1274,9 +1276,20 @@ Function Set-HistFile(){
     }
 }
 
-# DEFINITION: Pause the programme if debug-var is active.
+# DEFINITION: Pause the programme if debug-var is active. Also, enable measuring times per command with -debug 3.
 Function Invoke-Pause(){
-    if($script:debug -eq 2){Pause}
+    param(
+        $starttime,
+        $endtime
+    )
+
+    if($script:debug -eq 3){
+        $time_job = (New-TimeSpan –Start $starttime –End $endtime).TotalSeconds
+        Write-Host "Used time for process:`t$time_job`r`n" -ForegroundColor Cyan
+    }
+    if($script:debug -ge 2){
+        Pause
+    }
 }
 
 # DEFINITION: Exit the program (and close all windows) + option to pause before exiting.
@@ -1305,6 +1318,7 @@ Function Start-Everything(){
         # Clear-Host
         Write-Host "    Welcome to Flo's Media-Copytool! // Willkommen bei Flos Media-Copytool!    " -ForegroundColor DarkCyan -BackgroundColor Gray
         Write-Host "                          v0.5 (Beta) - 24.7.2017                              `r`n" -ForegroundColor DarkCyan -BackgroundColor Gray
+        $starttime = Get-Date
         if((Get-UserValues) -eq $false){
             Start-Sound(0)
             Start-Sleep -Seconds 2
@@ -1313,10 +1327,13 @@ Function Start-Everything(){
             }
             break
         }
-        Invoke-Pause
+        $endtime = Get-Date
+        Invoke-Pause -starttime $starttime -endtime $endtime
         iF($script:RememberInPath -ne 0 -or $script:RememberOutPath -ne 0 -or $script:RememberMirrorPath -ne 0 -or $script:RememberSettings -ne 0){
+            $starttime = Get-Date
             Start-Remembering
-            Invoke-Pause
+            $endtime = Get-Date
+            Invoke-Pause -starttime $starttime -endtime $endtime
         }
         if($script:PreventStandby -eq 1){
             "0" | Out-File -FilePath $preventStandbyFile -Encoding utf8
@@ -1327,79 +1344,92 @@ Function Start-Everything(){
                 Start-Sleep -Seconds 3
             }
         }
-        if($script:debug -lt 3){
-            [array]$histfiles = @()
-            if($script:UseHistFile -eq 1){
-                $histfiles = Get-HistFile
-                Invoke-Pause
+        [array]$histfiles = @()
+        if($script:UseHistFile -eq 1){
+            $starttime = Get-Date
+            $histfiles = Get-HistFile
+            $endtime = Get-Date
+            Invoke-Pause -starttime $starttime -endtime $endtime
+        }
+        $starttime = Get-Date
+        $inputfiles = (Start-FileSearchAndCheck -InPath $script:InputPath -OutPath $script:OutputPath -HistFiles $histfiles)
+        $endtime = Get-Date
+        Invoke-Pause -starttime $starttime -endtime $endtime
+        if(1 -notin $inputfiles.tocopy){
+            Write-Host "0 files left to copy - aborting rest of the script." -ForegroundColor Magenta
+            Start-Sound(1)
+            Start-Sleep -Seconds 2
+            if($script:GUI_CLI_Direct -eq "GUI"){
+                $script:Form.WindowState ='Normal'
             }
-            $inputfiles = (Start-FileSearchAndCheck -InPath $script:InputPath -OutPath $script:OutputPath -HistFiles $histfiles)
-            Invoke-Pause
-            if(1 -notin $inputfiles.tocopy){
-                Write-Host "0 files left to copy - aborting rest of the script." -ForegroundColor Magenta
-                Start-Sound(1)
-                Start-Sleep -Seconds 2
-                if($script:GUI_CLI_Direct -eq "GUI"){
-                    $script:Form.WindowState ='Normal'
+            break
+        }
+        $j = 1
+        while(1 -in $inputfiles.tocopy){
+            if($j -gt 1){
+                Write-Host "Some of the copied files are corrupt. Attempt re-copying them?" -ForegroundColor Magenta
+                if((Read-Host "`"1`" (w/o quotes) for `"yes`", other number for `"no`"") -ne 1){
+                    Write-Host "Aborting." -ForegroundColor Cyan
+                    Start-Sleep -Seconds 2
+                    if($script:GUI_CLI_Direct -eq "GUI"){
+                        $script:Form.WindowState ='Normal'
+                    }
+                    break
                 }
-                break
+            }
+            $starttime = Get-Date
+            $inputfiles = (Start-OverwriteProtection -InFiles $inputfiles -OutPath $script:OutputPath)
+            $endtime = Get-Date
+            Invoke-Pause -starttime $starttime -endtime $endtime
+            $starttime = Get-Date
+            Start-FileCopy -InFiles $inputfiles -InPath $script:InputPath -OutPath $script:OutputPath
+            $endtime = Get-Date
+            Invoke-Pause -starttime $starttime -endtime $endtime
+            $starttime = Get-Date
+            $inputfiles = (Start-FileVerification -InFiles $inputfiles)
+            $endtime = Get-Date
+            Invoke-Pause -starttime $starttime -endtime $endtime
+            $j++
+        }
+        if($script:WriteHistFile -ne "no"){
+            $starttime = Get-Date
+            Set-HistFile -InFiles $inputfiles
+            $endtime = Get-Date
+            Invoke-Pause -starttime $starttime -endtime $endtime
+        }
+        if($script:MirrorEnable -ne 0){
+            for($i=0; $i -lt $inputfiles.fullpath.length; $i++){
+                if($inputfiles[$i].tocopy -eq 1){
+                    $inputfiles[$i].tocopy = 0
+                }else{
+                    $inputfiles[$i].tocopy = 1
+                }
+                $inputfiles[$i].fullpath = "$($inputfiles[$i].outpath)\$($inputfiles[$i].outname)"
+                $inputfiles[$i].inpath = (Split-Path -Path $inputfiles[$i].fullpath -Parent)
+                $inputfiles[$i].outname = "$($inputfiles[$i].basename)$($inputfiles[$i].extension)"
             }
             $j = 1
             while(1 -in $inputfiles.tocopy){
                 if($j -gt 1){
                     Write-Host "Some of the copied files are corrupt. Attempt re-copying them?" -ForegroundColor Magenta
                     if((Read-Host "`"1`" (w/o quotes) for `"yes`", other number for `"no`"") -ne 1){
-                        Write-Host "Aborting." -ForegroundColor Cyan
-                        Start-Sleep -Seconds 2
-                        if($script:GUI_CLI_Direct -eq "GUI"){
-                            $script:Form.WindowState ='Normal'
-                        }
                         break
                     }
                 }
-                $inputfiles = (Start-OverwriteProtection -InFiles $inputfiles -OutPath $script:OutputPath)
-                Invoke-Pause
-                Start-FileCopy -InFiles $inputfiles -InPath $script:InputPath -OutPath $script:OutputPath
-                Invoke-Pause
+                $starttime = Get-Date
+                $inputfiles = (Start-OverwriteProtection -InFiles $inputfiles -OutPath $script:MirrorPath)
+                $endtime = Get-Date
+                Invoke-Pause -starttime $starttime -endtime $endtime
+                $starttime = Get-Date
+                Start-FileCopy -InFiles $inputfiles -InPath $script:OutputPath -OutPath $script:MirrorPath
+                $endtime = Get-Date
+                Invoke-Pause -starttime $starttime -endtime $endtime
+                $starttime = Get-Date
                 $inputfiles = (Start-FileVerification -InFiles $inputfiles)
-                Invoke-Pause
+                $endtime = Get-Date
+                Invoke-Pause -starttime $starttime -endtime $endtime
                 $j++
             }
-            if($script:WriteHistFile -ne "no"){
-                Set-HistFile -InFiles $inputfiles
-                Invoke-Pause
-            }
-            if($script:MirrorEnable -ne 0){
-                for($i=0; $i -lt $inputfiles.fullpath.length; $i++){
-                    if($inputfiles[$i].tocopy -eq 1){
-                        $inputfiles[$i].tocopy = 0
-                    }else{
-                        $inputfiles[$i].tocopy = 1
-                    }
-                    $inputfiles[$i].fullpath = "$($inputfiles[$i].outpath)\$($inputfiles[$i].outname)"
-                    $inputfiles[$i].inpath = (Split-Path -Path $inputfiles[$i].fullpath -Parent)
-                    $inputfiles[$i].outname = "$($inputfiles[$i].basename)$($inputfiles[$i].extension)"
-                }
-                $j = 1
-                while(1 -in $inputfiles.tocopy){
-                    if($j -gt 1){
-                        Write-Host "Some of the copied files are corrupt. Attempt re-copying them?" -ForegroundColor Magenta
-                        if((Read-Host "`"1`" (w/o quotes) for `"yes`", other number for `"no`"") -ne 1){
-                            break
-                        }
-                    }
-                    $inputfiles = (Start-OverwriteProtection -InFiles $inputfiles -OutPath $script:MirrorPath)
-                    Invoke-Pause
-                    Start-FileCopy -InFiles $inputfiles -InPath $script:OutputPath -OutPath $script:MirrorPath
-                    Invoke-Pause
-                    $inputfiles = (Start-FileVerification -InFiles $inputfiles)
-                    Invoke-Pause
-                    $j++
-                }
-            }
-        }else{
-            Write-Host "-Debug 3 not defined at the moment. Sorry!"
-            # TODO: Implement Measure-Command or ditch $debug=3
         }
         break
     }
