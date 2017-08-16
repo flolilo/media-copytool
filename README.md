@@ -11,7 +11,7 @@ At the moment:
 
 ## Installing
 * [Download the zip](https://github.com/flolilo/media-copytool/archive/master.zip)
-* Extract all files to a folder (you can omit the .md-files if you want)
+* Extract all files to a folder (you can omit the .md-files and the LICENSE-file if you want)
 * Start the `media_copytool.ps1`-script.
 
 ### Troubleshooting
@@ -34,3 +34,4 @@ If you cannot start the script:
 - [ ] Making the output look nice(r) and especially make errors more transparent to users (Low priority)
 - [ ] Multithreading the GUI (Low priority)
 - [ ] Creating a second JSON-file for looked up files in output-path (eventually)
+- [ ] :de: Deutsche Übersetzung (sinnvollerweise erst mit Message-Parametern, daher in weiter Ferne)
