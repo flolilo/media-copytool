@@ -34,4 +34,4 @@ If you cannot start the script:
 - [ ] Making the output look nice(r) and especially make errors more transparent to users (Low priority)
 - [ ] Multithreading the GUI (Low priority)
 - [ ] Creating a second JSON-file for looked up files in output-path (eventually)
-- [ ] :de: Deutsche Übersetzung (sinnvollerweise erst mit Message-Parametern, daher in weiter Ferne)
+- [ ] :de: Deutsche Übersetzung (sinnvollerweise erst mit Message-Variablen, daher in weiter Ferne)
