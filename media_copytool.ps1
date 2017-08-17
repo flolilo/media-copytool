@@ -143,10 +143,19 @@ param(
 # First line of "param" (for remembering/restoring parameters):
 [int]$paramline = 120
 
-
+# Checking if PoshRSJob is installed:
+if (-not (Get-Module -ListAvailable -Name PoshRSJob)){
+    Write-Host "Module RSJob (https://github.com/proxb/PoshRSJob) is required, but it seemingly isn't installed - please start PowerShell as administrator and run`t" -ForegroundColor Red -NoNewline
+    Write-Host "Install-Module -Name PoshRSJob" -ForegroundColor DarkYellow
+    Pause
+    Exit
+}
 
 # Get all error-outputs in English:
 [Threading.Thread]::CurrentThread.CurrentUICulture = 'en-US'
+
+# To get times for -debug 3:
+$timer = [diagnostics.stopwatch]::StartNew()
 
 # CREDIT: Set default ErrorAction to Stop: https://stackoverflow.com/a/21260623/8013879
 if($debug -eq 0){
@@ -208,6 +217,17 @@ Function Get-Folder($InOutMirror){
         if($InOutMirror -eq "output"){$script:WPFtextBoxOutput.Text = $folderdialog.SelectedPath}
         if($InOutMirror -eq "mirror"){$script:WPFtextBoxMirror.Text = $folderdialog.SelectedPath}
     }
+}
+
+# DEFINITION: Enabling fast, colorful Write-Outs. Unfortunately, no -NoNewLine...
+Function Write-ColorOut(){
+    param(
+        [string]$color="White",
+        [string]$message
+    )
+    [Console]::ForegroundColor = $color
+    [Console]::WriteLine($message)
+    [Console]::ForegroundColor = "White"
 }
 
 # DEFINITION: Get values from GUI, then check the main input- and outputfolder:
@@ -1278,10 +1298,7 @@ Function Set-HistFile(){
 
 # DEFINITION: Pause the programme if debug-var is active. Also, enable measuring times per command with -debug 3.
 Function Invoke-Pause(){
-    param(
-        $starttime,
-        $endtime
-    )
+    param($timing)
 
     if($script:debug -eq 3){
         $time_job = (New-TimeSpan –Start $starttime –End $endtime).TotalSeconds
@@ -1318,7 +1335,8 @@ Function Start-Everything(){
         # Clear-Host
         Write-Host "    Welcome to Flo's Media-Copytool! // Willkommen bei Flos Media-Copytool!    " -ForegroundColor DarkCyan -BackgroundColor Gray
         Write-Host "                          v0.5 (Beta) - 24.7.2017                              `r`n" -ForegroundColor DarkCyan -BackgroundColor Gray
-        $starttime = Get-Date
+        $timer.reset()
+        $timer.start()
         if((Get-UserValues) -eq $false){
             Start-Sound(0)
             Start-Sleep -Seconds 2
@@ -1327,34 +1345,37 @@ Function Start-Everything(){
             }
             break
         }
-        $endtime = Get-Date
-        Invoke-Pause -starttime $starttime -endtime $endtime
+        $timer.stop()
+        Invoke-Pause -timing $timer.elapsed.TotalSeconds
         iF($script:RememberInPath -ne 0 -or $script:RememberOutPath -ne 0 -or $script:RememberMirrorPath -ne 0 -or $script:RememberSettings -ne 0){
-            $starttime = Get-Date
+            $timer.reset()
+            $timer.start()
             Start-Remembering
-            $endtime = Get-Date
-            Invoke-Pause -starttime $starttime -endtime $endtime
+            $timer.stop()
+            Invoke-Pause -timing $timer.elapsed.TotalSeconds
         }
         if($script:PreventStandby -eq 1){
-            "0" | Out-File -FilePath $preventStandbyFile -Encoding utf8
-            if((Test-Path -Path $PSScriptRoot\preventsleep.ps1) -eq $true){
-                Start-Process powershell -ArgumentList "$PSScriptRoot\preventsleep.ps1 -fileToCheck `"$preventStandbyFile`" -mode `"process`" -userProcessCount 2 -userProcess `"xcopy`",`"robocopy`" -timeBase 150 -shutdown 0 -counterMax 5" -WindowStyle Hidden
-            }else{
-                Write-Host "Couldn't find .\preventsleep.ps1, so can't prevent standby." -ForegroundColor Magenta
-                Start-Sleep -Seconds 3
-            }
+            Start-RSJob -Name "PreventStandby" -Throttle 1 -ScriptBlock {
+                while($true){
+                    $MyShell = New-Object -com "Wscript.Shell"
+                    $MyShell.sendkeys("{F15}")
+                    Start-Sleep -Seconds 300
+                }
+            } | Out-Null
         }
         [array]$histfiles = @()
         if($script:UseHistFile -eq 1){
-            $starttime = Get-Date
+            $timer.reset()
+            $timer.start()
             $histfiles = Get-HistFile
-            $endtime = Get-Date
-            Invoke-Pause -starttime $starttime -endtime $endtime
+            $timer.stop()
+            Invoke-Pause -timing $timer.elapsed.TotalSeconds
         }
-        $starttime = Get-Date
+        $timer.reset()
+        $timer.start()
         $inputfiles = (Start-FileSearchAndCheck -InPath $script:InputPath -OutPath $script:OutputPath -HistFiles $histfiles)
-        $endtime = Get-Date
-        Invoke-Pause -starttime $starttime -endtime $endtime
+        $timer.stop()
+        Invoke-Pause -timing $timer.elapsed.TotalSeconds
         if(1 -notin $inputfiles.tocopy){
             Write-Host "0 files left to copy - aborting rest of the script." -ForegroundColor Magenta
             Start-Sound(1)
@@ -1377,25 +1398,29 @@ Function Start-Everything(){
                     break
                 }
             }
-            $starttime = Get-Date
+            $timer.reset()
+            $timer.start()
             $inputfiles = (Start-OverwriteProtection -InFiles $inputfiles -OutPath $script:OutputPath)
-            $endtime = Get-Date
-            Invoke-Pause -starttime $starttime -endtime $endtime
-            $starttime = Get-Date
+            $timer.stop()
+            Invoke-Pause -timing $timer.elapsed.TotalSeconds
+            $timer.reset()
+            $timer.start()
             Start-FileCopy -InFiles $inputfiles -InPath $script:InputPath -OutPath $script:OutputPath
-            $endtime = Get-Date
-            Invoke-Pause -starttime $starttime -endtime $endtime
-            $starttime = Get-Date
+            $timer.stop()
+            Invoke-Pause -timing $timer.elapsed.TotalSeconds
+            $timer.reset()
+            $timer.start()
             $inputfiles = (Start-FileVerification -InFiles $inputfiles)
-            $endtime = Get-Date
-            Invoke-Pause -starttime $starttime -endtime $endtime
+            $timer.stop()
+            Invoke-Pause -timing $timer.elapsed.TotalSeconds
             $j++
         }
         if($script:WriteHistFile -ne "no"){
-            $starttime = Get-Date
+            $timer.reset()
+            $timer.start()
             Set-HistFile -InFiles $inputfiles
-            $endtime = Get-Date
-            Invoke-Pause -starttime $starttime -endtime $endtime
+            $timer.stop()
+            Invoke-Pause -timing $timer.elapsed.TotalSeconds
         }
         if($script:MirrorEnable -ne 0){
             for($i=0; $i -lt $inputfiles.fullpath.length; $i++){
@@ -1416,18 +1441,21 @@ Function Start-Everything(){
                         break
                     }
                 }
-                $starttime = Get-Date
+                $timer.reset()
+                $timer.start()
                 $inputfiles = (Start-OverwriteProtection -InFiles $inputfiles -OutPath $script:MirrorPath)
-                $endtime = Get-Date
-                Invoke-Pause -starttime $starttime -endtime $endtime
-                $starttime = Get-Date
+                $timer.stop()
+                Invoke-Pause -timing $timer.elapsed.TotalSeconds
+                $timer.reset()
+                $timer.start()
                 Start-FileCopy -InFiles $inputfiles -InPath $script:OutputPath -OutPath $script:MirrorPath
-                $endtime = Get-Date
-                Invoke-Pause -starttime $starttime -endtime $endtime
-                $starttime = Get-Date
+                $timer.stop()
+                Invoke-Pause -timing $timer.elapsed.TotalSeconds
+                $timer.reset()
+                $timer.start()
                 $inputfiles = (Start-FileVerification -InFiles $inputfiles)
-                $endtime = Get-Date
-                Invoke-Pause -starttime $starttime -endtime $endtime
+                $timer.stop()
+                Invoke-Pause -timing $timer.elapsed.TotalSeconds
                 $j++
             }
         }
@@ -1448,7 +1476,9 @@ Function Start-Everything(){
     }
     
     if($script:PreventStandby -eq 1){
-        "1" | Out-File -FilePath $preventStandbyFile -Encoding utf8
+        Get-RSJob -Name "PreventStandby" | Stop-RSJob
+        Start-Sleep -Milliseconds 5
+        Get-RSJob -Name "PreventStandby" | Remove-RSJob
     }
     if($script:GUI_CLI_Direct -eq "GUI"){
         $script:Form.WindowState ='Normal'

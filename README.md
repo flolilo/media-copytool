@@ -8,6 +8,8 @@ At the moment:
     - I am not sure if PowerShell Version >= 3 is supported on WinXP.
 - [PowerShell >= Version 3](https://www.microsoft.com/en-us/download/details.aspx?id=50395)
 - For the GUI: [.NET Framework >= 4.6](https://www.microsoft.com/en-us/download/details.aspx?id=55170)
+- Since v0.6: [PoshRSJob](https://github.com/proxb/PoshRSJob); as of now, it's only used for replacing preventsleep.ps1, but in future releases, it will also speed up Hash-operations.
+    - To install, open PowerShell as administrator and run `Install-Module -Name PoshRSJob`
 
 ## Installing
 * [Download the zip](https://github.com/flolilo/media-copytool/archive/master.zip)
