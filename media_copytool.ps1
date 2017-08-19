@@ -104,18 +104,22 @@
             3 - additional speedtest (ATM not implemented)
 
     .INPUTS
-        "preventsleep.ps1" if '-PreventStandby 1',
-        "media_copytool_filehistory.json" if '-UseHistFile 1'
-        Files must be located in the script's directory.
+        "media_copytool_filehistory.json" if -UseHistFile is 1 and/or -WriteHistFile is "yes" or "overwrite".
+        File(s) must be located in the script's directory and must not be renamed.
 
     .OUTPUTS
-        "media_copytool_progress.txt" if '-PreventStandby 1',
-        "media_copytool_filehistory.json" if '-WriteHistFile "Yes"' or '-WriteHistFile "Overwrite"'
-        Files will be located in the script's directory.
+        "media_copytool_filehistory.json" if -WriteHistFile is "Yes" or "Overwrite".
+        File(s) will be saved into the script's directory.
     
+    .EXAMPLE
+        See the preset/saved parameters of this script:
+        media_copytool.ps1 -showparams 1
     .EXAMPLE
         Start Media-Copytool with the Graphical user interface:
         media_copytool.ps1 -GUI_CLI_Direct "GUI"
+    .EXAMPLE
+        Copy Canon's Raw-Files, Movies, JPEGs from G:\ to D:\Backup and prevent the computer from ging to standby:
+        media_copytool.ps1 -PresetFormats "Can","Mov","Jpg" .InputPath "G:\" -OutputPath "D:\Backup" -PreventStandby 1 
 #>
 param(
     [int]$showparams=0,
@@ -141,7 +145,7 @@ param(
     [int]$debug=0
 )
 # First line of "param" (for remembering/restoring parameters):
-[int]$paramline = 120
+[int]$paramline = 124
 
 # DEFINITION: Enabling fast, colorful Write-Outs. Unfortunately, no -NoNewLine...
 Function Write-ColorOut(){
@@ -660,13 +664,13 @@ Function Get-UserValues(){
     $script:OutputSubfolderStyle = $script:OutputSubfolderStyle -Replace 'mm','MM'
 
     # check paths for trailing backslash:
-    if($script:InputPath.replace($script:InputPath.Substring(0,$script:InputPath.Length-1),"") -eq "\"){
+    if($script:InputPath.replace($script:InputPath.Substring(0,$script:InputPath.Length-1),"") -eq "\" -and $script:InputPath.Length -gt 3){
         $script:InputPath = $script:InputPath.Substring(0,$script:InputPath.Length-1)
     }
-    if($script:OutputPath.replace($script:OutputPath.Substring(0,$script:OutputPath.Length-1),"") -eq "\"){
+    if($script:OutputPath.replace($script:OutputPath.Substring(0,$script:OutputPath.Length-1),"") -eq "\" -and $script:OutputPath.Length -gt 3){
         $script:OutputPath = $script:OutputPath.Substring(0,$script:OutputPath.Length-1)
     }
-    if($script:MirrorPath.replace($script:MirrorPath.Substring(0,$script:MirrorPath.Length-1),"") -eq "\"){
+    if($script:MirrorPath.replace($script:MirrorPath.Substring(0,$script:MirrorPath.Length-1),"") -eq "\" -and $script:MirrorPath.Length -gt 3){
         $script:MirrorPath = $script:MirrorPath.Substring(0,$script:MirrorPath.Length-1)
     }
 
