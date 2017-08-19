@@ -10,7 +10,7 @@
     .NOTES
         Version:        0.6.1 (Beta)
         Author:         flolilo
-        Creation Date:  17.8.2017
+        Creation Date:  19.8.2017
         Legal stuff: This program is free software. It comes without any warranty, to the extent permitted by
         applicable law. Most of the script was written by myself (or heavily modified by me when searching for solutions
         on the WWW). However, some parts are copies or modifications of very genuine code - see
@@ -1315,7 +1315,7 @@ Function Start-Sound($success){
 # DEFINITION: Starts all the things.
 Function Start-Everything(){
     Write-ColorOut "`r`n`r`n    Welcome to Flo's Media-Copytool! // Willkommen bei Flos Media-Copytool!    " -ForegroundColor DarkCyan -BackgroundColor Gray
-    Write-ColorOut "                           v0.6.0 (Alpha) - 17.8.2017                          `r`n" -ForegroundColor DarkCyan -BackgroundColor Gray
+    Write-ColorOut "                           v0.6.1 (Beta) - 19.8.2017                           `r`n" -ForegroundColor DarkCyan -BackgroundColor Gray
 
     $script:timer = [diagnostics.stopwatch]::StartNew()
     while($true){
