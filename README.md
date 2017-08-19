@@ -1,8 +1,8 @@
 # media-copytool
 PowerShell-based, GUI-including script that not only copies your files, but also verifies them afterwards.
+:de: [Hier geht es zur deutschen Readme-Datei](https://github.com/flolilo/media-copytool/blob/master/README_GER.md). :de:
 
 ## Prerequisites
-At the moment:
 - Windows >= XP (Robocopy and Xcopy are used)
     - For XP, you need the [Windows Server 2003 Resource Kit Tools](https://www.microsoft.com/en-us/download/details.aspx?id=17657) to get Robocopy. From Vista onwards, Robocopy should be included.
     - I am not sure if PowerShell Version >= 3 is supported on WinXP.
@@ -13,19 +13,19 @@ At the moment:
     - To install PoshRSJob, open PowerShell as administrator and run `Install-Module -Name PoshRSJob`
 
 ## Installing
-* [Download the zip](https://github.com/flolilo/media-copytool/archive/master.zip)
-* Extract all files to a folder (you can omit the .md-files and the LICENSE-file if you want)
-* Start the `media_copytool.ps1`-script.
+- [Download the zip](https://github.com/flolilo/media-copytool/archive/master.zip)
+- Extract all files to a folder (you can omit the .md-files and the LICENSE-file if you want)
+- Start the `media_copytool.ps1`-script.
+
+## How to use media-copytool
+- Opening PowerShell and typing `Get-Help .\media_copytool.ps1 -detailed` should tell you everything you need.
 
 ### Troubleshooting
 If you cannot start the script:
-* Check if PowerShell's `Set-ExecutionPolicy` [is set correctly](https://superuser.com/a/106363/703240),
-* Check if prerequisites are met.
-
-## Readme
-:uk: I recommend using the readme-file `README.rtf` or using `Get-Help .\media_copytool.ps1 -detailed` in PowerShell - as of now, I still have to get used to GitHub's styling (and its limitations for a complete readme). :uk:
-
-:de: Die Readme-Datei hat auch einen deutschsprachigen Teil (anders als der Befehl `Get-Help .\media_copytool.ps1 -detailed`). :de:
+- Check if PowerShell's `Set-ExecutionPolicy` [is set correctly](https://superuser.com/a/106363/703240),
+- Check if prerequisites are met.
+- Perhaps don't place the script on the root of `C:\` ;-)
+- Unfortunately, it is still required to avoid brackets `[ ]` in all file names and directories for the script to run. It should check for brackets and throw an error if it encounters some.
 
 ## To do
 - [ ] Checking if the volume exists if output-path(s) are not found (instead of looking for the parent directory) (High priority)
