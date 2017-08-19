@@ -9,7 +9,8 @@ At the moment:
 - [PowerShell >= Version 3](https://www.microsoft.com/en-us/download/details.aspx?id=50395)
 - For the GUI: [.NET Framework >= 4.6](https://www.microsoft.com/en-us/download/details.aspx?id=55170)
 - Since v0.6: [PoshRSJob](https://github.com/proxb/PoshRSJob); as of now, it's only used for replacing preventsleep.ps1, but in future releases, it will also speed up Hash-operations.
-    - To install, open PowerShell as administrator and run `Install-Module -Name PoshRSJob`
+    - You can still use the old version - it's in the [0.5-branch](https://github.com/flolilo/media-copytool/archive/0.5---without-RSJob.zip) and will get important bugfixes as long as the code has any similiarity with the master-branch. (No promise, just an estimate!)
+    - To install PoshRSJob, open PowerShell as administrator and run `Install-Module -Name PoshRSJob`
 
 ## Installing
 * [Download the zip](https://github.com/flolilo/media-copytool/archive/master.zip)
