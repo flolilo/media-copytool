@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 (The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html). )
 
 ## 0.6.1 - 2017-08-19
-#### Same code as 0.5-branch's 0.5.2 (2017-08-19), except from using PoshRSJob instead of preventsleep.ps1 
+#### Same code as [0.5-branch's 0.5.2 (2017-08-19)](https://github.com/flolilo/media-copytool/blob/0.5---without-RSJob/CHANGELOG.md), except from using PoshRSJob instead of preventsleep.ps1 
 
 ### Changed
 - Fixing error in function `Start-Remembering` that would result in messing up the parameter-variables
@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - Sub-function in function `Get-UserValues` to remove trailing backslashes in the path-variables' values.
+- `$OutputEncoding` is now set to UTF8 (after parameter-block), so hopefully there won't be any more errors because of wrong encodings in the future.
 
 ### Removed
 - Nothing.
