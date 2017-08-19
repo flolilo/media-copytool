@@ -8,7 +8,7 @@
         Uses Windows' Robocopy and Xcopy for file-copy, then uses PowerShell's Get-FileHash (SHA1) for verifying that files were copied without errors.
 
     .NOTES
-        Version:        0.6.1 (Beta)
+        Version:        0.6.2 (Beta)
         Author:         flolilo
         Creation Date:  19.8.2017
         Legal stuff: This program is free software. It comes without any warranty, to the extent permitted by
@@ -861,16 +861,24 @@ Function Start-FileSearchAndCheck(){
                 outpath = "ZYX"
                 outname = $_.Name
                 outbasename = $_.BaseName
-                hash = $(if($script:DupliCompareHashes -ne 0 -or $script:CheckOutputDupli -ne 0){Get-FileHash -Path $_.FullName -Algorithm SHA1 -ErrorAction Stop | Select-Object -ExpandProperty Hash}else{"ZYX"})
+                hash = "ZYX"
                 tocopy = 1
             }
         }
     }
-    $sw.Reset()
     if($files_in.fullpath -match '[|[]*]'){
         Write-ColorOut "Files with illegal characters detected. Aborting!" -ForegroundColor Red
         Invoke-Close
     }
+
+    if($script:DupliCompareHashes -ne 0 -or $script:CheckOutputDupli -ne 0){
+        $files_in | Start-RSJob -Name "GetHash" -Throttle 4 -ScriptBlock {
+            $_.hash = Get-FileHash -Path $_.fullpath -Algorithm SHA1 | Select-Object -ExpandProperty Hash
+        } | Wait-RSJob -ShowProgress | Receive-RSJob
+        Get-RSJob -Name "GetHash" | Remove-RSJob
+    }
+
+    $sw.Reset()
 
     Write-ColorOut "`r`n`r`nTotal in-files:`t$($files_in.fullpath.Length)`r`n" -ForegroundColor Yellow
     $script:resultvalues.ingoing = $files_in.fullpath.Length
@@ -1010,17 +1018,10 @@ Function Start-FileSearchAndCheck(){
 
     # calculate hash (if not yet done), get index of files,...
     if($script:DupliCompareHashes -eq 0 -and $script:CheckOutputDupli -eq 0){
-        for($i = 0; $i -lt $files_in.hash.Length; $i++){
-            if($files_in[$i].tocopy -eq 1){
-                if($sw.Elapsed.TotalMilliseconds -ge 500 -or $i -eq 0){
-                    Write-Progress -Activity "Calculating hashes for files to copy..." -PercentComplete $($i / $($files_in.name.Length - $dupliindex_hist.Length - $dupliindex_out.Length) * 100) -Status "File # $($i + 1) / $($files_in.fullpath.Length) - $($files_in[$i].name)"
-                    $sw.Reset()
-                    $sw.Start()
-                }
-
-                $files_in[$i].hash = (Get-FileHash -Path $files_in[$i].fullpath -Algorithm SHA1 | Select-Object -ExpandProperty Hash)
-            }
-        }
+        $files_in | Where-Object {$_.tocopy -eq 1} | Start-RSJob -Name "GetHash" -Throttle 4 -ScriptBlock {
+            $_.hash = Get-FileHash -Path $_.fullpath -Algorithm SHA1 | Select-Object -ExpandProperty Hash
+        } | Wait-RSJob -ShowProgress | Receive-RSJob
+        Get-RSJob -Name "GetHash" | Remove-RSJob
     }
 
     $script:resultvalues.copyfiles = $files_in.fullpath.Length
@@ -1095,7 +1096,6 @@ Function Start-FileCopy(){
         [string]$InPath="->In<-",
         [string]$OutPath="->Out<-"
     )
-    $sw = [diagnostics.stopwatch]::StartNew()
 
     if($script:OutputSubfolderStyle -eq "none"){
         Write-ColorOut "`r`n$(Get-Date -Format "dd.MM.yy HH:mm:ss")  --  Copy files from $InPath to $($OutPath)..." -ForegroundColor Cyan
@@ -1168,28 +1168,11 @@ Function Start-FileCopy(){
     }
 
     # start xcopy:
-    $activeProcessCounter = 0
-    for($i = 0; $i -lt $xc_command.Length; $i++){
-        # Only allow 4 instances of xcopy simultaneously:
-        while($activeProcessCounter -ge 4){
-            $activeProcessCounter = @(Get-Process -ErrorAction SilentlyContinue -Name xcopy).count
-            Start-Sleep -Milliseconds 25
-        }
-        if($sw.Elapsed.TotalMilliseconds -ge 500 -or $i -eq 0){
-            Write-Progress -Activity "Xcopying..." -PercentComplete $($i / $xc_command.Length * 100) -Status "$($xc_command[$i].replace($xc_suffix,'').replace($OutputPath,'.').replace($InPath,'.'))"
-            $sw.Reset()
-            $sw.Start()
-        }
-        Start-Process xcopy -ArgumentList $xc_command[$i] -WindowStyle Hidden
-        Start-Sleep -Milliseconds 1
-        $activeProcessCounter++
-    }
+    $xc_command | Start-RSJob -Name "Xcopy" -Throttle 4 -ScriptBlock {
+        Start-Process xcopy -ArgumentList $_ -WindowStyle Hidden -Wait
+    } | Wait-RSJob -ShowProgress | Out-Null
+    Get-RSJob -Name "Xcopy" | Remove-RSJob
 
-    # When finished copying, wait until all xcopy-instances are done:
-    while($activeProcessCounter -gt 0){
-        $activeProcessCounter = @(Get-Process -ErrorAction SilentlyContinue -Name xcopy).count
-        Start-Sleep -Milliseconds 25
-    }
     Start-Sleep -Milliseconds 250
 }
 
@@ -1198,35 +1181,28 @@ Function Start-FileVerification(){
     param(
         [array]$InFiles
     )
-    $sw = [diagnostics.stopwatch]::StartNew()
 
     Write-ColorOut "`r`n$(Get-Date -Format "dd.MM.yy HH:mm:ss")  --  Verify newly copied files..." -ForegroundColor Cyan
 
-    for($i = 0; $i -lt $InFiles.fullpath.Length; $i++){
-        if($InFiles[$i].tocopy -eq 1){
-            if($sw.Elapsed.TotalMilliseconds -ge 500 -or $i -eq 0){
-                Write-Progress -Activity "Verifying..." -PercentComplete $($i / $InFiles.Length * 100) -Status "File # $($i + 1) / $($InFiles.fullpath.Length) - $($InFiles[$i].name)"
-                $sw.Reset()
-                $sw.Start()
-            }
-
-            $inter = "$($InFiles[$i].outpath)\$($InFiles[$i].outname)"
-            if((Test-Path -Path $inter -PathType Leaf) -eq $true){
-                if($InFiles[$i].hash -ne $(Get-FileHash -Path $inter -Algorithm SHA1 | Select-Object -ExpandProperty Hash)){
-                    Write-ColorOut "Broken:`t$inter" -ForegroundColor Red
-                    Rename-Item -Path $inter -NewName "$($inter)_broken"
-                }else{
-                    $InFiles[$i].tocopy = 0
-                    if((Test-Path -Path "$($InFiles[$i].outpath)\$($InFiles[$i].outname)_broken" -PathType Leaf) -eq $true){
-                        Remove-Item -Path "$($InFiles[$i].outpath)\$($InFiles[$i].outname)_broken"
-                    }
-                }
+    $InFiles | Where-Object {$_.tocopy -eq 1} | Start-RSJob -Name "GetHash" -Throttle 4 -FunctionsToLoad Write-ColorOut -ScriptBlock {
+        $inter = "$($_.outpath)\$($_.outname)"
+        if((Test-Path -Path $inter -PathType Leaf) -eq $true){
+            if($_.hash -ne $(Get-FileHash -Path $inter -Algorithm SHA1 | Select-Object -ExpandProperty Hash)){
+                Write-ColorOut "Broken:`t$inter" -ForegroundColor Red
+                Rename-Item -Path $inter -NewName "$($inter)_broken"
             }else{
-                Write-ColorOut "Missing:`t$inter" -ForegroundColor Red
-                New-Item -Path "$($inter)_broken" | Out-Null
+                $_.tocopy = 0
+                if((Test-Path -Path "$($inter)_broken" -PathType Leaf) -eq $true){
+                    Remove-Item -Path "$($inter)_broken"
+                }
             }
+        }else{
+            Write-ColorOut "Missing:`t$inter" -ForegroundColor Red
+            New-Item -Path "$($inter)_broken" | Out-Null
         }
-    }
+    } | Wait-RSJob -ShowProgress | Receive-RSJob
+    Get-RSJob -Name "GetHash" | Remove-RSJob
+    
     if(1 -notin $InFiles.tocopy){
         Write-ColorOut "`r`n`r`nAll files successfully verified!`r`n" -ForegroundColor Green
     }
