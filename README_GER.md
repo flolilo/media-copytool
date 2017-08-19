@@ -1,7 +1,7 @@
 # media-copytool
 :uk: [Here's the path to the English readme file](https://github.com/flolilo/media-copytool/blob/master/README.md). :uk:
 
-PowerShell-basiertes Skript mit GUI, das Datien nicht nur kopiert, sondern auch verifiziert.
+PowerShell-basiertes Skript mit GUI, das Datien nicht nur kopiert, sondern auch verifiziert. *Jetzt mit Multithreading für höhere Geschwindigkeiten!*
 
 
 ## Voraussetzungen
@@ -32,7 +32,7 @@ Falls das Skript nicht startet:
 
 ## To do
 - [ ] Checking if the volume exists if output-path(s) are not found (instead of looking for the parent directory) (High priority)
-- [ ] Multithreading Get-FileHash operations (High priority)
+- [x] Multithreading Get-FileHash operations (High priority)
 - [ ] Allowing special characters like brackets in Paths (High priority, but seemingly complicated)
 - [ ] Option to create a 7zip-archive for mirror-copying (Medium priority)
 - [ ] Option to unmount USB drives after finishing (first) copy (Medium priority)

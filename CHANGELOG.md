@@ -3,6 +3,17 @@ All notable changes to this project will be documented in this file.
 
 (The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html). )
 
+## 0.6.2. - 2017-08-20
+### Changed
+- Changed `for`-loops with `Get-FileHash`-instances and Xcopy-instances to `Start-RSJob`s - Now the script truly supports multithreading, and it's fast!
+
+### Added
+- `Start-RSJob`s for `Get-FileHash` and Xcopy
+
+### Removed
+- `for`-loops with `Get-FileHash`-instances and Xcopy-instances
+
+
 ## 0.6.1 - 2017-08-19
 #### Same code as [0.5-branch's 0.5.2 (2017-08-19)](https://github.com/flolilo/media-copytool/blob/0.5---without-RSJob/CHANGELOG.md), except from using PoshRSJob instead of preventsleep.ps1 
 
