@@ -33,7 +33,7 @@ If you cannot start the script:
 - [ ] Option to create a 7zip-archive for mirror-copying (Medium priority)
 - [ ] Option to unmount USB drives after finishing (first) copy (Medium priority)
 - [ ] Option to avoid copying a file that exists more than once in the input more than one time. (E.g. .\DCIM\File_1.jpeg & .\DCIM\Sub\File_1.jpeg -> .\Out\File_1.jpeg) (Low priority)
-- [ ] Making the output look nice(r) and especially make errors more transparent to users (Low priority)
+- [x] Making the output look nice(r) and especially make errors more transparent to users (Low priority)
 - [ ] Multithreading the GUI (Low priority)
 - [ ] Creating a second JSON-file for looked up files in output-path (eventually)
 - [ ] :de: Deutsche Übersetzung (sinnvollerweise erst mit Message-Variablen, daher in weiter Ferne)

@@ -3,6 +3,19 @@ All notable changes to this project will be documented in this file.
 
 (The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html). )
 
+## 0.6.1 - 2017-08-19
+### Changed
+- Fixing error in function `Start-Remembering` that would result in messing up the parameter-variables
+- Changed from `Write-Host` to own function `Write-ColorOut` and function `Write-Progress` for a more readable output and faster performance (`Write-Host` is very slow)
+- Changed script's encoding back from `UTF-8` to `UTF-8 with BOM` (hopefully, it stays that way now.)
+
+### Added
+- Sub-function in function `Get-UserValues` to remove trailing backslashes in the path-variables' values.
+
+### Removed
+- Nothing.
+
+
 ## 0.6.0 - 2017-8-17
 ### Changed
 - Standby-prevention is now done via an RSJob instead of the external script `preventsleep.ps1`
@@ -14,6 +27,9 @@ All notable changes to this project will be documented in this file.
 
 ### Removed
 - Script `preventsleep.ps1` (see "changed")
+
+## 0.5.2 - 2017-08-19
+### Same code as 0.6.1, except from PoshRSJob-implementation.
 
 
 ## 0.5.1 - 2017-08-15
