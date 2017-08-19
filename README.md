@@ -1,6 +1,8 @@
 # media-copytool
-PowerShell-based, GUI-including script that not only copies your files, but also verifies them afterwards.
 :de: [Hier geht es zur deutschen Readme-Datei](https://github.com/flolilo/media-copytool/blob/master/README_GER.md). :de:
+
+PowerShell-based, GUI-including script that not only copies your files, but also verifies them afterwards.
+
 
 ## Prerequisites
 - Windows >= XP (Robocopy and Xcopy are used)

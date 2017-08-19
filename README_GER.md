@@ -1,6 +1,8 @@
 # media-copytool
-PowerShell-basiertes Skript mit GUI, das Datien nicht nur kopiert, sondern auch verifiziert.
 :uk: [Here's the path to the English readme file](https://github.com/flolilo/media-copytool/blob/master/README.md). :uk:
+
+PowerShell-basiertes Skript mit GUI, das Datien nicht nur kopiert, sondern auch verifiziert.
+
 
 ## Voraussetzungen
 - Windows >= XP (Robocopy und Xcopy werden benötigt)
