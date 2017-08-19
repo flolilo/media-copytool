@@ -104,7 +104,7 @@
             3 - additional speedtest (ATM not implemented)
 
     .INPUTS
-        "media_copytool_filehistory.json" if -UseHistFile is 1 and/or -WriteHistFile is "yes" or "overwrite".
+        "media_copytool_filehistory.json" if -UseHistFile is 1
         File(s) must be located in the script's directory and must not be renamed.
 
     .OUTPUTS
