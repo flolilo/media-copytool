@@ -1,4 +1,4 @@
-﻿#requires -version 3
+#requires -version 3
 
 <#
     .SYNOPSIS
@@ -146,6 +146,9 @@ param(
 )
 # First line of "param" (for remembering/restoring parameters):
 [int]$paramline = 124
+
+#DEFINITION: Hopefully avoiding errors by wrong encoding now:
+$OutputEncoding = New-Object -typename System.Text.UTF8Encoding
 
 # DEFINITION: Enabling fast, colorful Write-Outs. Unfortunately, no -NoNewLine...
 Function Write-ColorOut(){
@@ -879,7 +882,7 @@ Function Start-FileSearchAndCheck(){
         # Comparing Files between History-File and Input-Folder via history-file:
         for($i = 0; $i -lt $files_in.fullpath.Length; $i++){
             if($sw.Elapsed.TotalMilliseconds -ge 500 -or $i -eq 0){
-                Write-Progress -Activity "Comparing to already copied files (history-file).." -PercentComplete $($i / $files_in.fullpath.Length * 100) -Status "File # $($i + 1) / $($files_in.fullpath.Length + 1) - $($files_in[$i].name)"
+                Write-Progress -Activity "Comparing to already copied files (history-file).." -PercentComplete $($i / $files_in.fullpath.Length * 100) -Status "File # $($i + 1) / $($files_in.fullpath.Length) - $($files_in[$i].name)"
                 $sw.Reset()
                 $sw.Start()
             }
@@ -951,7 +954,7 @@ Function Start-FileSearchAndCheck(){
             for($i = 0; $i -lt $files_in.fullpath.Length; $i++){
                 if($files_in[$i].tocopy -eq 1){
                     if($sw.Elapsed.TotalMilliseconds -ge 500 -or $i -eq 0){
-                        Write-Progress -Activity "Comparing to files in out-path..." -PercentComplete $($i / $($files_in.name.Length - $dupliindex_hist.Length) * 100) -Status "File # $($i + 1) / $($files_in.fullpath.Length + 1) - $($files_in[$i].name)"
+                        Write-Progress -Activity "Comparing to files in out-path..." -PercentComplete $($i / $($files_in.name.Length - $dupliindex_hist.Length) * 100) -Status "File # $($i + 1) / $($files_in.fullpath.Length) - $($files_in[$i].name)"
                         $sw.Reset()
                         $sw.Start()
                     }
@@ -1010,7 +1013,7 @@ Function Start-FileSearchAndCheck(){
         for($i = 0; $i -lt $files_in.hash.Length; $i++){
             if($files_in[$i].tocopy -eq 1){
                 if($sw.Elapsed.TotalMilliseconds -ge 500 -or $i -eq 0){
-                    Write-Progress -Activity "Calculating hashes for files to copy..." -PercentComplete $($i / $($files_in.name.Length - $dupliindex_hist.Length - $dupliindex_out.Length) * 100) -Status "File # $($i + 1) / $($files_in.fullpath.Length + 1) - $($files_in[$i].name)"
+                    Write-Progress -Activity "Calculating hashes for files to copy..." -PercentComplete $($i / $($files_in.name.Length - $dupliindex_hist.Length - $dupliindex_out.Length) * 100) -Status "File # $($i + 1) / $($files_in.fullpath.Length) - $($files_in[$i].name)"
                     $sw.Reset()
                     $sw.Start()
                 }
@@ -1038,7 +1041,7 @@ Function Start-OverwriteProtection(){
     for($i=0; $i -lt $InFiles.fullpath.Length; $i++){
         if($InFiles.tocopy -eq 1){
             if($sw.Elapsed.TotalMilliseconds -ge 500 -or $i -eq 0){
-                Write-Progress -Activity "Calculating hashes for files to copy..." -PercentComplete $($i / $InFiles.Length * 100) -Status "File # $($i + 1) / $($InFiles.fullpath.Length + 1) - $($InFiles[$i].name)"
+                Write-Progress -Activity "Calculating hashes for files to copy..." -PercentComplete $($i / $InFiles.Length * 100) -Status "File # $($i + 1) / $($InFiles.fullpath.Length) - $($InFiles[$i].name)"
                 $sw.Reset()
                 $sw.Start()
             }
@@ -1202,7 +1205,7 @@ Function Start-FileVerification(){
     for($i = 0; $i -lt $InFiles.fullpath.Length; $i++){
         if($InFiles[$i].tocopy -eq 1){
             if($sw.Elapsed.TotalMilliseconds -ge 500 -or $i -eq 0){
-                Write-Progress -Activity "Verifying..." -PercentComplete $($i / $InFiles.Length * 100) -Status "File # $($i + 1) / $($InFiles.fullpath.Length + 1) - $($InFiles[$i].name)"
+                Write-Progress -Activity "Verifying..." -PercentComplete $($i / $InFiles.Length * 100) -Status "File # $($i + 1) / $($InFiles.fullpath.Length) - $($InFiles[$i].name)"
                 $sw.Reset()
                 $sw.Start()
             }
