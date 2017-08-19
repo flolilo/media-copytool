@@ -766,38 +766,40 @@ Function Start-Remembering(){
 
 # DEFINITION: Get History-File
 Function Get-HistFile(){
-    param([string]$HistFilePath="$PSScriptRoot\media_copytool_filehistory.json")
+    param([string]$HistFilePath="$($PSScriptRoot)\media_copytool_filehistory.json")
     Write-ColorOut "$(Get-Date -Format "dd.MM.yy HH:mm:ss")  --  Checking for history-file, importing values..." -ForegroundColor Cyan
 
-    while($true){
-        if(Test-Path -Path $HistFilePath -PathType Leaf){
-            $JSONFile = Get-Content -Path $HistFilePath -Raw | ConvertFrom-Json
-            $JSONFile | Out-Null
-            $files_history = $JSONFile | ForEach-Object {
-                [PSCustomObject]@{
-                    name = $_.inname
-                    date = $_.date
-                    size = $_.size
-                    hash = $_.hash
-                }
-            }
-            if($script:debug -ne 0){
-                Write-ColorOut "Found values:" -ForegroundColor Yellow
-                $files_history | Format-Table
-            }
-            Break
-        }else{
-            Write-ColorOut "History-File $HistFilePath could not be found. This means it's possible that duplicates get copied." -ForegroundColor Magenta
-            if((Read-Host "Is that okay? Type '1' (without quotes) to confirm or any other number to abort. Confirm by pressing Enter") -eq 1){
-                $script:UseHistFile = 0
-                $script:WriteHistFile = "Overwrite"
-                break
-            }else{
-                Write-ColorOut "`r`nAborting.`r`n" -ForegroundColor Magenta
-                Invoke-Close
+    [array]$files_history = @()
+    if(Test-Path -Path $HistFilePath -PathType Leaf){
+        $JSONFile = Get-Content -Path $HistFilePath -Raw | ConvertFrom-Json
+        $JSONFile | Out-Null
+        $files_history = $JSONFile | ForEach-Object {
+            [PSCustomObject]@{
+                name = $_.inname
+                date = $_.date
+                size = $_.size
+                hash = $_.hash
             }
         }
+        $files_history
+        if($script:debug -ne 0){
+            Write-ColorOut "Found values: $($files_history.Length)" -ForegroundColor Yellow
+            Write-ColorOut "Name`tDate`tSize`tHash"
+            for($i = 0; $i -lt $files_history.Length; $i++){
+                Write-ColorOut "$($files_history[$i].name)`t$($files_history[$i].date)`t$($files_history[$i].size)`t$($files_history[$i].hash)" -ForegroundColor Gray
+            }
+        }
+    }else{
+        Write-ColorOut "History-File $HistFilePath could not be found. This means it's possible that duplicates get copied." -ForegroundColor Magenta
+        if((Read-Host "Is that okay? Type '1' (without quotes) to confirm or any other number to abort. Confirm by pressing Enter") -eq 1){
+            $script:UseHistFile = 0
+            $script:WriteHistFile = "Overwrite"
+        }else{
+            Write-ColorOut "`r`nAborting.`r`n" -ForegroundColor Magenta
+            Invoke-Close
+        }
     }
+
     if("null" -in $files_history -or $files_history.name.Length -ne $files_history.date.Length -or $files_history.name.Length -ne $files_history.size.Length -or $files_history.name.Length -ne $files_history.hash.Length -or $files_history.name.Length -eq 0){
         Write-ColorOut "Some values in the history-file $HistFilePath seem wrong - it's safest to delete the whole file." -ForegroundColor Magenta
         if((Read-Host "Is that okay? Type '1' (without quotes) to confirm or any other number to abort. Confirm by pressing Enter") -eq 1){
