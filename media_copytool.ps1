@@ -821,19 +821,18 @@ Function Get-HistFile(){
                 Write-ColorOut "$($files_history[$i].name)`t$($files_history[$i].date)`t$($files_history[$i].size)`t$($files_history[$i].hash)" -ForegroundColor Gray
             }
         }
+        if("null" -in $files_history -or $files_history.name.Length -ne $files_history.date.Length -or $files_history.name.Length -ne $files_history.size.Length -or $files_history.name.Length -ne $files_history.hash.Length -or $files_history.name.Length -eq 0){
+            Write-ColorOut "Some values in the history-file $HistFilePath seem wrong - it's safest to delete the whole file." -ForegroundColor Magenta
+            if((Read-Host "Is that okay? Type '1' (without quotes) to confirm or any other number to abort. Confirm by pressing Enter") -eq 1){
+                $script:UseHistFile = 0
+                $script:WriteHistFile = "Overwrite"
+            }else{
+                Write-ColorOut "`r`nAborting.`r`n" -ForegroundColor Magenta
+                Invoke-Close
+            }
+        }
     }else{
         Write-ColorOut "History-File $HistFilePath could not be found. This means it's possible that duplicates get copied." -ForegroundColor Magenta
-        if((Read-Host "Is that okay? Type '1' (without quotes) to confirm or any other number to abort. Confirm by pressing Enter") -eq 1){
-            $script:UseHistFile = 0
-            $script:WriteHistFile = "Overwrite"
-        }else{
-            Write-ColorOut "`r`nAborting.`r`n" -ForegroundColor Magenta
-            Invoke-Close
-        }
-    }
-
-    if("null" -in $files_history -or $files_history.name.Length -ne $files_history.date.Length -or $files_history.name.Length -ne $files_history.size.Length -or $files_history.name.Length -ne $files_history.hash.Length -or $files_history.name.Length -eq 0){
-        Write-ColorOut "Some values in the history-file $HistFilePath seem wrong - it's safest to delete the whole file." -ForegroundColor Magenta
         if((Read-Host "Is that okay? Type '1' (without quotes) to confirm or any other number to abort. Confirm by pressing Enter") -eq 1){
             $script:UseHistFile = 0
             $script:WriteHistFile = "Overwrite"
@@ -1074,6 +1073,7 @@ Function Start-OverwriteProtection(){
 
             # create outpath:
             $InFiles[$i].outpath = "$OutPath$($InFiles[$i].sub_date)"
+            $InFiles[$i].outpath = $InFiles[$i].outpath.Replace("\\","\")
             $InFiles[$i].outbasename = $InFiles[$i].basename
             # check for files with same name from input:
             [int]$j = 1
@@ -1303,9 +1303,18 @@ Function Invoke-Pause(){
 
 # DEFINITION: Exit the program (and close all windows) + option to pause before exiting.
 Function Invoke-Close(){
-    $script:Form.Close()
+    if($script:GUI_CLI_Direct -eq "GUI"){$script:Form.Close()}
     Set-Location $PSScriptRoot
     if($script:debug -ne 0){Pause}
+    Get-RSJob -Name "GetHash" | Stop-RSJob
+    Start-Sleep -Milliseconds 5
+    Get-RSJob -Name "GetHash" | Remove-RSJob
+    Get-RSJob -Name "Xcopy" | Stop-RSJob
+    Start-Sleep -Milliseconds 5
+    Get-RSJob -Name "Xcopy" | Remove-RSJob
+    Get-RSJob -Name "PreventStandby" | Stop-RSJob
+    Start-Sleep -Milliseconds 5
+    Get-RSJob -Name "PreventStandby" | Remove-RSJob
     Exit
 }
 
