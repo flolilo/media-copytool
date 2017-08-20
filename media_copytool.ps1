@@ -240,7 +240,7 @@ Function Get-UserValues(){
     if($script:GUI_CLI_Direct -eq "CLI"){
         # input-path
         while($true){
-            $script:InputPath = Read-Host "Please specify input-path"
+            [string]$script:InputPath = Read-Host "Please specify input-path"
             if($script:InputPath.Length -lt 2 -or (Test-Path -LiteralPath $script:InputPath -PathType Container) -eq $false){
                 Write-ColorOut "Invalid selection!" -ForeGroundColor Magenta
                 continue
@@ -250,7 +250,7 @@ Function Get-UserValues(){
         }
         # output-path
         while($true){
-            $script:OutputPath = Read-Host "Please specify output-path"
+            [string]$script:OutputPath = Read-Host "Please specify output-path"
             if($script:OutputPath -eq $script:InputPath){
                 Write-ColorOut "`r`nInput-path is the same as output-path.`r`n" -ForegroundColor Magenta
                 continue
@@ -275,7 +275,7 @@ Function Get-UserValues(){
         }
         # mirror yes/no
         while($true){
-            $script:MirrorEnable = Read-Host "Copy files to an additional folder? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+            [int]$script:MirrorEnable = Read-Host "Copy files to an additional folder? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
             if(!($script:MirrorEnable -eq 1 -or $script:MirrorEnable -eq 0)){
                 continue
             }else{
@@ -285,7 +285,7 @@ Function Get-UserValues(){
         # mirror-path
         if($script:MirrorEnable -eq 1){
             while($true){
-                $script:MirrorPath = Read-Host "Please specify additional output-path"
+                [string]$script:MirrorPath = Read-Host "Please specify additional output-path"
                 if($script:MirrorPath -eq $script:OutputPath -or $script:MirrorPath -eq $script:InputPath){
                     Write-ColorOut "`r`nAdditional output-path is the same as input- or output-path.`r`n" -ForegroundColor Red
                     continue
@@ -311,7 +311,7 @@ Function Get-UserValues(){
         while($true){
             $separator = ","
             $option = [System.StringSplitOptions]::RemoveEmptyEntries
-            $script:PresetFormats = (Read-Host "Which preset file-formats would you like to copy? Options: `"Can`",`"Nik`",`"Son`",`"Jpg`",`"Mov`",`"Aud`", or leave empty for none. For multiple selection, separate with commata.").Split($separator,$option)
+            [array]$script:PresetFormats = (Read-Host "Which preset file-formats would you like to copy? Options: `"Can`",`"Nik`",`"Son`",`"Jpg`",`"Mov`",`"Aud`", or leave empty for none. For multiple selection, separate with commata.").Split($separator,$option)
             if(!($script:PresetFormats.Length -ne 0 -and ("Can" -notin $script:PresetFormats -and "Nik" -notin $script:PresetFormats -and "Son" -notin $script:PresetFormats -and "Jpeg" -notin $script:PresetFormats -and "Jpg" -notin $script:PresetFormats -and "Mov" -notin $script:PresetFormats -and "Aud" -notin $script:PresetFormats))){
                 Write-ColorOut "Invalid selection!" -ForegroundColor Magenta
                 continue
@@ -347,7 +347,7 @@ Function Get-UserValues(){
         }
         # subfolder-style
         while($true){
-            $script:OutputSubfolderStyle = Read-Host "Which subfolder-style should be used in the output-path? Options: `"none`",`"yyyy-mm-dd`",`"yyyy_mm_dd`",`"yy-mm-dd`",`"yy_mm_dd`" (all w/o quotes)."
+            [string]$script:OutputSubfolderStyle = Read-Host "Which subfolder-style should be used in the output-path? Options: `"none`",`"yyyy-mm-dd`",`"yyyy_mm_dd`",`"yy-mm-dd`",`"yy_mm_dd`" (all w/o quotes)."
             if($script:OutputSubfolderStyle.Length -eq 0 -or ("none" -notin $script:OutputSubfolderStyle -and "yyyy-mm-dd" -notin $script:OutputSubfolderStyle -and "yyyy_mm_dd" -notin $script:OutputSubfolderStyle -and "yy-mm-dd" -notin $script:OutputSubfolderStyle -and "yy_mm_dd" -notin $script:OutputSubfolderStyle)){
                 Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
                 continue
@@ -357,7 +357,7 @@ Function Get-UserValues(){
         }
         # use history-file
         while($true){
-            $script:UseHistFile = Read-Host "How to treat history-file? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+            [int]$script:UseHistFile = Read-Host "How to treat history-file? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
             if($script:UseHistFile -notin (0..1)){
                 Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
                 continue
@@ -367,7 +367,7 @@ Function Get-UserValues(){
         }
         # write history-file
         while($true){
-            $script:WriteHistFile = Read-Host "Write newly copied files to history-file? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+            [string]$script:WriteHistFile = Read-Host "Write newly copied files to history-file? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
             if($script:WriteHistFile.Length -eq 0 -or ("yes" -notin $script:WriteHistFile -and "no" -notin $script:WriteHistFile -and "overwrite" -notin $script:WriteHistFile)){
                 Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
                 continue
@@ -377,7 +377,7 @@ Function Get-UserValues(){
         }
         # search subfolders in input-path 
         while($true){
-            $script:InputSubfolderSearch = Read-Host "Check input-path's subfolders? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+            [int]$script:InputSubfolderSearch = Read-Host "Check input-path's subfolders? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
             if($script:InputSubfolderSearch -notin (0..1)){
                 Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
                 continue
@@ -387,7 +387,7 @@ Function Get-UserValues(){
         }
         # additionally check input-hashes for dupli-verification
         while($true){
-            $script:DupliCompareHashes = Read-Host "Additionally compare all input-files via hashes (slow)? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+            [int]$script:DupliCompareHashes = Read-Host "Additionally compare all input-files via hashes (slow)? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
             if($script:DupliCompareHashes -notin (0..1)){
                 Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
                 continue
@@ -397,7 +397,7 @@ Function Get-UserValues(){
         }
         # check duplis in output-path
         while($true){
-            $script:CheckOutputDupli = Read-Host "Additionally check output-path for already copied files? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+            [int]$script:CheckOutputDupli = Read-Host "Additionally check output-path for already copied files? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
             if($script:CheckOutputDupli -notin (0..1)){
                 Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
                 continue
@@ -407,7 +407,7 @@ Function Get-UserValues(){
         }
         # prevent standby
         while($true){
-            $script:PreventStandby = Read-Host "Auto-prevent standby of computer while script is running? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+            [int]$script:PreventStandby = Read-Host "Auto-prevent standby of computer while script is running? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
             if($script:PreventStandby -notin (0..1)){
                 Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
                 continue
@@ -417,7 +417,7 @@ Function Get-UserValues(){
         }
         # $ThreadCount
         while($true){
-            $script:ThreadCount = Read-Host "Number of threads for multithreaded operations. Suggestion: Number in between 2 and 4."
+            [int]$script:ThreadCount = Read-Host "Number of threads for multithreaded operations. Suggestion: Number in between 2 and 4."
             if($script:ThreadCount -notin (0..999)){
                 Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
                 continue
@@ -427,7 +427,7 @@ Function Get-UserValues(){
         }
         # remember input
         while($true){
-            $script:RememberInPath = Read-Host "Remember the input-path for future uses? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+            [int]$script:RememberInPath = Read-Host "Remember the input-path for future uses? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
             if($script:RememberInPath -notin (0..1)){
                 Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
                 continue
@@ -437,7 +437,7 @@ Function Get-UserValues(){
         }
         # remember output
         while($true){
-            $script:RememberOutPath = Read-Host "Remember the output-path for future uses? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+            [int]$script:RememberOutPath = Read-Host "Remember the output-path for future uses? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
             if($script:RememberOutPath -notin (0..1)){
                 Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
                 continue
@@ -447,7 +447,7 @@ Function Get-UserValues(){
         }
         # remember mirror
         while($true){
-            $script:RememberMirrorPath = Read-Host "Remember the additional output-path for future uses? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+            [int]$script:RememberMirrorPath = Read-Host "Remember the additional output-path for future uses? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
             if($script:RememberMirrorPath -notin (0..1)){
                 Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
                 continue
@@ -457,7 +457,7 @@ Function Get-UserValues(){
         }
         # remember settings
         while($true){
-            $script:RememberSettings = Read-Host "Remember settings for future uses? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+            [int]$script:RememberSettings = Read-Host "Remember settings for future uses? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
             if($script:RememberSettings -notin (0..1)){
                 Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
                 continue
