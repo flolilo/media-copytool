@@ -1527,7 +1527,7 @@ $inputXML = @"
             <RadioButton x:Name="radioButtonWriteHistFileNo" Content="Don't add new files" ToolTip="Does not touch the history-file." GroupName="WriteHistFile"/>
             <RadioButton x:Name="radioButtonWriteHistFileOverwrite" Content="Delete old files, write new ones" ToolTip="Deletes the old values and only writes the new one to the history-file." GroupName="WriteHistFile"/>
         </ComboBox>
-        <ComboBox x:Name="comboBoxOptions" HorizontalAlignment="Right" Margin="0,126,50,0" VerticalAlignment="Top" Width="200" SelectedIndex="0" VerticalContentAlignment="Center" BorderThickness="1,5,1,1">
+        <ComboBox x:Name="comboBoxOptions" HorizontalAlignment="Right" Margin="0,126,50,0" VerticalAlignment="Top" Width="200" SelectedIndex="0" VerticalContentAlignment="Center" BorderThickness="1,1,1,1">
             <ComboBoxItem Content="Select some options"/>
             <CheckBox x:Name="checkBoxInSubSearch" Content="Include subfolders in in-path" ToolTip="Default. E.g. not only searching files in E:\DCIM, but also in E:\DCIM\abc"/>
             <CheckBox x:Name="checkBoxCheckInHash" Content="Check hashes of in-files (slow)" ToolTip="For history-check: If unchecked, dupli-check is done via name, size, date. If checked, hash is added. Dupli-Check in out-path disables this function."/>
@@ -1535,7 +1535,10 @@ $inputXML = @"
             <!-- <CheckBox x:Name="checkBoxPreventDupli" Content="Prevent duplicates from in-path" ToolTip="Prevent duplicates from the input-path (e.g. same file in two folders)."/> -->
             <CheckBox x:Name="checkBoxPreventStandby" Content="Prevent standby" ToolTip="Prevents system from hibernating by simulating the keystroke of F13." Foreground="#FF0080FF"/>
             <ComboBoxItem Content="Thread Count:"/>
-            <TextBox x:Name="textBoxThreadCount" Text="Thread Count" ToolTip="Number of threads for operations. High numbers tend to slow everything down; recommended: 2-4." HorizontalAlignment="Left" Width="100" BorderThickness="2" />
+            <DockPanel VerticalAlignment="Center" Margin="1" ToolTip="Number of threads for operations. High numbers tend to slow everything down; recommended: 2-4.">
+                <Slider x:Name="sliderThreadCount" Minimum="1" Maximum="24" TickPlacement="TopLeft" Width="150" SmallChange="1" Value="1" IsSnapToTickEnabled="True"/>
+                <TextBox x:Name="textBoxThreadCount" Text="{Binding ElementName=sliderThreadCount, Path=Value, UpdateSourceTrigger=PropertyChanged}" DockPanel.Dock="Right" TextAlignment="Right" Width="30" Margin="5,0,0,0" />
+            </DockPanel>
         </ComboBox>
         <CheckBox x:Name="checkBoxRememberSettings" Content=":Remember settings" ToolTip="Remember all parameters (excl. Remember-Params)" HorizontalAlignment="Right" Margin="0,158,50,0" VerticalAlignment="Top" Foreground="#FFC90000" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Padding="4,-2,0,0" Height="22" FlowDirection="RightToLeft"/>
         <Button x:Name="buttonStart" Content="START" HorizontalAlignment="Center" Margin="0,0,0,20" VerticalAlignment="Bottom" Width="100" IsDefault="True" FontWeight="Bold"/>
