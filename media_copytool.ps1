@@ -793,7 +793,7 @@ Function Start-Remembering(){
     }
 
     Invoke-Pause
-    Out-File -FilePath $PSCommandPath -InputObject $lines_new -Encoding UTF8
+    [IO.File]::WriteAllText($PSCommandPath, $lines_new)
 }
 
 # DEFINITION: Get History-File
@@ -1258,7 +1258,7 @@ Function Set-HistFile(){
 
     $results = ($InFiles | Where-Object {$_.tocopy -eq 0 -and $_.hash -ne "ZYX"} | Select-Object -Property inname,date,size,hash)
 
-    if($script:WriteHistFile -eq "Yes"){
+    if($script:WriteHistFile -eq "Yes" -and (Test-Path -Path $HistFilePath -PathType Leaf) -eq $true){
         $JSON = Get-Content -Path $HistFilePath -Raw | ConvertFrom-Json
         $JSON | Out-Null
         $results += $JSON | ForEach-Object {
@@ -1274,7 +1274,7 @@ Function Set-HistFile(){
     $results = $results | Sort-Object -Property inname,date,size,hash -Unique | ConvertTo-Json
 
     try{
-        $results | Out-File -FilePath $HistFilePath -Encoding utf8
+        [IO.File]::WriteAllText($HistFilePath, $results)
     }
     catch{
         Write-ColorOut "Writing to history-file failed! Trying again..." -ForegroundColor Red
