@@ -9,9 +9,9 @@
         Now supports multithreading via Boe Prox's PoshRSJob-cmdlet (https://github.com/proxb/PoshRSJob)
 
     .NOTES
-        Version:        0.6.2 (Beta)
+        Version:        0.6.3 (Alpha)
         Author:         flolilo
-        Creation Date:  20.8.2017
+        Creation Date:  21.8.2017
         Legal stuff: This program is free software. It comes without any warranty, to the extent permitted by
         applicable law. Most of the script was written by myself (or heavily modified by me when searching for solutions
         on the WWW). However, some parts are copies or modifications of very genuine code - see
@@ -27,9 +27,9 @@
             "CLI" - interactive console
             "direct" - instant execution with given parameters.
     .PARAMETER InputPath
-        Path from which files will be copied. At the moment, paths (as well as files) that contain brackets [ ] are not allowed.
+        Path from which files will be copied.
     .PARAMETER OutputPath
-        Path to copy the files to. ATM, paths that contain brackets [ ] are not allowed.
+        Path to copy the files to.
     .PARAMETER MirrorEnable
         Valid range: 0 (deactivate), 1 (activate)
         If enabled, it enables copying to a second output-path that is specified with -MirrorPath.
@@ -240,9 +240,9 @@ Function Get-UserValues(){
     if($script:GUI_CLI_Direct -eq "CLI"){
         # input-path
         while($true){
-            $script:InputPath = (Read-Host "Please specify input-path")
-            if($script:InputPath.Length -lt 2 -or (Test-Path -Path $script:InputPath -PathType Container) -eq $false -or $script:InputPath -match '[$|[]*]'){
-                Write-ColorOut "Invalid selection! Please note that brackets [ ] are not supported in filenames due to issues w/ PowerShell." -ForeGroundColor Magenta
+            $script:InputPath = Read-Host "Please specify input-path"
+            if($script:InputPath.Length -lt 2 -or (Test-Path -LiteralPath $script:InputPath -PathType Container) -eq $false){
+                Write-ColorOut "Invalid selection!" -ForeGroundColor Magenta
                 continue
             }else{
                 break
@@ -250,18 +250,14 @@ Function Get-UserValues(){
         }
         # output-path
         while($true){
-            $script:OutputPath = (Read-Host "Please specify output-path")
+            $script:OutputPath = Read-Host "Please specify output-path"
             if($script:OutputPath -eq $script:InputPath){
                 Write-ColorOut "`r`nInput-path is the same as output-path.`r`n" -ForegroundColor Magenta
                 continue
             }
-            if($script:OutputPath -match '[$|[]*]'){
-                Write-ColorOut "Invalid selection! Please note that brackets [ ] are not supported in filenames due to issues w/ PowerShell." -ForegroundColor Magenta
-                continue
-            }
-            if($script:OutputPath.Length -gt 1 -and (Test-Path -Path $script:OutputPath -PathType Container) -eq $true){
+            if($script:OutputPath.Length -gt 1 -and (Test-Path -LiteralPath $script:OutputPath -PathType Container) -eq $true){
                 break
-            }elseif((Split-Path -Parent -Path $script:OutputPath).Length -gt 1 -and (Test-Path -Path $(Split-Path -Parent -Path $script:OutputPath) -PathType Container) -eq $true){
+            }elseif((Split-Path -Parent -Path $script:OutputPath).Length -gt 1 -and (Test-Path -LiteralPath $(Split-Path -Parent -Path $script:OutputPath) -PathType Container) -eq $true){
                 # TODO: (Get-Item .\your\path\to\file.ext).PSDrive.Name instead of split-path TODO:
                 # CREDIT: https://stackoverflow.com/a/28967236/8013879
                 [int]$request = Read-Host "Output-path not found, but parent directory of it was found. Create chosen directory? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
@@ -289,18 +285,14 @@ Function Get-UserValues(){
         # mirror-path
         if($script:MirrorEnable -eq 1){
             while($true){
-                $script:MirrorPath = (Read-Host "Please specify additional output-path")
+                $script:MirrorPath = Read-Host "Please specify additional output-path"
                 if($script:MirrorPath -eq $script:OutputPath -or $script:MirrorPath -eq $script:InputPath){
                     Write-ColorOut "`r`nAdditional output-path is the same as input- or output-path.`r`n" -ForegroundColor Red
                     continue
                 }
-                if($script:MirrorPath -match '[$|[]*]'){
-                    Write-ColorOut "Invalid selection! Please note that brackets [ ] are not supported in filenames due to issues w/ PowerShell." -ForegroundColor Magenta
-                    continue
-                }
-                if($script:MirrorPath -gt 1 -and (Test-Path -Path $script:MirrorPath -PathType Container) -eq $true){
+                if($script:MirrorPath -gt 1 -and (Test-Path -LiteralPath $script:MirrorPath -PathType Container) -eq $true){
                     break
-                }elseif((Split-Path -Parent -Path $script:MirrorPath).Length -gt 1 -and (Test-Path -Path $(Split-Path -Parent -Path $script:MirrorPath) -PathType Container) -eq $true){
+                }elseif((Split-Path -Parent -Path $script:MirrorPath).Length -gt 1 -and (Test-Path -LiteralPath $(Split-Path -Parent -Path $script:MirrorPath) -PathType Container) -eq $true){
                     [int]$request = Read-Host "Additional output-path not found, but parent directory of it was found. Create chosen directory? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
                     if($request -eq 1){
                         New-Item -ItemType Directory -Path $script:MirrorPath | Out-Null
@@ -587,25 +579,17 @@ Function Get-UserValues(){
             }
         }
 
-        if($script:InputPath -match '[$|[]*]'){
-            Write-ColorOut "`r`nBrackets [ ] are not allowed due to issues with PowerShell.`r`n" -ForegroundColor Magenta
-            return $false
-        }
-        if($script:InputPath -lt 2 -or (Test-Path -Path $script:InputPath -PathType Container) -eq $false){
+        if($script:InputPath -lt 2 -or (Test-Path -LiteralPath $script:InputPath -PathType Container) -eq $false){
             Write-ColorOut "`r`nInput-path $script:InputPath could not be found.`r`n" -ForegroundColor Red
             return $false
         }
         # output-path
-        if($script:OutputPath -match '[$|[]*]'){
-            Write-ColorOut "`r`nBrackets [ ] are not allowed due to issues with PowerShell.`r`n" -ForegroundColor Magenta
-            return $false
-        }
         if($script:OutputPath -eq $script:InputPath){
             Write-ColorOut "`r`nOutput-path is the same as input-path.`r`n" -ForegroundColor Red
             return $false
         }
-        if($script:OutputPath.Length -lt 2 -or (Test-Path -Path $script:OutputPath -PathType Container) -eq $false){
-            if((Split-Path -Parent -Path $script:OutputPath).Length -gt 1 -and (Test-Path -Path $(Split-Path -Parent -Path $script:OutputPath) -PathType Container) -eq $true){
+        if($script:OutputPath.Length -lt 2 -or (Test-Path -LiteralPath $script:OutputPath -PathType Container) -eq $false){
+            if((Split-Path -Parent -Path $script:OutputPath).Length -gt 1 -and (Test-Path -LiteralPath $(Split-Path -Parent -Path $script:OutputPath) -PathType Container) -eq $true){
                 while($true){
                     [int]$request = Read-Host "Output-path not found, but parent directory of it was found. Create chosen directory? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
                     if($request -eq 1){
@@ -628,12 +612,8 @@ Function Get-UserValues(){
                 Write-ColorOut "`r`nAdditional output-path is the same as input- or output-path.`r`n" -ForegroundColor Red
                 return $false
             }
-            if($script:MirrorPath -match '[$|[]*]'){
-                Write-ColorOut "`r`nBrackets [ ] are not allowed due to issues with PowerShell.`r`n" -ForegroundColor Magenta
-                return $false
-            }
-            if($script:MirrorPath -lt 2 -or (Test-Path -Path $script:MirrorPath -PathType Container) -eq $false){
-                if((Split-Path -Parent -Path $script:MirrorPath).Length -gt 1 -and (Test-Path -Path $(Split-Path -Parent -Path $script:MirrorPath) -PathType Container) -eq $true){
+            if($script:MirrorPath -lt 2 -or (Test-Path -LiteralPath $script:MirrorPath -PathType Container) -eq $false){
+                if((Split-Path -Parent -Path $script:MirrorPath).Length -gt 1 -and (Test-Path -LiteralPath $(Split-Path -Parent -Path $script:MirrorPath) -PathType Container) -eq $true){
                     while($true){
                         [int]$request = Read-Host "Additional output-path not found, but parent directory of it was found. Create chosen directory? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
                         if($request -eq 1){
@@ -793,7 +773,9 @@ Function Start-Remembering(){
     }
 
     Invoke-Pause
-    [IO.File]::WriteAllText($PSCommandPath, $lines_new)
+    # $Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding($False)
+    [System.IO.File]::WriteAllText($PSCommandPath, $lines_new)
+    # $lines_new | Out-File -FilePath $PSCommandPath -Encoding unicode
 }
 
 # DEFINITION: Get History-File
@@ -802,8 +784,8 @@ Function Get-HistFile(){
     Write-ColorOut "$(Get-Date -Format "dd.MM.yy HH:mm:ss")  --  Checking for history-file, importing values..." -ForegroundColor Cyan
 
     [array]$files_history = @()
-    if(Test-Path -Path $HistFilePath -PathType Leaf){
-        $JSONFile = Get-Content -Path $HistFilePath -Raw | ConvertFrom-Json
+    if(Test-Path -LiteralPath $HistFilePath -PathType Leaf){
+        $JSONFile = Get-Content -LiteralPath $HistFilePath -Raw -Encoding UTF8 | ConvertFrom-Json
         $JSONFile | Out-Null
         $files_history = $JSONFile | ForEach-Object {
             [PSCustomObject]@{
@@ -865,7 +847,7 @@ Function Start-FileSearchAndCheck(){
     $inter = $(if($script:DupliCompareHashes -ne 0 -or $script:CheckOutputDupli -ne 0){"incl."}else{"excl."})
 
     for($i=0;$i -lt $script:allChosenFormats.Length; $i++){
-       $files_in += Get-ChildItem -Path $InPath -Filter $script:allChosenFormats[$i] -Recurse:$script:input_recurse -File | ForEach-Object {
+       $files_in += Get-ChildItem -LiteralPath $InPath -Filter $script:allChosenFormats[$i] -Recurse:$script:input_recurse -File | ForEach-Object {
             if($sw.Elapsed.TotalMilliseconds -ge 500 -or $counter -eq 1){
                 Write-Progress -Activity "Find files in $InPath ($inter additional hash-calc.)..." -PercentComplete -1 -Status "File #$counter - $($_.FullName.Replace("$InPath",'.'))"
                 $sw.Reset()
@@ -890,14 +872,10 @@ Function Start-FileSearchAndCheck(){
             }
         }
     }
-    if($files_in.fullpath -match '[|[]*]'){
-        Write-ColorOut "Files with illegal characters detected. Aborting!" -ForegroundColor Red
-        Invoke-Close
-    }
 
     if($script:DupliCompareHashes -ne 0 -or $script:CheckOutputDupli -ne 0){
         $files_in | Start-RSJob -Name "GetHash" -throttle $script:ThreadCount -ScriptBlock {
-            $_.hash = Get-FileHash -Path $_.fullpath -Algorithm SHA1 | Select-Object -ExpandProperty Hash
+            $_.hash = Get-FileHash -LiteralPath $_.fullpath -Algorithm SHA1 | Select-Object -ExpandProperty Hash
         } | Wait-RSJob -ShowProgress | Receive-RSJob
         Get-RSJob -Name "GetHash" | Remove-RSJob
     }
@@ -964,7 +942,7 @@ Function Start-FileSearchAndCheck(){
         Write-ColorOut "`r`nAdditional comparison to already existing files in the output-path..." -ForegroundColor Yellow
         [int]$counter = 1
         for($i=0;$i -lt $script:allChosenFormats.Length; $i++){
-            $script:files_duplicheck += Get-ChildItem -Path $OutPath -Filter $script:allChosenFormats[$i] -Recurse -File | ForEach-Object {
+            $script:files_duplicheck += Get-ChildItem -LiteralPath $OutPath -Filter $script:allChosenFormats[$i] -Recurse -File | ForEach-Object {
                 if($sw.Elapsed.TotalMilliseconds -ge 500 -or $counter -eq 1){
                     Write-Progress -Activity "Find files in $OutPath..." -PercentComplete -1 -Status "File # $counter - $($_.FullName.Replace("$OutPath",'.'))"
                     $sw.Reset()
@@ -995,7 +973,7 @@ Function Start-FileSearchAndCheck(){
                     while($true){
                         # calculate hash only if date and size are the same:
                         if($($files_in[$i].date) -eq $($script:files_duplicheck[$j].date) -and $($files_in[$i].size) -eq $($script:files_duplicheck[$j].size)){
-                            $script:files_duplicheck[$j].hash = (Get-FileHash -Path $script:files_duplicheck.fullpath[$j] -Algorithm SHA1 | Select-Object -ExpandProperty Hash)
+                            $script:files_duplicheck[$j].hash = (Get-FileHash -LiteralPath $script:files_duplicheck.fullpath[$j] -Algorithm SHA1 | Select-Object -ExpandProperty Hash)
                             if($files_in[$i].hash -eq $script:files_duplicheck[$j].hash){
                                 $dupliindex_out += $i
                                 Write-ColorOut "Existing: $($i + 1) - $($files_in[$i].inname.Replace("$InPath",'.'))" -ForegroundColor DarkGreen
@@ -1043,7 +1021,7 @@ Function Start-FileSearchAndCheck(){
     # calculate hash (if not yet done), get index of files,...
     if($script:DupliCompareHashes -eq 0 -and $script:CheckOutputDupli -eq 0){
         $files_in | Where-Object {$_.tocopy -eq 1} | Start-RSJob -Name "GetHash" -throttle $script:ThreadCount -ScriptBlock {
-            $_.hash = Get-FileHash -Path $_.fullpath -Algorithm SHA1 | Select-Object -ExpandProperty Hash
+            $_.hash = Get-FileHash -LiteralPath $_.fullpath -Algorithm SHA1 | Select-Object -ExpandProperty Hash
         } | Wait-RSJob -ShowProgress | Receive-RSJob
         Get-RSJob -Name "GetHash" | Remove-RSJob
     }
@@ -1080,7 +1058,7 @@ Function Start-OverwriteProtection(){
             [int]$k = 1
             while($true){
                 [string]$check = "$($InFiles[$i].outpath)\$($InFiles[$i].outname)"
-                if($check -notin $allpaths -and (Test-Path -Path $check -PathType Leaf) -eq $false){
+                if($check -notin $allpaths -and (Test-Path -LiteralPath $check -PathType Leaf) -eq $false){
                     $allpaths += $check
                     break
                 }elseif($check -in $allpaths){
@@ -1093,7 +1071,7 @@ Function Start-OverwriteProtection(){
                     $j++
                     # if($script:debug -ne 0){Write-ColorOut $InFiles[$i].outbasename}
                     continue
-                }elseif((Test-Path -Path $check -PathType Leaf) -eq $true){
+                }elseif((Test-Path -LiteralPath $check -PathType Leaf) -eq $true){
                     if($k -eq 1){
                         $InFiles[$i].outbasename = "$($InFiles[$i].outbasename)_OutCopy$k"
                     }else{
@@ -1211,14 +1189,14 @@ Function Start-FileVerification(){
 
     $InFiles | Where-Object {$_.tocopy -eq 1} | Start-RSJob -Name "GetHash" -throttle $script:ThreadCount -FunctionsToLoad Write-ColorOut -ScriptBlock {
         $inter = "$($_.outpath)\$($_.outname)"
-        if((Test-Path -Path $inter -PathType Leaf) -eq $true){
-            if($_.hash -ne $(Get-FileHash -Path $inter -Algorithm SHA1 | Select-Object -ExpandProperty Hash)){
+        if((Test-Path -LiteralPath $inter -PathType Leaf) -eq $true){
+            if($_.hash -ne $(Get-FileHash -LiteralPath $inter -Algorithm SHA1 | Select-Object -ExpandProperty Hash)){
                 Write-ColorOut "Broken:`t$inter" -ForegroundColor Red
-                Rename-Item -Path $inter -NewName "$($inter)_broken"
+                Rename-Item -LiteralPath $inter -NewName "$($inter)_broken"
             }else{
                 $_.tocopy = 0
-                if((Test-Path -Path "$($inter)_broken" -PathType Leaf) -eq $true){
-                    Remove-Item -Path "$($inter)_broken"
+                if((Test-Path -LiteralPath "$($inter)_broken" -PathType Leaf) -eq $true){
+                    Remove-Item -LiteralPath "$($inter)_broken"
                 }
             }
         }else{
@@ -1258,8 +1236,8 @@ Function Set-HistFile(){
 
     $results = ($InFiles | Where-Object {$_.tocopy -eq 0 -and $_.hash -ne "ZYX"} | Select-Object -Property inname,date,size,hash)
 
-    if($script:WriteHistFile -eq "Yes" -and (Test-Path -Path $HistFilePath -PathType Leaf) -eq $true){
-        $JSON = Get-Content -Path $HistFilePath -Raw | ConvertFrom-Json
+    if($script:WriteHistFile -eq "Yes" -and (Test-Path -LiteralPath $HistFilePath -PathType Leaf) -eq $true){
+        $JSON = Get-Content -LiteralPath $HistFilePath -Raw -Encoding UTF8 | ConvertFrom-Json
         $JSON | Out-Null
         $results += $JSON | ForEach-Object {
             [PSCustomObject]@{
@@ -1274,7 +1252,9 @@ Function Set-HistFile(){
     $results = $results | Sort-Object -Property inname,date,size,hash -Unique | ConvertTo-Json
 
     try{
-        [IO.File]::WriteAllText($HistFilePath, $results)
+        # $Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding($False)
+        [System.IO.File]::WriteAllText($HistFilePath, $results)
+        # $results | Out-File -FilePath $HistFilePath -Encoding unicode
     }
     catch{
         Write-ColorOut "Writing to history-file failed! Trying again..." -ForegroundColor Red
