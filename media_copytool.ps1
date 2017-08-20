@@ -6,11 +6,12 @@
 
     .DESCRIPTION
         Uses Windows' Robocopy and Xcopy for file-copy, then uses PowerShell's Get-FileHash (SHA1) for verifying that files were copied without errors.
+        Now supports multithreading via Boe Prox's PoshRSJob-cmdlet (https://github.com/proxb/PoshRSJob)
 
     .NOTES
         Version:        0.6.2 (Beta)
         Author:         flolilo
-        Creation Date:  19.8.2017
+        Creation Date:  20.8.2017
         Legal stuff: This program is free software. It comes without any warranty, to the extent permitted by
         applicable law. Most of the script was written by myself (or heavily modified by me when searching for solutions
         on the WWW). However, some parts are copies or modifications of very genuine code - see
@@ -1585,11 +1586,7 @@ $inputXML = @"
     })
     # DEFINITION: About-Button
     $WPFbuttonAbout.Add_Click({
-        if((Test-Path -Path "$PSScriptRoot\README.rtf") -eq $true){
-            Start-Process wordpad.exe -ArgumentList "`"$PSScriptRoot\README.rtf`""
-        }else{
-            Start-Process powershell -ArgumentList "Get-Help $PSCommandPath -detailed" -NoNewWindow -Wait
-        }
+        Start-Process powershell -ArgumentList "Get-Help $PSCommandPath -detailed" -NoNewWindow -Wait
     })
     # DEFINITION: Close-Button
     $WPFbuttonClose.Add_Click({
