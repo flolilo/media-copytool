@@ -1304,8 +1304,6 @@ Function Invoke-Pause(){
 # DEFINITION: Exit the program (and close all windows) + option to pause before exiting.
 Function Invoke-Close(){
     if($script:GUI_CLI_Direct -eq "GUI"){$script:Form.Close()}
-    Set-Location $PSScriptRoot
-    if($script:debug -ne 0){Pause}
     Get-RSJob -Name "GetHash" | Stop-RSJob
     Start-Sleep -Milliseconds 5
     Get-RSJob -Name "GetHash" | Remove-RSJob
@@ -1315,6 +1313,7 @@ Function Invoke-Close(){
     Get-RSJob -Name "PreventStandby" | Stop-RSJob
     Start-Sleep -Milliseconds 5
     Get-RSJob -Name "PreventStandby" | Remove-RSJob
+    if($script:debug -ne 0){Pause}
     Exit
 }
 
