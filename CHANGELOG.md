@@ -9,7 +9,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - `Start-RSJob`s for `Get-FileHash` and Xcopy
-    - Parameter (and GUI TextBox) `ThreadCount` to allow the user to experiment with different thread counts. To high numbers (with average equipment: >4) will slow everything down!
+    - Parameter (and GUI TextBox & Slider) `ThreadCount` to allow the user to experiment with different thread counts. To high numbers (with average equipment: >4) will slow everything down!
 
 ### Removed
 - `for`-loops with `Get-FileHash`-instances and Xcopy-instances
