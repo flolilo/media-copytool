@@ -84,6 +84,9 @@
     .PARAMETER PreventStandby
         Valid range: 0 (deactivate), 1 (activate)
         If enabled, automatic standby or shutdown is prevented as long as media-copytool is running.
+    .PARAMETER ThreadCount
+        Thread-count for RSJobs.
+        You can experiment around with this: too high thread counts tend to be much slower than relatively low ones.
     .PARAMETER RememberInPath
         Valid range: 0 (deactivate), 1 (activate)
         If enabled, it remembers the value of -InputPath for future script-executions.
@@ -139,6 +142,7 @@ param(
     [int]$DupliCompareHashes=0,
     [int]$CheckOutputDupli=0,
     [int]$PreventStandby=1,
+    [int]$ThreadCount=2,
     [int]$RememberInPath=0,
     [int]$RememberOutPath=0,
     [int]$RememberMirrorPath=0,
@@ -146,7 +150,7 @@ param(
     [int]$debug=0
 )
 # First line of "param" (for remembering/restoring parameters):
-[int]$paramline = 124
+[int]$paramline = 128
 
 #DEFINITION: Hopefully avoiding errors by wrong encoding now:
 $OutputEncoding = New-Object -typename System.Text.UTF8Encoding
@@ -201,7 +205,8 @@ if($showparams -ne 0){
     Write-ColorOut "-WriteHistFile`t`t=`t$WriteHistFile" -ForegroundColor Cyan
     Write-ColorOut "-InputSubfolderSearch`t=`t$InputSubfolderSearch" -ForegroundColor Cyan
     Write-ColorOut "-CheckOutputDupli`t=`t$CheckOutputDupli" -ForegroundColor Cyan
-    Write-ColorOut "-PreventStandby`t`t=`t$PreventStandby`r`n" -ForegroundColor Cyan
+    Write-ColorOut "-PreventStandby`t`t=`t$PreventStandby" -ForegroundColor Cyan
+    Write-ColorOut "-ThreadCount`t`t=`t$ThreadCount`r`n" -ForegroundColor Cyan
     Pause
     Exit
 }
@@ -418,6 +423,16 @@ Function Get-UserValues(){
                 break
             }
         }
+        # $ThreadCount
+        while($true){
+            $script:ThreadCount = Read-Host "Number of threads for multithreaded operations. Suggestion: Number in between 2 and 4."
+            if($script:ThreadCount -notin (0..999)){
+                Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
+                continue
+            }else{
+                break
+            }
+        }
         # remember input
         while($true){
             $script:RememberInPath = Read-Host "Remember the input-path for future uses? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
@@ -498,6 +513,8 @@ Function Get-UserValues(){
             $script:CheckOutputDupli = $(if($script:WPFcheckBoxOutputDupli.IsChecked -eq $true){1}else{0})
             # prevent standby
             $script:PreventStandby = $(if($script:WPFcheckBoxPreventStandby.IsChecked -eq $true){1}else{0})
+            # $ThreadCount
+            $script:ThreadCount = $script:WPFtextBoxThreadCount.Text
             # remember input
             $script:RememberInPath = $(if($script:WPFcheckBoxRememberIn.IsChecked -eq $true){1}else{0})
             # remember output
@@ -546,6 +563,10 @@ Function Get-UserValues(){
             }
             if($script:PreventStandby -notin (0..1)){
                 Write-ColorOut "Invalid choice of -PreventStandby." -ForegroundColor Red
+                return $false
+            }
+            if($script:ThreadCount -notin (0..999)){
+                Write-ColorOut "Invalid choice of -ThreadCount." -ForegroundColor Red
                 return $false
             }
             if($script:RememberInPath -notin (0..1)){
@@ -692,6 +713,7 @@ Function Get-UserValues(){
         Write-ColorOut "DupliCompareHashes:`t$script:DupliCompareHashes"
         Write-ColorOut "CheckOutputDupli:`t$script:CheckOutputDupli"
         Write-ColorOut "PreventStandby:`t`t$script:PreventStandby"
+        Write-ColorOut "ThreadCount:`t`t$script:ThreadCount"
     }
 
     # if everything was sucessful, return true:
@@ -727,7 +749,7 @@ Function Start-Remembering(){
     # Remember settings
     if($script:RememberSettings -ne 0){
         Write-ColorOut "From:"
-        for($i = $($script:paramline + 1); $i -le $($script:paramline + 15); $i++){
+        for($i = $($script:paramline + 1); $i -le $($script:paramline + 16); $i++){
             if(-not ($i -eq $($script:paramline + 2) -or $i -eq $($script:paramline + 3) -or $i -eq $($script:paramline + 5))){
                 Write-ColorOut $lines_new[$i] -ForegroundColor Gray
             }
@@ -759,9 +781,11 @@ Function Start-Remembering(){
         $lines_new[$($script:paramline + 14)] = '    [int]$CheckOutputDupli=' + "$script:CheckOutputDupli" + ','
         # $PreventStandby
         $lines_new[$($script:paramline + 15)] = '    [int]$PreventStandby=' + "$script:PreventStandby" + ','
+        # $ThreadCount
+        $lines_new[$($script:paramline + 16)] = '    [int]$ThreadCount=' + "$script:ThreadCount" + ','
 
         Write-ColorOut "To:"
-        for($i = $($script:paramline + 1); $i -le $($script:paramline + 15); $i++){
+        for($i = $($script:paramline + 1); $i -le $($script:paramline + 16); $i++){
             if(-not ($i -eq $($script:paramline + 2) -or $i -eq $($script:paramline + 3) -or $i -eq $($script:paramline + 5))){
                 Write-ColorOut $lines_new[$i] -ForegroundColor Yellow
             }
@@ -873,7 +897,7 @@ Function Start-FileSearchAndCheck(){
     }
 
     if($script:DupliCompareHashes -ne 0 -or $script:CheckOutputDupli -ne 0){
-        $files_in | Start-RSJob -Name "GetHash" -Throttle 4 -ScriptBlock {
+        $files_in | Start-RSJob -Name "GetHash" -throttle $script:ThreadCount -ScriptBlock {
             $_.hash = Get-FileHash -Path $_.fullpath -Algorithm SHA1 | Select-Object -ExpandProperty Hash
         } | Wait-RSJob -ShowProgress | Receive-RSJob
         Get-RSJob -Name "GetHash" | Remove-RSJob
@@ -1019,7 +1043,7 @@ Function Start-FileSearchAndCheck(){
 
     # calculate hash (if not yet done), get index of files,...
     if($script:DupliCompareHashes -eq 0 -and $script:CheckOutputDupli -eq 0){
-        $files_in | Where-Object {$_.tocopy -eq 1} | Start-RSJob -Name "GetHash" -Throttle 4 -ScriptBlock {
+        $files_in | Where-Object {$_.tocopy -eq 1} | Start-RSJob -Name "GetHash" -throttle $script:ThreadCount -ScriptBlock {
             $_.hash = Get-FileHash -Path $_.fullpath -Algorithm SHA1 | Select-Object -ExpandProperty Hash
         } | Wait-RSJob -ShowProgress | Receive-RSJob
         Get-RSJob -Name "GetHash" | Remove-RSJob
@@ -1169,7 +1193,7 @@ Function Start-FileCopy(){
     }
 
     # start xcopy:
-    $xc_command | Start-RSJob -Name "Xcopy" -Throttle 4 -ScriptBlock {
+    $xc_command | Start-RSJob -Name "Xcopy" -throttle $script:ThreadCount -ScriptBlock {
         Start-Process xcopy -ArgumentList $_ -WindowStyle Hidden -Wait
     } | Wait-RSJob -ShowProgress | Out-Null
     Get-RSJob -Name "Xcopy" | Remove-RSJob
@@ -1185,7 +1209,7 @@ Function Start-FileVerification(){
 
     Write-ColorOut "`r`n$(Get-Date -Format "dd.MM.yy HH:mm:ss")  --  Verify newly copied files..." -ForegroundColor Cyan
 
-    $InFiles | Where-Object {$_.tocopy -eq 1} | Start-RSJob -Name "GetHash" -Throttle 4 -FunctionsToLoad Write-ColorOut -ScriptBlock {
+    $InFiles | Where-Object {$_.tocopy -eq 1} | Start-RSJob -Name "GetHash" -throttle $script:ThreadCount -FunctionsToLoad Write-ColorOut -ScriptBlock {
         $inter = "$($_.outpath)\$($_.outname)"
         if((Test-Path -Path $inter -PathType Leaf) -eq $true){
             if($_.hash -ne $(Get-FileHash -Path $inter -Algorithm SHA1 | Select-Object -ExpandProperty Hash)){
@@ -1456,65 +1480,67 @@ if($GUI_CLI_Direct -eq "GUI"){
     #>
 $inputXML = @"
 <Window x:Class="MediaCopytool.MainWindow"
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d"
-    Title="Flo's Media-Copytool v0.6.0 Alpha" Height="276" Width="800" ResizeMode="CanMinimize">
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Flo's Media-Copytool v0.6.2 Beta" Height="276" Width="800" ResizeMode="CanMinimize">
     <Grid Background="#FFB3B6B5">
-    <TextBlock x:Name="textBlockInput" Text="Input-path:" HorizontalAlignment="Left" Margin="20,23,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="70" TextAlignment="Right"/>
-    <TextBox x:Name="textBoxInput" Text="Input-path, e.g. D:\input_path" ToolTip="Brackets [ ] lead to errors!" HorizontalAlignment="Left" Height="22" Margin="100,20,0,0" VerticalAlignment="Top" Width="500" VerticalScrollBarVisibility="Disabled" VerticalContentAlignment="Center"/>
-    <Button x:Name="buttonSearchIn" Content="Select Path..." HorizontalAlignment="Right" Margin="0,20,100,0" VerticalAlignment="Top" Width="80" Height="22"/>
-    <CheckBox x:Name="checkBoxRememberIn" Content="Remember" ToolTip="Remember the Input-Path." HorizontalAlignment="Right" Margin="0,21,15,0" VerticalAlignment="Top" Width="80" Foreground="#FFC90000" Padding="4,-2,0,0" VerticalContentAlignment="Center" Height="22"/>
-    <TextBlock x:Name="textBlockOutput" Text="Output-path:" HorizontalAlignment="Left" Margin="20,55,0,0" TextWrapping="Wrap" VerticalAlignment="Top" TextAlignment="Right" Width="70"/>
-    <TextBox x:Name="textBoxOutput" Text="Output-path, e.g. D:\output_path" ToolTip="Brackets [ ] lead to errors!" HorizontalAlignment="Left" Height="22" Margin="100,52,0,0" VerticalAlignment="Top" Width="500" VerticalScrollBarVisibility="Disabled" VerticalContentAlignment="Center"/>
-    <Button x:Name="buttonSearchOut" Content="Select Path..." HorizontalAlignment="Right" Margin="0,52,100,0" VerticalAlignment="Top" Width="80" Height="22"/>
-    <CheckBox x:Name="checkBoxRememberOut" Content="Remember" ToolTip="Remember the Output-Path." HorizontalAlignment="Right" Margin="0,53,15,0" VerticalAlignment="Top" Width="80" Foreground="#FFC90000" VerticalContentAlignment="Center" Padding="4,-2,0,0" Height="22"/>
-    <CheckBox x:Name="checkBoxMirror" Content=":Mirror" ToolTip="Check if you want to Mirror the copied files to a second path." HorizontalAlignment="Left" Margin="20,85,0,0" VerticalAlignment="Top" Width="70" FlowDirection="RightToLeft" Padding="4,-2,0,0" Height="22" BorderThickness="1" VerticalContentAlignment="Center" UseLayoutRounding="False"/>
-    <TextBox x:Name="textBoxMirror" Text="Mirror-path, e.g. D:\mirror_path" HorizontalAlignment="Left" Height="22" Margin="100,84,0,0" VerticalAlignment="Top" Width="500" VerticalScrollBarVisibility="Disabled" VerticalContentAlignment="Center"/>
-    <Button x:Name="buttonSearchMirror" Content="Select Path..." HorizontalAlignment="Right" Margin="0,84,100,0" VerticalAlignment="Top" Width="80" Height="22"/>
-    <CheckBox x:Name="checkBoxRememberMirror" Content="Remember" ToolTip="Remember the Output-Path." HorizontalAlignment="Right" Margin="0,85,15,0" VerticalAlignment="Top" Width="80" Foreground="#FFC90000" VerticalContentAlignment="Center" Padding="4,-2,0,0" Height="22"/>
-    <Rectangle Fill="#FFB3B6B5" HorizontalAlignment="Left" Height="2" Stroke="#FF878787" VerticalAlignment="Top" Width="794" Panel.ZIndex="-1" Margin="0,115,0,0"/>
-    <ComboBox x:Name="comboBoxPresetFormats" HorizontalAlignment="Left" Margin="50,126,0,0" VerticalAlignment="Top" Width="210" SelectedIndex="0" VerticalContentAlignment="Center">
-        <ComboBoxItem Content="- - - Preset formats to copy - - -"/>
-        <CheckBox x:Name="checkBoxCan" Content="Canon   - CR2" FontFamily="Consolas"/>
-        <CheckBox x:Name="checkBoxNik" Content="Nikon   - NEF + NRW" FontFamily="Consolas"/>
-        <CheckBox x:Name="checkBoxSon" Content="Sony    - ARW" FontFamily="Consolas"/>
-        <CheckBox x:Name="checkBoxJpg" Content="JPEG    - JPG + JPEG" FontFamily="Consolas"/>
-        <CheckBox x:Name="checkBoxMov" Content="Movies  - MOV + MP4" FontFamily="Consolas"/>
-        <CheckBox x:Name="checkBoxAud" Content="Audio   - WAV + MP3 + M4A" FontFamily="Consolas"/>
-    </ComboBox>
-    <CheckBox x:Name="checkBoxCustom" Content="Custom:" ToolTip="Enable to copy customised file-formats." HorizontalAlignment="Left" Margin="50,159,0,0" VerticalAlignment="Top" VerticalContentAlignment="Center" Height="22" Padding="4,-2,0,0"/>
-    <TextBox x:Name="textBoxCustom" Text="custom-formats" FontFamily="Consolas" ToolTip="*.ext1,*.ext2,*.ext3 - Brackets [ ] lead to errors!"  HorizontalAlignment="Left" Height="22" Margin="120,158,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="140" VerticalContentAlignment="Center" VerticalScrollBarVisibility="Disabled"/>
-    <TextBlock x:Name="textBlockOutSubStyle" Text="Subfolder-Style:" HorizontalAlignment="Center" Margin="0,129,140,0" VerticalAlignment="Top" Width="90" TextAlignment="Right"/>
-    <ComboBox x:Name="comboBoxOutSubStyle" ToolTip="Choose your favorite subfolder-style." HorizontalAlignment="Center" Margin="100,126,0,0" VerticalAlignment="Top" Width="120" SelectedIndex="1" Height="23" VerticalContentAlignment="Center" FontFamily="Consolas">
-        <ComboBoxItem Content="No subfolders"/>
-        <ComboBoxItem Content="yyyy-mm-dd" FontFamily="Consolas" ToolTip="e.g.: 2017-12-31"/>
-        <ComboBoxItem Content="yyyy_mm_dd" FontFamily="Consolas" ToolTip="e.g.: 2017_12_31" Width="120"/>
-        <ComboBoxItem Content="yy-mm-dd" FontFamily="Consolas" ToolTip="e.g.: 17-12-31"/>
-        <ComboBoxItem Content="yy_mm_dd" FontFamily="Consolas" ToolTip="e.g.: 17_12_31"/>
-    </ComboBox>
-    <ComboBox x:Name="comboBoxHistFile" HorizontalAlignment="Center" Margin="282,158,287,0" VerticalAlignment="Top" Width="225" SelectedIndex="0" Height="22" VerticalContentAlignment="Center">
-        <ComboBoxItem Content="- - - Histoy-file options - - -"/>
-        <CheckBox x:Name="checkBoxUseHistFile" Content="Use hist-file to prevent duplis" ToolTip="Default. Fast way to prevent already copied files from being copied again." Foreground="#FF00A22C"/>
-        <ComboBoxItem Content="- - - Writing the history-file - - -"/>
-        <RadioButton x:Name="radioButtonWriteHistFileYes" Content="Write old + new files to history-file" ToolTip="Default. Adds new values to the old ones." GroupName="WriteHistFile"/>
-        <RadioButton x:Name="radioButtonWriteHistFileNo" Content="Don't add new files" ToolTip="Does not touch the history-file." GroupName="WriteHistFile"/>
-        <RadioButton x:Name="radioButtonWriteHistFileOverwrite" Content="Delete old files, write new ones" ToolTip="Deletes the old values and only writes the new one to the history-file." GroupName="WriteHistFile"/>
-    </ComboBox>
-    <ComboBox x:Name="comboBoxOptions" HorizontalAlignment="Right" Margin="0,126,50,0" VerticalAlignment="Top" Width="200" SelectedIndex="0" VerticalContentAlignment="Center">
-        <ComboBoxItem Content="Select some options"/>
-        <CheckBox x:Name="checkBoxInSubSearch" Content="Include subfolders in in-path" ToolTip="Default. E.g. not only searching files in E:\DCIM, but also in E:\DCIM\abc"/>
-        <CheckBox x:Name="checkBoxCheckInHash" Content="Check hashes of in-files (slow)" ToolTip="For history-check: If unchecked, dupli-check is done via name, size, date. If checked, hash is added. Dupli-Check in out-path disables this function."/>
-        <CheckBox x:Name="checkBoxOutputDupli" Content="Check for duplis in out-path" ToolTip="Ideal if you have used LR or other import-tools since the last card-formatting."/>
-        <!-- <CheckBox x:Name="checkBoxPreventDupli" Content="Prevent duplicates from in-path" ToolTip="Prevent duplicates from the input-path (e.g. same file in two folders)."/> -->
-        <CheckBox x:Name="checkBoxPreventStandby" Content="Prevent standby" ToolTip="Prevents system from hibernating by simulating the keystroke of F13." Foreground="#FF0080FF"/>
-    </ComboBox>
-    <CheckBox x:Name="checkBoxRememberSettings" Content=":Remember settings" ToolTip="Remember all parameters (excl. Remember-Params)" HorizontalAlignment="Right" Margin="0,158,50,0" VerticalAlignment="Top" Foreground="#FFC90000" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Padding="4,-2,0,0" Height="22" FlowDirection="RightToLeft"/>
-    <Button x:Name="buttonStart" Content="START" HorizontalAlignment="Center" Margin="0,0,0,20" VerticalAlignment="Bottom" Width="100" IsDefault="True" FontWeight="Bold"/>
-    <Button x:Name="buttonClose" Content="EXIT" HorizontalAlignment="Right" Margin="0,0,40,20" VerticalAlignment="Bottom" Width="100"/>
-    <Button x:Name="buttonAbout" Content="About / Help" HorizontalAlignment="Left" Margin="40,0,0,20" VerticalAlignment="Bottom" Width="90"/>
+        <TextBlock x:Name="textBlockInput" Text="Input-path:" HorizontalAlignment="Left" Margin="20,23,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="70" TextAlignment="Right"/>
+        <TextBox x:Name="textBoxInput" Text="Input-path, e.g. D:\input_path" ToolTip="Brackets [ ] lead to errors!" HorizontalAlignment="Left" Height="22" Margin="100,20,0,0" VerticalAlignment="Top" Width="500" VerticalScrollBarVisibility="Disabled" VerticalContentAlignment="Center"/>
+        <Button x:Name="buttonSearchIn" Content="Select Path..." HorizontalAlignment="Right" Margin="0,20,100,0" VerticalAlignment="Top" Width="80" Height="22"/>
+        <CheckBox x:Name="checkBoxRememberIn" Content="Remember" ToolTip="Remember the Input-Path." HorizontalAlignment="Right" Margin="0,21,15,0" VerticalAlignment="Top" Width="80" Foreground="#FFC90000" Padding="4,-2,0,0" VerticalContentAlignment="Center" Height="22"/>
+        <TextBlock x:Name="textBlockOutput" Text="Output-path:" HorizontalAlignment="Left" Margin="20,55,0,0" TextWrapping="Wrap" VerticalAlignment="Top" TextAlignment="Right" Width="70"/>
+        <TextBox x:Name="textBoxOutput" Text="Output-path, e.g. D:\output_path" ToolTip="Brackets [ ] lead to errors!" HorizontalAlignment="Left" Height="22" Margin="100,52,0,0" VerticalAlignment="Top" Width="500" VerticalScrollBarVisibility="Disabled" VerticalContentAlignment="Center"/>
+        <Button x:Name="buttonSearchOut" Content="Select Path..." HorizontalAlignment="Right" Margin="0,52,100,0" VerticalAlignment="Top" Width="80" Height="22"/>
+        <CheckBox x:Name="checkBoxRememberOut" Content="Remember" ToolTip="Remember the Output-Path." HorizontalAlignment="Right" Margin="0,53,15,0" VerticalAlignment="Top" Width="80" Foreground="#FFC90000" VerticalContentAlignment="Center" Padding="4,-2,0,0" Height="22"/>
+        <CheckBox x:Name="checkBoxMirror" Content=":Mirror" ToolTip="Check if you want to Mirror the copied files to a second path." HorizontalAlignment="Left" Margin="20,85,0,0" VerticalAlignment="Top" Width="70" FlowDirection="RightToLeft" Padding="4,-2,0,0" Height="22" BorderThickness="1" VerticalContentAlignment="Center" UseLayoutRounding="False"/>
+        <TextBox x:Name="textBoxMirror" Text="Mirror-path, e.g. D:\mirror_path" HorizontalAlignment="Left" Height="22" Margin="100,84,0,0" VerticalAlignment="Top" Width="500" VerticalScrollBarVisibility="Disabled" VerticalContentAlignment="Center"/>
+        <Button x:Name="buttonSearchMirror" Content="Select Path..." HorizontalAlignment="Right" Margin="0,84,100,0" VerticalAlignment="Top" Width="80" Height="22"/>
+        <CheckBox x:Name="checkBoxRememberMirror" Content="Remember" ToolTip="Remember the Output-Path." HorizontalAlignment="Right" Margin="0,85,15,0" VerticalAlignment="Top" Width="80" Foreground="#FFC90000" VerticalContentAlignment="Center" Padding="4,-2,0,0" Height="22"/>
+        <Rectangle Fill="#FFB3B6B5" HorizontalAlignment="Left" Height="2" Stroke="#FF878787" VerticalAlignment="Top" Width="794" Panel.ZIndex="-1" Margin="0,115,0,0"/>
+        <ComboBox x:Name="comboBoxPresetFormats" HorizontalAlignment="Left" Margin="50,126,0,0" VerticalAlignment="Top" Width="210" SelectedIndex="0" VerticalContentAlignment="Center">
+            <ComboBoxItem Content="- - - Preset formats to copy - - -"/>
+            <CheckBox x:Name="checkBoxCan" Content="Canon   - CR2" FontFamily="Consolas"/>
+            <CheckBox x:Name="checkBoxNik" Content="Nikon   - NEF + NRW" FontFamily="Consolas"/>
+            <CheckBox x:Name="checkBoxSon" Content="Sony    - ARW" FontFamily="Consolas"/>
+            <CheckBox x:Name="checkBoxJpg" Content="JPEG    - JPG + JPEG" FontFamily="Consolas"/>
+            <CheckBox x:Name="checkBoxMov" Content="Movies  - MOV + MP4" FontFamily="Consolas"/>
+            <CheckBox x:Name="checkBoxAud" Content="Audio   - WAV + MP3 + M4A" FontFamily="Consolas"/>
+        </ComboBox>
+        <CheckBox x:Name="checkBoxCustom" Content="Custom:" ToolTip="Enable to copy customised file-formats." HorizontalAlignment="Left" Margin="50,159,0,0" VerticalAlignment="Top" VerticalContentAlignment="Center" Height="22" Padding="4,-2,0,0"/>
+        <TextBox x:Name="textBoxCustom" Text="custom-formats" FontFamily="Consolas" ToolTip="*.ext1,*.ext2,*.ext3 - Brackets [ ] lead to errors!"  HorizontalAlignment="Left" Height="22" Margin="120,158,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="140" VerticalContentAlignment="Center" VerticalScrollBarVisibility="Disabled"/>
+        <TextBlock x:Name="textBlockOutSubStyle" Text="Subfolder-Style:" HorizontalAlignment="Center" Margin="0,129,140,0" VerticalAlignment="Top" Width="90" TextAlignment="Right"/>
+        <ComboBox x:Name="comboBoxOutSubStyle" ToolTip="Choose your favorite subfolder-style." HorizontalAlignment="Center" Margin="100,126,0,0" VerticalAlignment="Top" Width="120" SelectedIndex="1" Height="23" VerticalContentAlignment="Center" FontFamily="Consolas">
+            <ComboBoxItem Content="No subfolders"/>
+            <ComboBoxItem Content="yyyy-mm-dd" FontFamily="Consolas" ToolTip="e.g.: 2017-12-31"/>
+            <ComboBoxItem Content="yyyy_mm_dd" FontFamily="Consolas" ToolTip="e.g.: 2017_12_31" Width="120"/>
+            <ComboBoxItem Content="yy-mm-dd" FontFamily="Consolas" ToolTip="e.g.: 17-12-31"/>
+            <ComboBoxItem Content="yy_mm_dd" FontFamily="Consolas" ToolTip="e.g.: 17_12_31"/>
+        </ComboBox>
+        <ComboBox x:Name="comboBoxHistFile" HorizontalAlignment="Center" Margin="282,158,287,0" VerticalAlignment="Top" Width="225" SelectedIndex="0" Height="22" VerticalContentAlignment="Center">
+            <ComboBoxItem Content="- - - Histoy-file options - - -"/>
+            <CheckBox x:Name="checkBoxUseHistFile" Content="Use hist-file to prevent duplis" ToolTip="Default. Fast way to prevent already copied files from being copied again." Foreground="#FF00A22C"/>
+            <ComboBoxItem Content="- - - Writing the history-file - - -"/>
+            <RadioButton x:Name="radioButtonWriteHistFileYes" Content="Write old + new files to history-file" ToolTip="Default. Adds new values to the old ones." GroupName="WriteHistFile"/>
+            <RadioButton x:Name="radioButtonWriteHistFileNo" Content="Don't add new files" ToolTip="Does not touch the history-file." GroupName="WriteHistFile"/>
+            <RadioButton x:Name="radioButtonWriteHistFileOverwrite" Content="Delete old files, write new ones" ToolTip="Deletes the old values and only writes the new one to the history-file." GroupName="WriteHistFile"/>
+        </ComboBox>
+        <ComboBox x:Name="comboBoxOptions" HorizontalAlignment="Right" Margin="0,126,50,0" VerticalAlignment="Top" Width="200" SelectedIndex="0" VerticalContentAlignment="Center" BorderThickness="1,5,1,1">
+            <ComboBoxItem Content="Select some options"/>
+            <CheckBox x:Name="checkBoxInSubSearch" Content="Include subfolders in in-path" ToolTip="Default. E.g. not only searching files in E:\DCIM, but also in E:\DCIM\abc"/>
+            <CheckBox x:Name="checkBoxCheckInHash" Content="Check hashes of in-files (slow)" ToolTip="For history-check: If unchecked, dupli-check is done via name, size, date. If checked, hash is added. Dupli-Check in out-path disables this function."/>
+            <CheckBox x:Name="checkBoxOutputDupli" Content="Check for duplis in out-path" ToolTip="Ideal if you have used LR or other import-tools since the last card-formatting."/>
+            <!-- <CheckBox x:Name="checkBoxPreventDupli" Content="Prevent duplicates from in-path" ToolTip="Prevent duplicates from the input-path (e.g. same file in two folders)."/> -->
+            <CheckBox x:Name="checkBoxPreventStandby" Content="Prevent standby" ToolTip="Prevents system from hibernating by simulating the keystroke of F13." Foreground="#FF0080FF"/>
+            <ComboBoxItem Content="Thread Count:"/>
+            <TextBox x:Name="textBoxThreadCount" Text="Thread Count" ToolTip="Number of threads for operations. High numbers tend to slow everything down; recommended: 2-4." HorizontalAlignment="Left" Width="100" BorderThickness="2" />
+        </ComboBox>
+        <CheckBox x:Name="checkBoxRememberSettings" Content=":Remember settings" ToolTip="Remember all parameters (excl. Remember-Params)" HorizontalAlignment="Right" Margin="0,158,50,0" VerticalAlignment="Top" Foreground="#FFC90000" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Padding="4,-2,0,0" Height="22" FlowDirection="RightToLeft"/>
+        <Button x:Name="buttonStart" Content="START" HorizontalAlignment="Center" Margin="0,0,0,20" VerticalAlignment="Bottom" Width="100" IsDefault="True" FontWeight="Bold"/>
+        <Button x:Name="buttonClose" Content="EXIT" HorizontalAlignment="Right" Margin="0,0,40,20" VerticalAlignment="Bottom" Width="100"/>
+        <Button x:Name="buttonAbout" Content="About / Help" HorizontalAlignment="Left" Margin="40,0,0,20" VerticalAlignment="Bottom" Width="90"/>
     </Grid>
 </Window>
 "@
@@ -1561,6 +1587,7 @@ $inputXML = @"
     $WPFcheckBoxCheckInHash.IsChecked = $DupliCompareHashes
     $WPFcheckBoxOutputDupli.IsChecked = $CheckOutputDupli
     $WPFcheckBoxPreventStandby.IsChecked = $PreventStandby
+    $WPFtextBoxThreadCount.Text = $ThreadCount
     $WPFcheckBoxRememberIn.IsChecked = $RememberInPath
     $WPFcheckBoxRememberOut.IsChecked = $RememberOutPath
     $WPFcheckBoxRememberMirror.IsChecked = $RememberMirrorPath
