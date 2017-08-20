@@ -9,7 +9,7 @@
         Now supports multithreading via Boe Prox's PoshRSJob-cmdlet (https://github.com/proxb/PoshRSJob)
 
     .NOTES
-        Version:        0.6.2 (Beta)
+        Version:        0.6.3 (Beta)
         Author:         flolilo
         Creation Date:  20.8.2017
         Legal stuff: This program is free software. It comes without any warranty, to the extent permitted by

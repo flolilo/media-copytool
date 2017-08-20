@@ -28,12 +28,12 @@ Falls das Skript nicht startet:
     - PowerShell als Administrator starten, `Set-ExecutionPolicy RemoteSigned` eingeben.
 - Überprüfen, ob die Voraussetzungen alle eingehalten wurden.
 - Das Skript nicht im Basisverzeichnis von `C:\` ablegen. ;-)
-- Das vollständige Vermeiden von eckigen Klammern `[ ]` in Ordner- und Dateinamen ist derzeit leider noch notwendig. Das Skript sollte im Zweifelsfall einen Fehler ausgeben.
+- Wurden eckige Klammern `[ ]` verwendet? Lt. Tests sollten sie funktionieren, Fehlfunktionen kann ich aber noch nicht mit absoluter Sicherheit ausschließen.
 
 ## To do
 - [ ] Checking if the volume exists if output-path(s) are not found (instead of looking for the parent directory) (High priority)
 - [x] Multithreading Get-FileHash operations (High priority)
-- [ ] Allowing special characters like brackets in Paths (High priority, but seemingly complicated)
+- [x] Allowing special characters like brackets in Paths
 - [ ] Option to create a 7zip-archive for mirror-copying (Medium priority)
 - [ ] Option to unmount USB drives after finishing (first) copy (Medium priority)
 - [ ] Option to avoid copying a file that exists more than once in the input more than one time. (E.g. .\DCIM\File_1.jpeg & .\DCIM\Sub\File_1.jpeg -> .\Out\File_1.jpeg) (Low priority)

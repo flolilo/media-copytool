@@ -37,13 +37,13 @@ If the script takes very long to finish:
 If the script aborts or throws weird errors:
 - Please note as much as you can about your settings: parameters, paths and when it occured. Also copy the error message (it will always be shown in English, so one can look it up more easily). Open a ticket and/or contact me!
     - Run the script with `-debug 2` if you have trouble to determine when things got weird.
-- Have you used brackets `[ ]` in paths or files? As of now, they won't work. The script should abort if it finds brackets; however, if you've overcome that limitation somehow, please tell me.
+- Have you used brackets `[ ]` in paths or files? They seem to work now (since 0.6.3), but I can't still rule out problems with them with full confidence.
 
 
 ## To do
 - [ ] Checking if the volume exists if output-path(s) are not found (instead of looking for the parent directory) (High priority)
-- [x] Multithreading Get-FileHash operations (High priority)
-- [ ] Allowing special characters like brackets in Paths (High priority, but seemingly complicated)
+- [x] Multithreading Get-FileHash operations
+- [x] Allowing special characters like brackets in Paths
 - [ ] Option to create a 7zip-archive for mirror-copying (Medium priority)
 - [ ] Option to unmount USB drives after finishing (first) copy (Medium priority)
 - [ ] Option to avoid copying a file that exists more than once in the input more than one time. (E.g. .\DCIM\File_1.jpeg & .\DCIM\Sub\File_1.jpeg -> .\Out\File_1.jpeg) (Low priority)

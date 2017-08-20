@@ -3,7 +3,19 @@ All notable changes to this project will be documented in this file.
 
 (The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html). )
 
-## 0.6.2. - 2017-08-20
+## 0.6.3 - 2017-08-21
+### Changed
+- Changed most `-Path`s to `-LiteralPath`s - therefore, brackets should work now in paths.
+- Fixed encoding issues for good: `Start-Remembering` now works, too. 
+
+### Added
+- Nothing.
+
+### Removed
+- All special character detectors (because they now should work).
+
+
+## 0.6.2 - 2017-08-20
 ### Changed
 - Changed `for`-loops with `Get-FileHash`-instances and Xcopy-instances to `Start-RSJob`s - Now the script truly supports multithreading, and it's fast!
 
