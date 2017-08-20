@@ -31,7 +31,8 @@ If you cannot start the script:
 
 If the script takes very long to finish:
 - Check your task manager: is the CPU / drive bottlenecking? If it is the drive: buy a faster one ;-)
-- Large history-files tend to slow down the duplicate-check. You can delete (manually or via the "overwrite"-option) it every time after formatting your sd-card (if you tend to use the script for importing photos as I do).
+    - If it's your CPU (and it is a bit younger than an [8086](https://en.wikipedia.org/wiki/8086)), please tell me what file(s) you tried to copy (size, file count and fomrmat(s)) and where exactly it started to slow down.
+- Large history-files tend to slow down the duplicate-check. You can delete (manually or via the "overwrite"-option) it every time after formatting/emptying your sd-card (if you tend to use the script for importing photos as I do).
 
 If the script aborts or throws weird errors:
 - Please note as much as you can about your settings: parameters, paths and when it occured. Also copy the error message (it will always be shown in English, so one can look it up more easily). Open a ticket and/or contact me!
