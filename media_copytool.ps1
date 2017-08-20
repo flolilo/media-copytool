@@ -127,15 +127,15 @@
 #>
 param(
     [int]$showparams=0,
-    [string]$GUI_CLI_Direct="GUI",
-    [string]$InputPath="G:\",
-    [string]$OutputPath="D:\Eigene_Bilder\_CANON",
-    [int]$MirrorEnable=0,
-    [string]$MirrorPath="F:\emergency-backups",
+    [string]$GUI_CLI_Direct="direct",
+    [string]$InputPath="D:\Temp\in [ ] pfad",
+    [string]$OutputPath="D:\Temp\out [ ] pfad",
+    [int]$MirrorEnable=1,
+    [string]$MirrorPath="D:\Temp\mirr [ ] pfad",
     [array]$PresetFormats=("Can","Jpg","Mov"),
-    [int]$CustomFormatsEnable=0,
-    [array]$CustomFormats=("*.xml","*.xmp"),
-    [string]$OutputSubfolderStyle="yyyy-MM-dd",
+    [int]$CustomFormatsEnable=1,
+    [array]$CustomFormats=("*"),
+    [string]$OutputSubfolderStyle="yy-MM-dd",
     [int]$UseHistFile=1,
     [string]$WriteHistFile="yes",
     [int]$InputSubfolderSearch=1,
@@ -704,7 +704,7 @@ Function Get-UserValues(){
 Function Start-Remembering(){
     Write-ColorOut "$(Get-Date -Format "dd.MM.yy HH:mm:ss")  --  Remembering settings..." -ForegroundColor Cyan
 
-    $lines_old = Get-Content $PSCommandPath
+    $lines_old = [System.IO.File]::ReadAllLines($PSCommandPath)
     $lines_new = $lines_old
     
     # $InputPath
@@ -773,9 +773,7 @@ Function Start-Remembering(){
     }
 
     Invoke-Pause
-    # $Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding($False)
-    [System.IO.File]::WriteAllText($PSCommandPath, $lines_new)
-    # $lines_new | Out-File -FilePath $PSCommandPath -Encoding unicode
+    [System.IO.File]::WriteAllLines($PSCommandPath, $lines_new)
 }
 
 # DEFINITION: Get History-File
@@ -1252,9 +1250,7 @@ Function Set-HistFile(){
     $results = $results | Sort-Object -Property inname,date,size,hash -Unique | ConvertTo-Json
 
     try{
-        # $Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding($False)
         [System.IO.File]::WriteAllText($HistFilePath, $results)
-        # $results | Out-File -FilePath $HistFilePath -Encoding unicode
     }
     catch{
         Write-ColorOut "Writing to history-file failed! Trying again..." -ForegroundColor Red
