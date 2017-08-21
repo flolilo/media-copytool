@@ -9,7 +9,7 @@
         Now supports multithreading via Boe Prox's PoshRSJob-cmdlet (https://github.com/proxb/PoshRSJob)
 
     .NOTES
-        Version:        0.6.3 (Beta)
+        Version:        0.6.4 (Beta)
         Author:         flolilo
         Creation Date:  21.8.2017
         Legal stuff: This program is free software. It comes without any warranty, to the extent permitted by
@@ -257,10 +257,8 @@ Function Get-UserValues(){
             }
             if($script:OutputPath.Length -gt 1 -and (Test-Path -LiteralPath $script:OutputPath -PathType Container) -eq $true){
                 break
-            }elseif((Split-Path -Parent -Path $script:OutputPath).Length -gt 1 -and (Test-Path -LiteralPath $(Split-Path -Parent -Path $script:OutputPath) -PathType Container) -eq $true){
-                # TODO: (Get-Item .\your\path\to\file.ext).PSDrive.Name instead of split-path TODO:
-                # CREDIT: https://stackoverflow.com/a/28967236/8013879
-                [int]$request = Read-Host "Output-path not found, but parent directory of it was found. Create chosen directory? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+            }elseif((Split-Path -Parent -Path $script:OutputPath).Length -gt 1 -and (Test-Path -LiteralPath $(Split-Path -Qualifier -Path $script:OutputPath) -PathType Container) -eq $true){
+                [int]$request = Read-Host "Output-path not found, but it's pointing to a valid drive letter. Create chosen directory? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
                 if($request -eq 1){
                     New-Item -ItemType Directory -Path $script:OutputPath | Out-Null
                     break
@@ -292,8 +290,8 @@ Function Get-UserValues(){
                 }
                 if($script:MirrorPath -gt 1 -and (Test-Path -LiteralPath $script:MirrorPath -PathType Container) -eq $true){
                     break
-                }elseif((Split-Path -Parent -Path $script:MirrorPath).Length -gt 1 -and (Test-Path -LiteralPath $(Split-Path -Parent -Path $script:MirrorPath) -PathType Container) -eq $true){
-                    [int]$request = Read-Host "Additional output-path not found, but parent directory of it was found. Create chosen directory? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+                }elseif((Split-Path -Parent -Path $script:MirrorPath).Length -gt 1 -and (Test-Path -LiteralPath $(Split-Path -Qualifier -Path $script:MirrorPath) -PathType Container) -eq $true){
+                    [int]$request = Read-Host "Additional output-path not found, but it's pointing to a valid drive letter. Create chosen directory? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
                     if($request -eq 1){
                         New-Item -ItemType Directory -Path $script:MirrorPath | Out-Null
                         break
@@ -589,9 +587,9 @@ Function Get-UserValues(){
             return $false
         }
         if($script:OutputPath.Length -lt 2 -or (Test-Path -LiteralPath $script:OutputPath -PathType Container) -eq $false){
-            if((Split-Path -Parent -Path $script:OutputPath).Length -gt 1 -and (Test-Path -LiteralPath $(Split-Path -Parent -Path $script:OutputPath) -PathType Container) -eq $true){
+            if((Split-Path -Parent -Path $script:OutputPath).Length -gt 1 -and (Test-Path -LiteralPath $(Split-Path -Qualifier -Path $script:OutputPath) -PathType Container) -eq $true){
                 while($true){
-                    [int]$request = Read-Host "Output-path not found, but parent directory of it was found. Create chosen directory? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+                    [int]$request = Read-Host "Output-path not found, but it's pointing to a valid drive letter. Create chosen directory? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
                     if($request -eq 1){
                         New-Item -ItemType Directory -Path $script:OutputPath | Out-Null
                         break
@@ -613,9 +611,9 @@ Function Get-UserValues(){
                 return $false
             }
             if($script:MirrorPath -lt 2 -or (Test-Path -LiteralPath $script:MirrorPath -PathType Container) -eq $false){
-                if((Split-Path -Parent -Path $script:MirrorPath).Length -gt 1 -and (Test-Path -LiteralPath $(Split-Path -Parent -Path $script:MirrorPath) -PathType Container) -eq $true){
+                if((Split-Path -Parent -Path $script:MirrorPath).Length -gt 1 -and (Test-Path -Qualifier $(Split-Path -Parent -Path $script:MirrorPath) -PathType Container) -eq $true){
                     while($true){
-                        [int]$request = Read-Host "Additional output-path not found, but parent directory of it was found. Create chosen directory? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+                        [int]$request = Read-Host "Additional output-path not found, but it's pointing to a valid drive letter. Create chosen directory? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
                         if($request -eq 1){
                             New-Item -ItemType Directory -Path $script:MirrorPath | Out-Null
                             break
@@ -1307,7 +1305,7 @@ Function Start-Sound($success){
 # DEFINITION: Starts all the things.
 Function Start-Everything(){
     Write-ColorOut "`r`n`r`n    Welcome to Flo's Media-Copytool! // Willkommen bei Flos Media-Copytool!    " -ForegroundColor DarkCyan -BackgroundColor Gray
-    Write-ColorOut "                           v0.6.3 (Beta) - 21.8.2017                           `r`n" -ForegroundColor DarkCyan -BackgroundColor Gray
+    Write-ColorOut "                           v0.6.4 (Beta) - 21.8.2017                           `r`n" -ForegroundColor DarkCyan -BackgroundColor Gray
 
     $script:timer = [diagnostics.stopwatch]::StartNew()
     while($true){
@@ -1469,7 +1467,7 @@ $inputXML = @"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="Flo's Media-Copytool v0.6.3 Beta" Height="276" Width="800" ResizeMode="CanMinimize">
+        Title="Flo's Media-Copytool v0.6.4 Beta" Height="276" Width="800" ResizeMode="CanMinimize">
     <Grid Background="#FFB3B6B5">
         <TextBlock x:Name="textBlockInput" Text="Input-path:" HorizontalAlignment="Left" Margin="20,23,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="70" TextAlignment="Right"/>
         <TextBox x:Name="textBoxInput" Text="Input-path, e.g. D:\input_path" ToolTip="Brackets [ ] lead to errors!" HorizontalAlignment="Left" Height="22" Margin="100,20,0,0" VerticalAlignment="Top" Width="500" VerticalScrollBarVisibility="Disabled" VerticalContentAlignment="Center"/>

@@ -31,7 +31,7 @@ Falls das Skript nicht startet:
 - Wurden eckige Klammern `[ ]` verwendet? Lt. Tests sollten sie funktionieren, Fehlfunktionen kann ich aber noch nicht mit absoluter Sicherheit ausschließen.
 
 ## To do
-- [ ] Checking if the volume exists if output-path(s) are not found (instead of looking for the parent directory) (High priority)
+- [x] Checking if the volume exists if output-path(s) are not found (instead of looking for the parent directory)
 - [x] Multithreading Get-FileHash operations (High priority)
 - [x] Allowing special characters like brackets in Paths
 - [ ] Option to create a 7zip-archive for mirror-copying (Medium priority)

@@ -3,6 +3,17 @@ All notable changes to this project will be documented in this file.
 
 (The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html). )
 
+## 0.6.4 - 2017-08-21
+### Changed
+- Changed test for output-paths in function `Get-UserValues`: `Split-Path -Qualifier` enables to create new directories as long as they point to a valid drive. Thanks to https://stackoverflow.com/a/45596690/8013879 !
+
+### Added
+- Nothing.
+
+### Removed
+- Nothing.
+
+
 ## 0.6.3 - 2017-08-21
 ### Changed
 - Changed most `-Path`s to `-LiteralPath`s - therefore, brackets should work now in paths.
