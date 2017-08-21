@@ -1307,7 +1307,7 @@ Function Start-Sound($success){
 # DEFINITION: Starts all the things.
 Function Start-Everything(){
     Write-ColorOut "`r`n`r`n    Welcome to Flo's Media-Copytool! // Willkommen bei Flos Media-Copytool!    " -ForegroundColor DarkCyan -BackgroundColor Gray
-    Write-ColorOut "                           v0.6.1 (Beta) - 19.8.2017                           `r`n" -ForegroundColor DarkCyan -BackgroundColor Gray
+    Write-ColorOut "                           v0.6.3 (Beta) - 21.8.2017                           `r`n" -ForegroundColor DarkCyan -BackgroundColor Gray
 
     $script:timer = [diagnostics.stopwatch]::StartNew()
     while($true){
@@ -1469,7 +1469,7 @@ $inputXML = @"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="Flo's Media-Copytool v0.6.2 Beta" Height="276" Width="800" ResizeMode="CanMinimize">
+        Title="Flo's Media-Copytool v0.6.3 Beta" Height="276" Width="800" ResizeMode="CanMinimize">
     <Grid Background="#FFB3B6B5">
         <TextBlock x:Name="textBlockInput" Text="Input-path:" HorizontalAlignment="Left" Margin="20,23,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="70" TextAlignment="Right"/>
         <TextBox x:Name="textBoxInput" Text="Input-path, e.g. D:\input_path" ToolTip="Brackets [ ] lead to errors!" HorizontalAlignment="Left" Height="22" Margin="100,20,0,0" VerticalAlignment="Top" Width="500" VerticalScrollBarVisibility="Disabled" VerticalContentAlignment="Center"/>
