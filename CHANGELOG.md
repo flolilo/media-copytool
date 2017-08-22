@@ -3,6 +3,19 @@ All notable changes to this project will be documented in this file.
 
 (The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html). )
 
+
+## 0.6.6 - 2017-08-23
+### Changed
+- Small improvements for readability of if-conditions in the code.
+- Excluded XAML-code for GUI from script-file, added `GUI.xaml`-file.
+
+### Added
+- `media_copytool_GUI.xaml`
+
+### Removed
+- XAML-code from `media_copytool.ps1`
+
+
 ## 0.6.5 - 2017-08-21
 ### Changed
 - Nothing.

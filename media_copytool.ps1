@@ -9,9 +9,9 @@
         Now supports multithreading via Boe Prox's PoshRSJob-cmdlet (https://github.com/proxb/PoshRSJob)
 
     .NOTES
-        Version:        0.6.5 (Beta)
+        Version:        0.6.6 (Beta)
         Author:         flolilo
-        Creation Date:  21.8.2017
+        Creation Date:  23.8.2017
         Legal stuff: This program is free software. It comes without any warranty, to the extent permitted by
         applicable law. Most of the script was written by myself (or heavily modified by me when searching for solutions
         on the WWW). However, some parts are copies or modifications of very genuine code - see
@@ -60,8 +60,12 @@
             "none"          -   No subfolders in -OutputPath.
             "yyyy-mm-dd"    -   E.g. 2017-01-31
             "yyyy_mm_dd"    -   E.g. 2017_01_31
+            "yyyy.mm.dd"    -   E.g. 2017.01.31
+            "yyyymmdd"      -   E.g. 20170131
             "yy-mm-dd"      -   E.g. 17-01-31
             "yy_mm_dd"      -   E.g. 17_01_31
+            "yy.mm.dd"      -   E.g. 17.01.31
+            "yymmdd"        -   E.g. 170131
     .PARAMETER UseHistFile
         Valid range: 0 (deactivate), 1 (activate)
         The history-file is a fast way to rule out the creation of duplicates by comparing the files from -InputPath against the values stored earlier.
@@ -116,6 +120,7 @@
 
     .INPUTS
         "media_copytool_filehistory.json" if -UseHistFile is 1
+        "media_copytool_GUI.xaml" if -GUI_CLI_direct "GUI"
         File(s) must be located in the script's directory and must not be renamed.
 
     .OUTPUTS
@@ -277,269 +282,278 @@ Function Get-Folder($InOutMirror){
 
 # DEFINITION: Get values from GUI, then check the main input- and outputfolder:
 Function Get-UserValues(){
-    Write-ColorOut "$(Get-Date -Format "dd.MM.yy HH:mm:ss")  --  Getting user-values..." -ForeGroundColor Cyan
+    Write-ColorOut "$(Get-Date -Format "dd.MM.yy HH:mm:ss")  -" -NoNewLine
+    Write-ColorOut "-  Getting user-values..." -ForeGroundColor Cyan
     
     # get values, test paths:
-    if($script:GUI_CLI_Direct -eq "CLI"){
-        # input-path
-        while($true){
-            [string]$script:InputPath = Read-Host "Please specify input-path"
-            if($script:InputPath.Length -lt 2 -or (Test-Path -LiteralPath $script:InputPath -PathType Container) -eq $false){
-                Write-ColorOut "Invalid selection!" -ForeGroundColor Magenta
-                continue
-            }else{
-                break
-            }
-        }
-        # output-path
-        while($true){
-            [string]$script:OutputPath = Read-Host "Please specify output-path"
-            if($script:OutputPath -eq $script:InputPath){
-                Write-ColorOut "`r`nInput-path is the same as output-path.`r`n" -ForegroundColor Magenta
-                continue
-            }
-            if($script:OutputPath.Length -gt 1 -and (Test-Path -LiteralPath $script:OutputPath -PathType Container) -eq $true){
-                break
-            }elseif((Split-Path -Parent -Path $script:OutputPath).Length -gt 1 -and (Test-Path -LiteralPath $(Split-Path -Qualifier -Path $script:OutputPath) -PathType Container) -eq $true){
-                [int]$request = Read-Host "Output-path not found, but it's pointing to a valid drive letter. Create chosen directory? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
-                if($request -eq 1){
-                    New-Item -ItemType Directory -Path $script:OutputPath | Out-Null
-                    break
-                }elseif($request -eq 0){
-                    Write-ColorOut "`r`nOutput-path not found.`r`n" -ForegroundColor Magenta
-                    continue
-                }
-            }else{
-                Write-ColorOut "Invalid selection!" -ForegroundColor Magenta
-                continue
-            }
-        }
-        # mirror yes/no
-        while($true){
-            [int]$script:MirrorEnable = Read-Host "Copy files to an additional folder? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
-            if(!($script:MirrorEnable -eq 1 -or $script:MirrorEnable -eq 0)){
-                continue
-            }else{
-                break
-            }
-        }
-        # mirror-path
-        if($script:MirrorEnable -eq 1){
+    if($script:GUI_CLI_Direct -eq "GUI" -or $script:GUI_CLI_Direct -eq "CLI" -or $script:GUI_CLI_Direct -eq "direct"){
+        if($script:GUI_CLI_Direct -eq "CLI"){
+            # $InputPath
             while($true){
-                [string]$script:MirrorPath = Read-Host "Please specify additional output-path"
-                if($script:MirrorPath -eq $script:OutputPath -or $script:MirrorPath -eq $script:InputPath){
-                    Write-ColorOut "`r`nAdditional output-path is the same as input- or output-path.`r`n" -ForegroundColor Red
+                [string]$script:InputPath = Read-Host "Please specify input-path"
+                if($script:InputPath.Length -gt 1 -and (Test-Path -LiteralPath $script:InputPath -PathType Container) -eq $true){
+                    break
+                }else{
+                    Write-ColorOut "Invalid selection!" -ForeGroundColor Magenta
                     continue
                 }
-                if($script:MirrorPath -gt 1 -and (Test-Path -LiteralPath $script:MirrorPath -PathType Container) -eq $true){
-                    break
-                }elseif((Split-Path -Parent -Path $script:MirrorPath).Length -gt 1 -and (Test-Path -LiteralPath $(Split-Path -Qualifier -Path $script:MirrorPath) -PathType Container) -eq $true){
-                    [int]$request = Read-Host "Additional output-path not found, but it's pointing to a valid drive letter. Create chosen directory? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
-                    if($request -eq 1){
-                        New-Item -ItemType Directory -Path $script:MirrorPath | Out-Null
+            }
+            # $OutputPath
+            while($true){
+                [string]$script:OutputPath = Read-Host "Please specify output-path"
+                if($script:OutputPath -eq $script:InputPath){
+                    Write-ColorOut "`r`nInput-path is the same as output-path.`r`n" -ForegroundColor Magenta
+                    continue
+                }else{
+                    if($script:OutputPath.Length -gt 1 -and (Test-Path -LiteralPath $script:OutputPath -PathType Container) -eq $true){
                         break
-                    }elseif($request -eq 0){
-                        Write-ColorOut "`r`nAdditional output-path not found.`r`n" -ForegroundColor Magenta
+                    }elseif((Split-Path -Parent -Path $script:OutputPath).Length -gt 1 -and (Test-Path -LiteralPath $(Split-Path -Qualifier -Path $script:OutputPath) -PathType Container) -eq $true){
+                        [int]$request = Read-Host "Output-path not found, but it's pointing to a valid drive letter. Create chosen directory? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+                        if($request -eq 1){
+                            New-Item -ItemType Directory -Path $script:OutputPath | Out-Null
+                            break
+                        }elseif($request -eq 0){
+                            Write-ColorOut "`r`nOutput-path not found.`r`n" -ForegroundColor Magenta
+                            continue
+                        }
+                    }else{
+                        Write-ColorOut "Invalid selection!" -ForegroundColor Magenta
                         continue
                     }
+                }
+            }
+            # $MirrorEnable
+            while($true){
+                [int]$script:MirrorEnable = Read-Host "Copy files to an additional folder? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+                if($script:MirrorEnable -eq 1 -or $script:MirrorEnable -eq 0){
+                    break
                 }else{
                     Write-ColorOut "Invalid selection!" -ForegroundColor Magenta
                     continue
                 }
             }
-        }
-        # preset-formats
-        while($true){
-            $separator = ","
-            $option = [System.StringSplitOptions]::RemoveEmptyEntries
-            [array]$script:PresetFormats = (Read-Host "Which preset file-formats would you like to copy? Options: `"Can`",`"Nik`",`"Son`",`"Jpg`",`"Mov`",`"Aud`", or leave empty for none. For multiple selection, separate with commata.").Split($separator,$option)
-            if(!($script:PresetFormats.Length -ne 0 -and ("Can" -notin $script:PresetFormats -and "Nik" -notin $script:PresetFormats -and "Son" -notin $script:PresetFormats -and "Jpeg" -notin $script:PresetFormats -and "Jpg" -notin $script:PresetFormats -and "Mov" -notin $script:PresetFormats -and "Aud" -notin $script:PresetFormats))){
-                Write-ColorOut "Invalid selection!" -ForegroundColor Magenta
-                continue
-            }else{
-                break
-            }
-        }
-        # custom format counter
-        while($true){
-            [int]$script:CustomFormatsEnable = Read-Host "How many custom file-formats? Range: From `"0`" (w/o quotes) for `"none`" to as many as you like."
-            if($script:CustomFormatsEnable -in (0..999)){
-                break
-            }else{
-                Write-ColorOut "Please choose a positive number!" -ForegroundColor Magenta
-                continue
-            }
-        }
-        # custom formats
-        [array]$script:CustomFormats = @()
-        if($script:CustomFormatsEnable -ne 0){
-            for($i = 1; $i -le $script:CustomFormatsEnable; $i++){
+            # $MirrorPath
+            if($script:MirrorEnable -eq 1){
                 while($true){
-                    [string]$inter = Read-Host "Select custom format no. $i. `"*`" (w/o quotes) means `"all files`", `"*.ext`" means `"all files with extension .ext`", `"file.*`" means `"all files named file`"."
-                    if($inter.Length -ne 0 -and $inter -notmatch '[$|[]*]'){
-                        $script:CustomFormats += $inter
+                    [string]$script:MirrorPath = Read-Host "Please specify additional output-path"
+                    if($script:MirrorPath -eq $script:OutputPath -or $script:MirrorPath -eq $script:InputPath){
+                        Write-ColorOut "`r`nAdditional output-path is the same as input- or output-path.`r`n" -ForegroundColor Red
+                        continue
+                    }
+                    if($script:MirrorPath -gt 1 -and (Test-Path -LiteralPath $script:MirrorPath -PathType Container) -eq $true){
                         break
+                    }elseif((Split-Path -Parent -Path $script:MirrorPath).Length -gt 1 -and (Test-Path -LiteralPath $(Split-Path -Qualifier -Path $script:MirrorPath) -PathType Container) -eq $true){
+                        [int]$request = Read-Host "Additional output-path not found, but it's pointing to a valid drive letter. Create chosen directory? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+                        if($request -eq 1){
+                            New-Item -ItemType Directory -Path $script:MirrorPath | Out-Null
+                            break
+                        }elseif($request -eq 0){
+                            Write-ColorOut "`r`nAdditional output-path not found.`r`n" -ForegroundColor Magenta
+                            continue
+                        }
                     }else{
-                        Write-ColorOut "Invalid input! (Brackets [ ] are not allowed due to issues with PowerShell.)" -ForegroundColor Magenta
+                        Write-ColorOut "Invalid selection!" -ForegroundColor Magenta
                         continue
                     }
                 }
             }
-        }
-        # subfolder-style
-        while($true){
-            [string]$script:OutputSubfolderStyle = Read-Host "Which subfolder-style should be used in the output-path? Options: `"none`",`"yyyy-mm-dd`",`"yyyy_mm_dd`",`"yy-mm-dd`",`"yy_mm_dd`" (all w/o quotes)."
-            if($script:OutputSubfolderStyle.Length -eq 0 -or ("none" -notin $script:OutputSubfolderStyle -and "yyyy-mm-dd" -notin $script:OutputSubfolderStyle -and "yyyy_mm_dd" -notin $script:OutputSubfolderStyle -and "yy-mm-dd" -notin $script:OutputSubfolderStyle -and "yy_mm_dd" -notin $script:OutputSubfolderStyle)){
-                Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
-                continue
-            }else{
-                break
-            }
-        }
-        # use history-file
-        while($true){
-            [int]$script:UseHistFile = Read-Host "How to treat history-file? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
-            if($script:UseHistFile -notin (0..1)){
-                Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
-                continue
-            }else{
-                break
-            }
-        }
-        # write history-file
-        while($true){
-            [string]$script:WriteHistFile = Read-Host "Write newly copied files to history-file? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
-            if($script:WriteHistFile.Length -eq 0 -or ("yes" -notin $script:WriteHistFile -and "no" -notin $script:WriteHistFile -and "overwrite" -notin $script:WriteHistFile)){
-                Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
-                continue
-            }else{
-                break
-            }
-        }
-        # search subfolders in input-path 
-        while($true){
-            [int]$script:InputSubfolderSearch = Read-Host "Check input-path's subfolders? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
-            if($script:InputSubfolderSearch -notin (0..1)){
-                Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
-                continue
-            }else{
-                break
-            }
-        }
-        # additionally check input-hashes for dupli-verification
-        while($true){
-            [int]$script:DupliCompareHashes = Read-Host "Additionally compare all input-files via hashes (slow)? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
-            if($script:DupliCompareHashes -notin (0..1)){
-                Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
-                continue
-            }else{
-                break
-            }
-        }
-        # check duplis in output-path
-        while($true){
-            [int]$script:CheckOutputDupli = Read-Host "Additionally check output-path for already copied files? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
-            if($script:CheckOutputDupli -notin (0..1)){
-                Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
-                continue
-            }else{
-                break
-            }
-        }
-        <# TODO: $7zipMirror
-        if($script:MirrorEnable -eq 1){
+            # $PresetFormats
             while($true){
-                [int]$script:7zipMirror = Read-Host "Copying files to additional output-path as 7zip-archive? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
-                if($script:7zipMirror -notin (0..1)){
-                    Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
-                    continue
-                }else{
+                [array]$inter=@("Can","Nik","Son","Jpeg","Jpg","Mov","Aud")
+                $separator = ","
+                $option = [System.StringSplitOptions]::RemoveEmptyEntries
+                [array]$script:PresetFormats = (Read-Host "Which preset file-formats would you like to copy? Options: `"Can`",`"Nik`",`"Son`",`"Jpg`",`"Mov`",`"Aud`", or leave empty for none. For multiple selection, separate with commata.").Split($separator,$option)
+                if($script:PresetFormats.Length -eq 0 -or $script:PresetFormats -in $inter){
                     break
+                }else{
+                    Write-ColorOut "Invalid selection!" -ForegroundColor Magenta
+                    continue
                 }
             }
-        } #>
-        # $RemoveInputDrive
-        while($true){
-            [int]$script:RemoveInputDrive = Read-Host "Removing input-drive after copying & verifying (before mirroring)? Only use it for external drives. `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
-            if($script:RemoveInputDrive -notin (0..1)){
-                Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
-                continue
-            }else{
-                break
+            # $CustomFormatsEnable - Number
+            while($true){
+                [int]$script:CustomFormatsEnable = Read-Host "How many custom file-formats? Range: From `"0`" (w/o quotes) for `"none`" to as many as you like."
+                if($script:CustomFormatsEnable -in (0..999)){
+                    break
+                }else{
+                    Write-ColorOut "Please choose a positive number!" -ForegroundColor Magenta
+                    continue
+                }
             }
-        }
-        # prevent standby
-        while($true){
-            [int]$script:PreventStandby = Read-Host "Auto-prevent standby of computer while script is running? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
-            if($script:PreventStandby -notin (0..1)){
-                Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
-                continue
-            }else{
-                break
+            # $CustomFormats
+            [array]$script:CustomFormats = @()
+            if($script:CustomFormatsEnable -ne 0){
+                for($i = 1; $i -le $script:CustomFormatsEnable; $i++){
+                    while($true){
+                        [string]$inter = Read-Host "Select custom format no. $i. `"*`" (w/o quotes) means `"all files`", `"*.ext`" means `"all files with extension .ext`", `"file.*`" means `"all files named file`"."
+                        if($inter.Length -ne 0){
+                            $script:CustomFormats += $inter
+                            break
+                        }else{
+                            Write-ColorOut "Invalid input!" -ForegroundColor Magenta
+                            continue
+                        }
+                    }
+                }
             }
-        }
-        # $ThreadCount
-        while($true){
-            [int]$script:ThreadCount = Read-Host "Number of threads for multithreaded operations. Suggestion: Number in between 2 and 4."
-            if($script:ThreadCount -notin (0..999)){
-                Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
-                continue
-            }else{
-                break
+            # $OutputSubfolderStyle
+            while($true){
+                [array]$inter = @("none","yyyy-mm-dd","yyyy_mm_dd","yyyy.mm.dd","yyyymmdd","yy-mm-dd","yy_mm_dd","yy.mm.dd","yymmdd")
+                [string]$script:OutputSubfolderStyle = Read-Host "Which subfolder-style should be used in the output-path? Options: `"none`",`"yyyy-mm-dd`",`"yyyy_mm_dd`",`"yyyy.mm.dd`",`"yyyymmdd`",`"yy-mm-dd`",`"yy_mm_dd`",`"yy.mm.dd`",`"yymmdd`" (all w/o quotes)."
+                if($script:OutputSubfolderStyle -in $inter){
+                    break
+                }else{
+                    Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
+                    continue
+                }
             }
-        }
-        # remember input
-        while($true){
-            [int]$script:RememberInPath = Read-Host "Remember the input-path for future uses? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
-            if($script:RememberInPath -notin (0..1)){
-                Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
-                continue
-            }else{
-                break
+            # $UseHistFile
+            while($true){
+                [int]$script:UseHistFile = Read-Host "How to treat history-file? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+                if($script:UseHistFile -in (0..1)){
+                    break
+                }else{
+                    Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
+                    continue
+                }
             }
-        }
-        # remember output
-        while($true){
-            [int]$script:RememberOutPath = Read-Host "Remember the output-path for future uses? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
-            if($script:RememberOutPath -notin (0..1)){
-                Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
-                continue
-            }else{
-                break
+            # $WriteHistFile
+            while($true){
+                [array]$inter = @("yes","no","overwrite")
+                [string]$script:WriteHistFile = Read-Host "Write newly copied files to history-file? Options: `"yes`",`"no`",`"overwrite`". (all w/o quotes)"
+                if($script:WriteHistFile -in $inter){
+                    break
+                }else{
+                    Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
+                    continue
+                }
             }
-        }
-        # remember mirror
-        while($true){
-            [int]$script:RememberMirrorPath = Read-Host "Remember the additional output-path for future uses? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
-            if($script:RememberMirrorPath -notin (0..1)){
-                Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
-                continue
-            }else{
-                break
+            # $InputSubfolderSearch
+            while($true){
+                [int]$script:InputSubfolderSearch = Read-Host "Check input-path's subfolders? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+                if($script:InputSubfolderSearch -in (0..1)){
+                    break
+                }else{
+                    Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
+                    continue
+                }
             }
-        }
-        # remember settings
-        while($true){
-            [int]$script:RememberSettings = Read-Host "Remember settings for future uses? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
-            if($script:RememberSettings -notin (0..1)){
-                Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
-                continue
-            }else{
-                break
+            # $DupliCompareHashes
+            while($true){
+                [int]$script:DupliCompareHashes = Read-Host "Additionally compare all input-files via hashes (slow)? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+                if($script:DupliCompareHashes -in (0..1)){
+                    break
+                }else{
+                    Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
+                    continue
+                }
             }
-        }
-        return $true
-    }elseif($script:GUI_CLI_Direct -eq "GUI" -or $script:GUI_CLI_Direct -eq "direct"){
-        if($script:GUI_CLI_Direct -eq "GUI"){
-            # input-path
+            # $CheckOutputDupli
+            while($true){
+                [int]$script:CheckOutputDupli = Read-Host "Additionally check output-path for already copied files? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+                if($script:CheckOutputDupli -in (0..1)){
+                    break
+                }else{
+                    Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
+                    continue
+                }
+            }
+            <# TODO: $7zipMirror
+            if($script:MirrorEnable -eq 1){
+                while($true){
+                    [int]$script:7zipMirror = Read-Host "Copying files to additional output-path as 7zip-archive? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+                    if($script:7zipMirror -in (0..1)){
+                        break
+                    }else{
+                        Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
+                        continue
+                    }
+                }
+            } #>
+            # $RemoveInputDrive
+            while($true){
+                [int]$script:RemoveInputDrive = Read-Host "Removing input-drive after copying & verifying (before mirroring)? Only use it for external drives. `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+                if($script:RemoveInputDrive -in (0..1)){
+                    break
+                }else{
+                    Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
+                    continue
+                }
+            }
+            # $PreventStandby
+            while($true){
+                [int]$script:PreventStandby = Read-Host "Auto-prevent standby of computer while script is running? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+                if($script:PreventStandby -in (0..1)){
+                    break
+                }else{
+                    Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
+                    continue
+                }
+            }
+            # $ThreadCount
+            while($true){
+                [int]$script:ThreadCount = Read-Host "Number of threads for multithreaded operations. Suggestion: Number in between 2 and 4."
+                if($script:ThreadCount -in (1..24)){
+                    break
+                }else{
+                    Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
+                    continue
+                }
+            }
+            # $RememberInPath
+            while($true){
+                [int]$script:RememberInPath = Read-Host "Remember the input-path for future uses? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+                if($script:RememberInPath -in (0..1)){
+                    break
+                }else{
+                    Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
+                    continue
+                }
+            }
+            # $RememberOutPath
+            while($true){
+                [int]$script:RememberOutPath = Read-Host "Remember the output-path for future uses? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+                if($script:RememberOutPath -in (0..1)){
+                    break
+                }else{
+                    Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
+                    continue
+                }
+            }
+            # $RememberMirrorPath
+            while($true){
+                [int]$script:RememberMirrorPath = Read-Host "Remember the additional output-path for future uses? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+                if($script:RememberMirrorPath -in (0..1)){
+                    break
+                }else{
+                    Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
+                    continue
+                }
+            }
+            # $RememberSettings
+            while($true){
+                [int]$script:RememberSettings = Read-Host "Remember settings for future uses? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+                if($script:RememberSettings -in (0..1)){
+                    break
+                }else{
+                    Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
+                    continue
+                }
+            }
+            return $true
+        }elseif($script:GUI_CLI_Direct -eq "GUI"){
+            # $InputPath
             $script:InputPath = $script:WPFtextBoxInput.Text
-            # output-path
+            # $OutputPath
             $script:OutputPath = $script:WPFtextBoxOutput.Text
-            # mirror yes/no
-            $script:MirrorEnable = $(if($script:WPFcheckBoxMirror.IsChecked -eq $true){1}else{0})
-            # mirror-path
+            # $MirrorEnable
+            $script:MirrorEnable = $(
+                if($script:WPFcheckBoxMirror.IsChecked -eq $true){1}
+                else{0}
+            )
+            # $MirrorPath
             $script:MirrorPath = $script:WPFtextBoxMirror.Text
-            # preset-formats
+            # $PresetFormats
             [array]$script:PresetFormats = @()
             if($script:WPFcheckBoxCan.IsChecked -eq $true){$script:PresetFormats += "Can"}
             if($script:WPFcheckBoxNik.IsChecked -eq $true){$script:PresetFormats += "Nik"}
@@ -547,48 +561,98 @@ Function Get-UserValues(){
             if($script:WPFcheckBoxJpg.IsChecked -eq $true){$script:PresetFormats += "Jpg"}
             if($script:WPFcheckBoxMov.IsChecked -eq $true){$script:PresetFormats += "Mov"}
             if($script:WPFcheckBoxAud.IsChecked -eq $true){$script:PresetFormats += "Aud"}
-            # custom formats yes/no
-            $script:CustomFormatsEnable = $(if($script:WPFcheckBoxCustom.IsChecked -eq $true){1}else{0})
-            # custom formats
+            # $CustomFormatsEnable
+            $script:CustomFormatsEnable = $(
+                if($script:WPFcheckBoxCustom.IsChecked -eq $true){1}
+                else{0}
+            )
+            # $CustomFormats
             [array]$script:CustomFormats = @()
             $separator = ","
             $option = [System.StringSplitOptions]::RemoveEmptyEntries
             $script:CustomFormats = $script:WPFtextBoxCustom.Text.Replace(" ",'').Split($separator,$option)
-            # subfolder-style
-            $script:OutputSubfolderStyle = $(if($script:WPFcomboBoxOutSubStyle.SelectedIndex -eq 0){"none"}elseif($script:WPFcomboBoxOutSubStyle.SelectedIndex -eq 1){"yyyy-mm-dd"}elseif($script:WPFcomboBoxOutSubStyle.SelectedIndex -eq 2){"yyyy_mm_dd"}elseif($script:WPFcomboBoxOutSubStyle.SelectedIndex -eq 3){"yy-mm-dd"}elseif($script:WPFcomboBoxOutSubStyle.SelectedIndex -eq 4){"yy_mm_dd"})
-            # use history-file
-            $script:UseHistFile = $(if($script:WPFcheckBoxUseHistFile.IsChecked -eq $true){1}else{0})
-            # write history-file
-            $script:WriteHistFile = $(if($script:WPFradioButtonWriteHistFileYes.IsChecked -eq $true){"yes"}elseif($script:WPFradioButtonWriteHistFileNo.IsChecked -eq $true){"no"}elseif($script:WPFradioButtonWriteHistFileOverwrite.IsChecked -eq $true){"Overwrite"})
-            # search subfolders in input-path
-            $script:InputSubfolderSearch = $(if($script:WPFcheckBoxInSubSearch.IsChecked -eq $true){1}else{0})
-            # check all hashes
-            $script:DupliCompareHashes = $(if($script:WPFcheckBoxCheckInHash.IsChecked -eq $true){1}else{0})
-            # check duplis in output-path
-            $script:CheckOutputDupli = $(if($script:WPFcheckBoxOutputDupli.IsChecked -eq $true){1}else{0})
+            # $OutputSubfolderStyle
+            $script:OutputSubfolderStyle = $(
+                if($script:WPFcomboBoxOutSubStyle.SelectedIndex -eq 0){"none"}
+                elseif($script:WPFcomboBoxOutSubStyle.SelectedIndex -eq 1){"yyyy-MM-dd"}
+                elseif($script:WPFcomboBoxOutSubStyle.SelectedIndex -eq 2){"yyyy_MM_dd"}
+                elseif($script:WPFcomboBoxOutSubStyle.SelectedIndex -eq 3){"yyyy.MM.dd"}
+                elseif($script:WPFcomboBoxOutSubStyle.SelectedIndex -eq 4){"yyyyMMdd"}
+                elseif($script:WPFcomboBoxOutSubStyle.SelectedIndex -eq 5){"yy-MM-dd"}
+                elseif($script:WPFcomboBoxOutSubStyle.SelectedIndex -eq 6){"yy_MM_dd"}
+                elseif($script:WPFcomboBoxOutSubStyle.SelectedIndex -eq 7){"yy.MM.dd"}
+                elseif($script:WPFcomboBoxOutSubStyle.SelectedIndex -eq 8){"yyMMdd"}
+            )
+            # $UseHistFile
+            $script:UseHistFile = $(
+                if($script:WPFcheckBoxUseHistFile.IsChecked -eq $true){1}
+                else{0}
+            )
+            # $WriteHistFile
+            $script:WriteHistFile = $(
+                if($script:WPFradioButtonWriteHistFileYes.IsChecked -eq $true){"yes"}
+                elseif($script:WPFradioButtonWriteHistFileNo.IsChecked -eq $true){"no"}
+                elseif($script:WPFradioButtonWriteHistFileOverwrite.IsChecked -eq $true){"Overwrite"}
+            )
+            # $InputSubfolderSearch
+            $script:InputSubfolderSearch = $(
+                if($script:WPFcheckBoxInSubSearch.IsChecked -eq $true){1}
+                else{0}
+            )
+            # $DupliCompareHashes
+            $script:DupliCompareHashes = $(
+                if($script:WPFcheckBoxCheckInHash.IsChecked -eq $true){1}
+                else{0}
+            )
+            # $CheckOutputDupli
+            $script:CheckOutputDupli = $(
+                if($script:WPFcheckBoxOutputDupli.IsChecked -eq $true){1}
+                else{0}
+            )
             <# TODO: $7zipMirror
-            $script:7zipMirror = $(if($script:WPFcheckBox7zipMirror.IsChecked -eq $true){1}else{0}) #>
+            $script:7zipMirror = $(
+                if($script:WPFcheckBox7zipMirror.IsChecked -eq $true){1}
+                else{0}
+            ) #>
             # $RemoveInputDrive
-            $script:RemoveInputDrive = $(if($script:WPFcheckBoxRemoveInputDrive.IsChecked -eq $true){1}else{0})
-            # prevent standby
-            $script:PreventStandby = $(if($script:WPFcheckBoxPreventStandby.IsChecked -eq $true){1}else{0})
+            $script:RemoveInputDrive = $(
+                if($script:WPFcheckBoxRemoveInputDrive.IsChecked -eq $true){1}
+                else{0}
+            )
+            # $PreventStandby
+            $script:PreventStandby = $(
+                if($script:WPFcheckBoxPreventStandby.IsChecked -eq $true){1}
+                else{0}
+            )
             # $ThreadCount
             $script:ThreadCount = $script:WPFtextBoxThreadCount.Text
-            # remember input
-            $script:RememberInPath = $(if($script:WPFcheckBoxRememberIn.IsChecked -eq $true){1}else{0})
-            # remember output
-            $script:RememberOutPath = $(if($script:WPFcheckBoxRememberOut.IsChecked -eq $true){1}else{0})
-            # remember mirror
-            $script:RememberMirrorPath = $(if($script:WPFcheckBoxRememberMirror.IsChecked -eq $true){1}else{0})
-            # remember settings
-            $script:RememberSettings = $(if($script:WPFcheckBoxRememberSettings.IsChecked -eq $true){1}else{0})
-        }
-        if($script:GUI_CLI_Direct -eq "direct"){
+            # $RememberInPath
+            $script:RememberInPath = $(
+                if($script:WPFcheckBoxRememberIn.IsChecked -eq $true){1}
+                else{0}
+            )
+            # $RememberOutPath
+            $script:RememberOutPath = $(
+                if($script:WPFcheckBoxRememberOut.IsChecked -eq $true){1}
+                else{0}
+            )
+            # $RememberMirrorPath
+            $script:RememberMirrorPath = $(
+                if($script:WPFcheckBoxRememberMirror.IsChecked -eq $true){1}
+                else{0}
+            )
+            # $RememberSettings
+            $script:RememberSettings = $(
+                if($script:WPFcheckBoxRememberSettings.IsChecked -eq $true){1}
+                else{0}
+            )
+        }elseif($script:GUI_CLI_Direct -eq "direct"){
             if($script:MirrorEnable -notin (0..1)){
                 Write-ColorOut "Invalid choice of -MirrorEnable." -ForegroundColor Red
                 return $false
             }
-            if($script:PresetFormats.Length -gt 0 -and ("Can" -notin $script:PresetFormats -and "Nik" -notin $script:PresetFormats -and "Son" -notin $script:PresetFormats -and "Jpeg" -notin $script:PresetFormats -and "Jpg" -notin $script:PresetFormats -and "Mov" -notin $script:PresetFormats -and "Aud" -notin $script:PresetFormats)){
+            [array]$inter=@("Can","Nik","Son","Jpeg","Jpg","Mov","Aud")
+            if($script:PresetFormats.Length -gt 0 -and $script:PresetFormats -notin $inter){
                 Write-ColorOut "Invalid choice of -PresetFormats." -ForegroundColor Red
                 return $false
             }
@@ -596,7 +660,8 @@ Function Get-UserValues(){
                 Write-ColorOut "Invalid choice of -CustomFormatsEnable." -ForegroundColor Red
                 return $false
             }
-            if("none" -notin $script:OutputSubfolderStyle -and "yyyy-mm-dd" -notin $script:OutputSubfolderStyle -and "yy-mm-dd" -notin $script:OutputSubfolderStyle -and "yyyy_mm_dd" -notin $script:OutputSubfolderStyle -and "yy_mm_dd" -notin $script:OutputSubfolderStyle){
+            [array]$inter=@("none","yyyy-mm-dd","yyyy_mm_dd","yyyy.mm.dd","yyyymmdd","yy-mm-dd","yy_mm_dd","yy.mm.dd","yymmdd")
+            if($script:OutputSubfolderStyle -notin $inter -or $script:OutputSubfolderStyle.Length -gt $inter[1].Length){
                 Write-ColorOut "Invalid choice of -OutputSubfolderStyle." -ForegroundColor Red
                 return $false
             }
@@ -604,7 +669,8 @@ Function Get-UserValues(){
                 Write-ColorOut "Invalid choice of -UseHistFile." -ForegroundColor Red
                 return $false
             }
-            if("yes" -notin $script:WriteHistFile -and "no" -notin $script:WriteHistFile -and "Overwrite" -notin $script:WriteHistFile){
+            [array]$inter=@("yes","no","overwrite")
+            if($script:WriteHistFile -notin $inter -or $script:WriteHistFile.Length -gt $inter[2].Length){
                 Write-ColorOut "Invalid choice of -WriteHistFile." -ForegroundColor Red
                 return $false
             }
@@ -654,62 +720,61 @@ Function Get-UserValues(){
                 return $false
             }
         }
-
-        if($script:InputPath -lt 2 -or (Test-Path -LiteralPath $script:InputPath -PathType Container) -eq $false){
-            Write-ColorOut "`r`nInput-path $script:InputPath could not be found.`r`n" -ForegroundColor Red
-            return $false
-        }
-        # output-path
-        if($script:OutputPath -eq $script:InputPath){
-            Write-ColorOut "`r`nOutput-path is the same as input-path.`r`n" -ForegroundColor Red
-            return $false
-        }
-        if($script:OutputPath.Length -lt 2 -or (Test-Path -LiteralPath $script:OutputPath -PathType Container) -eq $false){
-            if((Split-Path -Parent -Path $script:OutputPath).Length -gt 1 -and (Test-Path -LiteralPath $(Split-Path -Qualifier -Path $script:OutputPath) -PathType Container) -eq $true){
-                while($true){
-                    [int]$request = Read-Host "Output-path not found, but it's pointing to a valid drive letter. Create chosen directory? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
-                    if($request -eq 1){
-                        New-Item -ItemType Directory -Path $script:OutputPath | Out-Null
-                        break
-                    }elseif($request -eq 0){
-                        Write-ColorOut"`r`nOutput-path not found.`r`n" -ForegroundColor Red
-                        return $false
-                        break
-                    }else{continue}
-                }
-            }else{
-                Write-ColorOut "`r`nOutput-path not found.`r`n" -ForegroundColor Red
+        # checking paths for GUI and direct:
+        if($script:GUI_CLI_Direct -ne "CLI"){
+            # $InputPath
+            if($script:InputPath -lt 2 -or (Test-Path -LiteralPath $script:InputPath -PathType Container) -eq $false){
+                Write-ColorOut "`r`nInput-path $script:InputPath could not be found.`r`n" -ForegroundColor Red
                 return $false
             }
-        }
-        # mirror-path
-        if($script:MirrorEnable -eq 1){
-            if($script:MirrorPath -eq $script:InputPath -or $script:MirrorPath -eq $script:OutputPath){
-                Write-ColorOut "`r`nAdditional output-path is the same as input- or output-path.`r`n" -ForegroundColor Red
+            # $OutputPath
+            if($script:OutputPath -eq $script:InputPath){
+                Write-ColorOut "`r`nOutput-path is the same as input-path.`r`n" -ForegroundColor Red
                 return $false
             }
-            if($script:MirrorPath -lt 2 -or (Test-Path -LiteralPath $script:MirrorPath -PathType Container) -eq $false){
-                if((Split-Path -Parent -Path $script:MirrorPath).Length -gt 1 -and (Test-Path -Qualifier $(Split-Path -Parent -Path $script:MirrorPath) -PathType Container) -eq $true){
+            if($script:OutputPath.Length -lt 2 -or (Test-Path -LiteralPath $script:OutputPath -PathType Container) -eq $false){
+                if((Split-Path -Parent -Path $script:OutputPath).Length -gt 1 -and (Test-Path -LiteralPath $(Split-Path -Qualifier -Path $script:OutputPath) -PathType Container) -eq $true){
                     while($true){
-                        [int]$request = Read-Host "Additional output-path not found, but it's pointing to a valid drive letter. Create chosen directory? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+                        [int]$request = Read-Host "Output-path not found, but it's pointing to a valid drive letter. Create chosen directory? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
                         if($request -eq 1){
-                            New-Item -ItemType Directory -Path $script:MirrorPath | Out-Null
+                            New-Item -ItemType Directory -Path $script:OutputPath | Out-Null
                             break
                         }elseif($request -eq 0){
-                            Write-ColorOut "`r`nAdditional output-path not found.`r`n" -ForegroundColor Red
+                            Write-ColorOut"`r`nOutput-path not found.`r`n" -ForegroundColor Red
                             return $false
                             break
                         }else{continue}
                     }
                 }else{
-                    Write-ColorOut "`r`nAdditional output-path not found.`r`n" -ForegroundColor Red
+                    Write-ColorOut "`r`nOutput-path not found.`r`n" -ForegroundColor Red
                     return $false
                 }
             }
-        }
-        if($script:CustomFormats -match '[$|[]*]'){
-            Write-ColorOut "Custom formats must not include brackets [ ] due to issues with PowerShell." -ForegroundColor Magenta
-            return $false
+            # $MirrorPath
+            if($script:MirrorEnable -eq 1){
+                if($script:MirrorPath -eq $script:InputPath -or $script:MirrorPath -eq $script:OutputPath){
+                    Write-ColorOut "`r`nAdditional output-path is the same as input- or output-path.`r`n" -ForegroundColor Red
+                    return $false
+                }
+                if($script:MirrorPath -lt 2 -or (Test-Path -LiteralPath $script:MirrorPath -PathType Container) -eq $false){
+                    if((Split-Path -Parent -Path $script:MirrorPath).Length -gt 1 -and (Test-Path -Qualifier $(Split-Path -Parent -Path $script:MirrorPath) -PathType Container) -eq $true){
+                        while($true){
+                            [int]$request = Read-Host "Additional output-path not found, but it's pointing to a valid drive letter. Create chosen directory? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+                            if($request -eq 1){
+                                New-Item -ItemType Directory -Path $script:MirrorPath | Out-Null
+                                break
+                            }elseif($request -eq 0){
+                                Write-ColorOut "`r`nAdditional output-path not found.`r`n" -ForegroundColor Red
+                                return $false
+                                break
+                            }else{continue}
+                        }
+                    }else{
+                        Write-ColorOut "`r`nAdditional output-path not found.`r`n" -ForegroundColor Red
+                        return $false
+                    }
+                }
+            }
         }
     }else{
         Write-ColorOut "Invalid choice of -GUI_CLI_Direct." -ForegroundColor Magenta
@@ -718,12 +783,29 @@ Function Get-UserValues(){
 
     # sum up formats:
     [array]$script:allChosenFormats = @()
-    if("Can" -in $script:PresetFormats){$script:allChosenFormats += "*.cr2"}
-    if("Nik" -in $script:PresetFormats){$script:allChosenFormats += "*.nef"; $script:allChosenFormats += "*.nrw"}
-    if("Son" -in $script:PresetFormats){$script:allChosenFormats += "*.arw"}
-    if("Jpg" -in $script:PresetFormats -or "Jpeg" -in $script:PresetFormats){$script:allChosenFormats += "*.jpg"; $script:allChosenFormats += "*.jpeg"}
-    if("Mov" -in $script:PresetFormats){$script:allChosenFormats += "*.mov"; $script:allChosenFormats += "*.mp4"}
-    if("Aud" -in $script:PresetFormats){$script:allChosenFormats += "*.wav"; $script:allChosenFormats += "*.mp3"; $script:allChosenFormats += "*.m4a"}
+    if("Can" -in $script:PresetFormats){
+        $script:allChosenFormats += "*.cr2"
+    }
+    if("Nik" -in $script:PresetFormats){
+        $script:allChosenFormats += "*.nef"
+        $script:allChosenFormats += "*.nrw"
+    }
+    if("Son" -in $script:PresetFormats){
+        $script:allChosenFormats += "*.arw"
+    }
+    if("Jpg" -in $script:PresetFormats -or "Jpeg" -in $script:PresetFormats){
+        $script:allChosenFormats += "*.jpg"
+        $script:allChosenFormats += "*.jpeg"
+    }
+    if("Mov" -in $script:PresetFormats){
+        $script:allChosenFormats += "*.mov"
+        $script:allChosenFormats += "*.mp4"
+    }
+    if("Aud" -in $script:PresetFormats){
+        $script:allChosenFormats += "*.wav"
+        $script:allChosenFormats += "*.mp3"
+        $script:allChosenFormats += "*.m4a"
+    }
     if($script:CustomFormatsEnable -ne 0 -and $script:CustomFormats.Length -gt 0){
         for($i = 0; $i -lt $script:CustomFormats.Length; $i++){
             $script:allChosenFormats += $script:CustomFormats[$i]
@@ -739,7 +821,10 @@ Function Get-UserValues(){
     }
 
     # build switches
-    if($script:InputSubfolderSearch -eq 1){[switch]$script:input_recurse = $true}else{[switch]$script:input_recurse = $false}
+    [switch]$script:input_recurse = $(
+        if($script:InputSubfolderSearch -eq 1){$true}
+        else{$false}
+    )
 
     # get minutes (mm) to months (MM):
     $script:OutputSubfolderStyle = $script:OutputSubfolderStyle -Replace 'mm','MM'
@@ -924,7 +1009,7 @@ Function Start-FileSearchAndCheck(){
 
     # Search files and get some information about them:
     [int]$counter = 1
-    $inter = $(if($script:DupliCompareHashes -ne 0 -or $script:CheckOutputDupli -ne 0){"incl."}else{"excl."})
+    [string]$inter = $(if($script:DupliCompareHashes -ne 0 -or $script:CheckOutputDupli -ne 0){"incl."}else{"excl."})
 
     for($i=0;$i -lt $script:allChosenFormats.Length; $i++){
        $files_in += Get-ChildItem -LiteralPath $InPath -Filter $script:allChosenFormats[$i] -Recurse:$script:input_recurse -File | ForEach-Object {
@@ -998,7 +1083,7 @@ Function Start-FileSearchAndCheck(){
         if($script:debug -ne 0){
             Write-ColorOut "`r`n`r`nFiles to skip / process (after history-check):" -ForegroundColor Yellow
             for($i = 0; $i -lt $files_in.fullpath.Length; $i++){
-                $inter = ($($files_in.fullpath[$i]).Replace($InPath,'.'))
+                [string]$inter = ($($files_in.fullpath[$i]).Replace($InPath,'.'))
                 if($i -notin $dupliindex_hist){
                     Write-ColorOut "Copy:`t$inter" -ForegroundColor Gray
                 }else{
@@ -1080,7 +1165,7 @@ Function Start-FileSearchAndCheck(){
             if($script:debug -ne 0){
                 Write-ColorOut "`r`n`r`nFiles to skip / process (after out-path-check):" -ForegroundColor Yellow
                 for($i = 0; $i -lt $script:files_duplicheck.fullpath.Length; $i++){
-                    $inter = ($($script:files_duplicheck.fullpath[$i]).Replace($InPath,'.'))
+                    [string]$inter = ($($script:files_duplicheck.fullpath[$i]).Replace($InPath,'.'))
                     if($i -notin $dupliindex_out){
                         Write-ColorOut "Copy:`t$inter" -ForegroundColor Gray
                     }else{
@@ -1268,7 +1353,7 @@ Function Start-FileVerification(){
     Write-ColorOut "`r`n$(Get-Date -Format "dd.MM.yy HH:mm:ss")  --  Verify newly copied files..." -ForegroundColor Cyan
 
     $InFiles | Where-Object {$_.tocopy -eq 1} | Start-RSJob -Name "GetHash" -throttle $script:ThreadCount -FunctionsToLoad Write-ColorOut -ScriptBlock {
-        $inter = "$($_.outpath)\$($_.outname)"
+        [string]$inter = "$($_.outpath)\$($_.outname)"
         if((Test-Path -LiteralPath $inter -PathType Leaf) -eq $true){
             if($_.hash -ne $(Get-FileHash -LiteralPath $inter -Algorithm SHA1 | Select-Object -ExpandProperty Hash)){
                 Write-ColorOut "Broken:`t$inter" -ForegroundColor Red
@@ -1401,7 +1486,7 @@ Function Start-Sound($success){
 # DEFINITION: Starts all the things.
 Function Start-Everything(){
     Write-ColorOut "`r`n`r`n            Welcome to flolilo's Media-Copytool!            " -ForegroundColor DarkCyan -BackgroundColor Gray
-    Write-ColorOut "                 v0.6.5 (Beta) - 22.8.2017                  `r`n" -ForegroundColor DarkCyan -BackgroundColor Gray
+    Write-ColorOut "                 v0.6.6 (Beta) - 23.8.2017                  `r`n" -ForegroundColor DarkCyan -BackgroundColor Gray
 
     $script:timer = [diagnostics.stopwatch]::StartNew()
     while($true){
@@ -1569,77 +1654,7 @@ if($GUI_CLI_Direct -eq "GUI"){
         code of this section (except from content of inputXML and small modifications) by
         https://foxdeploy.com/series/learning-gui-toolmaking-series/
     #>
-$inputXML = @"
-<Window x:Class="MediaCopytool.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d"
-        Title="flolilo's Media-Copytool v0.6.5 (Beta)" Height="276" Width="800" ResizeMode="CanMinimize">
-    <Grid Background="#FFB3B6B5">
-        <TextBlock x:Name="textBlockInput" Text="Input-path:" HorizontalAlignment="Left" Margin="20,23,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="70" TextAlignment="Right"/>
-        <TextBox x:Name="textBoxInput" Text="Input-path, e.g. D:\input_path" ToolTip="Brackets [ ] lead to errors!" HorizontalAlignment="Left" Height="22" Margin="100,20,0,0" VerticalAlignment="Top" Width="500" VerticalScrollBarVisibility="Disabled" VerticalContentAlignment="Center"/>
-        <Button x:Name="buttonSearchIn" Content="Select Path..." HorizontalAlignment="Right" Margin="0,20,100,0" VerticalAlignment="Top" Width="80" Height="22"/>
-        <CheckBox x:Name="checkBoxRememberIn" Content="Remember" ToolTip="Remember the Input-Path." HorizontalAlignment="Right" Margin="0,21,15,0" VerticalAlignment="Top" Width="80" Foreground="#FFC90000" Padding="4,-2,0,0" VerticalContentAlignment="Center" Height="22"/>
-        <TextBlock x:Name="textBlockOutput" Text="Output-path:" HorizontalAlignment="Left" Margin="20,55,0,0" TextWrapping="Wrap" VerticalAlignment="Top" TextAlignment="Right" Width="70"/>
-        <TextBox x:Name="textBoxOutput" Text="Output-path, e.g. D:\output_path" ToolTip="Brackets [ ] lead to errors!" HorizontalAlignment="Left" Height="22" Margin="100,52,0,0" VerticalAlignment="Top" Width="500" VerticalScrollBarVisibility="Disabled" VerticalContentAlignment="Center"/>
-        <Button x:Name="buttonSearchOut" Content="Select Path..." HorizontalAlignment="Right" Margin="0,52,100,0" VerticalAlignment="Top" Width="80" Height="22"/>
-        <CheckBox x:Name="checkBoxRememberOut" Content="Remember" ToolTip="Remember the Output-Path." HorizontalAlignment="Right" Margin="0,53,15,0" VerticalAlignment="Top" Width="80" Foreground="#FFC90000" VerticalContentAlignment="Center" Padding="4,-2,0,0" Height="22"/>
-        <CheckBox x:Name="checkBoxMirror" Content=":Mirror" ToolTip="Check if you want to Mirror the copied files to a second path." HorizontalAlignment="Left" Margin="20,85,0,0" VerticalAlignment="Top" Width="70" FlowDirection="RightToLeft" Padding="4,-2,0,0" Height="22" BorderThickness="1" VerticalContentAlignment="Center" UseLayoutRounding="False"/>
-        <TextBox x:Name="textBoxMirror" Text="Mirror-path, e.g. D:\mirror_path" HorizontalAlignment="Left" Height="22" Margin="100,84,0,0" VerticalAlignment="Top" Width="500" VerticalScrollBarVisibility="Disabled" VerticalContentAlignment="Center"/>
-        <Button x:Name="buttonSearchMirror" Content="Select Path..." HorizontalAlignment="Right" Margin="0,84,100,0" VerticalAlignment="Top" Width="80" Height="22"/>
-        <CheckBox x:Name="checkBoxRememberMirror" Content="Remember" ToolTip="Remember the Output-Path." HorizontalAlignment="Right" Margin="0,85,15,0" VerticalAlignment="Top" Width="80" Foreground="#FFC90000" VerticalContentAlignment="Center" Padding="4,-2,0,0" Height="22"/>
-        <Rectangle Fill="#FFB3B6B5" HorizontalAlignment="Left" Height="2" Stroke="#FF878787" VerticalAlignment="Top" Width="794" Panel.ZIndex="-1" Margin="0,115,0,0"/>
-        <ComboBox x:Name="comboBoxPresetFormats" HorizontalAlignment="Left" Margin="50,126,0,0" VerticalAlignment="Top" Width="210" SelectedIndex="0" VerticalContentAlignment="Center">
-            <ComboBoxItem Content="- - - Preset formats to copy - - -"/>
-            <CheckBox x:Name="checkBoxCan" Content="Canon   - CR2" FontFamily="Consolas"/>
-            <CheckBox x:Name="checkBoxNik" Content="Nikon   - NEF + NRW" FontFamily="Consolas"/>
-            <CheckBox x:Name="checkBoxSon" Content="Sony    - ARW" FontFamily="Consolas"/>
-            <CheckBox x:Name="checkBoxJpg" Content="JPEG    - JPG + JPEG" FontFamily="Consolas"/>
-            <CheckBox x:Name="checkBoxMov" Content="Movies  - MOV + MP4" FontFamily="Consolas"/>
-            <CheckBox x:Name="checkBoxAud" Content="Audio   - WAV + MP3 + M4A" FontFamily="Consolas"/>
-        </ComboBox>
-        <CheckBox x:Name="checkBoxCustom" Content="Custom:" ToolTip="Enable to copy customised file-formats." HorizontalAlignment="Left" Margin="50,159,0,0" VerticalAlignment="Top" VerticalContentAlignment="Center" Height="22" Padding="4,-2,0,0"/>
-        <TextBox x:Name="textBoxCustom" Text="custom-formats" FontFamily="Consolas" ToolTip="*.ext1,*.ext2,*.ext3 - Brackets [ ] lead to errors!"  HorizontalAlignment="Left" Height="22" Margin="120,158,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="140" VerticalContentAlignment="Center" VerticalScrollBarVisibility="Disabled"/>
-        <TextBlock x:Name="textBlockOutSubStyle" Text="Subfolder-Style:" HorizontalAlignment="Center" Margin="0,129,140,0" VerticalAlignment="Top" Width="90" TextAlignment="Right"/>
-        <ComboBox x:Name="comboBoxOutSubStyle" ToolTip="Choose your favorite subfolder-style." HorizontalAlignment="Center" Margin="100,126,0,0" VerticalAlignment="Top" Width="120" SelectedIndex="1" Height="23" VerticalContentAlignment="Center" FontFamily="Consolas">
-            <ComboBoxItem Content="No subfolders"/>
-            <ComboBoxItem Content="yyyy-mm-dd" FontFamily="Consolas" ToolTip="e.g.: 2017-12-31"/>
-            <ComboBoxItem Content="yyyy_mm_dd" FontFamily="Consolas" ToolTip="e.g.: 2017_12_31" Width="120"/>
-            <ComboBoxItem Content="yy-mm-dd" FontFamily="Consolas" ToolTip="e.g.: 17-12-31"/>
-            <ComboBoxItem Content="yy_mm_dd" FontFamily="Consolas" ToolTip="e.g.: 17_12_31"/>
-        </ComboBox>
-        <ComboBox x:Name="comboBoxHistFile" HorizontalAlignment="Center" Margin="282,158,287,0" VerticalAlignment="Top" Width="225" SelectedIndex="0" Height="22" VerticalContentAlignment="Center">
-            <ComboBoxItem Content="- - - Histoy-file options - - -"/>
-            <CheckBox x:Name="checkBoxUseHistFile" Content="Use hist-file to prevent duplis" ToolTip="Default. Fast way to prevent already copied files from being copied again." Foreground="#FF00A22C"/>
-            <ComboBoxItem Content="- - - Writing the history-file - - -"/>
-            <RadioButton x:Name="radioButtonWriteHistFileYes" Content="Write old + new files to history-file" ToolTip="Default. Adds new values to the old ones." GroupName="WriteHistFile"/>
-            <RadioButton x:Name="radioButtonWriteHistFileNo" Content="Don't add new files" ToolTip="Does not touch the history-file." GroupName="WriteHistFile"/>
-            <RadioButton x:Name="radioButtonWriteHistFileOverwrite" Content="Delete old files, write new ones" ToolTip="Deletes the old values and only writes the new one to the history-file." GroupName="WriteHistFile"/>
-        </ComboBox>
-        <ComboBox x:Name="comboBoxOptions" HorizontalAlignment="Right" Margin="0,126,50,0" VerticalAlignment="Top" Width="200" SelectedIndex="0" VerticalContentAlignment="Center" BorderThickness="1,1,1,1">
-            <ComboBoxItem Content="Select some options"/>
-            <CheckBox x:Name="checkBoxInSubSearch" Content="Include subfolders in in-path" ToolTip="Default. E.g. not only searching files in E:\DCIM, but also in E:\DCIM\abc"/>
-            <CheckBox x:Name="checkBoxCheckInHash" Content="Check hashes of in-files (slow)" ToolTip="For history-check: If unchecked, dupli-check is done via name, size, date. If checked, hash is added. Dupli-Check in out-path disables this function."/>
-            <CheckBox x:Name="checkBoxOutputDupli" Content="Check for duplis in out-path" ToolTip="Ideal if you have used LR or other import-tools since the last card-formatting."/>
-            <!-- <CheckBox x:Name="checkBox7zipMirror" Content="Mirroring files as 7z-archive" ToolTip="Creating an archive with the files in it - good as a backup."/> -->
-            <!-- <CheckBox x:Name="checkBoxPreventDupli" Content="Prevent duplicates from in-path" ToolTip="Prevent duplicates from the input-path (e.g. same file in two folders)."/> -->
-            <CheckBox x:Name="checkBoxRemoveInputDrive" Content="Remove in-drive after copying" ToolTip="Safely removing the input-drive after successful verification (before mirroring). Note: It does not work with all drives - so double-check if your drive was removed!" Foreground="#FFFF1717"/>
-            <CheckBox x:Name="checkBoxPreventStandby" Content="Prevent standby" ToolTip="Prevents system from hibernating by simulating the keystroke of F13." Foreground="#FF0080FF"/>
-            <ComboBoxItem Content="Thread Count:"/>
-            <DockPanel VerticalAlignment="Center" Margin="1" ToolTip="Number of threads for operations. High numbers tend to slow everything down; recommended: 2-4.">
-                <Slider x:Name="sliderThreadCount" Minimum="1" Maximum="24" TickPlacement="TopLeft" Width="150" SmallChange="1" Value="1" IsSnapToTickEnabled="True"/>
-                <TextBox x:Name="textBoxThreadCount" Text="{Binding ElementName=sliderThreadCount, Path=Value, UpdateSourceTrigger=PropertyChanged}" DockPanel.Dock="Right" TextAlignment="Right" Width="30" Margin="5,0,0,0" />
-            </DockPanel>
-        </ComboBox>
-        <CheckBox x:Name="checkBoxRememberSettings" Content=":Remember settings" ToolTip="Remember all parameters (excl. Remember-Params)" HorizontalAlignment="Right" Margin="0,158,50,0" VerticalAlignment="Top" Foreground="#FFC90000" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Padding="4,-2,0,0" Height="22" FlowDirection="RightToLeft"/>
-        <Button x:Name="buttonStart" Content="START" HorizontalAlignment="Center" Margin="0,0,0,20" VerticalAlignment="Bottom" Width="100" IsDefault="True" FontWeight="Bold"/>
-        <Button x:Name="buttonClose" Content="EXIT" HorizontalAlignment="Right" Margin="0,0,40,20" VerticalAlignment="Bottom" Width="100"/>
-        <Button x:Name="buttonAbout" Content="About / Help" HorizontalAlignment="Left" Margin="40,0,0,20" VerticalAlignment="Bottom" Width="90"/>
-    </Grid>
-</Window>
-"@
+    $inputXML = Get-Content -Path "$($PSScriptRoot)/media_copytool_GUI.xaml" -Encoding UTF8
 
     [void][System.Reflection.Assembly]::LoadWithPartialName('presentationframework')
     [xml]$xaml = $inputXML -replace 'mc:Ignorable="d"','' -replace "x:Name",'Name'  -replace '^<Win.*', '<Window'
@@ -1674,7 +1689,17 @@ $inputXML = @"
     $WPFcheckBoxAud.IsChecked = $(if("Aud" -in $PresetFormats){$true}else{$false})
     $WPFcheckBoxCustom.IsChecked = $CustomFormatsEnable
     $WPFtextBoxCustom.Text = $CustomFormats -join ","
-    $WPFcomboBoxOutSubStyle.SelectedIndex = $(if("none" -eq $OutputSubfolderStyle){0}elseif("yyyy-mm-dd" -eq $OutputSubfolderStyle){1}elseif("yyyy_mm_dd" -eq $OutputSubfolderStyle){2}elseif("yy-mm-dd" -eq $OutputSubfolderStyle){3}elseif("yy_mm_dd" -eq $OutputSubfolderStyle){4})
+    $WPFcomboBoxOutSubStyle.SelectedIndex = $(
+        if("none" -eq $OutputSubfolderStyle){0}
+        elseif("yyyy-mm-dd" -eq $OutputSubfolderStyle){1}
+        elseif("yyyy_mm_dd" -eq $OutputSubfolderStyle){2}
+        elseif("yyyy.mm.dd" -eq $OutputSubfolderStyle){3}
+        elseif("yyyymmdd" -eq $OutputSubfolderStyle){4}
+        elseif("yy-mm-dd" -eq $OutputSubfolderStyle){5}
+        elseif("yy_mm_dd" -eq $OutputSubfolderStyle){6}
+        elseif("yy.mm.dd" -eq $OutputSubfolderStyle){7}
+        elseif("yymmdd" -eq $OutputSubfolderStyle){8}
+    )
     $WPFcheckBoxUseHistFile.IsChecked = $UseHistFile
     $WPFradioButtonWriteHistFileYes.IsChecked = $(if($WriteHistFile -eq "yes"){1}else{0})
     $WPFradioButtonWriteHistFileNo.IsChecked = $(if($WriteHistFile -eq "no"){1}else{0})
