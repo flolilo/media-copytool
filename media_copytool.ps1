@@ -9,7 +9,7 @@
         Now supports multithreading via Boe Prox's PoshRSJob-cmdlet (https://github.com/proxb/PoshRSJob)
 
     .NOTES
-        Version:        0.6.4 (Beta)
+        Version:        0.6.5 (Beta)
         Author:         flolilo
         Creation Date:  21.8.2017
         Legal stuff: This program is free software. It comes without any warranty, to the extent permitted by
@@ -81,6 +81,13 @@
     .PARAMETER CheckOutputDupli
         Valid range: 0 (deactivate), 1 (activate)
         If enabled, it checks for already copied files in the output-path (and its subfolders).
+    .PARAMETER 7zipMirror
+        TODO: To be implemented.
+        Valid range: 0 (deactivate), 1 (activate)
+        Only enabled if -EnableMirror is enabled, too. Creates a 7z-archive for archiving.
+    .PARAMETER RemoveInputDrive
+        Valid range: 0 (deactivate), 1 (activate)
+        If enabled, safely removes the input-drive after finishing copying & verifying. Only use with external drives!
     .PARAMETER PreventStandby
         Valid range: 0 (deactivate), 1 (activate)
         If enabled, automatic standby or shutdown is prevented as long as media-copytool is running.
@@ -127,20 +134,22 @@
 #>
 param(
     [int]$showparams=0,
-    [string]$GUI_CLI_Direct="direct",
-    [string]$InputPath="D:\Temp\in [ ] pfad",
-    [string]$OutputPath="D:\Temp\out [ ] pfad",
-    [int]$MirrorEnable=1,
-    [string]$MirrorPath="D:\Temp\mirr [ ] pfad",
+    [string]$GUI_CLI_Direct="GUI",
+    [string]$InputPath="G:\",
+    [string]$OutputPath="D:\",
+    [int]$MirrorEnable=0,
+    [string]$MirrorPath="E:\",
     [array]$PresetFormats=("Can","Jpg","Mov"),
-    [int]$CustomFormatsEnable=1,
+    [int]$CustomFormatsEnable=0,
     [array]$CustomFormats=("*"),
-    [string]$OutputSubfolderStyle="yy-MM-dd",
+    [string]$OutputSubfolderStyle="yyyy-MM-dd",
     [int]$UseHistFile=1,
     [string]$WriteHistFile="yes",
     [int]$InputSubfolderSearch=1,
     [int]$DupliCompareHashes=0,
     [int]$CheckOutputDupli=0,
+    # TODO: [int]$7zipMirror=0,
+    [int]$RemoveInputDrive=1,
     [int]$PreventStandby=1,
     [int]$ThreadCount=2,
     [int]$RememberInPath=0,
@@ -150,24 +159,56 @@ param(
     [int]$debug=0
 )
 # First line of "param" (for remembering/restoring parameters):
-[int]$paramline = 128
+[int]$paramline = 135
 
 #DEFINITION: Hopefully avoiding errors by wrong encoding now:
 $OutputEncoding = New-Object -typename System.Text.UTF8Encoding
 
-# DEFINITION: Enabling fast, colorful Write-Outs. Unfortunately, no -NoNewLine...
+# DEFINITION: Making Write-Host much, much faster:
 Function Write-ColorOut(){
+    <#
+        .SYNOPSIS
+            A faster version of Write-Host
+        
+        .DESCRIPTION
+            Using the [Console]-commands to make everything faster.
+
+        .NOTES
+            Date: 2018-08-22
+        
+        .PARAMETER Object
+            String to write out
+        
+        .PARAMETER ForegroundColor
+            Color of characters. If not specified, uses color that was set before calling. Valid: White (PS-Default), Red, Yellow, Cyan, Green, Gray, Magenta, Blue, Black, DarkRed, DarkYellow, DarkCyan, DarkGreen, DarkGray, DarkMagenta, DarkBlue
+        
+        .PARAMETER BackgroundColor
+            Color of background. If not specified, uses color that was set before calling. Valid: DarkMagenta (PS-Default), White, Red, Yellow, Cyan, Green, Gray, Magenta, Blue, Black, DarkRed, DarkYellow, DarkCyan, DarkGreen, DarkGray, DarkBlue
+        
+        .PARAMETER NoNewLine
+            When enabled, no line-break will be created.
+        
+        .EXAMPLE
+            Write-ColorOut "Hello World!" -ForegroundColor Green -NoNewLine
+    #>
     param(
         [string]$Object,
         [string]$ForegroundColor=[Console]::ForegroundColor,
-        [string]$BackgroundColor=[Console]::BackgroundColor
+        [string]$BackgroundColor=[Console]::BackgroundColor,
+        [switch]$NoNewLine=$false
     )
     $old_fg_color = [Console]::ForegroundColor
     $old_bg_color = [Console]::BackgroundColor
-
+    
     if($ForeGroundColor -ne $old_fg_color){[Console]::ForegroundColor = $ForeGroundColor}
     if($BackgroundColor -ne $old_bg_color){[Console]::BackgroundColor = $BackgroundColor}
-    [Console]::WriteLine($Object)
+
+    if($NoNewLine -eq $false){
+        [Console]::WriteLine($Object)
+    }else{
+        [Console]::Write($Object)
+    }
+    
     if($ForeGroundColor -ne $old_fg_color){[Console]::ForegroundColor = $old_fg_color}
     if($BackgroundColor -ne $old_bg_color){[Console]::BackgroundColor = $old_bg_color}
 }
@@ -205,6 +246,8 @@ if($showparams -ne 0){
     Write-ColorOut "-WriteHistFile`t`t=`t$WriteHistFile" -ForegroundColor Cyan
     Write-ColorOut "-InputSubfolderSearch`t=`t$InputSubfolderSearch" -ForegroundColor Cyan
     Write-ColorOut "-CheckOutputDupli`t=`t$CheckOutputDupli" -ForegroundColor Cyan
+    # TODO: Write-ColorOut "-7zipMirror`t`t=`t$7zipMirror" -ForegroundColor Cyan
+    Write-ColorOut "-RemoveInputDrive`t=`t$RemoveInputDrive" -ForegroundColor Cyan
     Write-ColorOut "-PreventStandby`t`t=`t$PreventStandby" -ForegroundColor Cyan
     Write-ColorOut "-ThreadCount`t`t=`t$ThreadCount`r`n" -ForegroundColor Cyan
     Pause
@@ -403,6 +446,28 @@ Function Get-UserValues(){
                 break
             }
         }
+        <# TODO: $7zipMirror
+        if($script:MirrorEnable -eq 1){
+            while($true){
+                [int]$script:7zipMirror = Read-Host "Copying files to additional output-path as 7zip-archive? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+                if($script:7zipMirror -notin (0..1)){
+                    Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
+                    continue
+                }else{
+                    break
+                }
+            }
+        } #>
+        # $RemoveInputDrive
+        while($true){
+            [int]$script:RemoveInputDrive = Read-Host "Removing input-drive after copying & verifying (before mirroring)? Only use it for external drives. `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+            if($script:RemoveInputDrive -notin (0..1)){
+                Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
+                continue
+            }else{
+                break
+            }
+        }
         # prevent standby
         while($true){
             [int]$script:PreventStandby = Read-Host "Auto-prevent standby of computer while script is running? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
@@ -501,6 +566,10 @@ Function Get-UserValues(){
             $script:DupliCompareHashes = $(if($script:WPFcheckBoxCheckInHash.IsChecked -eq $true){1}else{0})
             # check duplis in output-path
             $script:CheckOutputDupli = $(if($script:WPFcheckBoxOutputDupli.IsChecked -eq $true){1}else{0})
+            <# TODO: $7zipMirror
+            $script:7zipMirror = $(if($script:WPFcheckBox7zipMirror.IsChecked -eq $true){1}else{0}) #>
+            # $RemoveInputDrive
+            $script:RemoveInputDrive = $(if($script:WPFcheckBoxRemoveInputDrive.IsChecked -eq $true){1}else{0})
             # prevent standby
             $script:PreventStandby = $(if($script:WPFcheckBoxPreventStandby.IsChecked -eq $true){1}else{0})
             # $ThreadCount
@@ -549,6 +618,15 @@ Function Get-UserValues(){
             }
             if($script:CheckOutputDupli -notin (0..1)){
                 Write-ColorOut "Invalid choice of -CheckOutputDupli." -ForegroundColor Red
+                return $false
+            }
+            <# TODO:
+            if($script:7zipMirror -notin (0..1)){
+                Write-ColorOut "Invalid choice of -7zipMirror." -ForegroundColor Red
+                return $false
+            } #>
+            if($script:RemoveInputDrive -notin (0..1)){
+                Write-ColorOut "Invalid choice of -RemoveInputDrive." -ForegroundColor Red
                 return $false
             }
             if($script:PreventStandby -notin (0..1)){
@@ -690,6 +768,8 @@ Function Get-UserValues(){
         Write-ColorOut "InputSubfolderSearch:`t$script:InputSubfolderSearch"
         Write-ColorOut "DupliCompareHashes:`t$script:DupliCompareHashes"
         Write-ColorOut "CheckOutputDupli:`t$script:CheckOutputDupli"
+        # TODO: Write-ColorOut "7zipMirror:`t`t$script:7zipMirror"
+        Write-ColorOut "RemoveInputDrive:`t`t$script:RemoveInputDrive"
         Write-ColorOut "PreventStandby:`t`t$script:PreventStandby"
         Write-ColorOut "ThreadCount:`t`t$script:ThreadCount"
     }
@@ -727,7 +807,7 @@ Function Start-Remembering(){
     # Remember settings
     if($script:RememberSettings -ne 0){
         Write-ColorOut "From:"
-        for($i = $($script:paramline + 1); $i -le $($script:paramline + 16); $i++){
+        for($i = $($script:paramline + 1); $i -le $($script:paramline + 18); $i++){
             if(-not ($i -eq $($script:paramline + 2) -or $i -eq $($script:paramline + 3) -or $i -eq $($script:paramline + 5))){
                 Write-ColorOut $lines_new[$i] -ForegroundColor Gray
             }
@@ -757,13 +837,17 @@ Function Start-Remembering(){
         $lines_new[$($script:paramline + 13)] = '    [int]$DupliCompareHashes=' + "$script:DupliCompareHashes" + ','
         # $CheckOutputDupli
         $lines_new[$($script:paramline + 14)] = '    [int]$CheckOutputDupli=' + "$script:CheckOutputDupli" + ','
+        <# TODO: $7zipMirror
+        $lines_new[$($script:paramline + 15)] = '    [int]$7zipMirror=' + "$script:7zipMirror" + ',' #>
+        # $RemoveInputDrive
+        $lines_new[$($script:paramline + 16)] = '    [int]$RemoveInputDrive=' + "$script:RemoveInputDrive" + ','
         # $PreventStandby
-        $lines_new[$($script:paramline + 15)] = '    [int]$PreventStandby=' + "$script:PreventStandby" + ','
+        $lines_new[$($script:paramline + 17)] = '    [int]$PreventStandby=' + "$script:PreventStandby" + ','
         # $ThreadCount
-        $lines_new[$($script:paramline + 16)] = '    [int]$ThreadCount=' + "$script:ThreadCount" + ','
+        $lines_new[$($script:paramline + 18)] = '    [int]$ThreadCount=' + "$script:ThreadCount" + ','
 
         Write-ColorOut "To:"
-        for($i = $($script:paramline + 1); $i -le $($script:paramline + 16); $i++){
+        for($i = $($script:paramline + 1); $i -le $($script:paramline + 18); $i++){
             if(-not ($i -eq $($script:paramline + 2) -or $i -eq $($script:paramline + 3) -or $i -eq $($script:paramline + 5))){
                 Write-ColorOut $lines_new[$i] -ForegroundColor Yellow
             }
@@ -1201,10 +1285,6 @@ Function Start-FileVerification(){
         }
     } | Wait-RSJob -ShowProgress | Receive-RSJob
     Get-RSJob -Name "GetHash" | Remove-RSJob
-    
-    if(1 -notin $InFiles.tocopy){
-        Write-ColorOut "`r`n`r`nAll files successfully verified!`r`n" -ForegroundColor Green
-    }
 
     [int]$verified = 0
     [int]$unverified = 0
@@ -1293,19 +1373,35 @@ Function Invoke-Close(){
 
 # DEFINITION: For the auditory experience:
 Function Start-Sound($success){
-    $sound = new-Object System.Media.SoundPlayer -ErrorAction SilentlyContinue
+    <#
+    .SYNOPSIS
+        Gives auditive feedback for fails and successes
+    
+    .DESCRIPTION
+        Uses SoundPlayer and Windows's own WAVs to play sounds.
+
+    .NOTES
+        Date: 2018-08-22
+
+    .PARAMETER success
+        If 1 it plays Windows's "tada"-sound, if 0 it plays Windows's "chimes"-sound.
+    
+    .EXAMPLE
+        For success: Start-Sound(1)
+    #>
+    $sound = New-Object System.Media.SoundPlayer -ErrorAction SilentlyContinue
     if($success -eq 1){
-        $sound.SoundLocation = "c:\WINDOWS\Media\tada.wav"
+        $sound.SoundLocation = "C:\Windows\Media\tada.wav"
     }else{
-        $sound.SoundLocation = "c:\WINDOWS\Media\chimes.wav"
+        $sound.SoundLocation = "C:\Windows\Media\chimes.wav"
     }
     $sound.Play()
 }
 
 # DEFINITION: Starts all the things.
 Function Start-Everything(){
-    Write-ColorOut "`r`n`r`n    Welcome to Flo's Media-Copytool! // Willkommen bei Flos Media-Copytool!    " -ForegroundColor DarkCyan -BackgroundColor Gray
-    Write-ColorOut "                           v0.6.4 (Beta) - 21.8.2017                           `r`n" -ForegroundColor DarkCyan -BackgroundColor Gray
+    Write-ColorOut "`r`n`r`n            Welcome to flolilo's Media-Copytool!            " -ForegroundColor DarkCyan -BackgroundColor Gray
+    Write-ColorOut "                 v0.6.5 (Beta) - 22.8.2017                  `r`n" -ForegroundColor DarkCyan -BackgroundColor Gray
 
     $script:timer = [diagnostics.stopwatch]::StartNew()
     while($true){
@@ -1380,6 +1476,19 @@ Function Start-Everything(){
             Invoke-Pause -tottime $timer.elapsed.TotalSeconds
             $timer.reset()
             $j++
+        }
+        Write-ColorOut "`r`n`r`nAll files successfully verified!`r`n" -ForegroundColor Green
+        if($script:RemoveInputDrive -eq 1){
+            # CREDIT: https://serverfault.com/a/580298
+            # TODO: Find a solution that works with all drives.
+            $driveEject = New-Object -comObject Shell.Application
+            try{
+                $driveEject.Namespace(17).ParseName($(Split-Path -Qualifier -Path $script:InputPath)).InvokeVerb("Eject")
+                Write-ColorOut "Drive $(Split-Path -Qualifier -Path $script:InputPath) successfully ejected!" -ForegroundColor DarkCyan -BackgroundColor Gray
+            }
+            catch{
+                Write-ColorOut "Couldn't eject drive $(Split-Path -Qualifier -Path $script:InputPath)." -ForegroundColor Magenta
+            }
         }
         if($script:WriteHistFile -ne "no"){
             $timer.start()
@@ -1467,7 +1576,7 @@ $inputXML = @"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="Flo's Media-Copytool v0.6.4 Beta" Height="276" Width="800" ResizeMode="CanMinimize">
+        Title="flolilo's Media-Copytool v0.6.5 (Beta)" Height="276" Width="800" ResizeMode="CanMinimize">
     <Grid Background="#FFB3B6B5">
         <TextBlock x:Name="textBlockInput" Text="Input-path:" HorizontalAlignment="Left" Margin="20,23,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="70" TextAlignment="Right"/>
         <TextBox x:Name="textBoxInput" Text="Input-path, e.g. D:\input_path" ToolTip="Brackets [ ] lead to errors!" HorizontalAlignment="Left" Height="22" Margin="100,20,0,0" VerticalAlignment="Top" Width="500" VerticalScrollBarVisibility="Disabled" VerticalContentAlignment="Center"/>
@@ -1514,7 +1623,9 @@ $inputXML = @"
             <CheckBox x:Name="checkBoxInSubSearch" Content="Include subfolders in in-path" ToolTip="Default. E.g. not only searching files in E:\DCIM, but also in E:\DCIM\abc"/>
             <CheckBox x:Name="checkBoxCheckInHash" Content="Check hashes of in-files (slow)" ToolTip="For history-check: If unchecked, dupli-check is done via name, size, date. If checked, hash is added. Dupli-Check in out-path disables this function."/>
             <CheckBox x:Name="checkBoxOutputDupli" Content="Check for duplis in out-path" ToolTip="Ideal if you have used LR or other import-tools since the last card-formatting."/>
+            <!-- <CheckBox x:Name="checkBox7zipMirror" Content="Mirroring files as 7z-archive" ToolTip="Creating an archive with the files in it - good as a backup."/> -->
             <!-- <CheckBox x:Name="checkBoxPreventDupli" Content="Prevent duplicates from in-path" ToolTip="Prevent duplicates from the input-path (e.g. same file in two folders)."/> -->
+            <CheckBox x:Name="checkBoxRemoveInputDrive" Content="Remove in-drive after copying" ToolTip="Safely removing the input-drive after successful verification (before mirroring). Note: It does not work with all drives - so double-check if your drive was removed!" Foreground="#FFFF1717"/>
             <CheckBox x:Name="checkBoxPreventStandby" Content="Prevent standby" ToolTip="Prevents system from hibernating by simulating the keystroke of F13." Foreground="#FF0080FF"/>
             <ComboBoxItem Content="Thread Count:"/>
             <DockPanel VerticalAlignment="Center" Margin="1" ToolTip="Number of threads for operations. High numbers tend to slow everything down; recommended: 2-4.">
@@ -1571,6 +1682,8 @@ $inputXML = @"
     $WPFcheckBoxInSubSearch.IsChecked = $InputSubfolderSearch
     $WPFcheckBoxCheckInHash.IsChecked = $DupliCompareHashes
     $WPFcheckBoxOutputDupli.IsChecked = $CheckOutputDupli
+    # TODO: $WPFcheckBox7zipMirror.IsChecked = $7zipMirror
+    $WPFcheckBoxRemoveInputDrive.IsChecked = $RemoveInputDrive
     $WPFcheckBoxPreventStandby.IsChecked = $PreventStandby
     $WPFtextBoxThreadCount.Text = $ThreadCount
     $WPFcheckBoxRememberIn.IsChecked = $RememberInPath
