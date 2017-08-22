@@ -68,7 +68,7 @@ Falls in der GUI mit Netzwerk-Pfaden (wie `\\192.168.0.2\bilder`) gearbeitet wer
 - Obwohl das Multi-Threading funktioniert, kannes gerade bei höheren Nummern das Skript immens verlangsamen - deswegen gibt es einen Parameter bzw. einen Slider hierfür.
 
 ## To do
-- [ ] GUI mit Tabs statt Dropdowns (Hohe Priorität)
+- [x] GUI mit Tabs statt Dropdowns (Hohe Priorität)
 - [ ] Option um Verifikation komplett zu deaktivieren, um so die Ausführung zu beschleunigen. (Hohe Priorität)
 - [ ] Mehr Unterordner-Stile
 - [ ] Option um Dateien nach Datum zu benennen

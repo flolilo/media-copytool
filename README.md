@@ -68,7 +68,7 @@ If you want to copy from/to a network-path (such as `\\192.168.0.2\pictures`):
 - Although multi-threading works, the thread-count is a tricky thing: setting it too high will slow the script down, even. That's why there's a slider for that.
 
 ## To do
-- [ ] GUI with tabs instead of dropdowns (high priority)
+- [x] GUI with tabs instead of dropdowns (high priority)
 - [ ] Option to deactivate verification completely, thus enabling fast copying. (high priority)
 - [ ] More subfolder-styles
 - [ ] Reaming files by date

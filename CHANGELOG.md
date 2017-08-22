@@ -7,7 +7,8 @@ All notable changes to this project will be documented in this file.
 ## 0.6.6 - 2017-08-23
 ### Changed
 - Small improvements for readability of if-conditions in the code.
-- Excluded XAML-code for GUI from script-file, added `GUI.xaml`-file.
+- Outsourced XAML-code for GUI from script-file, added `GUI.xaml`-file.
+- GUI-Layout for readability
 
 ### Added
 - `media_copytool_GUI.xaml`
