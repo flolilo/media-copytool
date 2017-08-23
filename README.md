@@ -70,7 +70,7 @@ If you want to copy from/to a network-path (such as `\\192.168.0.2\pictures`):
 ## To do
 - [x] GUI with tabs instead of dropdowns (high priority)
 - [ ] Option to deactivate verification completely, thus enabling fast copying. (high priority)
-- [ ] More subfolder-styles
+- [x] More subfolder-styles
 - [ ] Reaming files by date
 - [x] Checking if the volume exists if output-path(s) are not found (instead of looking for the parent directory)
 - [x] Multithreading Get-FileHash operations

@@ -70,7 +70,7 @@ Falls in der GUI mit Netzwerk-Pfaden (wie `\\192.168.0.2\bilder`) gearbeitet wer
 ## To do
 - [x] GUI mit Tabs statt Dropdowns (Hohe Priorität)
 - [ ] Option um Verifikation komplett zu deaktivieren, um so die Ausführung zu beschleunigen. (Hohe Priorität)
-- [ ] Mehr Unterordner-Stile
+- [x] Mehr Unterordner-Stile
 - [ ] Option um Dateien nach Datum zu benennen
 - [x] Bei nicht vorhandendn Ausgabe-Pfaden: Statt suche nach Überverzeichnis nun kontrollieren, ob Laufwerk existiert
 - [x] Multithreading der Get-FileHash Operationen

@@ -55,17 +55,31 @@
             "media*" will look for all files inside -InputPath that start with "media", regardless their extension. E.g. media_copytool.ps1, media123.ini,...
         Specify your terms inside quotes and separate multiple entries with commata.
     .PARAMETER OutputSubfolderStyle
-        Creation-style of subfolders for files in -OutputPath. The date will be taken from the files' last edit time.
+        Creation-style of subfolders for files in -OutputPath. The date will be taken from the file's last edit time.
         Valid options:
             "none"          -   No subfolders in -OutputPath.
-            "yyyy-mm-dd"    -   E.g. 2017-01-31
-            "yyyy_mm_dd"    -   E.g. 2017_01_31
-            "yyyy.mm.dd"    -   E.g. 2017.01.31
-            "yyyymmdd"      -   E.g. 20170131
-            "yy-mm-dd"      -   E.g. 17-01-31
-            "yy_mm_dd"      -   E.g. 17_01_31
-            "yy.mm.dd"      -   E.g. 17.01.31
-            "yymmdd"        -   E.g. 170131
+            "yyyy-MM-dd"    -   E.g. 2017-01-31
+            "yyyy_MM_dd"    -   E.g. 2017_01_31
+            "yyyy.MM.dd"    -   E.g. 2017.01.31
+            "yyyyMMdd"      -   E.g. 20170131
+            "yy-MM-dd"      -   E.g. 17-01-31
+            "yy_MM_dd"      -   E.g. 17_01_31
+            "yy.MM.dd"      -   E.g. 17.01.31
+            "yyMMdd"        -   E.g. 170131
+    .PARAMETER OutputFileStyle
+        TODO: To be implemented.
+        Renaming-style for input-files. The date and time will be taken from the file's last edit time.
+        Valid options:
+            "unchanged"         -   Original file-name will be used.
+            "yyyy-MM-dd_HH-mm"  -   E.g. 2017-01-31_13-59-58.ext
+            "yyyyMMdd_HHmm"     -   E.g. 20170131_135958.ext
+            "yyyyMMddHHmm"      -   E.g. 20170131135958.ext
+            "yy-MM-dd_HH-mm"    -   E.g. 17-01-31_13-59-58.ext
+            "yyMMdd_HHmm"       -   E.g. 170131_135958.ext
+            "yyMMddHHmm"        -   E.g. 170131135958.ext
+            "HH-mm-ss"          -   E.g. 13-59-58.ext
+            "HH_mm_ss"          -   E.g. 13_59_58.ext
+            "HHmmss"            -   E.g. 135958.ext
     .PARAMETER UseHistFile
         Valid range: 0 (deactivate), 1 (activate)
         The history-file is a fast way to rule out the creation of duplicates by comparing the files from -InputPath against the values stored earlier.
@@ -85,11 +99,15 @@
     .PARAMETER CheckOutputDupli
         Valid range: 0 (deactivate), 1 (activate)
         If enabled, it checks for already copied files in the output-path (and its subfolders).
+    .PARAMETER VerifyCopies
+        TODO: To be implemented.
+        Valid range: 0 (deactivate), 1 (activate)
+        If enabled, copied files will be checked for their integrity via SHA1-hashes. Disabling will increase speed, but there is no absolute guarantee that your files are copied correctly.
     .PARAMETER 7zipMirror
         TODO: To be implemented.
         Valid range: 0 (deactivate), 1 (activate)
         Only enabled if -EnableMirror is enabled, too. Creates a 7z-archive for archiving.
-    .PARAMETER RemoveInputDrive
+    .PARAMETER UnmountInputDrive
         Valid range: 0 (deactivate), 1 (activate)
         If enabled, safely removes the input-drive after finishing copying & verifying. Only use with external drives!
     .PARAMETER PreventStandby
@@ -148,13 +166,15 @@ param(
     [int]$CustomFormatsEnable=0,
     [array]$CustomFormats=("*"),
     [string]$OutputSubfolderStyle="yyyy-MM-dd",
+    # TODO: [string]$OutputFileStyle="unchanged",
     [int]$UseHistFile=1,
     [string]$WriteHistFile="yes",
     [int]$InputSubfolderSearch=1,
     [int]$DupliCompareHashes=0,
     [int]$CheckOutputDupli=0,
+    # TODO: [int]$VerifyCopies=1,
     # TODO: [int]$7zipMirror=0,
-    [int]$RemoveInputDrive=1,
+    [int]$UnmountInputDrive=1,
     [int]$PreventStandby=1,
     [int]$ThreadCount=2,
     [int]$RememberInPath=0,
@@ -164,7 +184,7 @@ param(
     [int]$debug=0
 )
 # First line of "param" (for remembering/restoring parameters):
-[int]$paramline = 140
+[int]$paramline = 158
 
 #DEFINITION: Hopefully avoiding errors by wrong encoding now:
 $OutputEncoding = New-Object -typename System.Text.UTF8Encoding
@@ -252,7 +272,7 @@ if($showparams -ne 0){
     Write-ColorOut "-InputSubfolderSearch`t=`t$InputSubfolderSearch" -ForegroundColor Cyan
     Write-ColorOut "-CheckOutputDupli`t=`t$CheckOutputDupli" -ForegroundColor Cyan
     # TODO: Write-ColorOut "-7zipMirror`t`t=`t$7zipMirror" -ForegroundColor Cyan
-    Write-ColorOut "-RemoveInputDrive`t=`t$RemoveInputDrive" -ForegroundColor Cyan
+    Write-ColorOut "-UnmountInputDrive`t=`t$UnmountInputDrive" -ForegroundColor Cyan
     Write-ColorOut "-PreventStandby`t`t=`t$PreventStandby" -ForegroundColor Cyan
     Write-ColorOut "-ThreadCount`t`t=`t$ThreadCount`r`n" -ForegroundColor Cyan
     Pause
@@ -398,8 +418,8 @@ Function Get-UserValues(){
             }
             # $OutputSubfolderStyle
             while($true){
-                [array]$inter = @("none","yyyy-mm-dd","yyyy_mm_dd","yyyy.mm.dd","yyyymmdd","yy-mm-dd","yy_mm_dd","yy.mm.dd","yymmdd")
-                [string]$script:OutputSubfolderStyle = Read-Host "Which subfolder-style should be used in the output-path? Options: `"none`",`"yyyy-mm-dd`",`"yyyy_mm_dd`",`"yyyy.mm.dd`",`"yyyymmdd`",`"yy-mm-dd`",`"yy_mm_dd`",`"yy.mm.dd`",`"yymmdd`" (all w/o quotes)."
+                [array]$inter = @("none","yyyy-MM-dd","yyyy_MM_dd","yyyy.MM.dd","yyyyMMdd","yy-MM-dd","yy_MM_dd","yy.MM.dd","yyMMdd")
+                [string]$script:OutputSubfolderStyle = Read-Host "Which subfolder-style should be used in the output-path? Options: `"none`",`"yyyy-MM-dd`",`"yyyy_MM_dd`",`"yyyy.MM.dd`",`"yyyyMMdd`",`"yy-MM-dd`",`"yy_MM_dd`",`"yy.MM.dd`",`"yyMMdd`" (all w/o quotes)."
                 if($script:OutputSubfolderStyle -in $inter){
                     break
                 }else{
@@ -407,9 +427,20 @@ Function Get-UserValues(){
                     continue
                 }
             }
+            <# TODO: $OutputFileStyle
+            while($true){
+                [array]$inter = @("unchanged","yyyy-MM-dd_HH-mm","yyyyMMdd_HHmm","yyyyMMddHHmm","yy-MM-dd_HH-mm","yyMMdd_HHmm","yyMMddHHmm","HH-mm-ss","HH_mm_ss","HHmmss")
+                [string]$script:OutputFileStyle = Read-Host "Which subfolder-style should be used in the output-path? Options: `"unchanged`",`"yyyy-MM-dd_HH-mm`",`"yyyyMMdd_HHmm`",`"yyyyMMddHHmm`",`"yy-MM-dd_HH-mm`",`"yyMMdd_HHmm`",`"yyMMddHHmm`",`"HH-mm-ss`",`"HH_mm_ss`",`"HHmmss`" (all w/o quotes). Be aware that this time, you must match the case!"
+                if($script:OutputFileStyle -cin $inter){
+                    break
+                }else{
+                    Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
+                    continue
+                }
+            } #>
             # $UseHistFile
             while($true){
-                [int]$script:UseHistFile = Read-Host "How to treat history-file? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+                [int]$script:UseHistFile = Read-Host "Compare input-files with the history-file to prevent duplicates? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
                 if($script:UseHistFile -in (0..1)){
                     break
                 }else{
@@ -458,6 +489,16 @@ Function Get-UserValues(){
                     continue
                 }
             }
+            <# TODO: $VerifyCopies
+            while($true){
+                [int]$script:VerifyCopies = Read-Host "Enable verifying copied files afterwards for guaranteed successfully copied files? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+                if($script:VerifyCopies -in (0..1)){
+                    break
+                }else{
+                    Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
+                    continue
+                }
+            } #>
             <# TODO: $7zipMirror
             if($script:MirrorEnable -eq 1){
                 while($true){
@@ -470,10 +511,10 @@ Function Get-UserValues(){
                     }
                 }
             } #>
-            # $RemoveInputDrive
+            # $UnmountInputDrive
             while($true){
-                [int]$script:RemoveInputDrive = Read-Host "Removing input-drive after copying & verifying (before mirroring)? Only use it for external drives. `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
-                if($script:RemoveInputDrive -in (0..1)){
+                [int]$script:UnmountInputDrive = Read-Host "Removing input-drive after copying & verifying (before mirroring)? Only use it for external drives. `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+                if($script:UnmountInputDrive -in (0..1)){
                     break
                 }else{
                     Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
@@ -583,6 +624,19 @@ Function Get-UserValues(){
                 elseif($script:WPFcomboBoxOutSubStyle.SelectedIndex -eq 7){"yy.MM.dd"}
                 elseif($script:WPFcomboBoxOutSubStyle.SelectedIndex -eq 8){"yyMMdd"}
             )
+            <# TODO: $OutputFileStyle
+            $script:OutputFileStyle = $(
+                if($script:WPFcomboBoxOutFileStyle.SelectedIndex -eq 0){"unchanged"}
+                elseif($script:WPFcomboBoxOutFileStyle.SelectedIndex -eq 1){"yyyy-MM-dd_HH-mm"}
+                elseif($script:WPFcomboBoxOutFileStyle.SelectedIndex -eq 2){"yyyyMMdd_HHmm"}
+                elseif($script:WPFcomboBoxOutFileStyle.SelectedIndex -eq 3){"yyyyMMddHHmm"}
+                elseif($script:WPFcomboBoxOutFileStyle.SelectedIndex -eq 4){"yy-MM-dd_HH-mm"}
+                elseif($script:WPFcomboBoxOutFileStyle.SelectedIndex -eq 5){"yyMMdd_HHmm"}
+                elseif($script:WPFcomboBoxOutFileStyle.SelectedIndex -eq 6){"yyMMddHHmm"}
+                elseif($script:WPFcomboBoxOutFileStyle.SelectedIndex -eq 7){"HH-mm-ss"}
+                elseif($script:WPFcomboBoxOutFileStyle.SelectedIndex -eq 8){"HH_mm_ss"}
+                elseif($script:WPFcomboBoxOutFileStyle.SelectedIndex -eq 9){"HHmmss"}
+            ) #>
             # $UseHistFile
             $script:UseHistFile = $(
                 if($script:WPFcheckBoxUseHistFile.IsChecked -eq $true){1}
@@ -609,14 +663,19 @@ Function Get-UserValues(){
                 if($script:WPFcheckBoxOutputDupli.IsChecked -eq $true){1}
                 else{0}
             )
+            <# TODO: $VerifyCopies
+            $script:VerifyCopies = $(
+                if($script:WPFcheckBoxVerifyCopies.IsChecked -eq $true){1}
+                else{0}
+            ) #>
             <# TODO: $7zipMirror
             $script:7zipMirror = $(
                 if($script:WPFcheckBox7zipMirror.IsChecked -eq $true){1}
                 else{0}
             ) #>
-            # $RemoveInputDrive
-            $script:RemoveInputDrive = $(
-                if($script:WPFcheckBoxRemoveInputDrive.IsChecked -eq $true){1}
+            # $UnmountInputDrive
+            $script:UnmountInputDrive = $(
+                if($script:WPFcheckBoxUnmountInputDrive.IsChecked -eq $true){1}
                 else{0}
             )
             # $PreventStandby
@@ -647,79 +706,102 @@ Function Get-UserValues(){
                 else{0}
             )
         }elseif($script:GUI_CLI_Direct -eq "direct"){
+            # $MirrorEnable
             if($script:MirrorEnable -notin (0..1)){
                 Write-ColorOut "Invalid choice of -MirrorEnable." -ForegroundColor Red
                 return $false
             }
+            # $PresetFormats
             [array]$inter=@("Can","Nik","Son","Jpeg","Jpg","Mov","Aud")
             if($script:PresetFormats.Length -gt 0 -and $script:PresetFormats -notin $inter){
                 Write-ColorOut "Invalid choice of -PresetFormats." -ForegroundColor Red
                 return $false
             }
+            # $CustomFormatsEnable
             if($script:CustomFormatsEnable -notin (0..1)){
                 Write-ColorOut "Invalid choice of -CustomFormatsEnable." -ForegroundColor Red
                 return $false
             }
+            # $OutputSubfolderStyle
             [array]$inter=@("none","yyyy-mm-dd","yyyy_mm_dd","yyyy.mm.dd","yyyymmdd","yy-mm-dd","yy_mm_dd","yy.mm.dd","yymmdd")
             if($script:OutputSubfolderStyle -notin $inter -or $script:OutputSubfolderStyle.Length -gt $inter[1].Length){
                 Write-ColorOut "Invalid choice of -OutputSubfolderStyle." -ForegroundColor Red
                 return $false
             }
+            <# TODO: $OutputFileStyle
+            [array]$inter = @("unchanged","yyyy-MM-dd_HH-mm","yyyyMMdd_HHmm","yyyyMMddHHmm","yy-MM-dd_HH-mm","yyMMdd_HHmm","yyMMddHHmm","HH-mm-ss","HH_mm_ss","HHmmss")
+            if($script:OutputFileStyle -cnotin $inter -or $script:OutputFileStyle.Length -gt $inter[1].Length){
+                Write-ColorOut "Invalid choice of -OutputFileStyle." -ForegroundColor Red
+                return $false
+            } #>
+            # $UseHistFile
             if($script:UseHistFile -notin (0..1)){
                 Write-ColorOut "Invalid choice of -UseHistFile." -ForegroundColor Red
                 return $false
             }
+            # $WriteHistFile
             [array]$inter=@("yes","no","overwrite")
             if($script:WriteHistFile -notin $inter -or $script:WriteHistFile.Length -gt $inter[2].Length){
                 Write-ColorOut "Invalid choice of -WriteHistFile." -ForegroundColor Red
                 return $false
             }
+            # InputSubfolderSearch
             if($script:InputSubfolderSearch -notin (0..1)){
                 Write-ColorOut "Invalid choice of -InputSubfolderSearch." -ForegroundColor Red
                 return $false
             }
+            # $DupliCompareHashes
             if($script:DupliCompareHashes -notin (0..1)){
                 Write-ColorOut "Invalid choice of -DupliCompareHashes." -ForegroundColor Red
                 return $false
             }
+            # $CheckOutputDupli
             if($script:CheckOutputDupli -notin (0..1)){
                 Write-ColorOut "Invalid choice of -CheckOutputDupli." -ForegroundColor Red
                 return $false
             }
-            <# TODO:
+            <# TODO: $7zipMirror
             if($script:7zipMirror -notin (0..1)){
                 Write-ColorOut "Invalid choice of -7zipMirror." -ForegroundColor Red
                 return $false
             } #>
-            if($script:RemoveInputDrive -notin (0..1)){
-                Write-ColorOut "Invalid choice of -RemoveInputDrive." -ForegroundColor Red
+            # $UnmountInputDrive
+            if($script:UnmountInputDrive -notin (0..1)){
+                Write-ColorOut "Invalid choice of -UnmountInputDrive." -ForegroundColor Red
                 return $false
             }
+            # $PreventStandby
             if($script:PreventStandby -notin (0..1)){
                 Write-ColorOut "Invalid choice of -PreventStandby." -ForegroundColor Red
                 return $false
             }
+            # $ThreadCount
             if($script:ThreadCount -notin (0..999)){
                 Write-ColorOut "Invalid choice of -ThreadCount." -ForegroundColor Red
                 return $false
             }
+            # $RememberInPath
             if($script:RememberInPath -notin (0..1)){
                 Write-ColorOut "Invalid choice of -RememberInPath." -ForegroundColor Red
                 return $false
             }
+            # $RememberOutPath
             if($script:RememberOutPath -notin (0..1)){
                 Write-ColorOut "Invalid choice of -RememberOutPath." -ForegroundColor Red
                 return $false
             }
+            # $RememberMirrorPath
             if($script:RememberMirrorPath -notin (0..1)){
                 Write-ColorOut "Invalid choice of -RememberMirrorPath." -ForegroundColor Red
                 return $false
             }
+            # $RememberSettings
             if($script:RememberSettings -notin (0..1)){
                 Write-ColorOut "Invalid choice of -RememberSettings." -ForegroundColor Red
                 return $false
             }
         }
+
         # checking paths for GUI and direct:
         if($script:GUI_CLI_Direct -ne "CLI"){
             # $InputPath
@@ -776,6 +858,7 @@ Function Get-UserValues(){
                 }
             }
         }
+
     }else{
         Write-ColorOut "Invalid choice of -GUI_CLI_Direct." -ForegroundColor Magenta
         return $false
@@ -848,13 +931,15 @@ Function Get-UserValues(){
         Write-ColorOut "CustomFormatsEnable:`t$script:CustomFormatsEnable"
         Write-ColorOut "allChosenFormats:`t$script:allChosenFormats"
         Write-ColorOut "OutputSubfolderStyle:`t$script:OutputSubfolderStyle"
+        # TODO: Write-ColorOut "OutputFileStyle:`t$script:OutputFileStyle"
         Write-ColorOut "UseHistFile:`t`t$script:UseHistFile"
         Write-ColorOut "WriteHistFile:`t`t$script:WriteHistFile"
         Write-ColorOut "InputSubfolderSearch:`t$script:InputSubfolderSearch"
         Write-ColorOut "DupliCompareHashes:`t$script:DupliCompareHashes"
         Write-ColorOut "CheckOutputDupli:`t$script:CheckOutputDupli"
+        # TODO: Write-ColorOut "VerifyCopies:`t`t$script:VerifyCopies"
         # TODO: Write-ColorOut "7zipMirror:`t`t$script:7zipMirror"
-        Write-ColorOut "RemoveInputDrive:`t`t$script:RemoveInputDrive"
+        Write-ColorOut "UnmountInputDrive:`t`t$script:UnmountInputDrive"
         Write-ColorOut "PreventStandby:`t`t$script:PreventStandby"
         Write-ColorOut "ThreadCount:`t`t$script:ThreadCount"
     }
@@ -865,7 +950,8 @@ Function Get-UserValues(){
 
 # DEFINITION: If checked, remember values for future use:
 Function Start-Remembering(){
-    Write-ColorOut "$(Get-Date -Format "dd.MM.yy HH:mm:ss")  --  Remembering settings..." -ForegroundColor Cyan
+    Write-ColorOut "$(Get-Date -Format "dd.MM.yy HH:mm:ss")  -" -NoNewLine
+    Write-ColorOut "-  Remembering settings..." -ForegroundColor Cyan
 
     $lines_old = [System.IO.File]::ReadAllLines($PSCommandPath)
     $lines_new = $lines_old
@@ -892,7 +978,7 @@ Function Start-Remembering(){
     # Remember settings
     if($script:RememberSettings -ne 0){
         Write-ColorOut "From:"
-        for($i = $($script:paramline + 1); $i -le $($script:paramline + 18); $i++){
+        for($i = $($script:paramline + 1); $i -le $($script:paramline + 20); $i++){
             if(-not ($i -eq $($script:paramline + 2) -or $i -eq $($script:paramline + 3) -or $i -eq $($script:paramline + 5))){
                 Write-ColorOut $lines_new[$i] -ForegroundColor Gray
             }
@@ -912,27 +998,31 @@ Function Start-Remembering(){
         $lines_new[$($script:paramline + 8)] = '    [array]$CustomFormats=(' + "$inter" + '),'
         # $OutputSubfolderStyle
         $lines_new[$($script:paramline + 9)] = '    [string]$OutputSubfolderStyle="' + "$script:OutputSubfolderStyle" + '",'
+        <# TODO: $OutputFileStyle
+        $lines_new[$($script:paramline + 10)] = '    [string]$OutputFileStyle="' + "$script:OutputFileStyle" + '",' #>
         # $UseHistFile
-        $lines_new[$($script:paramline + 10)] = '    [int]$UseHistFile=' + "$script:UseHistFile" + ','
+        $lines_new[$($script:paramline + 11)] = '    [int]$UseHistFile=' + "$script:UseHistFile" + ','
         # $WriteHistFile
-        $lines_new[$($script:paramline + 11)] = '    [string]$WriteHistFile="' + "$script:WriteHistFile" + '",'
+        $lines_new[$($script:paramline + 12)] = '    [string]$WriteHistFile="' + "$script:WriteHistFile" + '",'
         # $InputSubfolderSearch
-        $lines_new[$($script:paramline + 12)] = '    [int]$InputSubfolderSearch=' + "$script:InputSubfolderSearch" + ','
+        $lines_new[$($script:paramline + 13)] = '    [int]$InputSubfolderSearch=' + "$script:InputSubfolderSearch" + ','
         # $DupliCompareHashes
-        $lines_new[$($script:paramline + 13)] = '    [int]$DupliCompareHashes=' + "$script:DupliCompareHashes" + ','
+        $lines_new[$($script:paramline + 14)] = '    [int]$DupliCompareHashes=' + "$script:DupliCompareHashes" + ','
         # $CheckOutputDupli
-        $lines_new[$($script:paramline + 14)] = '    [int]$CheckOutputDupli=' + "$script:CheckOutputDupli" + ','
+        $lines_new[$($script:paramline + 15)] = '    [int]$CheckOutputDupli=' + "$script:CheckOutputDupli" + ','
+        <# TODO: $VerifyCopies
+        $lines_new[$($script:paramline + 16)] = '    [int]$VerifyCopies=' + "$script:VerifyCopies" + ',' #>
         <# TODO: $7zipMirror
-        $lines_new[$($script:paramline + 15)] = '    [int]$7zipMirror=' + "$script:7zipMirror" + ',' #>
-        # $RemoveInputDrive
-        $lines_new[$($script:paramline + 16)] = '    [int]$RemoveInputDrive=' + "$script:RemoveInputDrive" + ','
+        $lines_new[$($script:paramline + 17)] = '    [int]$7zipMirror=' + "$script:7zipMirror" + ',' #>
+        # $UnmountInputDrive
+        $lines_new[$($script:paramline + 18)] = '    [int]$UnmountInputDrive=' + "$script:UnmountInputDrive" + ','
         # $PreventStandby
-        $lines_new[$($script:paramline + 17)] = '    [int]$PreventStandby=' + "$script:PreventStandby" + ','
+        $lines_new[$($script:paramline + 19)] = '    [int]$PreventStandby=' + "$script:PreventStandby" + ','
         # $ThreadCount
-        $lines_new[$($script:paramline + 18)] = '    [int]$ThreadCount=' + "$script:ThreadCount" + ','
+        $lines_new[$($script:paramline + 20)] = '    [int]$ThreadCount=' + "$script:ThreadCount" + ','
 
         Write-ColorOut "To:"
-        for($i = $($script:paramline + 1); $i -le $($script:paramline + 18); $i++){
+        for($i = $($script:paramline + 1); $i -le $($script:paramline + 20); $i++){
             if(-not ($i -eq $($script:paramline + 2) -or $i -eq $($script:paramline + 3) -or $i -eq $($script:paramline + 5))){
                 Write-ColorOut $lines_new[$i] -ForegroundColor Yellow
             }
@@ -946,7 +1036,8 @@ Function Start-Remembering(){
 # DEFINITION: Get History-File
 Function Get-HistFile(){
     param([string]$HistFilePath="$($PSScriptRoot)\media_copytool_filehistory.json")
-    Write-ColorOut "$(Get-Date -Format "dd.MM.yy HH:mm:ss")  --  Checking for history-file, importing values..." -ForegroundColor Cyan
+    Write-ColorOut "$(Get-Date -Format "dd.MM.yy HH:mm:ss")  -" -NoNewLine
+    Write-ColorOut "-  Checking for history-file, importing values..." -ForegroundColor Cyan
 
     [array]$files_history = @()
     if(Test-Path -LiteralPath $HistFilePath -PathType Leaf){
@@ -1000,7 +1091,8 @@ Function Start-FileSearchAndCheck(){
         [array]$HistFiles
     )
     $sw = [diagnostics.stopwatch]::StartNew()
-    Write-ColorOut "$(Get-Date -Format "dd.MM.yy HH:mm:ss")  --  Finding files & checking for duplicates." -ForegroundColor Cyan
+    Write-ColorOut "$(Get-Date -Format "dd.MM.yy HH:mm:ss")  -" -NoNewLine
+    Write-ColorOut "-  Finding files & checking for duplicates." -ForegroundColor Cyan
 
     # pre-defining variables:
     $files_in = @()
@@ -1202,7 +1294,8 @@ Function Start-OverwriteProtection(){
         [string]$OutPath
     )
     $sw = [diagnostics.stopwatch]::StartNew()
-    Write-ColorOut "`r`n$(Get-Date -Format "dd.MM.yy HH:mm:ss")  --  Prevent overwriting existing files in $OutPath..." -ForegroundColor Cyan
+    Write-ColorOut "`r`n$(Get-Date -Format "dd.MM.yy HH:mm:ss")  -" -NoNewLine
+    Write-ColorOut "-  Prevent overwriting existing files in $OutPath..." -ForegroundColor Cyan
 
     [array]$allpaths = @()
 
@@ -1266,9 +1359,11 @@ Function Start-FileCopy(){
     )
 
     if($script:OutputSubfolderStyle -eq "none"){
-        Write-ColorOut "`r`n$(Get-Date -Format "dd.MM.yy HH:mm:ss")  --  Copy files from $InPath to $($OutPath)..." -ForegroundColor Cyan
+        Write-ColorOut "`r`n$(Get-Date -Format "dd.MM.yy HH:mm:ss")  -" -NoNewLine
+        Write-ColorOut "-  Copy files from $InPath to $($OutPath)..." -ForegroundColor Cyan
     }else{
-        Write-ColorOut "`r`n$(Get-Date -Format "dd.MM.yy HH:mm:ss")  --  Copy files from $InPath to $OutPath\$($script:OutputSubfolderStyle)..." -ForegroundColor Cyan
+        Write-ColorOut "`r`n$(Get-Date -Format "dd.MM.yy HH:mm:ss")  -" -NoNewLine
+        Write-ColorOut "-  Copy files from $InPath to $OutPath\$($script:OutputSubfolderStyle)..." -ForegroundColor Cyan
     }
 
     $InFiles = $InFiles | Sort-Object -Property inpath,outpath
@@ -1350,7 +1445,8 @@ Function Start-FileVerification(){
         [array]$InFiles
     )
 
-    Write-ColorOut "`r`n$(Get-Date -Format "dd.MM.yy HH:mm:ss")  --  Verify newly copied files..." -ForegroundColor Cyan
+    Write-ColorOut "`r`n$(Get-Date -Format "dd.MM.yy HH:mm:ss")  -" -NoNewLine
+    Write-ColorOut "-  Verify newly copied files..." -ForegroundColor Cyan
 
     $InFiles | Where-Object {$_.tocopy -eq 1} | Start-RSJob -Name "GetHash" -throttle $script:ThreadCount -FunctionsToLoad Write-ColorOut -ScriptBlock {
         [string]$inter = "$($_.outpath)\$($_.outname)"
@@ -1393,7 +1489,8 @@ Function Set-HistFile(){
         [string]$HistFilePath="$PSScriptRoot\media_copytool_filehistory.json"
     )
 
-    Write-ColorOut "$(Get-Date -Format "dd.MM.yy HH:mm:ss")  --  Write attributes of successfully copied files to history-file..." -ForegroundColor Cyan
+    Write-ColorOut "$(Get-Date -Format "dd.MM.yy HH:mm:ss")  -" -NoNewLine
+    Write-ColorOut "-  Write attributes of successfully copied files to history-file..." -ForegroundColor Cyan
 
     $results = ($InFiles | Where-Object {$_.tocopy -eq 0 -and $_.hash -ne "ZYX"} | Select-Object -Property inname,date,size,hash)
 
@@ -1563,7 +1660,7 @@ Function Start-Everything(){
             $j++
         }
         Write-ColorOut "`r`n`r`nAll files successfully verified!`r`n" -ForegroundColor Green
-        if($script:RemoveInputDrive -eq 1){
+        if($script:UnmountInputDrive -eq 1){
             # CREDIT: https://serverfault.com/a/580298
             # TODO: Find a solution that works with all drives.
             $driveEject = New-Object -comObject Shell.Application
@@ -1708,7 +1805,7 @@ if($GUI_CLI_Direct -eq "GUI"){
     $WPFcheckBoxCheckInHash.IsChecked = $DupliCompareHashes
     $WPFcheckBoxOutputDupli.IsChecked = $CheckOutputDupli
     # TODO: $WPFcheckBox7zipMirror.IsChecked = $7zipMirror
-    $WPFcheckBoxRemoveInputDrive.IsChecked = $RemoveInputDrive
+    $WPFcheckBoxUnmountInputDrive.IsChecked = $UnmountInputDrive
     $WPFcheckBoxPreventStandby.IsChecked = $PreventStandby
     $WPFtextBoxThreadCount.Text = $ThreadCount
     $WPFcheckBoxRememberIn.IsChecked = $RememberInPath
