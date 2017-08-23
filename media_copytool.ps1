@@ -71,12 +71,12 @@
         Renaming-style for input-files. The date and time will be taken from the file's last edit time.
         Valid options:
             "unchanged"         -   Original file-name will be used.
-            "yyyy-MM-dd_HH-mm"  -   E.g. 2017-01-31_13-59-58.ext
-            "yyyyMMdd_HHmm"     -   E.g. 20170131_135958.ext
-            "yyyyMMddHHmm"      -   E.g. 20170131135958.ext
-            "yy-MM-dd_HH-mm"    -   E.g. 17-01-31_13-59-58.ext
-            "yyMMdd_HHmm"       -   E.g. 170131_135958.ext
-            "yyMMddHHmm"        -   E.g. 170131135958.ext
+            "yyyy-MM-dd_HH-mm-ss"  -   E.g. 2017-01-31_13-59-58.ext
+            "yyyyMMdd_HHmmss"     -   E.g. 20170131_135958.ext
+            "yyyyMMddHHmmss"      -   E.g. 20170131135958.ext
+            "yy-MM-dd_HH-mm-ss"    -   E.g. 17-01-31_13-59-58.ext
+            "yyMMdd_HHmmss"       -   E.g. 170131_135958.ext
+            "yyMMddHHmmss"        -   E.g. 170131135958.ext
             "HH-mm-ss"          -   E.g. 13-59-58.ext
             "HH_mm_ss"          -   E.g. 13_59_58.ext
             "HHmmss"            -   E.g. 135958.ext
@@ -429,8 +429,8 @@ Function Get-UserValues(){
             }
             <# TODO: $OutputFileStyle
             while($true){
-                [array]$inter = @("unchanged","yyyy-MM-dd_HH-mm","yyyyMMdd_HHmm","yyyyMMddHHmm","yy-MM-dd_HH-mm","yyMMdd_HHmm","yyMMddHHmm","HH-mm-ss","HH_mm_ss","HHmmss")
-                [string]$script:OutputFileStyle = Read-Host "Which subfolder-style should be used in the output-path? Options: `"unchanged`",`"yyyy-MM-dd_HH-mm`",`"yyyyMMdd_HHmm`",`"yyyyMMddHHmm`",`"yy-MM-dd_HH-mm`",`"yyMMdd_HHmm`",`"yyMMddHHmm`",`"HH-mm-ss`",`"HH_mm_ss`",`"HHmmss`" (all w/o quotes). Be aware that this time, you must match the case!"
+                [array]$inter = @("unchanged","yyyy-MM-dd_HH-mm-ss","yyyyMMdd_HHmmss","yyyyMMddHHmmss","yy-MM-dd_HH-mm-ss","yyMMdd_HHmmss","yyMMddHHmmss","HH-mm-ss","HH_mm_ss","HHmmss")
+                [string]$script:OutputFileStyle = Read-Host "Which subfolder-style should be used in the output-path? Options: `"unchanged`",`"yyyy-MM-dd_HH-mm-ss`",`"yyyyMMdd_HHmmss`",`"yyyyMMddHHmmss`",`"yy-MM-dd_HH-mmss`",`"yyMMdd_HHmmss`",`"yyMMddHHmmss`",`"HH-mm-ss`",`"HH_mm_ss`",`"HHmmss`" (all w/o quotes). Be aware that this time, you must match the case!"
                 if($script:OutputFileStyle -cin $inter){
                     break
                 }else{
@@ -627,12 +627,12 @@ Function Get-UserValues(){
             <# TODO: $OutputFileStyle
             $script:OutputFileStyle = $(
                 if($script:WPFcomboBoxOutFileStyle.SelectedIndex -eq 0){"unchanged"}
-                elseif($script:WPFcomboBoxOutFileStyle.SelectedIndex -eq 1){"yyyy-MM-dd_HH-mm"}
-                elseif($script:WPFcomboBoxOutFileStyle.SelectedIndex -eq 2){"yyyyMMdd_HHmm"}
-                elseif($script:WPFcomboBoxOutFileStyle.SelectedIndex -eq 3){"yyyyMMddHHmm"}
-                elseif($script:WPFcomboBoxOutFileStyle.SelectedIndex -eq 4){"yy-MM-dd_HH-mm"}
-                elseif($script:WPFcomboBoxOutFileStyle.SelectedIndex -eq 5){"yyMMdd_HHmm"}
-                elseif($script:WPFcomboBoxOutFileStyle.SelectedIndex -eq 6){"yyMMddHHmm"}
+                elseif($script:WPFcomboBoxOutFileStyle.SelectedIndex -eq 1){"yyyy-MM-dd_HH-mm-ss"}
+                elseif($script:WPFcomboBoxOutFileStyle.SelectedIndex -eq 2){"yyyyMMdd_HHmmss"}
+                elseif($script:WPFcomboBoxOutFileStyle.SelectedIndex -eq 3){"yyyyMMddHHmmss"}
+                elseif($script:WPFcomboBoxOutFileStyle.SelectedIndex -eq 4){"yy-MM-dd_HH-mmss"}
+                elseif($script:WPFcomboBoxOutFileStyle.SelectedIndex -eq 5){"yyMMdd_HHmmss"}
+                elseif($script:WPFcomboBoxOutFileStyle.SelectedIndex -eq 6){"yyMMddHHmmss"}
                 elseif($script:WPFcomboBoxOutFileStyle.SelectedIndex -eq 7){"HH-mm-ss"}
                 elseif($script:WPFcomboBoxOutFileStyle.SelectedIndex -eq 8){"HH_mm_ss"}
                 elseif($script:WPFcomboBoxOutFileStyle.SelectedIndex -eq 9){"HHmmss"}
@@ -729,7 +729,7 @@ Function Get-UserValues(){
                 return $false
             }
             <# TODO: $OutputFileStyle
-            [array]$inter = @("unchanged","yyyy-MM-dd_HH-mm","yyyyMMdd_HHmm","yyyyMMddHHmm","yy-MM-dd_HH-mm","yyMMdd_HHmm","yyMMddHHmm","HH-mm-ss","HH_mm_ss","HHmmss")
+            [array]$inter = @("unchanged","yyyy-MM-dd_HH-mmss","yyyyMMdd_HHmmss","yyyyMMddHHmmss","yy-MM-dd_HH-mmss","yyMMdd_HHmmss","yyMMddHHmmss","HH-mm-ss","HH_mm_ss","HHmmss")
             if($script:OutputFileStyle -cnotin $inter -or $script:OutputFileStyle.Length -gt $inter[1].Length){
                 Write-ColorOut "Invalid choice of -OutputFileStyle." -ForegroundColor Red
                 return $false
@@ -1797,6 +1797,19 @@ if($GUI_CLI_Direct -eq "GUI"){
         elseif("yy.mm.dd" -eq $OutputSubfolderStyle){7}
         elseif("yymmdd" -eq $OutputSubfolderStyle){8}
     )
+    <# TODO:
+    $WPFcomboBoxOutFileStyle.SelectedIndex = $(
+        if("Unchanged" -eq $OutFileStyle){0}
+        elseif("yyyy-MM-dd_HH-mm-ss" -eq $OutFileStyle){1}
+        elseif("yyyyMMdd_HHmmss" -eq $OutFileStyle){2}
+        elseif("yyyyMMddHHmmss" -eq $OutFileStyle){3}
+        elseif("yy-MM-dd_HH-mmss" -eq $OutFileStyle){4}
+        elseif("yyMMdd_HHmmss" -eq $OutFileStyle){5}
+        elseif("yyMMddHHmmss" -eq $OutFileStyle){6}
+        elseif("HH-mm-ss" -eq $OutFileStyle){7}
+        elseif("HH_mm_ss" -eq $OutFileStyle){8}
+        elseif("HHmmss" -eq $OutFileStyle){9}
+    ) #>
     $WPFcheckBoxUseHistFile.IsChecked = $UseHistFile
     $WPFradioButtonWriteHistFileYes.IsChecked = $(if($WriteHistFile -eq "yes"){1}else{0})
     $WPFradioButtonWriteHistFileNo.IsChecked = $(if($WriteHistFile -eq "no"){1}else{0})
@@ -1804,6 +1817,7 @@ if($GUI_CLI_Direct -eq "GUI"){
     $WPFcheckBoxInSubSearch.IsChecked = $InputSubfolderSearch
     $WPFcheckBoxCheckInHash.IsChecked = $DupliCompareHashes
     $WPFcheckBoxOutputDupli.IsChecked = $CheckOutputDupli
+    # TODO: $WPFcheckBoxVerifyCopies.IsChecked = $VerifyCopies
     # TODO: $WPFcheckBox7zipMirror.IsChecked = $7zipMirror
     $WPFcheckBoxUnmountInputDrive.IsChecked = $UnmountInputDrive
     $WPFcheckBoxPreventStandby.IsChecked = $PreventStandby
