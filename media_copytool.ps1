@@ -644,9 +644,9 @@ Function Get-UserValues(){
             )
             # $WriteHistFile
             $script:WriteHistFile = $(
-                if($script:WPFradioButtonWriteHistFileYes.IsChecked -eq $true){"yes"}
-                elseif($script:WPFradioButtonWriteHistFileNo.IsChecked -eq $true){"no"}
-                elseif($script:WPFradioButtonWriteHistFileOverwrite.IsChecked -eq $true){"Overwrite"}
+                if($script:WPFcomboBoxWriteHistFile.SelectedIndex -eq 0){"yes"}
+                elseif($script:WPFcomboBoxWriteHistFile.SelectedIndex -eq 1){"overwrite"}
+                elseif($script:WPFcomboBoxWriteHistFile.SelectedIndex -eq 2){"no"}
             )
             # $InputSubfolderSearch
             $script:InputSubfolderSearch = $(
