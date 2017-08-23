@@ -1811,9 +1811,11 @@ if($GUI_CLI_Direct -eq "GUI"){
         elseif("HHmmss" -eq $OutFileStyle){9}
     ) #>
     $WPFcheckBoxUseHistFile.IsChecked = $UseHistFile
-    $WPFradioButtonWriteHistFileYes.IsChecked = $(if($WriteHistFile -eq "yes"){1}else{0})
-    $WPFradioButtonWriteHistFileNo.IsChecked = $(if($WriteHistFile -eq "no"){1}else{0})
-    $WPFradioButtonWriteHistFileOverwrite.IsChecked = $(if($WriteHistFile -eq "Overwrite"){1}else{0})
+    $WPFcomboBoxWriteHistFile.SelectedIndex = $(
+        if("yes" -eq $OutputSubfolderStyle){0}
+        elseif("Overwrite" -eq $WriteHistFile){1}
+        elseif("no" -eq $WriteHistFile){2}
+    )
     $WPFcheckBoxInSubSearch.IsChecked = $InputSubfolderSearch
     $WPFcheckBoxCheckInHash.IsChecked = $DupliCompareHashes
     $WPFcheckBoxOutputDupli.IsChecked = $CheckOutputDupli

@@ -266,7 +266,7 @@
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,1100,0,0"
                         Width="220"
                     /> -->
-                    <CheckBox x:Name="checkBoxRemoveInputDrive"
+                    <CheckBox x:Name="checkBoxUnmountInputDrive"
                         Content="Remove input-drive after copying" ToolTip="Safely removing the input-drive after successful verification (before mirroring). Note: It does not work with all drives - so double-check if your drive was removed!" VerticalContentAlignment="Center"
                         Foreground="#FFFF1717"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,120,0,0"
