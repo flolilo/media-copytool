@@ -300,17 +300,17 @@
         <Button x:Name="buttonStart"
             Content="START"
             FontWeight="Bold"
-            VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,20"
+            VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,15"
             Width="100"
         />
         <Button x:Name="buttonClose"
             Content="EXIT"
-            VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,40,20"
+            VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,40,15"
             Width="100"
         />
         <Button x:Name="buttonAbout"
             Content="About / Help"
-            VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="40,0,0,20"
+            VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="40,0,0,15"
             Width="100"
         />
     </Grid>
