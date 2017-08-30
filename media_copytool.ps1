@@ -1128,7 +1128,7 @@ Function Start-FileSearchAndCheck(){
                 extension = $_.Extension
                 size = $_.Length
                 date = $_.LastWriteTime.ToString("yyyy-MM-dd_HH-mm-ss")
-                sub_date = $(if($script:OutputSubfolderStyle -eq "none"){""}elseif($script:OutputSubfolderStyle -eq "unchanged"){$($(Split-Path -Parent $_.FullName).Replace($script:InputPath,$script:OutputPath))}else{"\$($_.LastWriteTime.ToString("$script:OutputSubfolderStyle"))"})
+                sub_date = $(if($script:OutputSubfolderStyle -eq "none"){""}elseif($script:OutputSubfolderStyle -eq "unchanged"){$($(Split-Path -Parent $_.FullName).Replace($script:InputPath,""))}else{"\$($_.LastWriteTime.ToString("$script:OutputSubfolderStyle"))"})
                 outpath = "ZYX"
                 outname = $_.Name
                 outbasename = $_.BaseName
@@ -1317,7 +1317,7 @@ Function Start-OverwriteProtection(){
 
             # create outpath:
             $InFiles[$i].outpath = "$OutPath$($InFiles[$i].sub_date)"
-            $InFiles[$i].outpath = $InFiles[$i].outpath.Replace("\\","\")
+            $InFiles[$i].outpath = $InFiles[$i].outpath.Replace("\\","\").Replace("\\","\")
             $InFiles[$i].outbasename = $InFiles[$i].basename
             # check for files with same name from input:
             [int]$j = 1
