@@ -267,10 +267,12 @@ if($showparams -ne 0){
     Write-ColorOut "-CustomFormatsEnable`t=`t$CustomFormatsEnable" -ForegroundColor Cyan
     Write-ColorOut "-CustomFormats`t`t=`t$CustomFormats" -ForegroundColor Cyan
     Write-ColorOut "-OutputSubfolderStyle`t=`t$OutputSubfolderStyle" -ForegroundColor Cyan
+    # TODO: Write-ColorOut "-OutputFileStyle`t=`t$OutputFileStyle" -ForegroundColor Cyan
     Write-ColorOut "-UseHistFile`t`t=`t$UseHistFile" -ForegroundColor Cyan
     Write-ColorOut "-WriteHistFile`t`t=`t$WriteHistFile" -ForegroundColor Cyan
     Write-ColorOut "-InputSubfolderSearch`t=`t$InputSubfolderSearch" -ForegroundColor Cyan
     Write-ColorOut "-CheckOutputDupli`t=`t$CheckOutputDupli" -ForegroundColor Cyan
+    # TODO: Write-ColorOut "-VerifyCopies`t=`t$VerifyCopies" -ForegroundColor Cyan
     # TODO: Write-ColorOut "-7zipMirror`t`t=`t$7zipMirror" -ForegroundColor Cyan
     Write-ColorOut "-UnmountInputDrive`t=`t$UnmountInputDrive" -ForegroundColor Cyan
     Write-ColorOut "-PreventStandby`t`t=`t$PreventStandby" -ForegroundColor Cyan
@@ -1613,7 +1615,7 @@ Function Start-Everything(){
             } | Out-Null
         }
         [array]$histfiles = @()
-        if($script:UseHistFile -eq 1){
+        if($script:UseHistFile -eq 1){ # -and $script:VerifyCopies -eq 1){
             $timer.start()
             $histfiles = Get-HistFile
             Invoke-Pause -tottime $timer.elapsed.TotalSeconds
@@ -1632,9 +1634,9 @@ Function Start-Everything(){
             }
             break
         }
-        $j = 1
+        $j = 0
         while(1 -in $inputfiles.tocopy){
-            if($j -gt 1){
+            if($j -gt 0){
                 Write-ColorOut "Some of the copied files are corrupt. Attempt re-copying them?" -ForegroundColor Magenta
                 if((Read-Host "`"1`" (w/o quotes) for `"yes`", other number for `"no`"") -ne 1){
                     Write-ColorOut "Aborting." -ForegroundColor Cyan
