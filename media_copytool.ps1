@@ -9,9 +9,9 @@
         Now supports multithreading via Boe Prox's PoshRSJob-cmdlet (https://github.com/proxb/PoshRSJob)
 
     .NOTES
-        Version:        0.6.6 (Beta)
+        Version:        0.6.7 (Beta)
         Author:         flolilo
-        Creation Date:  23.8.2017
+        Creation Date:  31.8.2017
         Legal stuff: This program is free software. It comes without any warranty, to the extent permitted by
         applicable law. Most of the script was written by myself (or heavily modified by me when searching for solutions
         on the WWW). However, some parts are copies or modifications of very genuine code - see
@@ -95,12 +95,11 @@
         If enabled, it enables file-search in subfolders of the input-path.
     .PARAMETER DupliCompareHashes
         Valid range: 0 (deactivate), 1 (activate)
-        If enabled, it additionally checks for duplicates via hash-calculation of all input-files (slow!)
+        If enabled, it additionally checks for duplicates in the history-file via hash-calculation of all input-files (slow!)
     .PARAMETER CheckOutputDupli
         Valid range: 0 (deactivate), 1 (activate)
         If enabled, it checks for already copied files in the output-path (and its subfolders).
     .PARAMETER VerifyCopies
-        TODO: To be implemented.
         Valid range: 0 (deactivate), 1 (activate)
         If enabled, copied files will be checked for their integrity via SHA1-hashes. Disabling will increase speed, but there is no absolute guarantee that your files are copied correctly.
     .PARAMETER 7zipMirror
@@ -172,7 +171,7 @@ param(
     [int]$InputSubfolderSearch=1,
     [int]$DupliCompareHashes=0,
     [int]$CheckOutputDupli=0,
-    # TODO: [int]$VerifyCopies=1,
+    [int]$VerifyCopies=1,
     # TODO: [int]$7zipMirror=0,
     [int]$UnmountInputDrive=1,
     [int]$PreventStandby=1,
@@ -272,7 +271,7 @@ if($showparams -ne 0){
     Write-ColorOut "-WriteHistFile`t`t=`t$WriteHistFile" -ForegroundColor Cyan
     Write-ColorOut "-InputSubfolderSearch`t=`t$InputSubfolderSearch" -ForegroundColor Cyan
     Write-ColorOut "-CheckOutputDupli`t=`t$CheckOutputDupli" -ForegroundColor Cyan
-    # TODO: Write-ColorOut "-VerifyCopies`t=`t$VerifyCopies" -ForegroundColor Cyan
+    Write-ColorOut "-VerifyCopies`t=`t$VerifyCopies" -ForegroundColor Cyan
     # TODO: Write-ColorOut "-7zipMirror`t`t=`t$7zipMirror" -ForegroundColor Cyan
     Write-ColorOut "-UnmountInputDrive`t=`t$UnmountInputDrive" -ForegroundColor Cyan
     Write-ColorOut "-PreventStandby`t`t=`t$PreventStandby" -ForegroundColor Cyan
@@ -491,7 +490,7 @@ Function Get-UserValues(){
                     continue
                 }
             }
-            <# TODO: $VerifyCopies
+            # $VerifyCopies
             while($true){
                 [int]$script:VerifyCopies = Read-Host "Enable verifying copied files afterwards for guaranteed successfully copied files? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
                 if($script:VerifyCopies -in (0..1)){
@@ -500,7 +499,7 @@ Function Get-UserValues(){
                     Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
                     continue
                 }
-            } #>
+            }
             <# TODO: $7zipMirror
             if($script:MirrorEnable -eq 1){
                 while($true){
@@ -665,11 +664,11 @@ Function Get-UserValues(){
                 if($script:WPFcheckBoxOutputDupli.IsChecked -eq $true){1}
                 else{0}
             )
-            <# TODO: $VerifyCopies
+            # $VerifyCopies
             $script:VerifyCopies = $(
                 if($script:WPFcheckBoxVerifyCopies.IsChecked -eq $true){1}
                 else{0}
-            ) #>
+            )
             <# TODO: $7zipMirror
             $script:7zipMirror = $(
                 if($script:WPFcheckBox7zipMirror.IsChecked -eq $true){1}
@@ -760,6 +759,11 @@ Function Get-UserValues(){
             # $CheckOutputDupli
             if($script:CheckOutputDupli -notin (0..1)){
                 Write-ColorOut "Invalid choice of -CheckOutputDupli." -ForegroundColor Red
+                return $false
+            }
+            # $VerifyCopies
+            if($script:VerifyCopies -notin (0..1)){
+                Write-ColorOut "Invalid choice of -VerifyCopies." -ForegroundColor Red
                 return $false
             }
             <# TODO: $7zipMirror
@@ -939,7 +943,7 @@ Function Get-UserValues(){
         Write-ColorOut "InputSubfolderSearch:`t$script:InputSubfolderSearch"
         Write-ColorOut "DupliCompareHashes:`t$script:DupliCompareHashes"
         Write-ColorOut "CheckOutputDupli:`t$script:CheckOutputDupli"
-        # TODO: Write-ColorOut "VerifyCopies:`t`t$script:VerifyCopies"
+        Write-ColorOut "VerifyCopies:`t`t$script:VerifyCopies"
         # TODO: Write-ColorOut "7zipMirror:`t`t$script:7zipMirror"
         Write-ColorOut "UnmountInputDrive:`t`t$script:UnmountInputDrive"
         Write-ColorOut "PreventStandby:`t`t$script:PreventStandby"
@@ -1012,8 +1016,8 @@ Function Start-Remembering(){
         $lines_new[$($script:paramline + 14)] = '    [int]$DupliCompareHashes=' + "$script:DupliCompareHashes" + ','
         # $CheckOutputDupli
         $lines_new[$($script:paramline + 15)] = '    [int]$CheckOutputDupli=' + "$script:CheckOutputDupli" + ','
-        <# TODO: $VerifyCopies
-        $lines_new[$($script:paramline + 16)] = '    [int]$VerifyCopies=' + "$script:VerifyCopies" + ',' #>
+        # $VerifyCopies
+        $lines_new[$($script:paramline + 16)] = '    [int]$VerifyCopies=' + "$script:VerifyCopies" + ','
         <# TODO: $7zipMirror
         $lines_new[$($script:paramline + 17)] = '    [int]$7zipMirror=' + "$script:7zipMirror" + ',' #>
         # $UnmountInputDrive
@@ -1278,7 +1282,7 @@ Function Start-FileSearchAndCheck(){
     Invoke-Pause
 
     # calculate hash (if not yet done), get index of files,...
-    if($script:DupliCompareHashes -eq 0 -and $script:CheckOutputDupli -eq 0){
+    if($script:VerifyCopies -eq 1 -and $script:DupliCompareHashes -eq 0 -and $script:CheckOutputDupli -eq 0){
         $files_in | Where-Object {$_.tocopy -eq 1} | Start-RSJob -Name "GetHash" -throttle $script:ThreadCount -ScriptBlock {
             $_.hash = Get-FileHash -LiteralPath $_.fullpath -Algorithm SHA1 | Select-Object -ExpandProperty Hash
         } | Wait-RSJob -ShowProgress | Receive-RSJob
@@ -1558,20 +1562,20 @@ Function Invoke-Close(){
 # DEFINITION: For the auditory experience:
 Function Start-Sound($success){
     <#
-    .SYNOPSIS
-        Gives auditive feedback for fails and successes
-    
-    .DESCRIPTION
-        Uses SoundPlayer and Windows's own WAVs to play sounds.
+        .SYNOPSIS
+            Gives auditive feedback for fails and successes
+        
+        .DESCRIPTION
+            Uses SoundPlayer and Windows's own WAVs to play sounds.
 
-    .NOTES
-        Date: 2018-08-22
+        .NOTES
+            Date: 2018-08-22
 
-    .PARAMETER success
-        If 1 it plays Windows's "tada"-sound, if 0 it plays Windows's "chimes"-sound.
-    
-    .EXAMPLE
-        For success: Start-Sound(1)
+        .PARAMETER success
+            If 1 it plays Windows's "tada"-sound, if 0 it plays Windows's "chimes"-sound.
+        
+        .EXAMPLE
+            For success: Start-Sound(1)
     #>
     $sound = New-Object System.Media.SoundPlayer -ErrorAction SilentlyContinue
     if($success -eq 1){
@@ -1585,7 +1589,7 @@ Function Start-Sound($success){
 # DEFINITION: Starts all the things.
 Function Start-Everything(){
     Write-ColorOut "`r`n`r`n            Welcome to flolilo's Media-Copytool!            " -ForegroundColor DarkCyan -BackgroundColor Gray
-    Write-ColorOut "                 v0.6.6 (Beta) - 23.8.2017                  `r`n" -ForegroundColor DarkCyan -BackgroundColor Gray
+    Write-ColorOut "                 v0.6.7 (Beta) - 31.8.2017                  `r`n" -ForegroundColor DarkCyan -BackgroundColor Gray
 
     $script:timer = [diagnostics.stopwatch]::StartNew()
     while($true){
@@ -1615,7 +1619,7 @@ Function Start-Everything(){
             } | Out-Null
         }
         [array]$histfiles = @()
-        if($script:UseHistFile -eq 1){ # -and $script:VerifyCopies -eq 1){
+        if($script:UseHistFile -eq 1 -and $script:VerifyCopies -eq 1){
             $timer.start()
             $histfiles = Get-HistFile
             Invoke-Pause -tottime $timer.elapsed.TotalSeconds
@@ -1655,13 +1659,16 @@ Function Start-Everything(){
             Start-FileCopy -InFiles $inputfiles -InPath $script:InputPath -OutPath $script:OutputPath
             Invoke-Pause -tottime $timer.elapsed.TotalSeconds
             $timer.reset()
-            $timer.start()
-            $inputfiles = (Start-FileVerification -InFiles $inputfiles)
-            Invoke-Pause -tottime $timer.elapsed.TotalSeconds
-            $timer.reset()
-            $j++
+            if($script:VerifyCopies -eq 1){
+                $timer.start()
+                $inputfiles = (Start-FileVerification -InFiles $inputfiles)
+                Invoke-Pause -tottime $timer.elapsed.TotalSeconds
+                $timer.reset()
+                $j++
+            }else{
+                foreach($instance in $inputfiles.tocopy){$instance = 0}
+            }
         }
-        Write-ColorOut "`r`n`r`nAll files successfully verified!`r`n" -ForegroundColor Green
         if($script:UnmountInputDrive -eq 1){
             # CREDIT: https://serverfault.com/a/580298
             # TODO: Find a solution that works with all drives.
@@ -1707,24 +1714,30 @@ Function Start-Everything(){
                 Start-FileCopy -InFiles $inputfiles -InPath $script:OutputPath -OutPath $script:MirrorPath
                 Invoke-Pause -tottime $timer.elapsed.TotalSeconds
                 $timer.reset()
-                $timer.start()
-                $inputfiles = (Start-FileVerification -InFiles $inputfiles)
-                Invoke-Pause -tottime $timer.elapsed.TotalSeconds
-                $timer.reset()
-                
-                $j++
+                if($script:VerifyCopies -eq 1){
+                    $timer.start()
+                    $inputfiles = (Start-FileVerification -InFiles $inputfiles)
+                    Invoke-Pause -tottime $timer.elapsed.TotalSeconds
+                    $timer.reset()
+                    $j++
+                }else{
+                    foreach($instance in $inputfiles.tocopy){$instance = 0}
+                }
             }
         }
         break
     }
 
-    # $script:resultvalues.unverified
     Write-ColorOut "`r`nStats:" -ForegroundColor DarkCyan
     Write-ColorOut "Found:`t`t$($script:resultvalues.ingoing)`tfiles." -ForegroundColor Cyan
     Write-ColorOut "Skipped:`t$($script:resultvalues.duplihist) (history) + $($script:resultvalues.dupliout) (out-path)`tfiles." -ForegroundColor DarkGreen
     Write-ColorOut "Copied: `t$($script:resultvalues.copyfiles)`tfiles." -ForegroundColor Yellow
-    Write-ColorOut "Verified:`t$($script:resultvalues.verified)`tfiles." -ForegroundColor Green
-    Write-ColorOut "Unverified:`t$($script:resultvalues.unverified)`tfiles.`r`n" -ForegroundColor DarkRed
+    if($script:VerifyCopies -eq 1){
+        Write-ColorOut "Verified:`t$($script:resultvalues.verified)`tfiles." -ForegroundColor Green
+        Write-ColorOut "Unverified:`t$($script:resultvalues.unverified)`tfiles." -ForegroundColor DarkRed
+    }
+    Write-ColorOut " 
+    "
     if($script:resultvalues.unverified -eq 0){
         Start-Sound(1)
     }else{
@@ -1821,7 +1834,7 @@ if($GUI_CLI_Direct -eq "GUI"){
     $WPFcheckBoxInSubSearch.IsChecked = $InputSubfolderSearch
     $WPFcheckBoxCheckInHash.IsChecked = $DupliCompareHashes
     $WPFcheckBoxOutputDupli.IsChecked = $CheckOutputDupli
-    # TODO: $WPFcheckBoxVerifyCopies.IsChecked = $VerifyCopies
+    $WPFcheckBoxVerifyCopies.IsChecked = $VerifyCopies
     # TODO: $WPFcheckBox7zipMirror.IsChecked = $7zipMirror
     $WPFcheckBoxUnmountInputDrive.IsChecked = $UnmountInputDrive
     $WPFcheckBoxPreventStandby.IsChecked = $PreventStandby

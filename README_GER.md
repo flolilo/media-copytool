@@ -69,7 +69,7 @@ Falls in der GUI mit Netzwerk-Pfaden (wie `\\192.168.0.2\bilder`) gearbeitet wer
 
 ## To do
 - [x] GUI mit Tabs statt Dropdowns (Hohe Priorität)
-- [ ] Option um Verifikation komplett zu deaktivieren, um so die Ausführung zu beschleunigen. (Hohe Priorität)
+- [x] Option um Kopien-Verifikation zu deaktivieren, um so die Ausführung zu beschleunigen.
 - [ ] Option um nur Robocopy zu verwenden und die originale Struktur mitzukopieren (also wie `robocopy InputPath OutputPath /MIR`) (Hohe Priorität)
 - [x] Mehr Unterordner-Stile
 - [ ] Option um Dateien nach Datum zu benennen

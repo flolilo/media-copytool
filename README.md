@@ -69,7 +69,7 @@ If you want to copy from/to a network-path (such as `\\192.168.0.2\pictures`):
 
 ## To do
 - [x] GUI with tabs instead of dropdowns (high priority)
-- [ ] Option to deactivate verification completely, thus enabling fast copying. (high priority)
+- [x] Option to deactivate copy-verification, thus enabling fast copying.
 - [ ] Option to just Robocopy files over in their original subfolders (so like `robocopy InputPath OutputPath /MIR`) (high priority)
 - [x] More subfolder-styles
 - [ ] Reaming files by date
