@@ -3,12 +3,23 @@ All notable changes to this project will be documented in this file.
 
 (The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html). )
 
+## 0.6.8 - 2017-08-31
+### Changed
+- Nothing.
+
+## Added
+- Option `unchanged` to `-OutputSubfolderStyle` - works like Robocopy's `/MIR`.
+
+## Removed
+- Nothing.
+
+
 ## 0.6.7 - 2017-08-31
 ### Changed
 - Nothing.
 
 ## Added
-- `VerifyCopies` - now verifying copied files is optional.
+- `-VerifyCopies` - now verifying copied files is optional.
 
 ## Removed
 - Nothing.

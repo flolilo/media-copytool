@@ -68,9 +68,9 @@ If you want to copy from/to a network-path (such as `\\192.168.0.2\pictures`):
 - Although multi-threading works, the thread-count is a tricky thing: setting it too high will slow the script down, even. That's why there's a slider for that.
 
 ## To do
-- [x] GUI with tabs instead of dropdowns (high priority)
+- [x] GUI with tabs instead of dropdowns
 - [x] Option to deactivate copy-verification, thus enabling fast copying.
-- [ ] Option to just Robocopy files over in their original subfolders (so like `robocopy InputPath OutputPath /MIR`) (high priority)
+- [x] Option to just Robocopy files over in their original subfolders (so like `robocopy InputPath OutputPath /MIR`)
 - [x] More subfolder-styles
 - [ ] Reaming files by date
 - [x] Checking if the volume exists if output-path(s) are not found (instead of looking for the parent directory)

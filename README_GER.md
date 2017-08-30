@@ -68,9 +68,9 @@ Falls in der GUI mit Netzwerk-Pfaden (wie `\\192.168.0.2\bilder`) gearbeitet wer
 - Obwohl das Multi-Threading funktioniert, kannes gerade bei höheren Nummern das Skript immens verlangsamen - deswegen gibt es einen Parameter bzw. einen Slider hierfür.
 
 ## To do
-- [x] GUI mit Tabs statt Dropdowns (Hohe Priorität)
+- [x] GUI mit Tabs statt Dropdowns
 - [x] Option um Kopien-Verifikation zu deaktivieren, um so die Ausführung zu beschleunigen.
-- [ ] Option um nur Robocopy zu verwenden und die originale Struktur mitzukopieren (also wie `robocopy InputPath OutputPath /MIR`) (Hohe Priorität)
+- [x] Option um nur Robocopy zu verwenden und die originale Struktur mitzukopieren (also wie `robocopy InputPath OutputPath /MIR`)
 - [x] Mehr Unterordner-Stile
 - [ ] Option um Dateien nach Datum zu benennen
 - [x] Bei nicht vorhandendn Ausgabe-Pfaden: Statt suche nach Überverzeichnis nun kontrollieren, ob Laufwerk existiert

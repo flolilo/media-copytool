@@ -9,7 +9,7 @@
         Now supports multithreading via Boe Prox's PoshRSJob-cmdlet (https://github.com/proxb/PoshRSJob)
 
     .NOTES
-        Version:        0.6.7 (Beta)
+        Version:        0.6.8 (Beta)
         Author:         flolilo
         Creation Date:  31.8.2017
         Legal stuff: This program is free software. It comes without any warranty, to the extent permitted by
@@ -58,6 +58,7 @@
         Creation-style of subfolders for files in -OutputPath. The date will be taken from the file's last edit time.
         Valid options:
             "none"          -   No subfolders in -OutputPath.
+            "unchanged"     -   Take the original subfolder-structure and copy it (like Robocopy's /MIR)
             "yyyy-MM-dd"    -   E.g. 2017-01-31
             "yyyy_MM_dd"    -   E.g. 2017_01_31
             "yyyy.MM.dd"    -   E.g. 2017.01.31
@@ -419,8 +420,8 @@ Function Get-UserValues(){
             }
             # $OutputSubfolderStyle
             while($true){
-                [array]$inter = @("none","yyyy-MM-dd","yyyy_MM_dd","yyyy.MM.dd","yyyyMMdd","yy-MM-dd","yy_MM_dd","yy.MM.dd","yyMMdd")
-                [string]$script:OutputSubfolderStyle = Read-Host "Which subfolder-style should be used in the output-path? Options: `"none`",`"yyyy-MM-dd`",`"yyyy_MM_dd`",`"yyyy.MM.dd`",`"yyyyMMdd`",`"yy-MM-dd`",`"yy_MM_dd`",`"yy.MM.dd`",`"yyMMdd`" (all w/o quotes)."
+                [array]$inter = @("none","unchanged","yyyy-MM-dd","yyyy_MM_dd","yyyy.MM.dd","yyyyMMdd","yy-MM-dd","yy_MM_dd","yy.MM.dd","yyMMdd")
+                [string]$script:OutputSubfolderStyle = Read-Host "Which subfolder-style should be used in the output-path? Options: `"none`",`"unchanged`",`"yyyy-MM-dd`",`"yyyy_MM_dd`",`"yyyy.MM.dd`",`"yyyyMMdd`",`"yy-MM-dd`",`"yy_MM_dd`",`"yy.MM.dd`",`"yyMMdd`" (all w/o quotes)."
                 if($script:OutputSubfolderStyle -in $inter){
                     break
                 }else{
@@ -616,14 +617,15 @@ Function Get-UserValues(){
             # $OutputSubfolderStyle
             $script:OutputSubfolderStyle = $(
                 if($script:WPFcomboBoxOutSubStyle.SelectedIndex -eq 0){"none"}
-                elseif($script:WPFcomboBoxOutSubStyle.SelectedIndex -eq 1){"yyyy-MM-dd"}
-                elseif($script:WPFcomboBoxOutSubStyle.SelectedIndex -eq 2){"yyyy_MM_dd"}
-                elseif($script:WPFcomboBoxOutSubStyle.SelectedIndex -eq 3){"yyyy.MM.dd"}
-                elseif($script:WPFcomboBoxOutSubStyle.SelectedIndex -eq 4){"yyyyMMdd"}
-                elseif($script:WPFcomboBoxOutSubStyle.SelectedIndex -eq 5){"yy-MM-dd"}
-                elseif($script:WPFcomboBoxOutSubStyle.SelectedIndex -eq 6){"yy_MM_dd"}
-                elseif($script:WPFcomboBoxOutSubStyle.SelectedIndex -eq 7){"yy.MM.dd"}
-                elseif($script:WPFcomboBoxOutSubStyle.SelectedIndex -eq 8){"yyMMdd"}
+                elseif($script:WPFcomboBoxOutSubStyle.SelectedIndex -eq 1){"unchanged"}
+                elseif($script:WPFcomboBoxOutSubStyle.SelectedIndex -eq 2){"yyyy-MM-dd"}
+                elseif($script:WPFcomboBoxOutSubStyle.SelectedIndex -eq 3){"yyyy_MM_dd"}
+                elseif($script:WPFcomboBoxOutSubStyle.SelectedIndex -eq 4){"yyyy.MM.dd"}
+                elseif($script:WPFcomboBoxOutSubStyle.SelectedIndex -eq 5){"yyyyMMdd"}
+                elseif($script:WPFcomboBoxOutSubStyle.SelectedIndex -eq 6){"yy-MM-dd"}
+                elseif($script:WPFcomboBoxOutSubStyle.SelectedIndex -eq 7){"yy_MM_dd"}
+                elseif($script:WPFcomboBoxOutSubStyle.SelectedIndex -eq 8){"yy.MM.dd"}
+                elseif($script:WPFcomboBoxOutSubStyle.SelectedIndex -eq 9){"yyMMdd"}
             )
             <# TODO: $OutputFileStyle
             $script:OutputFileStyle = $(
@@ -724,7 +726,7 @@ Function Get-UserValues(){
                 return $false
             }
             # $OutputSubfolderStyle
-            [array]$inter=@("none","yyyy-mm-dd","yyyy_mm_dd","yyyy.mm.dd","yyyymmdd","yy-mm-dd","yy_mm_dd","yy.mm.dd","yymmdd")
+            [array]$inter=@("none","unchanged","yyyy-mm-dd","yyyy_mm_dd","yyyy.mm.dd","yyyymmdd","yy-mm-dd","yy_mm_dd","yy.mm.dd","yymmdd")
             if($script:OutputSubfolderStyle -notin $inter -or $script:OutputSubfolderStyle.Length -gt $inter[1].Length){
                 Write-ColorOut "Invalid choice of -OutputSubfolderStyle." -ForegroundColor Red
                 return $false
@@ -1126,7 +1128,7 @@ Function Start-FileSearchAndCheck(){
                 extension = $_.Extension
                 size = $_.Length
                 date = $_.LastWriteTime.ToString("yyyy-MM-dd_HH-mm-ss")
-                sub_date = $(if($script:OutputSubfolderStyle -eq "none"){""}else{"\$($_.LastWriteTime.ToString("$script:OutputSubfolderStyle"))"})
+                sub_date = $(if($script:OutputSubfolderStyle -eq "none"){""}elseif($script:OutputSubfolderStyle -eq "unchanged"){$($(Split-Path -Parent $_.FullName).Replace($script:InputPath,$script:OutputPath))}else{"\$($_.LastWriteTime.ToString("$script:OutputSubfolderStyle"))"})
                 outpath = "ZYX"
                 outname = $_.Name
                 outbasename = $_.BaseName
@@ -1367,6 +1369,9 @@ Function Start-FileCopy(){
     if($script:OutputSubfolderStyle -eq "none"){
         Write-ColorOut "`r`n$(Get-Date -Format "dd.MM.yy HH:mm:ss")  -" -NoNewLine
         Write-ColorOut "-  Copy files from $InPath to $($OutPath)..." -ForegroundColor Cyan
+    }elseif($script:OutputSubfolderStyle -eq "unchanged"){
+        Write-ColorOut "`r`n$(Get-Date -Format "dd.MM.yy HH:mm:ss")  -" -NoNewLine
+        Write-ColorOut "-  Copy files from $InPath to $($OutPath) with original subfolders:" -ForegroundColor Cyan
     }else{
         Write-ColorOut "`r`n$(Get-Date -Format "dd.MM.yy HH:mm:ss")  -" -NoNewLine
         Write-ColorOut "-  Copy files from $InPath to $OutPath\$($script:OutputSubfolderStyle)..." -ForegroundColor Cyan
@@ -1589,7 +1594,7 @@ Function Start-Sound($success){
 # DEFINITION: Starts all the things.
 Function Start-Everything(){
     Write-ColorOut "`r`n`r`n            Welcome to flolilo's Media-Copytool!            " -ForegroundColor DarkCyan -BackgroundColor Gray
-    Write-ColorOut "                 v0.6.7 (Beta) - 31.8.2017                  `r`n" -ForegroundColor DarkCyan -BackgroundColor Gray
+    Write-ColorOut "                 v0.6.8 (Beta) - 31.8.2017                  `r`n" -ForegroundColor DarkCyan -BackgroundColor Gray
 
     $script:timer = [diagnostics.stopwatch]::StartNew()
     while($true){
@@ -1803,14 +1808,15 @@ if($GUI_CLI_Direct -eq "GUI"){
     $WPFtextBoxCustom.Text = $CustomFormats -join ","
     $WPFcomboBoxOutSubStyle.SelectedIndex = $(
         if("none" -eq $OutputSubfolderStyle){0}
-        elseif("yyyy-mm-dd" -eq $OutputSubfolderStyle){1}
-        elseif("yyyy_mm_dd" -eq $OutputSubfolderStyle){2}
-        elseif("yyyy.mm.dd" -eq $OutputSubfolderStyle){3}
-        elseif("yyyymmdd" -eq $OutputSubfolderStyle){4}
-        elseif("yy-mm-dd" -eq $OutputSubfolderStyle){5}
-        elseif("yy_mm_dd" -eq $OutputSubfolderStyle){6}
-        elseif("yy.mm.dd" -eq $OutputSubfolderStyle){7}
-        elseif("yymmdd" -eq $OutputSubfolderStyle){8}
+        elseif("unchanged" -eq $OutputSubfolderStyle){1}
+        elseif("yyyy-mm-dd" -eq $OutputSubfolderStyle){2}
+        elseif("yyyy_mm_dd" -eq $OutputSubfolderStyle){3}
+        elseif("yyyy.mm.dd" -eq $OutputSubfolderStyle){4}
+        elseif("yyyymmdd" -eq $OutputSubfolderStyle){5}
+        elseif("yy-mm-dd" -eq $OutputSubfolderStyle){6}
+        elseif("yy_mm_dd" -eq $OutputSubfolderStyle){7}
+        elseif("yy.mm.dd" -eq $OutputSubfolderStyle){8}
+        elseif("yymmdd" -eq $OutputSubfolderStyle){9}
     )
     <# TODO:
     $WPFcomboBoxOutFileStyle.SelectedIndex = $(
