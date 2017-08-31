@@ -185,10 +185,10 @@
                         <ComboBoxItem Content="yyyy_MM_dd - 2017_12_31" FontFamily="Consolas"/>
                         <ComboBoxItem Content="yyyy.MM.dd - 2017.12.31" FontFamily="Consolas"/>
                         <ComboBoxItem Content="yyyyMMdd   - 20171231" FontFamily="Consolas"/>
-                        <ComboBoxItem Content="yy-MM-dd   - 17-12-31" FontFamily="Consolas"/>
-                        <ComboBoxItem Content="yy_MM_dd   - 17_12_31" FontFamily="Consolas"/>
-                        <ComboBoxItem Content="yy.MM.dd   - 17.12.31" FontFamily="Consolas"/>
-                        <ComboBoxItem Content="yyMMdd     - 171231" FontFamily="Consolas"/>
+                        <ComboBoxItem Content="yy-MM-dd - 17-12-31" FontFamily="Consolas"/>
+                        <ComboBoxItem Content="yy_MM_dd - 17_12_31" FontFamily="Consolas"/>
+                        <ComboBoxItem Content="yy.MM.dd - 17.12.31" FontFamily="Consolas"/>
+                        <ComboBoxItem Content="yyMMdd   - 171231" FontFamily="Consolas"/>
                     </ComboBox>
                     <Rectangle Fill="#FFB3B6B5" Stroke="#FF878787" Panel.ZIndex="-1" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="250,55,0,0" Height="2" Width="250"/>
 
@@ -204,14 +204,14 @@
                         Height="23" Width="215">
                         <ComboBoxItem Content="Unchanged"/>
                         <ComboBoxItem Content="yyyy-MM-dd_HH-mm-ss - 2017-01-31_13-59-58.ext" FontFamily="Consolas"/>
-                        <ComboBoxItem Content="yyyyMMdd_HHmmss - 20170131_135958.ext" FontFamily="Consolas"/>
-                        <ComboBoxItem Content="yyyyMMddHHmmss - 20170131135958.ext" FontFamily="Consolas"/>
+                        <ComboBoxItem Content="yyyyMMdd_HHmmss     - 20170131_135958.ext" FontFamily="Consolas"/>
+                        <ComboBoxItem Content="yyyyMMddHHmmss      - 20170131135958.ext" FontFamily="Consolas"/>
                         <ComboBoxItem Content="yy-MM-dd_HH-mmss - 17-01-31_13-59-58.ext" FontFamily="Consolas"/>
-                        <ComboBoxItem Content="yyMMdd_HHmmss - 170131_135958.ext" FontFamily="Consolas"/>
-                        <ComboBoxItem Content="yyMMddHHmmss - 170131135958.ext" FontFamily="Consolas"/>
+                        <ComboBoxItem Content="yyMMdd_HHmmss    - 170131_135958.ext" FontFamily="Consolas"/>
+                        <ComboBoxItem Content="yyMMddHHmmss     - 170131135958.ext" FontFamily="Consolas"/>
                         <ComboBoxItem Content="HH-mm-ss - 2017-01-31_13-59-58.ext" FontFamily="Consolas"/>
                         <ComboBoxItem Content="HH_mm_ss - 20170131_135958.ext" FontFamily="Consolas"/>
-                        <ComboBoxItem Content="HHmmss - 20170131135958.ext" FontFamily="Consolas"/>
+                        <ComboBoxItem Content="HHmmss   - 20170131135958.ext" FontFamily="Consolas"/>
                     </ComboBox>
                     <Rectangle Fill="#FFB3B6B5" Stroke="#FF878787" Panel.ZIndex="-1" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="250,115,0,0" Height="2" Width="250"/>
 
