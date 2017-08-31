@@ -1692,7 +1692,7 @@ Function Start-Everything(){
             Invoke-Pause -tottime $timer.elapsed.TotalSeconds
             $timer.reset()
         }
-        if($script:MirrorEnable -ne 0){
+        if($script:MirrorEnable -eq 1){
             for($i=0; $i -lt $inputfiles.fullpath.length; $i++){
                 if($inputfiles[$i].tocopy -eq 1){
                     $inputfiles[$i].tocopy = 0
@@ -1711,23 +1711,31 @@ Function Start-Everything(){
                         break
                     }
                 }
-                $timer.start()
-                $inputfiles = (Start-OverwriteProtection -InFiles $inputfiles -OutPath $script:MirrorPath)
-                Invoke-Pause -tottime $timer.elapsed.TotalSeconds
-                $timer.reset()
-                $timer.start()
-                Start-FileCopy -InFiles $inputfiles -InPath $script:OutputPath -OutPath $script:MirrorPath
-                Invoke-Pause -tottime $timer.elapsed.TotalSeconds
-                $timer.reset()
-                if($script:VerifyCopies -eq 1){
+                <# TODO: if($script:7zipMirror -eq 1){
+                    [string]$inter = ""
+                    for($k = 0; $k -lt $inputfiles.Length; $k++){
+                        $inter += "`"$($inputfiles[$k].fullpath)`" "
+                    }
+                    Start-Process -FilePath "$($PSScriptRoot)\7z.exe" -ArgumentList "a -tzip -mm=Copy -mx0 -sccUTF-8 -mem=AES256 -bb0 `"-w$(Split-Path -Qualifier -Path $script:MirrorPath)\`" `"$script:MirrorPath\Mirror_$(Get-Date -Format "$script:OutputSubfolderStyle").zip`" $inter" -NoNewWindow -Wait
+                # TODO: }else{ #>
                     $timer.start()
-                    $inputfiles = (Start-FileVerification -InFiles $inputfiles)
+                    $inputfiles = (Start-OverwriteProtection -InFiles $inputfiles -OutPath $script:MirrorPath)
                     Invoke-Pause -tottime $timer.elapsed.TotalSeconds
                     $timer.reset()
-                    $j++
-                }else{
-                    foreach($instance in $inputfiles.tocopy){$instance = 0}
-                }
+                    $timer.start()
+                    Start-FileCopy -InFiles $inputfiles -InPath $script:OutputPath -OutPath $script:MirrorPath
+                    Invoke-Pause -tottime $timer.elapsed.TotalSeconds
+                    $timer.reset()
+                    if($script:VerifyCopies -eq 1){
+                        $timer.start()
+                        $inputfiles = (Start-FileVerification -InFiles $inputfiles)
+                        Invoke-Pause -tottime $timer.elapsed.TotalSeconds
+                        $timer.reset()
+                        $j++
+                    }else{
+                        foreach($instance in $inputfiles.tocopy){$instance = 0}
+                    }
+                # TODO: }
             }
         }
         break
