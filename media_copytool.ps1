@@ -1550,17 +1550,16 @@ Function Invoke-Pause(){
 
 # DEFINITION: Exit the program (and close all windows) + option to pause before exiting.
 Function Invoke-Close(){
-    if($script:GUI_CLI_Direct -eq "GUI"){$script:Form.Close()}
-    Get-RSJob -Name "GetHash" | Stop-RSJob
+    if($script:GUI_CLI_Direct -eq "GUI"){
+        $script:Form.Close()
+    }
+    Write-ColorOut "Exiting - This could take some seconds. Please do not close window!" -ForegroundColor Magenta
+    Get-RSJob | Stop-RSJob
     Start-Sleep -Milliseconds 5
-    Get-RSJob -Name "GetHash" | Remove-RSJob
-    Get-RSJob -Name "Xcopy" | Stop-RSJob
-    Start-Sleep -Milliseconds 5
-    Get-RSJob -Name "Xcopy" | Remove-RSJob
-    Get-RSJob -Name "PreventStandby" | Stop-RSJob
-    Start-Sleep -Milliseconds 5
-    Get-RSJob -Name "PreventStandby" | Remove-RSJob
-    if($script:debug -ne 0){Pause}
+    Get-RSJob | Remove-RSJob
+    if($script:debug -ne 0){
+        Pause
+    }
     Exit
 }
 

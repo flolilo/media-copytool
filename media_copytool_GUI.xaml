@@ -22,7 +22,7 @@
                     <TextBox x:Name="textBoxInput"
                         Text="textBoxInput" VerticalScrollBarVisibility="Disabled" VerticalContentAlignment="Center"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,30,0,0"
-                        Height="22" Width="500"
+                        Height="22" Width="490"
                     />
                     <Button x:Name="buttonSearchIn"
                         Content="Select Path..."
@@ -43,7 +43,7 @@
                     <TextBox x:Name="textBoxOutput"
                         Text="textBoxOutput" VerticalScrollBarVisibility="Disabled" VerticalContentAlignment="Center"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,70,0,0" 
-                        Height="22" Width="500"
+                        Height="22" Width="490"
                     />
                     <Button x:Name="buttonSearchOut"
                         Content="Select Path..."
@@ -64,7 +64,7 @@
                     <TextBox x:Name="textBoxMirror"
                         Text="textBoxMirror" VerticalScrollBarVisibility="Disabled" VerticalContentAlignment="Center"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,110,0,0"
-                        Height="22" Width="500"
+                        Height="22" Width="490"
                     />
                     <Button x:Name="buttonSearchMirror"
                         Content="Select Path..."
