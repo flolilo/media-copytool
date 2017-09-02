@@ -28,6 +28,7 @@ This script is an attempt to create a tool to easily (and switfly) copies files 
 - Since v0.6: [PoshRSJob](https://github.com/proxb/PoshRSJob); as of now, it's only used for replacing preventsleep.ps1, but in future releases, it will also speed up Hash-operations.
     - You can still use the old version - it's in the [0.5-branch](https://github.com/flolilo/media-copytool/archive/0.5---without-RSJob.zip) and will get important bugfixes as long as the code has any similiarity with the master-branch. (No promise, just an estimate!)
     - To install PoshRSJob, open PowerShell as administrator and run `Install-Module -Name PoshRSJob`.
+- To use `-ZipMirror` (to create an .zip-archive in the additional output-path), [7-Zip](http://www.7-zip.org/) is needed. The script will look for `7z.exe` in its own path, but also in the usual installation folders of 7-Zip (both 32bit and 64bit). So a regular installation of 7-Zip will do.
 
 ## Installing
 - [Download the zip](https://github.com/flolilo/media-copytool/archive/master.zip)
@@ -79,7 +80,7 @@ This script is an attempt to create a tool to easily (and switfly) copies files 
 - [x] Checking if the volume exists if output-path(s) are not found (instead of looking for the parent directory)
 - [x] Multithreading Get-FileHash operations
 - [x] Allowing special characters like brackets in Paths
-- [ ] Option to create a 7zip-archive for mirror-copying (Medium priority)
+- [x] Option to create a zip-archive for mirror-copying
 - [x] Option to unmount USB drives after finishing (first) copy (done with limitations)
 - [ ] Option to avoid copying a file that exists more than once in the input more than one time. (E.g. .\DCIM\File_1.jpeg & .\DCIM\Sub\File_1.jpeg -> .\Out\File_1.jpeg) (Low priority)
 - [x] Making the output look nice(r) and especially make errors more transparent to users (Low priority)

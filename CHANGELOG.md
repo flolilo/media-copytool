@@ -3,14 +3,25 @@ All notable changes to this project will be documented in this file.
 
 (The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html). )
 
+## 0.6.9 - 2017-09-02
+### Changed
+- Small things: remove histfile-variable after use to save a few KB of RAM, mainly
+
+### Added
+- `-ZipArchive`-Parameter and -Function
+- Failsafe for GUI.
+
+### Removed
+- As usual: nothing.
+
 ## 0.6.8 - 2017-08-31
 ### Changed
 - Nothing.
 
-## Added
+### Added
 - Option `unchanged` to `-OutputSubfolderStyle` - works like Robocopy's `/MIR`.
 
-## Removed
+### Removed
 - Nothing.
 
 
@@ -18,10 +29,10 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - Nothing.
 
-## Added
+### Added
 - `-VerifyCopies` - now verifying copied files is optional.
 
-## Removed
+### Removed
 - Nothing.
 
 

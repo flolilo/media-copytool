@@ -9,7 +9,7 @@
         Now supports multithreading via Boe Prox's PoshRSJob-cmdlet (https://github.com/proxb/PoshRSJob)
 
     .NOTES
-        Version:        0.6.8 (Beta)
+        Version:        0.6.9 (Beta)
         Author:         flolilo
         Creation Date:  31.8.2017
         Legal stuff: This program is free software. It comes without any warranty, to the extent permitted by
@@ -103,8 +103,7 @@
     .PARAMETER VerifyCopies
         Valid range: 0 (deactivate), 1 (activate)
         If enabled, copied files will be checked for their integrity via SHA1-hashes. Disabling will increase speed, but there is no absolute guarantee that your files are copied correctly.
-    .PARAMETER 7zipMirror
-        TODO: To be implemented.
+    .PARAMETER ZipMirror
         Valid range: 0 (deactivate), 1 (activate)
         Only enabled if -EnableMirror is enabled, too. Creates a 7z-archive for archiving.
     .PARAMETER UnmountInputDrive
@@ -173,7 +172,7 @@ param(
     [int]$DupliCompareHashes=0,
     [int]$CheckOutputDupli=0,
     [int]$VerifyCopies=1,
-    # TODO: [int]$7zipMirror=0,
+    [int]$ZipMirror=0,
     [int]$UnmountInputDrive=1,
     [int]$PreventStandby=1,
     [int]$ThreadCount=2,
@@ -274,7 +273,7 @@ if($showparams -ne 0){
     Write-ColorOut "-InputSubfolderSearch`t=`t$InputSubfolderSearch" -ForegroundColor Cyan
     Write-ColorOut "-CheckOutputDupli`t=`t$CheckOutputDupli" -ForegroundColor Cyan
     Write-ColorOut "-VerifyCopies`t=`t$VerifyCopies" -ForegroundColor Cyan
-    # TODO: Write-ColorOut "-7zipMirror`t`t=`t$7zipMirror" -ForegroundColor Cyan
+    Write-ColorOut "-ZipMirror`t`t=`t$ZipMirror" -ForegroundColor Cyan
     Write-ColorOut "-UnmountInputDrive`t=`t$UnmountInputDrive" -ForegroundColor Cyan
     Write-ColorOut "-PreventStandby`t`t=`t$PreventStandby" -ForegroundColor Cyan
     Write-ColorOut "-ThreadCount`t`t=`t$ThreadCount`r`n" -ForegroundColor Cyan
@@ -291,15 +290,82 @@ if($showparams -ne 0){
 # ==============================================================================
 # ==================================================================================================
 
+# DEFINITION: Pause the programme if debug-var is active. Also, enable measuring times per command with -debug 3.
+Function Invoke-Pause(){
+    param($tottime=0.0)
+
+    if($script:debug -eq 3 -and $tottime -ne 0.0){
+        Write-ColorOut "Used time for process:`t$tottime`r`n" -ForegroundColor Magenta
+    }
+    if($script:debug -ge 2){
+        if($tottime -ne 0.0){
+            $script:timer.Stop()
+        }
+        Pause
+        if($tottime -ne 0.0){
+            $script:timer.Start()
+        }
+    }
+}
+
+# DEFINITION: Exit the program (and close all windows) + option to pause before exiting.
+Function Invoke-Close(){
+    if($script:GUI_CLI_Direct -eq "GUI"){
+        $script:Form.Close()
+    }
+    Write-ColorOut "Exiting - This could take some seconds. Please do not close window!" -ForegroundColor Magenta
+    Get-RSJob | Stop-RSJob
+    Start-Sleep -Milliseconds 5
+    Get-RSJob | Remove-RSJob
+    if($script:debug -ne 0){
+        Pause
+    }
+    Exit
+}
+
+# DEFINITION: For the auditory experience:
+Function Start-Sound($success){
+    <#
+        .SYNOPSIS
+            Gives auditive feedback for fails and successes
+        
+        .DESCRIPTION
+            Uses SoundPlayer and Windows's own WAVs to play sounds.
+
+        .NOTES
+            Date: 2018-08-22
+
+        .PARAMETER success
+            If 1 it plays Windows's "tada"-sound, if 0 it plays Windows's "chimes"-sound.
+        
+        .EXAMPLE
+            For success: Start-Sound(1)
+    #>
+    $sound = New-Object System.Media.SoundPlayer -ErrorAction SilentlyContinue
+    if($success -eq 1){
+        $sound.SoundLocation = "C:\Windows\Media\tada.wav"
+    }else{
+        $sound.SoundLocation = "C:\Windows\Media\chimes.wav"
+    }
+    $sound.Play()
+}
+
+
 # DEFINITION: "Select"-Window for buttons to choose a path.
 Function Get-Folder($InOutMirror){
-    [void][System.Reflection.Assembly]::LoadWithPartialName("System.windows.forms")
+    [void][System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
     $folderdialog = New-Object System.Windows.Forms.FolderBrowserDialog
     $folderdialog.rootfolder = "MyComputer"
     if($folderdialog.ShowDialog() -eq "OK"){
-        if($InOutMirror -eq "input"){$script:WPFtextBoxInput.Text = $folderdialog.SelectedPath}
-        if($InOutMirror -eq "output"){$script:WPFtextBoxOutput.Text = $folderdialog.SelectedPath}
-        if($InOutMirror -eq "mirror"){$script:WPFtextBoxMirror.Text = $folderdialog.SelectedPath}
+        if($InOutMirror -eq "input"){
+            $script:WPFtextBoxInput.Text = $folderdialog.SelectedPath
+        }
+        if($InOutMirror -eq "output"){
+            $script:WPFtextBoxOutput.Text = $folderdialog.SelectedPath
+        }
+        if($InOutMirror -eq "mirror"){
+            $script:WPFtextBoxMirror.Text = $folderdialog.SelectedPath
+        }
     }
 }
 
@@ -502,18 +568,18 @@ Function Get-UserValues(){
                     continue
                 }
             }
-            <# TODO: $7zipMirror
+            # $ZipMirror
             if($script:MirrorEnable -eq 1){
                 while($true){
-                    [int]$script:7zipMirror = Read-Host "Copying files to additional output-path as 7zip-archive? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
-                    if($script:7zipMirror -in (0..1)){
+                    [int]$script:ZipMirror = Read-Host "Copying files to additional output-path as 7zip-archive? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+                    if($script:ZipMirror -in (0..1)){
                         break
                     }else{
                         Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
                         continue
                     }
                 }
-            } #>
+            }
             # $UnmountInputDrive
             while($true){
                 [int]$script:UnmountInputDrive = Read-Host "Removing input-drive after copying & verifying (before mirroring)? Only use it for external drives. `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
@@ -672,11 +738,11 @@ Function Get-UserValues(){
                 if($script:WPFcheckBoxVerifyCopies.IsChecked -eq $true){1}
                 else{0}
             )
-            <# TODO: $7zipMirror
-            $script:7zipMirror = $(
-                if($script:WPFcheckBox7zipMirror.IsChecked -eq $true){1}
+            # $ZipMirror
+            $script:ZipMirror = $(
+                if($script:WPFcheckBoxZipMirror.IsChecked -eq $true){1}
                 else{0}
-            ) #>
+            )
             # $UnmountInputDrive
             $script:UnmountInputDrive = $(
                 if($script:WPFcheckBoxUnmountInputDrive.IsChecked -eq $true){1}
@@ -769,11 +835,11 @@ Function Get-UserValues(){
                 Write-ColorOut "Invalid choice of -VerifyCopies." -ForegroundColor Red
                 return $false
             }
-            <# TODO: $7zipMirror
-            if($script:7zipMirror -notin (0..1)){
-                Write-ColorOut "Invalid choice of -7zipMirror." -ForegroundColor Red
+            # $ZipMirror
+            if($script:ZipMirror -notin (0..1)){
+                Write-ColorOut "Invalid choice of -ZipMirror." -ForegroundColor Red
                 return $false
-            } #>
+            }
             # $UnmountInputDrive
             if($script:UnmountInputDrive -notin (0..1)){
                 Write-ColorOut "Invalid choice of -UnmountInputDrive." -ForegroundColor Red
@@ -848,7 +914,7 @@ Function Get-UserValues(){
                     return $false
                 }
                 if($script:MirrorPath -lt 2 -or (Test-Path -LiteralPath $script:MirrorPath -PathType Container) -eq $false){
-                    if((Split-Path -Parent -Path $script:MirrorPath).Length -gt 1 -and (Test-Path -Qualifier $(Split-Path -Parent -Path $script:MirrorPath) -PathType Container) -eq $true){
+                    if((Test-Path -LiteralPath $(Split-Path -Qualifier -Path $script:MirrorPath) -PathType Container) -eq $true){
                         while($true){
                             [int]$request = Read-Host "Additional output-path not found, but it's pointing to a valid drive letter. Create chosen directory? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
                             if($request -eq 1){
@@ -947,7 +1013,7 @@ Function Get-UserValues(){
         Write-ColorOut "DupliCompareHashes:`t$script:DupliCompareHashes"
         Write-ColorOut "CheckOutputDupli:`t$script:CheckOutputDupli"
         Write-ColorOut "VerifyCopies:`t`t$script:VerifyCopies"
-        # TODO: Write-ColorOut "7zipMirror:`t`t$script:7zipMirror"
+        Write-ColorOut "ZipMirror:`t`t$script:ZipMirror"
         Write-ColorOut "UnmountInputDrive:`t`t$script:UnmountInputDrive"
         Write-ColorOut "PreventStandby:`t`t$script:PreventStandby"
         Write-ColorOut "ThreadCount:`t`t$script:ThreadCount"
@@ -1021,8 +1087,8 @@ Function Start-Remembering(){
         $lines_new[$($script:paramline + 15)] = '    [int]$CheckOutputDupli=' + "$script:CheckOutputDupli" + ','
         # $VerifyCopies
         $lines_new[$($script:paramline + 16)] = '    [int]$VerifyCopies=' + "$script:VerifyCopies" + ','
-        <# TODO: $7zipMirror
-        $lines_new[$($script:paramline + 17)] = '    [int]$7zipMirror=' + "$script:7zipMirror" + ',' #>
+        # $ZipMirror
+        $lines_new[$($script:paramline + 17)] = '    [int]$ZipMirror=' + "$script:ZipMirror" + ','
         # $UnmountInputDrive
         $lines_new[$($script:paramline + 18)] = '    [int]$UnmountInputDrive=' + "$script:UnmountInputDrive" + ','
         # $PreventStandby
@@ -1077,6 +1143,10 @@ Function Get-HistFile(){
                 Write-ColorOut "`r`nAborting.`r`n" -ForegroundColor Magenta
                 Invoke-Close
             }
+        }
+        if("ZYX" -in $files_history.hash -and $script:DupliCompareHashes -eq 1){
+            Write-ColorOut "Some hash-values in the history-file are missing (because -VerifyCopies wasn't activated when they were added). This could lead to duplicates." -ForegroundColor Magenta
+            Start-Sleep -Seconds 2
         }
     }else{
         Write-ColorOut "History-File $HistFilePath could not be found. This means it's possible that duplicates get copied." -ForegroundColor Magenta
@@ -1284,9 +1354,13 @@ Function Start-FileSearchAndCheck(){
     $script:resultvalues.dupliout = $dupliindex_out.Length
     Invoke-Pause
 
-    # calculate hash (if not yet done), get index of files,...
-    if($script:VerifyCopies -eq 1 -and $script:DupliCompareHashes -eq 0 -and $script:CheckOutputDupli -eq 0){
-        $files_in | Where-Object {$_.tocopy -eq 1} | Start-RSJob -Name "GetHash" -throttle $script:ThreadCount -ScriptBlock {
+    # cleaning away all files that will not get copied:
+    [array]$inter = $files_in | Where-Object {$_.tocopy -eq 1}
+    [array]$files_in = $inter
+
+    # calculate hash (if not yet done):
+    if($script:VerifyCopies -eq 1){
+        $files_in | Where-Object {$_.hash -eq "ZYX"} | Start-RSJob -Name "GetHash" -throttle $script:ThreadCount -ScriptBlock {
             $_.hash = Get-FileHash -LiteralPath $_.fullpath -Algorithm SHA1 | Select-Object -ExpandProperty Hash
         } | Wait-RSJob -ShowProgress | Receive-RSJob
         Get-RSJob -Name "GetHash" | Remove-RSJob
@@ -1392,14 +1466,14 @@ Function Start-FileCopy(){
 
     for($i=0; $i -lt $InFiles.fullpath.length; $i++){
         if($InFiles.tocopy -eq 1){
-            # check if qualified for robocopy (out-name = in-name):
+            # check if files is qualified for robocopy (out-name = in-name):
             if($InFiles[$i].fullpath.contains($InFiles[$i].outname)){
                 if($rc_inter_inpath.Length -eq 0 -or $rc_inter_outpath.Length -eq 0 -or $rc_inter_files.Length -eq 0){
                     $rc_inter_inpath = "`"$($InFiles[$i].inpath)`""
                     $rc_inter_outpath = "`"$($InFiles[$i].outpath)`""
                     $rc_inter_files = "`"$($InFiles[$i].outname)`" "
                 }
-                # if in-path and out-path stay the same:
+                # if in-path and out-path stay the same (between files):
                 if("`"$($InFiles[$i].inpath)`"" -eq $rc_inter_inpath -and "`"$($InFiles[$i].outpath)`"" -eq $rc_inter_outpath){
                     # if command-length is within boundary:
                     if($($rc_inter_inpath.Length + $rc_inter_outpath.Length + $rc_inter_files.Length + $InFiles[$i].outname.Length) -lt 8100){
@@ -1408,7 +1482,7 @@ Function Start-FileCopy(){
                         $rc_command += "`"$rc_inter_inpath`" `"$rc_inter_outpath`" $rc_inter_files $rc_suffix"
                         $rc_inter_files = "`"$($InFiles[$i].outname)`" "
                     }
-                # if in-path and out-path DON'T stay the same:
+                # if in-path and out-path DON'T stay the same (between files):
                 }else{
                     $rc_command += "$rc_inter_inpath $rc_inter_outpath $rc_inter_files $rc_suffix"
                     $rc_inter_inpath = "`"$($InFiles[$i].inpath)`""
@@ -1450,6 +1524,49 @@ Function Start-FileCopy(){
 
     Start-Sleep -Milliseconds 250
 }
+
+Function Start-7zip(){
+    param(
+        [string]$7zexe = "$($PSScriptRoot)\7z.exe",
+        [array]$InFiles
+    )
+    Write-ColorOut "`r`n$(Get-Date -Format "dd.MM.yy HH:mm:ss")  -" -NoNewLine
+    Write-ColorOut "-  Zipping files..." -ForegroundColor Cyan
+
+    if((Test-Path -LiteralPath "$($PSScriptRoot)\7z.exe" -PathType Leaf) -eq $false){
+        if((Test-Path -LiteralPath "C:\Program Files\7-Zip\7z.exe" -PathType Leaf) -eq $true){
+            $7zexe = "C:\Program Files\7-Zip\7z.exe"
+        }elseif((Test-Path -LiteralPath "C:\Program Files (x86)\7-Zip\7z.exe" -PathType Leaf) -eq $true){
+            $7zexe = "C:\Program Files (x86)\7-Zip\7z.exe"
+        }else{
+            Write-ColorOut "7z.exe could not be found - aborting zipping!" -ForegroundColor Red
+            Pause
+            break
+        }
+    }
+
+    [string]$7z_prefix = "a -tzip -mm=Copy -mx0 -ssw -sccUTF-8 -mem=AES256 -bb0"
+    [string]$7z_workdir = $(if($script:OutputSubfolderStyle -ne "none" -and $script:OutputSubfolderStyle -ne "unchanged"){" `"-w$(Split-Path -Qualifier -Path $script:MirrorPath)\`" `"$script:MirrorPath\$(Get-Date -Format "$script:OutputSubfolderStyle")_MIRROR.zip`" "}else{" `"-w$(Split-Path -Qualifier -Path $script:MirrorPath)\`" `"$script:MirrorPath\$($(Get-Date).ToString().Replace(":",'').Replace(",",'').Replace(" ",''))_MIRROR.zip`" "})
+    [array]$7z_command = @()
+
+    [string]$inter_files = ""
+    for($k = 0; $k -lt $InFiles.Length; $k++){
+        if($($7z_prefix.Length + $7z_workdir.Length + $inter_files.Length) -lt 8100){
+            $inter_files += "`"$($InFiles[$k].fullpath)`" "
+        }else{
+            $7z_command += "$7z_prefix $7z_workdir $inter_files"
+            $inter_files = ""
+        }
+    }
+    if($7z_command.Length -lt 1){
+        $7z_command += "$7z_prefix $7z_workdir $inter_files"
+    }
+
+    foreach($cmd in $7z_command){
+        Start-Process -FilePath $7zexe -ArgumentList $cmd -NoNewWindow -Wait
+    }
+}
+
 
 # DEFINITION: Verify newly copied files
 Function Start-FileVerification(){
@@ -1504,7 +1621,7 @@ Function Set-HistFile(){
     Write-ColorOut "$(Get-Date -Format "dd.MM.yy HH:mm:ss")  -" -NoNewLine
     Write-ColorOut "-  Write attributes of successfully copied files to history-file..." -ForegroundColor Cyan
 
-    $results = ($InFiles | Where-Object {$_.tocopy -eq 0 -and $_.hash -ne "ZYX"} | Select-Object -Property inname,date,size,hash)
+    $results = ($InFiles | Where-Object {$_.tocopy -eq 0} | Select-Object -Property inname,date,size,hash)
 
     if($script:WriteHistFile -eq "Yes" -and (Test-Path -LiteralPath $HistFilePath -PathType Leaf) -eq $true){
         $JSON = Get-Content -LiteralPath $HistFilePath -Raw -Encoding UTF8 | ConvertFrom-Json
@@ -1531,70 +1648,10 @@ Function Set-HistFile(){
     }
 }
 
-# DEFINITION: Pause the programme if debug-var is active. Also, enable measuring times per command with -debug 3.
-Function Invoke-Pause(){
-    param($tottime=0.0)
-
-    if($script:debug -eq 3 -and $tottime -ne 0.0){
-        Write-ColorOut "Used time for process:`t$tottime`r`n" -ForegroundColor Magenta
-    }
-    if($script:debug -ge 2){
-        if($tottime -ne 0.0){
-            $script:timer.Stop()
-        }
-        Pause
-        if($tottime -ne 0.0){
-            $script:timer.Start()
-        }
-    }
-}
-
-# DEFINITION: Exit the program (and close all windows) + option to pause before exiting.
-Function Invoke-Close(){
-    if($script:GUI_CLI_Direct -eq "GUI"){
-        $script:Form.Close()
-    }
-    Write-ColorOut "Exiting - This could take some seconds. Please do not close window!" -ForegroundColor Magenta
-    Get-RSJob | Stop-RSJob
-    Start-Sleep -Milliseconds 5
-    Get-RSJob | Remove-RSJob
-    if($script:debug -ne 0){
-        Pause
-    }
-    Exit
-}
-
-# DEFINITION: For the auditory experience:
-Function Start-Sound($success){
-    <#
-        .SYNOPSIS
-            Gives auditive feedback for fails and successes
-        
-        .DESCRIPTION
-            Uses SoundPlayer and Windows's own WAVs to play sounds.
-
-        .NOTES
-            Date: 2018-08-22
-
-        .PARAMETER success
-            If 1 it plays Windows's "tada"-sound, if 0 it plays Windows's "chimes"-sound.
-        
-        .EXAMPLE
-            For success: Start-Sound(1)
-    #>
-    $sound = New-Object System.Media.SoundPlayer -ErrorAction SilentlyContinue
-    if($success -eq 1){
-        $sound.SoundLocation = "C:\Windows\Media\tada.wav"
-    }else{
-        $sound.SoundLocation = "C:\Windows\Media\chimes.wav"
-    }
-    $sound.Play()
-}
-
 # DEFINITION: Starts all the things.
 Function Start-Everything(){
     Write-ColorOut "`r`n`r`n            Welcome to flolilo's Media-Copytool!            " -ForegroundColor DarkCyan -BackgroundColor Gray
-    Write-ColorOut "                 v0.6.8 (Beta) - 31.8.2017                  `r`n" -ForegroundColor DarkCyan -BackgroundColor Gray
+    Write-ColorOut "                 v0.6.9 (Beta) - 31.8.2017                  `r`n" -ForegroundColor DarkCyan -BackgroundColor Gray
 
     $script:timer = [diagnostics.stopwatch]::StartNew()
     while($true){
@@ -1632,6 +1689,8 @@ Function Start-Everything(){
         }
         $timer.start()
         $inputfiles = (Start-FileSearchAndCheck -InPath $script:InputPath -OutPath $script:OutputPath -HistFiles $histfiles)
+        # remove $histfiles, as it only eats RAM:
+        Remove-Variable histfiles
         Invoke-Pause -tottime $timer.elapsed.TotalSeconds
         $timer.reset()
         if(1 -notin $inputfiles.tocopy){
@@ -1703,21 +1762,21 @@ Function Start-Everything(){
                 $inputfiles[$i].inpath = (Split-Path -Path $inputfiles[$i].fullpath -Parent)
                 $inputfiles[$i].outname = "$($inputfiles[$i].basename)$($inputfiles[$i].extension)"
             }
-            $j = 1
-            while(1 -in $inputfiles.tocopy){
-                if($j -gt 1){
-                    Write-ColorOut "Some of the copied files are corrupt. Attempt re-copying them?" -ForegroundColor Magenta
-                    if((Read-Host "`"1`" (w/o quotes) for `"yes`", other number for `"no`"") -ne 1){
-                        break
+            
+            if($script:ZipMirror -eq 1){
+                $timer.start()
+                Start-7zip -InFiles $inputfiles
+                Invoke-Pause -tottime $timer.elapsed.TotalSeconds
+                $timer.reset()
+            }else{
+                $j = 1
+                while(1 -in $inputfiles.tocopy){
+                    if($j -gt 1){
+                        Write-ColorOut "Some of the copied files are corrupt. Attempt re-copying them?" -ForegroundColor Magenta
+                        if((Read-Host "`"1`" (w/o quotes) for `"yes`", other number for `"no`"") -ne 1){
+                            break
+                        }
                     }
-                }
-                <# TODO: if($script:7zipMirror -eq 1){
-                    [string]$inter = ""
-                    for($k = 0; $k -lt $inputfiles.Length; $k++){
-                        $inter += "`"$($inputfiles[$k].fullpath)`" "
-                    }
-                    Start-Process -FilePath "$($PSScriptRoot)\7z.exe" -ArgumentList "a -tzip -mm=Copy -mx0 -sccUTF-8 -mem=AES256 -bb0 `"-w$(Split-Path -Qualifier -Path $script:MirrorPath)\`" `"$script:MirrorPath\Mirror_$(Get-Date -Format "$script:OutputSubfolderStyle").zip`" $inter" -NoNewWindow -Wait
-                # TODO: }else{ #>
                     $timer.start()
                     $inputfiles = (Start-OverwriteProtection -InFiles $inputfiles -OutPath $script:MirrorPath)
                     Invoke-Pause -tottime $timer.elapsed.TotalSeconds
@@ -1735,7 +1794,7 @@ Function Start-Everything(){
                     }else{
                         foreach($instance in $inputfiles.tocopy){$instance = 0}
                     }
-                # TODO: }
+                }
             }
         }
         break
@@ -1855,7 +1914,7 @@ if($GUI_CLI_Direct -eq "GUI"){
     $WPFcheckBoxCheckInHash.IsChecked = $DupliCompareHashes
     $WPFcheckBoxOutputDupli.IsChecked = $CheckOutputDupli
     $WPFcheckBoxVerifyCopies.IsChecked = $VerifyCopies
-    # TODO: $WPFcheckBox7zipMirror.IsChecked = $7zipMirror
+    $WPFcheckBoxZipMirror.IsChecked = $ZipMirror
     $WPFcheckBoxUnmountInputDrive.IsChecked = $UnmountInputDrive
     $WPFcheckBoxPreventStandby.IsChecked = $PreventStandby
     $WPFtextBoxThreadCount.Text = $ThreadCount

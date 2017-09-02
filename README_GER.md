@@ -28,6 +28,7 @@ Dieses Skript ist mein Versuch, die Dateien von den Speicherkarten meiner DSLR e
 - Seit v0.6: [PoshRSJob](https://github.com/proxb/PoshRSJob); bisher ersetzt es nur preventsleep.ps1, aber in Zukunft werden damit auch die Hash-Berechnungen beschleunigt werden.
     - Die alte Version ohne PoshRSJob ist in der [0.5-branch](https://github.com/flolilo/media-copytool/archive/0.5---without-RSJob.zip) und bekommt Updates, solange der Code dem der master-branch ähnlich genug ist. (Kein Versprechen!)
     - Um PoshRSJob zu installieren: PowerShell als Administrator starten und `Install-Module -Name PoshRSJob` eingeben.
+- Für die Nutzung von `-ZipMirror`(.zip-Archiv im zweiten Ausgabepfad) wird [7-Zip](http://www.7-zip.org/) benötigt - das Skript durchsucht seinen eigenenPfad nach `7z.exe`, wenn sie dort nicht gefunden wird sucht es in den Standard-Installationspfaden (32bit und 64 bit) danach - eine vorhandene Installation genügt also.
 
 ## Installation
 - [Zip downloaden](https://github.com/flolilo/media-copytool/archive/master.zip)
@@ -79,7 +80,7 @@ Dieses Skript ist mein Versuch, die Dateien von den Speicherkarten meiner DSLR e
 - [x] Bei nicht vorhandendn Ausgabe-Pfaden: Statt suche nach Überverzeichnis nun kontrollieren, ob Laufwerk existiert
 - [x] Multithreading der Get-FileHash Operationen
 - [x] Sonderzeichen wie eckige Klammern in Pfaden und Dateien erlauben (Alle Tests sagen, dass es funktioniert)
-- [ ] Option um 7zip-Archive auf den Spiegel-Ausgabepfad abzulegen (Mittlere Priorität)
+- [x] Option um zip-Archive auf den Spiegel-Ausgabepfad abzulegen
 - [x] Option um USB-Geräte nach dem Abschluss der (ersten) Kopie sicher auszuwerfen
 - [ ] Option to avoid copying a file that exists more than once in the input more than one time. (E.g. .\DCIM\File_1.jpeg & .\DCIM\Sub\File_1.jpeg -> .\Out\File_1.jpeg) (Niedrige Priorität)
 - [x] Schönere/lesbarere Ausgabe in der Konsole
