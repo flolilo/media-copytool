@@ -218,8 +218,8 @@ Function Write-ColorOut(){
     #>
     param(
         [string]$Object,
-        [string]$ForegroundColor=[Console]::ForegroundColor,
-        [string]$BackgroundColor=[Console]::BackgroundColor,
+        [ValidateSet("DarkBlue","DarkGreen","DarkCyan","DarkRed","Blue","Green","Cyan","Red","Magenta","Yellow","Black","Darkgray","Gray","DarkYellow","White","DarkMagenta")][string]$ForegroundColor=[Console]::ForegroundColor,
+        [ValidateSet("DarkBlue","DarkGreen","DarkCyan","DarkRed","Blue","Green","Cyan","Red","Magenta","Yellow","Black","Darkgray","Gray","DarkYellow","White","DarkMagenta")][string]$BackgroundColor=[Console]::BackgroundColor,
         [switch]$NoNewLine=$false
     )
     $old_fg_color = [Console]::ForegroundColor
@@ -241,7 +241,8 @@ Function Write-ColorOut(){
 # Checking if PoshRSJob is installed:
 if (-not (Get-Module -ListAvailable -Name PoshRSJob)){
     Write-ColorOut "Module RSJob (https://github.com/proxb/PoshRSJob) is required, but it seemingly isn't installed - please start PowerShell as administrator and run`t" -ForegroundColor Red
-    Write-ColorOut "Install-Module -Name PoshRSJob" -ForegroundColor DarkYellow
+    Write-ColorOut "Install-Module -Name PoshRSJob " -ForegroundColor DarkYellow
+    Write-ColorOut "or use the fork of media-copytool without RSJob." -ForegroundColor Red
     Pause
     Exit
 }
@@ -286,7 +287,7 @@ if($showparams -ne 0){
 
 # ==================================================================================================
 # ==============================================================================
-# Defining Functions:
+#   Defining Functions:
 # ==============================================================================
 # ==================================================================================================
 
@@ -1768,7 +1769,7 @@ Function Start-Everything(){
 
 # ==================================================================================================
 # ==============================================================================
-# Programming GUI & starting everything:
+#   Programming GUI & starting everything:
 # ==============================================================================
 # ==================================================================================================
 
@@ -1778,7 +1779,13 @@ if($GUI_CLI_Direct -eq "GUI"){
         code of this section (except from content of inputXML and small modifications) by
         https://foxdeploy.com/series/learning-gui-toolmaking-series/
     #>
-    $inputXML = Get-Content -Path "$($PSScriptRoot)/media_copytool_GUI.xaml" -Encoding UTF8
+    if((Test-Path -LiteralPath "$($PSScriptRoot)/media_copytool_GUI.xaml" -PathType Leaf)){
+        $inputXML = Get-Content -Path "$($PSScriptRoot)/media_copytool_GUI.xaml" -Encoding UTF8
+    }else{
+        Write-ColorOut "Could not find $($PSScriptRoot)/media_copytool_GUI.xaml - GUI can therefore not start." -ForegroundColor Red
+        Pause
+        Exit
+    }
 
     [void][System.Reflection.Assembly]::LoadWithPartialName('presentationframework')
     [xml]$xaml = $inputXML -replace 'mc:Ignorable="d"','' -replace "x:Name",'Name'  -replace '^<Win.*', '<Window'
