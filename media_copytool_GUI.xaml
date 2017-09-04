@@ -9,7 +9,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="flolilo's Media-Copytool v0.7.0 (Beta)" Height="320" Width="800" ResizeMode="CanMinimize">
+        Title="flolilo's Media-Copytool v0.7.0-MT (Beta)" Height="320" Width="800" ResizeMode="CanMinimize">
     <Grid Background="#FFB3B6B5">
         <TabControl x:Name="tabControl" VerticalAlignment="Top" Margin="0,0,0,0" Height="240" Background="#FFB3B6B5" BorderBrush="#FF878787">
             <TabItem Header="Paths">

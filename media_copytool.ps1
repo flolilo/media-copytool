@@ -9,9 +9,9 @@
         Now supports multithreading via Boe Prox's PoshRSJob-cmdlet (https://github.com/proxb/PoshRSJob)
 
     .NOTES
-        Version:        0.7.0 (Beta)
+        Version:        0.7.0-MT (Beta)
         Author:         flolilo
-        Creation Date:  31.8.2017
+        Creation Date:  5.9.2017
         Legal stuff: This program is free software. It comes without any warranty, to the extent permitted by
         applicable law. Most of the script was written by myself (or heavily modified by me when searching for solutions
         on the WWW). However, some parts are copies or modifications of very genuine code - see
@@ -1659,8 +1659,9 @@ Function Set-HistFile(){
 
 # DEFINITION: Starts all the things.
 Function Start-Everything(){
+    # Clear-Host
     Write-ColorOut "`r`n`r`n            Welcome to flolilo's Media-Copytool!            " -ForegroundColor DarkCyan -BackgroundColor Gray
-    Write-ColorOut "                 v0.7.0 (Beta) - 31.8.2017                  `r`n" -ForegroundColor DarkCyan -BackgroundColor Gray
+    Write-ColorOut "              v0.7.0-MT (Beta) - 5.9.2017                  `r`n" -ForegroundColor DarkCyan -BackgroundColor Gray
 
     $script:timer = [diagnostics.stopwatch]::StartNew()
     while($true){
