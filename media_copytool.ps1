@@ -1242,6 +1242,9 @@ Function Start-FileSearchAndCheck(){
                     $files_in[$i].tocopy = 0
                     break
                 }else{
+                    if($script:DupliCompareHashes -eq 1 -and $HistFiles[$j].Hash -eq "ZYX"){
+                        Write-ColorOut "Possible duplicate (no hash found): $($i + 1) - $($files_in[$i].inname.Replace("$InPath",'.'))" -ForegroundColor Green
+                    }
                     if($j -le 0){
                         break
                     }
@@ -1566,7 +1569,6 @@ Function Start-7zip(){
         Start-Process -FilePath $7zexe -ArgumentList $cmd -NoNewWindow -Wait
     }
 }
-
 
 # DEFINITION: Verify newly copied files
 Function Start-FileVerification(){
