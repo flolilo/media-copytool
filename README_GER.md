@@ -4,6 +4,8 @@
 PowerShell-basiertes Skript mit GUI, das Datien nicht nur kopiert, sondern auch verifiziert. *Jetzt mit Multithreading für höhere Geschwindigkeiten!*
 Dieses Skript ist mein Versuch, die Dateien von den Speicherkarten meiner DSLR einfach (und schnell) auf den Computer zu kopieren. Die Funktionen des Skripts übertreffen inzwischen die der meisten (wenn nicht alle) professionellen RAW-Converter (natürlich nicht, wenn es um's Konvertieren von RAWs geht ;-) ). Doch der Spaß hört hier nicht auf: es kommen immer weitere Features! Und das beste daran: das Skript kann mit **jedem** Dateity umgehen!
 
+#### Anders als v0.6.x werden v0.7.x hauptsächlich Bugfixes beinhalten, da die meisten Features bereits integriert sind.
+
 **Bug-Reports, Fragen und Feature-Requests sind jederzeit gern gesehen!**
 
 ## Features
@@ -72,11 +74,12 @@ Dieses Skript ist mein Versuch, die Dateien von den Speicherkarten meiner DSLR e
 - Kein Support für andere Betriebssysteme als Windows *- Support ist aber irgendwann geplant*.
 
 ## To do
+- [ ] Evaluierung von Posh-RSJob (**Mithilfe erwünscht!**) (Hohe Priorität)
 - [x] GUI mit Tabs statt Dropdowns
 - [x] Option um Kopien-Verifikation zu deaktivieren, um so die Ausführung zu beschleunigen.
 - [x] Option um nur Robocopy zu verwenden und die originale Struktur mitzukopieren (also wie `robocopy InputPath OutputPath /MIR`)
 - [x] Mehr Unterordner-Stile
-- [ ] Option um Dateien nach Datum zu benennen
+- [x] Option um Dateien nach Datum zu benennen
 - [x] Bei nicht vorhandendn Ausgabe-Pfaden: Statt suche nach Überverzeichnis nun kontrollieren, ob Laufwerk existiert
 - [x] Multithreading der Get-FileHash Operationen
 - [x] Sonderzeichen wie eckige Klammern in Pfaden und Dateien erlauben (Alle Tests sagen, dass es funktioniert)

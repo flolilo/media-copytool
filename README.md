@@ -4,6 +4,8 @@
 PowerShell-based, GUI-including script that not only copies your files, but also verifies them afterwards. *Now with multithreading for faster processing!*
 This script is an attempt to create a tool to easily (and switfly) copies files from my DSLR's memory-cards to my computer. Its feature-set now beats most (if not all) professional RAW-converters (except of course in converting RAWs ;-) ) and the fun doesn't end here - there are even more features to come! And best of all: it not only works with your camera, but with all files that you have!
 
+#### Unlike v0.6.x, v0.7.x will mainly consist of bugfixes, as most features are already built-in.
+
 **Bug-reports, questions, and feature-requests would be very much appreciated!**
 
 ## Features
@@ -72,11 +74,12 @@ This script is an attempt to create a tool to easily (and switfly) copies files 
 - No support for non-Windows-OSs, *though I plan to achieve that someday*.
 
 ## To do
+- [ ] Evaluating the usefulness of Posh-RSJob (**Cuntributions are welcome!**) (high priority)
 - [x] GUI with tabs instead of dropdowns
 - [x] Option to deactivate copy-verification, thus enabling fast copying.
 - [x] Option to just Robocopy files over in their original subfolders (so like `robocopy InputPath OutputPath /MIR`)
 - [x] More subfolder-styles
-- [ ] Reaming files by date
+- [x] Reaming files by date
 - [x] Checking if the volume exists if output-path(s) are not found (instead of looking for the parent directory)
 - [x] Multithreading Get-FileHash operations
 - [x] Allowing special characters like brackets in Paths

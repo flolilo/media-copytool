@@ -9,7 +9,7 @@
         Now supports multithreading via Boe Prox's PoshRSJob-cmdlet (https://github.com/proxb/PoshRSJob)
 
     .NOTES
-        Version:        0.6.9 (Beta)
+        Version:        0.7.0 (Beta)
         Author:         flolilo
         Creation Date:  31.8.2017
         Legal stuff: This program is free software. It comes without any warranty, to the extent permitted by
@@ -68,7 +68,6 @@
             "yy.MM.dd"      -   E.g. 17.01.31
             "yyMMdd"        -   E.g. 170131
     .PARAMETER OutputFileStyle
-        TODO: To be implemented.
         Renaming-style for input-files. The date and time will be taken from the file's last edit time.
         Valid options:
             "unchanged"         -   Original file-name will be used.
@@ -165,7 +164,7 @@ param(
     [int]$CustomFormatsEnable=0,
     [array]$CustomFormats=("*"),
     [string]$OutputSubfolderStyle="yyyy-MM-dd",
-    # TODO: [string]$OutputFileStyle="unchanged",
+    [string]$OutputFileStyle="unchanged",
     [int]$UseHistFile=1,
     [string]$WriteHistFile="yes",
     [int]$InputSubfolderSearch=1,
@@ -173,7 +172,7 @@ param(
     [int]$CheckOutputDupli=0,
     [int]$VerifyCopies=1,
     [int]$ZipMirror=0,
-    [int]$UnmountInputDrive=1,
+    [int]$UnmountInputDrive=0,
     [int]$PreventStandby=1,
     [int]$ThreadCount=2,
     [int]$RememberInPath=0,
@@ -267,7 +266,7 @@ if($showparams -ne 0){
     Write-ColorOut "-CustomFormatsEnable`t=`t$CustomFormatsEnable" -ForegroundColor Cyan
     Write-ColorOut "-CustomFormats`t`t=`t$CustomFormats" -ForegroundColor Cyan
     Write-ColorOut "-OutputSubfolderStyle`t=`t$OutputSubfolderStyle" -ForegroundColor Cyan
-    # TODO: Write-ColorOut "-OutputFileStyle`t=`t$OutputFileStyle" -ForegroundColor Cyan
+    Write-ColorOut "-OutputFileStyle`t=`t$OutputFileStyle" -ForegroundColor Cyan
     Write-ColorOut "-UseHistFile`t`t=`t$UseHistFile" -ForegroundColor Cyan
     Write-ColorOut "-WriteHistFile`t`t=`t$WriteHistFile" -ForegroundColor Cyan
     Write-ColorOut "-InputSubfolderSearch`t=`t$InputSubfolderSearch" -ForegroundColor Cyan
@@ -496,7 +495,7 @@ Function Get-UserValues(){
                     continue
                 }
             }
-            <# TODO: $OutputFileStyle
+            # $OutputFileStyle
             while($true){
                 [array]$inter = @("unchanged","yyyy-MM-dd_HH-mm-ss","yyyyMMdd_HHmmss","yyyyMMddHHmmss","yy-MM-dd_HH-mm-ss","yyMMdd_HHmmss","yyMMddHHmmss","HH-mm-ss","HH_mm_ss","HHmmss")
                 [string]$script:OutputFileStyle = Read-Host "Which subfolder-style should be used in the output-path? Options: `"unchanged`",`"yyyy-MM-dd_HH-mm-ss`",`"yyyyMMdd_HHmmss`",`"yyyyMMddHHmmss`",`"yy-MM-dd_HH-mmss`",`"yyMMdd_HHmmss`",`"yyMMddHHmmss`",`"HH-mm-ss`",`"HH_mm_ss`",`"HHmmss`" (all w/o quotes). Be aware that this time, you must match the case!"
@@ -506,7 +505,7 @@ Function Get-UserValues(){
                     Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
                     continue
                 }
-            } #>
+            }
             # $UseHistFile
             while($true){
                 [int]$script:UseHistFile = Read-Host "Compare input-files with the history-file to prevent duplicates? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
@@ -694,7 +693,7 @@ Function Get-UserValues(){
                 elseif($script:WPFcomboBoxOutSubStyle.SelectedIndex -eq 8){"yy.MM.dd"}
                 elseif($script:WPFcomboBoxOutSubStyle.SelectedIndex -eq 9){"yyMMdd"}
             )
-            <# TODO: $OutputFileStyle
+            # $OutputFileStyle
             $script:OutputFileStyle = $(
                 if($script:WPFcomboBoxOutFileStyle.SelectedIndex -eq 0){"unchanged"}
                 elseif($script:WPFcomboBoxOutFileStyle.SelectedIndex -eq 1){"yyyy-MM-dd_HH-mm-ss"}
@@ -706,7 +705,7 @@ Function Get-UserValues(){
                 elseif($script:WPFcomboBoxOutFileStyle.SelectedIndex -eq 7){"HH-mm-ss"}
                 elseif($script:WPFcomboBoxOutFileStyle.SelectedIndex -eq 8){"HH_mm_ss"}
                 elseif($script:WPFcomboBoxOutFileStyle.SelectedIndex -eq 9){"HHmmss"}
-            ) #>
+            )
             # $UseHistFile
             $script:UseHistFile = $(
                 if($script:WPFcheckBoxUseHistFile.IsChecked -eq $true){1}
@@ -782,8 +781,9 @@ Function Get-UserValues(){
                 return $false
             }
             # $PresetFormats
-            [array]$inter=@("Can","Nik","Son","Jpeg","Jpg","Mov","Aud")
-            if($script:PresetFormats.Length -gt 0 -and $script:PresetFormats -notin $inter){
+            [array]$inter = @("Can","Nik","Son","Jpeg","Jpg","Mov","Aud")
+            if($script:PresetFormats.Length -gt 0 -and $(Compare-Object $inter $script:PresetFormats | Where-Object {$_.sideindicator -eq "=>"}).count -ne 0){
+                Write-ColorOut "$script:PresetFormats"
                 Write-ColorOut "Invalid choice of -PresetFormats." -ForegroundColor Red
                 return $false
             }
@@ -793,17 +793,17 @@ Function Get-UserValues(){
                 return $false
             }
             # $OutputSubfolderStyle
-            [array]$inter=@("none","unchanged","yyyy-mm-dd","yyyy_mm_dd","yyyy.mm.dd","yyyymmdd","yy-mm-dd","yy_mm_dd","yy.mm.dd","yymmdd")
+            [array]$inter = @("none","unchanged","yyyy-mm-dd","yyyy_mm_dd","yyyy.mm.dd","yyyymmdd","yy-mm-dd","yy_mm_dd","yy.mm.dd","yymmdd")
             if($script:OutputSubfolderStyle -notin $inter -or $script:OutputSubfolderStyle.Length -gt $inter[1].Length){
                 Write-ColorOut "Invalid choice of -OutputSubfolderStyle." -ForegroundColor Red
                 return $false
             }
-            <# TODO: $OutputFileStyle
+            # $OutputFileStyle
             [array]$inter = @("unchanged","yyyy-MM-dd_HH-mmss","yyyyMMdd_HHmmss","yyyyMMddHHmmss","yy-MM-dd_HH-mmss","yyMMdd_HHmmss","yyMMddHHmmss","HH-mm-ss","HH_mm_ss","HHmmss")
             if($script:OutputFileStyle -cnotin $inter -or $script:OutputFileStyle.Length -gt $inter[1].Length){
                 Write-ColorOut "Invalid choice of -OutputFileStyle." -ForegroundColor Red
                 return $false
-            } #>
+            }
             # $UseHistFile
             if($script:UseHistFile -notin (0..1)){
                 Write-ColorOut "Invalid choice of -UseHistFile." -ForegroundColor Red
@@ -1006,7 +1006,7 @@ Function Get-UserValues(){
         Write-ColorOut "CustomFormatsEnable:`t$script:CustomFormatsEnable"
         Write-ColorOut "allChosenFormats:`t$script:allChosenFormats"
         Write-ColorOut "OutputSubfolderStyle:`t$script:OutputSubfolderStyle"
-        # TODO: Write-ColorOut "OutputFileStyle:`t$script:OutputFileStyle"
+        Write-ColorOut "OutputFileStyle:`t$script:OutputFileStyle"
         Write-ColorOut "UseHistFile:`t`t$script:UseHistFile"
         Write-ColorOut "WriteHistFile:`t`t$script:WriteHistFile"
         Write-ColorOut "InputSubfolderSearch:`t$script:InputSubfolderSearch"
@@ -1014,7 +1014,7 @@ Function Get-UserValues(){
         Write-ColorOut "CheckOutputDupli:`t$script:CheckOutputDupli"
         Write-ColorOut "VerifyCopies:`t`t$script:VerifyCopies"
         Write-ColorOut "ZipMirror:`t`t$script:ZipMirror"
-        Write-ColorOut "UnmountInputDrive:`t`t$script:UnmountInputDrive"
+        Write-ColorOut "UnmountInputDrive:`t$script:UnmountInputDrive"
         Write-ColorOut "PreventStandby:`t`t$script:PreventStandby"
         Write-ColorOut "ThreadCount:`t`t$script:ThreadCount"
     }
@@ -1073,7 +1073,7 @@ Function Start-Remembering(){
         $lines_new[$($script:paramline + 8)] = '    [array]$CustomFormats=(' + "$inter" + '),'
         # $OutputSubfolderStyle
         $lines_new[$($script:paramline + 9)] = '    [string]$OutputSubfolderStyle="' + "$script:OutputSubfolderStyle" + '",'
-        <# TODO: $OutputFileStyle
+        # $OutputFileStyle
         $lines_new[$($script:paramline + 10)] = '    [string]$OutputFileStyle="' + "$script:OutputFileStyle" + '",' #>
         # $UseHistFile
         $lines_new[$($script:paramline + 11)] = '    [int]$UseHistFile=' + "$script:UseHistFile" + ','
@@ -1195,14 +1195,14 @@ Function Start-FileSearchAndCheck(){
                 fullpath = $_.FullName
                 inpath = (Split-Path $_.FullName -Parent)
                 inname = $_.Name
-                basename = $_.BaseName
+                basename = $(if($script:OutputFileStyle -eq "unchanged"){$_.BaseName}else{$_.LastWriteTime.ToString("$script:OutputFileStyle")})
                 extension = $_.Extension
                 size = $_.Length
                 date = $_.LastWriteTime.ToString("yyyy-MM-dd_HH-mm-ss")
                 sub_date = $(if($script:OutputSubfolderStyle -eq "none"){""}elseif($script:OutputSubfolderStyle -eq "unchanged"){$($(Split-Path -Parent $_.FullName).Replace($script:InputPath,""))}else{"\$($_.LastWriteTime.ToString("$script:OutputSubfolderStyle"))"})
                 outpath = "ZYX"
                 outname = $_.Name
-                outbasename = $_.BaseName
+                outbasename = $(if($script:OutputFileStyle -eq "unchanged"){$_.BaseName}else{$_.LastWriteTime.ToString("$script:OutputFileStyle")})
                 hash = "ZYX"
                 tocopy = 1
             }
@@ -1386,17 +1386,18 @@ Function Start-OverwriteProtection(){
     [array]$allpaths = @()
 
     for($i=0; $i -lt $InFiles.fullpath.Length; $i++){
-        if($InFiles.tocopy -eq 1){
+        if($InFiles[$i].tocopy -eq 1){
             if($sw.Elapsed.TotalMilliseconds -ge 500 -or $i -eq 0){
-                Write-Progress -Activity "Calculating hashes for files to copy..." -PercentComplete $($i / $InFiles.Length * 100) -Status "File # $($i + 1) / $($InFiles.fullpath.Length) - $($InFiles[$i].name)"
+                Write-Progress -Activity "Prevent overwriting existing files..." -PercentComplete $($i / $InFiles.Length * 100) -Status "File # $($i + 1) / $($InFiles.fullpath.Length) - $($InFiles[$i].name)"
                 $sw.Reset()
                 $sw.Start()
             }
 
             # create outpath:
-            $InFiles[$i].outpath = "$OutPath$($InFiles[$i].sub_date)"
-            $InFiles[$i].outpath = $InFiles[$i].outpath.Replace("\\","\").Replace("\\","\")
+            $InFiles[$i].outpath = $("$OutPath$($InFiles[$i].sub_date)").Replace("\\","\").Replace("\\","\")
+            # $InFiles[$i].outpath = $InFiles[$i].outpath.Replace("\\","\").Replace("\\","\")
             $InFiles[$i].outbasename = $InFiles[$i].basename
+            $InFiles[$i].outname = "$($InFiles[$i].basename)$($InFiles[$i].extension)"
             # check for files with same name from input:
             [int]$j = 1
             [int]$k = 1
@@ -1468,9 +1469,9 @@ Function Start-FileCopy(){
     [string]$xc_suffix = " /Q /J /-Y"
 
     for($i=0; $i -lt $InFiles.fullpath.length; $i++){
-        if($InFiles.tocopy -eq 1){
+        if($InFiles[$i].tocopy -eq 1){
             # check if files is qualified for robocopy (out-name = in-name):
-            if($InFiles[$i].fullpath.contains($InFiles[$i].outname)){
+            if($InFiles[$i].outname -eq $(Split-Path -Leaf -Path $InFiles[$i].fullpath)){
                 if($rc_inter_inpath.Length -eq 0 -or $rc_inter_outpath.Length -eq 0 -or $rc_inter_files.Length -eq 0){
                     $rc_inter_inpath = "`"$($InFiles[$i].inpath)`""
                     $rc_inter_outpath = "`"$($InFiles[$i].outpath)`""
@@ -1603,8 +1604,14 @@ Function Start-FileVerification(){
     for($i=0; $i -lt $InFiles.tocopy.Length; $i++){
         if($InFiles[$i].tocopy -eq 1){
             $unverified++
+            if($script:debug -ne 0){
+                Write-ColorOut $InFiles[$i].outname -ForegroundColor Red
+            }
         }else{
             $verified++
+            if($script:debug -ne 0){
+                Write-ColorOut $InFiles[$i].outname -ForegroundColor Green
+            }
         }
     }
     $script:resultvalues.unverified = $unverified
@@ -1653,7 +1660,7 @@ Function Set-HistFile(){
 # DEFINITION: Starts all the things.
 Function Start-Everything(){
     Write-ColorOut "`r`n`r`n            Welcome to flolilo's Media-Copytool!            " -ForegroundColor DarkCyan -BackgroundColor Gray
-    Write-ColorOut "                 v0.6.9 (Beta) - 31.8.2017                  `r`n" -ForegroundColor DarkCyan -BackgroundColor Gray
+    Write-ColorOut "                 v0.7.0 (Beta) - 31.8.2017                  `r`n" -ForegroundColor DarkCyan -BackgroundColor Gray
 
     $script:timer = [diagnostics.stopwatch]::StartNew()
     while($true){
@@ -1893,19 +1900,18 @@ if($GUI_CLI_Direct -eq "GUI"){
         elseif("yy.mm.dd" -eq $OutputSubfolderStyle){8}
         elseif("yymmdd" -eq $OutputSubfolderStyle){9}
     )
-    <# TODO:
     $WPFcomboBoxOutFileStyle.SelectedIndex = $(
-        if("Unchanged" -eq $OutFileStyle){0}
-        elseif("yyyy-MM-dd_HH-mm-ss" -eq $OutFileStyle){1}
-        elseif("yyyyMMdd_HHmmss" -eq $OutFileStyle){2}
-        elseif("yyyyMMddHHmmss" -eq $OutFileStyle){3}
-        elseif("yy-MM-dd_HH-mmss" -eq $OutFileStyle){4}
-        elseif("yyMMdd_HHmmss" -eq $OutFileStyle){5}
-        elseif("yyMMddHHmmss" -eq $OutFileStyle){6}
-        elseif("HH-mm-ss" -eq $OutFileStyle){7}
-        elseif("HH_mm_ss" -eq $OutFileStyle){8}
-        elseif("HHmmss" -eq $OutFileStyle){9}
-    ) #>
+        if("Unchanged" -eq $OutputFileStyle){0}
+        elseif("yyyy-MM-dd_HH-mm-ss" -eq $OutputFileStyle){1}
+        elseif("yyyyMMdd_HHmmss" -eq $OutputFileStyle){2}
+        elseif("yyyyMMddHHmmss" -eq $OutputFileStyle){3}
+        elseif("yy-MM-dd_HH-mmss" -eq $OutputFileStyle){4}
+        elseif("yyMMdd_HHmmss" -eq $OutputFileStyle){5}
+        elseif("yyMMddHHmmss" -eq $OutputFileStyle){6}
+        elseif("HH-mm-ss" -eq $OutputFileStyle){7}
+        elseif("HH_mm_ss" -eq $OutputFileStyle){8}
+        elseif("HHmmss" -eq $OutputFileStyle){9}
+    )
     $WPFcheckBoxUseHistFile.IsChecked = $UseHistFile
     $WPFcomboBoxWriteHistFile.SelectedIndex = $(
         if("yes" -eq $OutputSubfolderStyle){0}
