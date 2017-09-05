@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 (The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html). )
 
-## 0.7.0 - 2017-09-05
+## 0.7.0-MT - 2017-09-05
 ### Changed
 - Bugfix: In `-GUI_CLI_Direct "direct"`, `-PresetFormats` wouldn't work.
 - Bugfix: If >0 filed were found corrupt/missing, all files were re-copied.

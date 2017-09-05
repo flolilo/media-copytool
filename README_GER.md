@@ -1,4 +1,4 @@
-# media-copytool
+# media-copytool - multi-threaded (MT)
 :uk: [Here's the path to the English readme file](https://github.com/flolilo/media-copytool/blob/master/README.md). :uk:
 
 PowerShell-basiertes Skript mit GUI, das Datien nicht nur kopiert, sondern auch verifiziert. *Jetzt mit Multithreading für höhere Geschwindigkeiten!*
@@ -28,7 +28,7 @@ Dieses Skript ist mein Versuch, die Dateien von den Speicherkarten meiner DSLR e
 - [PowerShell >= Version 3](https://www.microsoft.com/en-us/download/details.aspx?id=50395)
 - Für die graphische Oberfläche (GUI): [.NET Framework >= 4.6](https://www.microsoft.com/de-DE/download/details.aspx?id=55170)
 - Seit v0.6: [PoshRSJob](https://github.com/proxb/PoshRSJob); bisher ersetzt es nur preventsleep.ps1, aber in Zukunft werden damit auch die Hash-Berechnungen beschleunigt werden.
-    - Die alte Version ohne PoshRSJob ist in der [0.5-branch](https://github.com/flolilo/media-copytool/archive/0.5---without-RSJob.zip) und bekommt Updates, solange der Code dem der master-branch ähnlich genug ist. (Kein Versprechen!)
+    - Die alte Version ohne PoshRSJob ist in der [ST-branch](https://github.com/flolilo/media-copytool/archive/0.5---without-RSJob.zip) und bekommt Updates, solange der Code dem der master-branch ähnlich genug ist. (Kein Versprechen!)
     - Um PoshRSJob zu installieren: PowerShell als Administrator starten und `Install-Module -Name PoshRSJob` eingeben.
 - Für die Nutzung von `-ZipMirror`(.zip-Archiv im zweiten Ausgabepfad) wird [7-Zip](http://www.7-zip.org/) benötigt - das Skript durchsucht seinen eigenenPfad nach `7z.exe`, wenn sie dort nicht gefunden wird sucht es in den Standard-Installationspfaden (32bit und 64 bit) danach - eine vorhandene Installation genügt also.
 

@@ -1,4 +1,4 @@
-# media-copytool
+# media-copytool - multi-threaded (MT)
 :de: [Hier geht es zur deutschen Readme-Datei](https://github.com/flolilo/media-copytool/blob/master/README_GER.md). :de:
 
 PowerShell-based, GUI-including script that not only copies your files, but also verifies them afterwards. *Now with multithreading for faster processing!*
@@ -28,7 +28,7 @@ This script is an attempt to create a tool to easily (and switfly) copies files 
 - [PowerShell >= Version 3](https://www.microsoft.com/en-us/download/details.aspx?id=50395)
 - For the GUI: [.NET Framework >= 4.6](https://www.microsoft.com/en-us/download/details.aspx?id=55170)
 - Since v0.6: [PoshRSJob](https://github.com/proxb/PoshRSJob); as of now, it's only used for replacing preventsleep.ps1, but in future releases, it will also speed up Hash-operations.
-    - You can still use the old version - it's in the [0.5-branch](https://github.com/flolilo/media-copytool/archive/0.5---without-RSJob.zip) and will get important bugfixes as long as the code has any similiarity with the master-branch. (No promise, just an estimate!)
+    - You can still use the old version - it's in the [ST-branch](https://github.com/flolilo/media-copytool/archive/0.5---without-RSJob.zip) and will get important bugfixes as long as the code has any similiarity with the master-branch. (No promise, just an estimate!)
     - To install PoshRSJob, open PowerShell as administrator and run `Install-Module -Name PoshRSJob`.
 - To use `-ZipMirror` (to create an .zip-archive in the additional output-path), [7-Zip](http://www.7-zip.org/) is needed. The script will look for `7z.exe` in its own path, but also in the usual installation folders of 7-Zip (both 32bit and 64bit). So a regular installation of 7-Zip will do.
 
