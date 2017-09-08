@@ -9,9 +9,9 @@
         Now supports multithreading via Boe Prox's PoshRSJob-cmdlet (https://github.com/proxb/PoshRSJob)
 
     .NOTES
-        Version:        0.7.0-MT (Beta)
+        Version:        0.7.1-MT (Beta)
         Author:         flolilo
-        Creation Date:  5.9.2017
+        Creation Date:  2017-9-8
         Legal stuff: This program is free software. It comes without any warranty, to the extent permitted by
         applicable law. Most of the script was written by myself (or heavily modified by me when searching for solutions
         on the WWW). However, some parts are copies or modifications of very genuine code - see
@@ -1429,7 +1429,7 @@ Function Start-OverwriteProtection(){
                 }
             }
             if($script:debug -ne 0){
-                Write-ColorOut "$($InFiles[$i].outpath)\$($InFiles[$i].outname)"
+                Write-ColorOut "$($InFiles[$i].outpath.Replace($OutPath,"."))\$($InFiles[$i].outname)`t`t" -NoNewLine -ForegroundColor Gray
             }
         }
     }
@@ -1441,8 +1441,8 @@ Function Start-OverwriteProtection(){
 Function Start-FileCopy(){
     param(
         [array]$InFiles,
-        [string]$InPath="->In<-",
-        [string]$OutPath="->Out<-"
+        [string]$InPath = "->In<-",
+        [string]$OutPath = "->Out<-"
     )
 
     if($script:OutputSubfolderStyle -eq "none"){
@@ -1460,7 +1460,7 @@ Function Start-FileCopy(){
 
     # setting up robocopy:
     [array]$rc_command = @()
-    [string]$rc_suffix = " /R:5 /W:15 /MT:4 /XO /XC /XN /NJH /NC /J"
+    [string]$rc_suffix = "/R:5 /W:15 /MT:4 /XO /XC /XN /NJH /NC /J"
     [string]$rc_inter_inpath = ""
     [string]$rc_inter_outpath = ""
     [string]$rc_inter_files = ""
@@ -1476,14 +1476,13 @@ Function Start-FileCopy(){
                     $rc_inter_inpath = "`"$($InFiles[$i].inpath)`""
                     $rc_inter_outpath = "`"$($InFiles[$i].outpath)`""
                     $rc_inter_files = "`"$($InFiles[$i].outname)`" "
-                }
-                # if in-path and out-path stay the same (between files):
-                if("`"$($InFiles[$i].inpath)`"" -eq $rc_inter_inpath -and "`"$($InFiles[$i].outpath)`"" -eq $rc_inter_outpath){
+                # if in-path and out-path stay the same (between files)...
+                }elseif("`"$($InFiles[$i].inpath)`"" -eq $rc_inter_inpath -and "`"$($InFiles[$i].outpath)`"" -eq $rc_inter_outpath){
                     # if command-length is within boundary:
                     if($($rc_inter_inpath.Length + $rc_inter_outpath.Length + $rc_inter_files.Length + $InFiles[$i].outname.Length) -lt 8100){
                         $rc_inter_files += "`"$($InFiles[$i].outname)`" "
                     }else{
-                        $rc_command += "`"$rc_inter_inpath`" `"$rc_inter_outpath`" $rc_inter_files $rc_suffix"
+                        $rc_command += "$rc_inter_inpath $rc_inter_outpath $rc_inter_files $rc_suffix"
                         $rc_inter_files = "`"$($InFiles[$i].outname)`" "
                     }
                 # if in-path and out-path DON'T stay the same (between files):
@@ -1493,6 +1492,7 @@ Function Start-FileCopy(){
                     $rc_inter_outpath = "`"$($InFiles[$i].outpath)`""
                     $rc_inter_files = "`"$($InFiles[$i].outname)`" "
                 }
+
             # if NOT qualified for robocopy:
             }else{
                 $xc_command += "`"$($InFiles[$i].fullpath)`" `"$($InFiles[$i].outpath)\$($InFiles[$i].outname)*`" $xc_suffix"
@@ -1509,9 +1509,9 @@ Function Start-FileCopy(){
     
     if($script:debug -ne 0){
         Write-ColorOut "`r`nROBOCOPY:" -ForeGroundColor Yellow
-        foreach($i in $rc_command){Write-ColorOut "`'$i`'" -ForeGroundColor Gray}
+        foreach($i in $rc_command){Write-ColorOut "`'$i`'`r`r" -ForeGroundColor Gray; [System.IO.File]::AppendAllText("D:\robocopy_commands.txt", $i)}
         Write-ColorOut "`r`nXCOPY:" -ForeGroundColor Yellow
-        foreach($i in $xc_command){Write-ColorOut "`'$i`'" -ForeGroundColor Gray}
+        foreach($i in $xc_command){Write-ColorOut "`'$i`'`r`n" -ForeGroundColor Gray; [System.IO.File]::AppendAllText("D:\xcopy_commands.txt", $i)}
         Invoke-Pause
     }
 
@@ -1661,7 +1661,7 @@ Function Set-HistFile(){
 Function Start-Everything(){
     # Clear-Host
     Write-ColorOut "`r`n`r`n            Welcome to flolilo's Media-Copytool!            " -ForegroundColor DarkCyan -BackgroundColor Gray
-    Write-ColorOut "              v0.7.0-MT (Beta) - 5.9.2017                  `r`n" -ForegroundColor DarkCyan -BackgroundColor Gray
+    Write-ColorOut "              v0.7.1-MT (Beta) - 5.9.2017                  `r`n" -ForegroundColor DarkCyan -BackgroundColor Gray
 
     $script:timer = [diagnostics.stopwatch]::StartNew()
     while($true){

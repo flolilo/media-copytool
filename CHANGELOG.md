@@ -3,6 +3,11 @@ All notable changes to this project will be documented in this file.
 
 (The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html). )
 
+## 0.7.1-MT - 2017-09-08
+### Changed
+- Bugfix: If both `-OutputSubfolderStyle` and `-OutputFileStyle` are set to `unchanged`, Robocopy would not copy all files correctly at the first attempt.
+
+
 ## 0.7.0-MT - 2017-09-05
 ### Changed
 - Bugfix: In `-GUI_CLI_Direct "direct"`, `-PresetFormats` wouldn't work.
@@ -11,8 +16,6 @@ All notable changes to this project will be documented in this file.
 ### Added
 - `-OutputFileStyle`-Parameter and -Function
 
-### Removed
-- Nothing.
 
 ## 0.6.9 - 2017-09-02
 ### Changed
@@ -22,29 +25,15 @@ All notable changes to this project will be documented in this file.
 - `-ZipArchive`-Parameter and -Function
 - Failsafe for GUI.
 
-### Removed
-- As usual: nothing.
 
 ## 0.6.8 - 2017-08-31
-### Changed
-- Nothing.
-
 ### Added
 - Option `unchanged` to `-OutputSubfolderStyle` - works like Robocopy's `/MIR`.
 
-### Removed
-- Nothing.
-
 
 ## 0.6.7 - 2017-08-31
-### Changed
-- Nothing.
-
 ### Added
 - `-VerifyCopies` - now verifying copied files is optional.
-
-### Removed
-- Nothing.
 
 
 ## 0.6.6 - 2017-08-23
@@ -61,35 +50,20 @@ All notable changes to this project will be documented in this file.
 
 
 ## 0.6.5 - 2017-08-21
-### Changed
-- Nothing.
-
 ### Added
 - Rough structure for 7zip (should come with 0.7.0, which should be the next release.)
 - Option to remove the input-drive safely after copying and verificating to (first) output-path. Limition: only works on some drives, so please double-check if it worked.
-
-### Removed
-- Nothing.
 
 
 ## 0.6.4 - 2017-08-21
 ### Changed
 - Changed test for output-paths in function `Get-UserValues`: `Split-Path -Qualifier` enables to create new directories as long as they point to a valid drive. Thanks to https://stackoverflow.com/a/45596690/8013879 !
 
-### Added
-- Nothing.
-
-### Removed
-- Nothing.
-
 
 ## 0.6.3 - 2017-08-21
 ### Changed
 - Changed most `-Path`s to `-LiteralPath`s - therefore, brackets should work now in paths.
 - Fixed encoding issues for good: `Start-Remembering` now works, too. 
-
-### Added
-- Nothing.
 
 ### Removed
 - All special character detectors (because they now should work).
@@ -119,9 +93,6 @@ All notable changes to this project will be documented in this file.
 - Sub-function in function `Get-UserValues` to remove trailing backslashes in the path-variables' values.
 - `$OutputEncoding` is now set to UTF8 (after parameter-block), so hopefully there won't be any more errors because of wrong encodings in the future.
 
-### Removed
-- Nothing.
-
 
 ## 0.6.0 - 2017-8-17
 ### Changed
@@ -140,12 +111,6 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - Fixed endless loop when getting the history-file.
 - Sped up comparison with history-file (especially when it has many entries) by reversing the order of comparison (meaning that the latest files will be compared first).
-
-### Added
-- Nothing.
-
-### Removed
-- Nothing.
 
 
 ## 0.5 - 2017-07-28
