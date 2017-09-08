@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - Bugfix: in `-GUI_CLI_direct direct`, `Get-UserValues` would always return `$false`.
 - Bugfix: all `for`-loops should now work with single files, too.
+- Bugfix: Mirror-Archive would not copy all files.
 
 ### Added
 - Option to show found input-files in `-debug >= 1`
