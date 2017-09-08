@@ -1566,10 +1566,10 @@ Function Start-7zip(){
             $inter_files += "`"$($InFiles[$k].fullpath)`" "
         }else{
             $7z_command += "$7z_prefix $7z_workdir $inter_files"
-            $inter_files = ""
+            $inter_files = "`"$($InFiles[$k].fullpath)`" "
         }
     }
-    if($7z_command.Length -lt 1){
+    if($inter_files -notin $7z_command){
         $7z_command += "$7z_prefix $7z_workdir $inter_files"
     }
 
