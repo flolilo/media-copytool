@@ -3,6 +3,15 @@ All notable changes to this project will be documented in this file.
 
 (The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html). )
 
+## 0.7.2-MT - 2017-09-08
+### Changed
+- Bugfix: in `-GUI_CLI_direct direct`, `Get-UserValues` would always return `$false`.
+- Bugfix: all `for`-loops should now work with single files, too.
+
+### Added
+- Option to show found input-files in `-debug >= 1`
+
+
 ## 0.7.1-MT - 2017-09-08
 ### Changed
 - Bugfix: If both `-OutputSubfolderStyle` and `-OutputFileStyle` are set to `unchanged`, Robocopy would not copy all files correctly at the first attempt.

@@ -9,7 +9,7 @@
         Now supports multithreading via Boe Prox's PoshRSJob-cmdlet (https://github.com/proxb/PoshRSJob)
 
     .NOTES
-        Version:        0.7.1-MT (Beta)
+        Version:        0.7.2-MT (Beta)
         Author:         flolilo
         Creation Date:  2017-9-8
         Legal stuff: This program is free software. It comes without any warranty, to the extent permitted by
@@ -794,7 +794,7 @@ Function Get-UserValues(){
             }
             # $OutputSubfolderStyle
             [array]$inter = @("none","unchanged","yyyy-mm-dd","yyyy_mm_dd","yyyy.mm.dd","yyyymmdd","yy-mm-dd","yy_mm_dd","yy.mm.dd","yymmdd")
-            if($script:OutputSubfolderStyle -notin $inter -or $script:OutputSubfolderStyle.Length -gt $inter[1].Length){
+            if($script:OutputSubfolderStyle -inotin $inter){
                 Write-ColorOut "Invalid choice of -OutputSubfolderStyle." -ForegroundColor Red
                 return $false
             }
@@ -880,7 +880,7 @@ Function Get-UserValues(){
         # checking paths for GUI and direct:
         if($script:GUI_CLI_Direct -ne "CLI"){
             # $InputPath
-            if($script:InputPath -lt 2 -or (Test-Path -LiteralPath $script:InputPath -PathType Container) -eq $false){
+            if($script:InputPath.Length -lt 2 -or (Test-Path -LiteralPath $script:InputPath -PathType Container) -eq $false){
                 Write-ColorOut "`r`nInput-path $script:InputPath could not be found.`r`n" -ForegroundColor Red
                 return $false
             }
@@ -1129,7 +1129,7 @@ Function Get-HistFile(){
         $files_history
         if($script:debug -ne 0){
             Write-ColorOut "Found values: $($files_history.Length)" -ForegroundColor Yellow
-            Write-ColorOut "Name`tDate`tSize`tHash"
+            Write-ColorOut "Name`t`tDate`t`tSize`t`tHash"
             for($i = 0; $i -lt $files_history.Length; $i++){
                 Write-ColorOut "$($files_history[$i].name)`t$($files_history[$i].date)`t$($files_history[$i].size)`t$($files_history[$i].hash)" -ForegroundColor Gray
             }
@@ -1174,7 +1174,7 @@ Function Start-FileSearchAndCheck(){
     Write-ColorOut "-  Finding files & checking for duplicates." -ForegroundColor Cyan
 
     # pre-defining variables:
-    $files_in = @()
+    [array]$files_in = @()
     $script:files_duplicheck = @()
     $script:resultvalues = @{}
 
@@ -1209,6 +1209,14 @@ Function Start-FileSearchAndCheck(){
         }
     }
 
+    if($debug -ne 0){
+        if((Read-Host "Show all found files? `"1`" for `"yes`"") -eq 1){
+            for($i=0; $i -lt $files_in.Length; $i++){
+                Write-ColorOut "$($files_in[$i].fullpath)`t$($files_in[$i].tocopy)"
+            }
+        }
+    }
+
     if($script:DupliCompareHashes -ne 0 -or $script:CheckOutputDupli -ne 0){
         $files_in | Start-RSJob -Name "GetHash" -throttle $script:ThreadCount -ScriptBlock {
             $_.hash = Get-FileHash -LiteralPath $_.fullpath -Algorithm SHA1 | Select-Object -ExpandProperty Hash
@@ -1218,22 +1226,22 @@ Function Start-FileSearchAndCheck(){
 
     $sw.Reset()
 
-    Write-ColorOut "`r`n`r`nTotal in-files:`t$($files_in.fullpath.Length)`r`n" -ForegroundColor Yellow
-    $script:resultvalues.ingoing = $files_in.fullpath.Length
+    Write-ColorOut "`r`n`r`nTotal in-files:`t$($files_in.Length)`r`n" -ForegroundColor Yellow
+    $script:resultvalues.ingoing = $files_in.Length
     Invoke-Pause
 
     # dupli-check via history-file:
     [array]$dupliindex_hist = @()
     if($script:UseHistFile -eq 1){
         # Comparing Files between History-File and Input-Folder via history-file:
-        for($i = 0; $i -lt $files_in.fullpath.Length; $i++){
+        for($i = 0; $i -lt $files_in.Length; $i++){
             if($sw.Elapsed.TotalMilliseconds -ge 500 -or $i -eq 0){
-                Write-Progress -Activity "Comparing to already copied files (history-file).." -PercentComplete $($i / $files_in.fullpath.Length * 100) -Status "File # $($i + 1) / $($files_in.fullpath.Length) - $($files_in[$i].name)"
+                Write-Progress -Activity "Comparing to already copied files (history-file).." -PercentComplete $($i / $files_in.Length * 100) -Status "File # $($i + 1) / $($files_in.Length) - $($files_in[$i].name)"
                 $sw.Reset()
                 $sw.Start()
             }
             
-            $j = $HistFiles.name.Length
+            $j = $HistFiles.Length
             while($true){
                 # check resemblance between in_files and hist_files:
                 if($files_in[$i].inname -eq $HistFiles[$j].name -and $files_in[$i].date -eq $HistFiles[$j].date -and $files_in[$i].size -eq $HistFiles[$j].size -and ($script:DupliCompareHashes -eq 0 -or ($script:DupliCompareHashes -eq 1 -and $files_in[$i].hash -eq $HistFiles[$j].Hash))){
@@ -1256,8 +1264,8 @@ Function Start-FileSearchAndCheck(){
         $sw.Reset()
         if($script:debug -ne 0){
             Write-ColorOut "`r`n`r`nFiles to skip / process (after history-check):" -ForegroundColor Yellow
-            for($i = 0; $i -lt $files_in.fullpath.Length; $i++){
-                [string]$inter = ($($files_in.fullpath[$i]).Replace($InPath,'.'))
+            for($i = 0; $i -lt $files_in.Length; $i++){
+                [string]$inter = ($($files_in[$i].fullpath).Replace($InPath,'.'))
                 if($i -notin $dupliindex_hist){
                     Write-ColorOut "Copy:`t$inter" -ForegroundColor Gray
                 }else{
@@ -1269,9 +1277,9 @@ Function Start-FileSearchAndCheck(){
         Write-ColorOut "`r`nNo history-file -> no files to skip." -ForegroundColor Yellow
     }
 
-    Write-ColorOut "`r`n`r`nTotal in-files:`t$($files_in.name.Length)" -ForegroundColor Gray
+    Write-ColorOut "`r`n`r`nTotal in-files:`t$($files_in.Length)" -ForegroundColor Gray
     Write-ColorOut "Files to skip:`t$($dupliindex_hist.Length)" -ForegroundColor DarkGreen
-    Write-ColorOut "Files left after history-check:`t$($files_in.name.Length - $dupliindex_hist.Length)" -ForegroundColor Yellow
+    Write-ColorOut "Files left after history-check:`t$($files_in.Length - $dupliindex_hist.Length)" -ForegroundColor Yellow
     $script:resultvalues.duplihist = $dupliindex_hist.Length
     Invoke-Pause
 
@@ -1299,11 +1307,11 @@ Function Start-FileSearchAndCheck(){
             }
         }
         $sw.Reset()
-        if($script:files_duplicheck.fullpath.Length -ne 0){
-            for($i = 0; $i -lt $files_in.fullpath.Length; $i++){
+        if($script:files_duplicheck.Length -ne 0){
+            for($i = 0; $i -lt $files_in.Length; $i++){
                 if($files_in[$i].tocopy -eq 1){
                     if($sw.Elapsed.TotalMilliseconds -ge 500 -or $i -eq 0){
-                        Write-Progress -Activity "Comparing to files in out-path..." -PercentComplete $($i / $($files_in.name.Length - $dupliindex_hist.Length) * 100) -Status "File # $($i + 1) / $($files_in.fullpath.Length) - $($files_in[$i].name)"
+                        Write-Progress -Activity "Comparing to files in out-path..." -PercentComplete $($i / $($files_in.Length - $dupliindex_hist.Length) * 100) -Status "File # $($i + 1) / $($files_in.Length) - $($files_in[$i].name)"
                         $sw.Reset()
                         $sw.Start()
                     }
@@ -1319,7 +1327,7 @@ Function Start-FileSearchAndCheck(){
                                 $files_in[$i].tocopy = 0
                                 break
                             }else{
-                                if($j -ge $script:files_duplicheck.fullpath.Length){
+                                if($j -ge $script:files_duplicheck.Length){
                                     break
                                 }
                                 $j++
@@ -1338,7 +1346,7 @@ Function Start-FileSearchAndCheck(){
 
             if($script:debug -ne 0){
                 Write-ColorOut "`r`n`r`nFiles to skip / process (after out-path-check):" -ForegroundColor Yellow
-                for($i = 0; $i -lt $script:files_duplicheck.fullpath.Length; $i++){
+                for($i = 0; $i -lt $script:files_duplicheck.Length; $i++){
                     [string]$inter = ($($script:files_duplicheck.fullpath[$i]).Replace($InPath,'.'))
                     if($i -notin $dupliindex_out){
                         Write-ColorOut "Copy:`t$inter" -ForegroundColor Gray
@@ -1351,9 +1359,9 @@ Function Start-FileSearchAndCheck(){
             Write-ColorOut "No files in $OutPath - skipping additional verification." -ForegroundColor Magenta
         }
     }
-    Write-ColorOut "`r`n`r`nTotal in-files:`t$($files_in.name.Length)" -ForegroundColor Gray
+    Write-ColorOut "`r`n`r`nTotal in-files:`t$($files_in.Length)" -ForegroundColor Gray
     Write-ColorOut "Files to skip:`t$($dupliindex_hist.Length + $dupliindex_out.Length)" -ForegroundColor DarkGreen
-    Write-ColorOut "Files left after history-check and/or output-check:`t$($files_in.name.Length - $dupliindex_hist.Length - $dupliindex_out.Length)" -ForegroundColor Yellow
+    Write-ColorOut "Files left after history-check and/or output-check:`t$($files_in.Length - $dupliindex_hist.Length - $dupliindex_out.Length)" -ForegroundColor Yellow
     $script:resultvalues.dupliout = $dupliindex_out.Length
     Invoke-Pause
 
@@ -1369,7 +1377,7 @@ Function Start-FileSearchAndCheck(){
         Get-RSJob -Name "GetHash" | Remove-RSJob
     }
 
-    $script:resultvalues.copyfiles = $files_in.fullpath.Length
+    $script:resultvalues.copyfiles = $files_in.Length
     return $files_in
 }
 
@@ -1385,17 +1393,16 @@ Function Start-OverwriteProtection(){
 
     [array]$allpaths = @()
 
-    for($i=0; $i -lt $InFiles.fullpath.Length; $i++){
+    for($i=0; $i -lt $InFiles.Length; $i++){
         if($InFiles[$i].tocopy -eq 1){
             if($sw.Elapsed.TotalMilliseconds -ge 500 -or $i -eq 0){
-                Write-Progress -Activity "Prevent overwriting existing files..." -PercentComplete $($i / $InFiles.Length * 100) -Status "File # $($i + 1) / $($InFiles.fullpath.Length) - $($InFiles[$i].name)"
+                Write-Progress -Activity "Prevent overwriting existing files..." -PercentComplete $($i / $InFiles.Length * 100) -Status "File # $($i + 1) / $($InFiles.Length) - $($InFiles[$i].name)"
                 $sw.Reset()
                 $sw.Start()
             }
 
             # create outpath:
             $InFiles[$i].outpath = $("$OutPath$($InFiles[$i].sub_date)").Replace("\\","\").Replace("\\","\")
-            # $InFiles[$i].outpath = $InFiles[$i].outpath.Replace("\\","\").Replace("\\","\")
             $InFiles[$i].outbasename = $InFiles[$i].basename
             $InFiles[$i].outname = "$($InFiles[$i].basename)$($InFiles[$i].extension)"
             # check for files with same name from input:
@@ -1468,7 +1475,7 @@ Function Start-FileCopy(){
     [array]$xc_command = @()
     [string]$xc_suffix = " /Q /J /-Y"
 
-    for($i=0; $i -lt $InFiles.fullpath.length; $i++){
+    for($i=0; $i -lt $InFiles.length; $i++){
         if($InFiles[$i].tocopy -eq 1){
             # check if files is qualified for robocopy (out-name = in-name):
             if($InFiles[$i].outname -eq $(Split-Path -Leaf -Path $InFiles[$i].fullpath)){
@@ -1601,7 +1608,7 @@ Function Start-FileVerification(){
 
     [int]$verified = 0
     [int]$unverified = 0
-    for($i=0; $i -lt $InFiles.tocopy.Length; $i++){
+    for($i=0; $i -lt $InFiles.Length; $i++){
         if($InFiles[$i].tocopy -eq 1){
             $unverified++
             if($script:debug -ne 0){
@@ -1661,7 +1668,7 @@ Function Set-HistFile(){
 Function Start-Everything(){
     # Clear-Host
     Write-ColorOut "`r`n`r`n            Welcome to flolilo's Media-Copytool!            " -ForegroundColor DarkCyan -BackgroundColor Gray
-    Write-ColorOut "              v0.7.1-MT (Beta) - 5.9.2017                  `r`n" -ForegroundColor DarkCyan -BackgroundColor Gray
+    Write-ColorOut "                v0.7.2-MT (Beta) - 2017-09-08               `r`n" -ForegroundColor DarkCyan -BackgroundColor Gray
 
     $script:timer = [diagnostics.stopwatch]::StartNew()
     while($true){
@@ -1762,7 +1769,7 @@ Function Start-Everything(){
             $timer.reset()
         }
         if($script:MirrorEnable -eq 1){
-            for($i=0; $i -lt $inputfiles.fullpath.length; $i++){
+            for($i=0; $i -lt $inputfiles.length; $i++){
                 if($inputfiles[$i].tocopy -eq 1){
                     $inputfiles[$i].tocopy = 0
                 }else{
