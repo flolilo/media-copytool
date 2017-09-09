@@ -11,7 +11,7 @@
     .NOTES
         Version:        0.7.2-MT (Beta)
         Author:         flolilo
-        Creation Date:  2017-9-8
+        Creation Date:  2017-09-08
         Legal stuff: This program is free software. It comes without any warranty, to the extent permitted by
         applicable law. Most of the script was written by myself (or heavily modified by me when searching for solutions
         on the WWW). However, some parts are copies or modifications of very genuine code - see
