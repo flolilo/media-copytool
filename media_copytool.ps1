@@ -491,7 +491,7 @@ Function Get-UserValues(){
             # $OutputFileStyle
             while($true){
                 [array]$inter = @("unchanged","yyyy-MM-dd_HH-mm-ss","yyyyMMdd_HHmmss","yyyyMMddHHmmss","yy-MM-dd_HH-mm-ss","yyMMdd_HHmmss","yyMMddHHmmss","HH-mm-ss","HH_mm_ss","HHmmss")
-                [string]$script:OutputFileStyle = Read-Host "Which subfolder-style should be used in the output-path? Options: `"unchanged`",`"yyyy-MM-dd_HH-mm-ss`",`"yyyyMMdd_HHmmss`",`"yyyyMMddHHmmss`",`"yy-MM-dd_HH-mmss`",`"yyMMdd_HHmmss`",`"yyMMddHHmmss`",`"HH-mm-ss`",`"HH_mm_ss`",`"HHmmss`" (all w/o quotes). Be aware that this time, you must match the case!"
+                [string]$script:OutputFileStyle = Read-Host "Which subfolder-style should be used in the output-path? Options: `"unchanged`",`"yyyy-MM-dd_HH-mm-ss`",`"yyyyMMdd_HHmmss`",`"yyyyMMddHHmmss`",`"yy-MM-dd_HH-mm-ss`",`"yyMMdd_HHmmss`",`"yyMMddHHmmss`",`"HH-mm-ss`",`"HH_mm_ss`",`"HHmmss`" (all w/o quotes). Be aware that this time, you must match the case!"
                 if($script:OutputFileStyle -cin $inter){
                     break
                 }else{
@@ -692,7 +692,7 @@ Function Get-UserValues(){
                 elseif($script:WPFcomboBoxOutFileStyle.SelectedIndex -eq 1){"yyyy-MM-dd_HH-mm-ss"}
                 elseif($script:WPFcomboBoxOutFileStyle.SelectedIndex -eq 2){"yyyyMMdd_HHmmss"}
                 elseif($script:WPFcomboBoxOutFileStyle.SelectedIndex -eq 3){"yyyyMMddHHmmss"}
-                elseif($script:WPFcomboBoxOutFileStyle.SelectedIndex -eq 4){"yy-MM-dd_HH-mmss"}
+                elseif($script:WPFcomboBoxOutFileStyle.SelectedIndex -eq 4){"yy-MM-dd_HH-mm-ss"}
                 elseif($script:WPFcomboBoxOutFileStyle.SelectedIndex -eq 5){"yyMMdd_HHmmss"}
                 elseif($script:WPFcomboBoxOutFileStyle.SelectedIndex -eq 6){"yyMMddHHmmss"}
                 elseif($script:WPFcomboBoxOutFileStyle.SelectedIndex -eq 7){"HH-mm-ss"}
@@ -792,7 +792,7 @@ Function Get-UserValues(){
                 return $false
             }
             # $OutputFileStyle
-            [array]$inter = @("unchanged","yyyy-MM-dd_HH-mmss","yyyyMMdd_HHmmss","yyyyMMddHHmmss","yy-MM-dd_HH-mmss","yyMMdd_HHmmss","yyMMddHHmmss","HH-mm-ss","HH_mm_ss","HHmmss")
+            [array]$inter = @("unchanged","yyyy-MM-dd_HH-mm-ss","yyyyMMdd_HHmmss","yyyyMMddHHmmss","yy-MM-dd_HH-mm-ss","yyMMdd_HHmmss","yyMMddHHmmss","HH-mm-ss","HH_mm_ss","HHmmss")
             if($script:OutputFileStyle -cnotin $inter -or $script:OutputFileStyle.Length -gt $inter[1].Length){
                 Write-ColorOut "Invalid choice of -OutputFileStyle." -ForegroundColor Red
                 return $false
@@ -1906,7 +1906,7 @@ if($GUI_CLI_Direct -eq "GUI"){
         elseif("yyyy-MM-dd_HH-mm-ss" -eq $OutputFileStyle){1}
         elseif("yyyyMMdd_HHmmss" -eq $OutputFileStyle){2}
         elseif("yyyyMMddHHmmss" -eq $OutputFileStyle){3}
-        elseif("yy-MM-dd_HH-mmss" -eq $OutputFileStyle){4}
+        elseif("yy-MM-dd_HH-mm-ss" -eq $OutputFileStyle){4}
         elseif("yyMMdd_HHmmss" -eq $OutputFileStyle){5}
         elseif("yyMMddHHmmss" -eq $OutputFileStyle){6}
         elseif("HH-mm-ss" -eq $OutputFileStyle){7}
