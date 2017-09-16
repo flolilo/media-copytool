@@ -1680,10 +1680,10 @@ Function Start-Everything(){
             Invoke-Pause -tottime $script:timer.elapsed.TotalSeconds
         }
         if($script:PreventStandby -eq 1){
-            if((Test-Path -Path "$($PSScriptRoot)\preventsleep.ps1" -PathType Leaf) -eq $true){
-                $preventstandby = (Start-Process powershell -ArgumentList "$($PSScriptRoot)\preventsleep.ps1 -mode `"none`" -timeBase 150" -WindowStyle Hidden -PassThru).Id
+            if((Test-Path -Path "$($PSScriptRoot)\media_copytool_preventsleep.ps1" -PathType Leaf) -eq $true){
+                $preventstandby = (Start-Process powershell -ArgumentList "$($PSScriptRoot)\media_copytool_preventsleep.ps1" -WindowStyle Hidden -PassThru).Id
             }else{
-                Write-Host "Couldn't find .\preventsleep.ps1, so can't prevent standby." -ForegroundColor Magenta
+                Write-Host "Couldn't find .\media_copytool_preventsleep.ps1, so can't prevent standby." -ForegroundColor Magenta
                 Start-Sleep -Seconds 3
             }
         }
