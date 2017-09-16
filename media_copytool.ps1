@@ -1,4 +1,5 @@
 #requires -version 3
+#requires -module PoshRSJob
 
 <#
     .SYNOPSIS
@@ -187,6 +188,9 @@ param(
 #DEFINITION: Hopefully avoiding errors by wrong encoding now:
 $OutputEncoding = New-Object -typename System.Text.UTF8Encoding
 
+# Get all error-outputs in English:
+[Threading.Thread]::CurrentThread.CurrentUICulture = 'en-US'
+
 # DEFINITION: Making Write-Host much, much faster:
 Function Write-ColorOut(){
     <#
@@ -236,18 +240,6 @@ Function Write-ColorOut(){
     if($BackgroundColor -ne $old_bg_color){[Console]::BackgroundColor = $old_bg_color}
 }
 
-# Checking if PoshRSJob is installed:
-if (-not (Get-Module -ListAvailable -Name PoshRSJob)){
-    Write-ColorOut "Module RSJob (https://github.com/proxb/PoshRSJob) is required, but it seemingly isn't installed - please start PowerShell as administrator and run`t" -ForegroundColor Red
-    Write-ColorOut "Install-Module -Name PoshRSJob " -ForegroundColor DarkYellow
-    Write-ColorOut "or use the fork of media-copytool without RSJob." -ForegroundColor Red
-    Pause
-    Exit
-}
-
-# Get all error-outputs in English:
-[Threading.Thread]::CurrentThread.CurrentUICulture = 'en-US'
-
 # CREDIT: Set default ErrorAction to Stop: https://stackoverflow.com/a/21260623/8013879
 if($debug -eq 0){
     $PSDefaultParameterValues = @{}
@@ -256,7 +248,7 @@ if($debug -eq 0){
 }
 
 if($showparams -ne 0){
-    Write-ColorOut "Flo's Media-Copytool Parameters:`r`n" -ForegroundColor Green
+    Write-ColorOut "flolilo's Media-Copytool's Parameters:`r`n" -ForegroundColor Green
     Write-ColorOut "-GUI_CLI_Direct`t`t=`t$GUI_CLI_Direct" -ForegroundColor Cyan
     Write-ColorOut "-InputPath`t`t=`t$InputPath" -ForegroundColor Cyan
     Write-ColorOut "-OutputPath`t`t=`t$OutputPath" -ForegroundColor Cyan
@@ -282,6 +274,7 @@ if($showparams -ne 0){
 
 # If you want to see the variables (buttons, checkboxes, ...) the GUI has to offer, set this to 1:
 [int]$getWPF = 0
+
 
 # ==================================================================================================
 # ==============================================================================
