@@ -139,7 +139,6 @@
         "media_copytool_filehistory.json" if -UseHistFile is 1
         "media_copytool_GUI.xaml" if -GUI_CLI_direct "GUI"
         File(s) must be located in the script's directory and must not be renamed.
-
     .OUTPUTS
         "media_copytool_filehistory.json" if -WriteHistFile is "Yes" or "Overwrite".
         File(s) will be saved into the script's directory.
@@ -183,7 +182,7 @@ param(
     [int]$debug=0
 )
 # First line of "param" (for remembering/restoring parameters):
-[int]$paramline = 157
+[int]$paramline = 156
 
 #DEFINITION: Hopefully avoiding errors by wrong encoding now:
 $OutputEncoding = New-Object -typename System.Text.UTF8Encoding
