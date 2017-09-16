@@ -10,7 +10,7 @@
         Now supports multithreading via Boe Prox's PoshRSJob-cmdlet (https://github.com/proxb/PoshRSJob)
 
     .NOTES
-        Version:        0.7.2-MT (Beta)
+        Version:        0.7.3-MT (Beta)
         Author:         flolilo
         Creation Date:  2017-09-08
         Legal stuff: This program is free software. It comes without any warranty, to the extent permitted by
@@ -286,12 +286,12 @@ if($showparams -ne 0){
 Function Invoke-Pause(){
     param($tottime=0.0)
 
-    if($script:debug -eq 3 -and $tottime -ne 0.0){
+    if($script:debug -gt 0 -and $tottime -ne 0.0){
         Write-ColorOut "Used time for process:`t$tottime`r`n" -ForegroundColor Magenta
     }
-    if($script:debug -ge 2){
+    if($script:debug -gt 1){
         if($tottime -ne 0.0){
-            $script:timer.Stop()
+            $script:timer.Reset()
         }
         Pause
         if($tottime -ne 0.0){
@@ -1659,10 +1659,10 @@ Function Set-HistFile(){
 
 # DEFINITION: Starts all the things.
 Function Start-Everything(){
-    # Clear-Host
     Write-ColorOut "`r`n`r`n            Welcome to flolilo's Media-Copytool!            " -ForegroundColor DarkCyan -BackgroundColor Gray
-    Write-ColorOut "                v0.7.2-MT (Beta) - 2017-09-08               `r`n" -ForegroundColor DarkCyan -BackgroundColor Gray
-
+    Write-ColorOut "                v0.7.3-MT (Beta) - 2017-09-08               `r`n" -ForegroundColor DarkCyan -BackgroundColor Gray
+    Write-ColorOut "$(Get-Date -Format "dd.MM.yy HH:mm:ss")  -" -NoNewLine
+    Write-ColorOut "-  Starting everything..." -ForegroundColor Cyan
     $script:timer = [diagnostics.stopwatch]::StartNew()
     while($true){
         if((Get-UserValues) -eq $false){
@@ -1673,36 +1673,31 @@ Function Start-Everything(){
             }
             break
         }
-        Invoke-Pause -tottime $timer.elapsed.TotalSeconds
-        $timer.reset()
+        Invoke-Pause -tottime $script:timer.elapsed.TotalSeconds
         iF($script:RememberInPath -ne 0 -or $script:RememberOutPath -ne 0 -or $script:RememberMirrorPath -ne 0 -or $script:RememberSettings -ne 0){
-            $timer.start()
+            $script:timer.start()
             Start-Remembering
-            Invoke-Pause -tottime $timer.elapsed.TotalSeconds
-            $timer.reset()
+            Invoke-Pause -tottime $script:timer.elapsed.TotalSeconds
         }
         if($script:PreventStandby -eq 1){
-            Start-RSJob -Name "PreventStandby" -Throttle 1 -ScriptBlock {
-                while($true){
-                    $MyShell = New-Object -com "Wscript.Shell"
-                    $MyShell.sendkeys("{F15}")
-                    Start-Sleep -Seconds 300
-                }
-            } | Out-Null
+            if((Test-Path -Path "$($PSScriptRoot)\preventsleep.ps1" -PathType Leaf) -eq $true){
+                $preventstandby = (Start-Process powershell -ArgumentList "$($PSScriptRoot)\preventsleep.ps1 -mode `"none`" -timeBase 150" -WindowStyle Hidden -PassThru).Id
+            }else{
+                Write-Host "Couldn't find .\preventsleep.ps1, so can't prevent standby." -ForegroundColor Magenta
+                Start-Sleep -Seconds 3
+            }
         }
         [array]$histfiles = @()
         if($script:UseHistFile -eq 1 -and $script:VerifyCopies -eq 1){
-            $timer.start()
+            $script:timer.start()
             $histfiles = Get-HistFile
-            Invoke-Pause -tottime $timer.elapsed.TotalSeconds
-            $timer.reset()
+            Invoke-Pause -tottime $script:timer.elapsed.TotalSeconds
         }
-        $timer.start()
+        $script:timer.start()
         $inputfiles = (Start-FileSearchAndCheck -InPath $script:InputPath -OutPath $script:OutputPath -HistFiles $histfiles)
         # remove $histfiles, as it only eats RAM:
         Remove-Variable histfiles
-        Invoke-Pause -tottime $timer.elapsed.TotalSeconds
-        $timer.reset()
+        Invoke-Pause -tottime $script:timer.elapsed.TotalSeconds
         if(1 -notin $inputfiles.tocopy){
             Write-ColorOut "0 files left to copy - aborting rest of the script." -ForegroundColor Magenta
             Start-Sound(1)
@@ -1725,19 +1720,16 @@ Function Start-Everything(){
                     break
                 }
             }
-            $timer.start()
+            $script:timer.start()
             $inputfiles = (Start-OverwriteProtection -InFiles $inputfiles -OutPath $script:OutputPath)
-            Invoke-Pause -tottime $timer.elapsed.TotalSeconds
-            $timer.reset()
-            $timer.start()
+            Invoke-Pause -tottime $script:timer.elapsed.TotalSeconds
+            $script:timer.start()
             Start-FileCopy -InFiles $inputfiles -InPath $script:InputPath -OutPath $script:OutputPath
-            Invoke-Pause -tottime $timer.elapsed.TotalSeconds
-            $timer.reset()
+            Invoke-Pause -tottime $script:timer.elapsed.TotalSeconds
             if($script:VerifyCopies -eq 1){
-                $timer.start()
+                $script:timer.start()
                 $inputfiles = (Start-FileVerification -InFiles $inputfiles)
-                Invoke-Pause -tottime $timer.elapsed.TotalSeconds
-                $timer.reset()
+                Invoke-Pause -tottime $script:timer.elapsed.TotalSeconds
                 $j++
             }else{
                 foreach($instance in $inputfiles.tocopy){$instance = 0}
@@ -1756,10 +1748,9 @@ Function Start-Everything(){
             }
         }
         if($script:WriteHistFile -ne "no"){
-            $timer.start()
+            $script:timer.start()
             Set-HistFile -InFiles $inputfiles
-            Invoke-Pause -tottime $timer.elapsed.TotalSeconds
-            $timer.reset()
+            Invoke-Pause -tottime $script:timer.elapsed.TotalSeconds
         }
         if($script:MirrorEnable -eq 1){
             for($i=0; $i -lt $inputfiles.length; $i++){
@@ -1774,10 +1765,9 @@ Function Start-Everything(){
             }
             
             if($script:ZipMirror -eq 1){
-                $timer.start()
+                $script:timer.start()
                 Start-7zip -InFiles $inputfiles
-                Invoke-Pause -tottime $timer.elapsed.TotalSeconds
-                $timer.reset()
+                Invoke-Pause -tottime $script:timer.elapsed.TotalSeconds
             }else{
                 $j = 1
                 while(1 -in $inputfiles.tocopy){
@@ -1787,19 +1777,16 @@ Function Start-Everything(){
                             break
                         }
                     }
-                    $timer.start()
+                    $script:timer.start()
                     $inputfiles = (Start-OverwriteProtection -InFiles $inputfiles -OutPath $script:MirrorPath)
-                    Invoke-Pause -tottime $timer.elapsed.TotalSeconds
-                    $timer.reset()
-                    $timer.start()
+                    Invoke-Pause -tottime $script:timer.elapsed.TotalSeconds
+                    $script:timer.start()
                     Start-FileCopy -InFiles $inputfiles -InPath $script:OutputPath -OutPath $script:MirrorPath
-                    Invoke-Pause -tottime $timer.elapsed.TotalSeconds
-                    $timer.reset()
+                    Invoke-Pause -tottime $script:timer.elapsed.TotalSeconds
                     if($script:VerifyCopies -eq 1){
-                        $timer.start()
+                        $script:timer.start()
                         $inputfiles = (Start-FileVerification -InFiles $inputfiles)
-                        Invoke-Pause -tottime $timer.elapsed.TotalSeconds
-                        $timer.reset()
+                        Invoke-Pause -tottime $script:timer.elapsed.TotalSeconds
                         $j++
                     }else{
                         foreach($instance in $inputfiles.tocopy){$instance = 0}
@@ -1810,6 +1797,8 @@ Function Start-Everything(){
         break
     }
 
+    Write-ColorOut "$(Get-Date -Format "dd.MM.yy HH:mm:ss")  -" -NoNewLine
+    Write-ColorOut "-  Done!" -ForegroundColor Cyan
     Write-ColorOut "`r`nStats:" -ForegroundColor DarkCyan
     Write-ColorOut "Found:`t`t$($script:resultvalues.ingoing)`tfiles." -ForegroundColor Cyan
     Write-ColorOut "Skipped:`t$($script:resultvalues.duplihist) (history) + $($script:resultvalues.dupliout) (out-path)`tfiles." -ForegroundColor DarkGreen
@@ -1818,8 +1807,7 @@ Function Start-Everything(){
         Write-ColorOut "Verified:`t$($script:resultvalues.verified)`tfiles." -ForegroundColor Green
         Write-ColorOut "Unverified:`t$($script:resultvalues.unverified)`tfiles." -ForegroundColor DarkRed
     }
-    Write-ColorOut " 
-    "
+    Write-ColorOut "                                                            `r`n" -ForegroundColor DarkCyan -BackgroundColor Gray
     if($script:resultvalues.unverified -eq 0){
         Start-Sound(1)
     }else{
@@ -1827,9 +1815,7 @@ Function Start-Everything(){
     }
     
     if($script:PreventStandby -eq 1){
-        Get-RSJob -Name "PreventStandby" | Stop-RSJob
-        Start-Sleep -Milliseconds 5
-        Get-RSJob -Name "PreventStandby" | Remove-RSJob
+        Stop-Process -Id $preventstandby -Verbose
     }
     if($script:GUI_CLI_Direct -eq "GUI"){
         $script:Form.WindowState ='Normal'
