@@ -1,3 +1,6 @@
+# Statistics of Jobs
+Find more information about it in this folder.
+
 ### i5-42210U, 8GB RAM - SD-Card-Reader
 Process (Jobs) | Time (sec.)
 ------------ | -------------
