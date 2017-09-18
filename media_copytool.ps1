@@ -1188,7 +1188,7 @@ Function Start-FileSearchAndCheck(){
             
             $counter++
             [PSCustomObject]@{
-                fullpath = $_.FullName
+                FullName = $_.FullName
                 inpath = (Split-Path $_.FullName -Parent)
                 inname = $_.Name
                 basename = $(if($script:OutputFileStyle -eq "unchanged"){$_.BaseName}else{$_.LastWriteTime.ToString("$script:OutputFileStyle")})
@@ -1211,14 +1211,14 @@ Function Start-FileSearchAndCheck(){
     if($debug -ne 0){
         if((Read-Host "Show all found files? `"1`" for `"yes`"") -eq 1){
             for($i=0; $i -lt $files_in.Length; $i++){
-                Write-ColorOut "$($files_in[$i].fullpath)`t$($files_in[$i].tocopy)"
+                Write-ColorOut "$($files_in[$i].FullName)`t$($files_in[$i].tocopy)"
             }
         }
     }
 
     if($script:DupliCompareHashes -ne 0 -or $script:CheckOutputDupli -ne 0){
         $files_in | Start-RSJob -Name "GetHash" -throttle $script:ThreadCount -ScriptBlock {
-            $_.hash = Get-FileHash -LiteralPath $_.fullpath -Algorithm SHA1 | Select-Object -ExpandProperty Hash
+            $_.hash = Get-FileHash -LiteralPath $_.FullName -Algorithm SHA1 | Select-Object -ExpandProperty Hash
         } | Wait-RSJob -ShowProgress | Receive-RSJob
         Get-RSJob -Name "GetHash" | Remove-RSJob
     }
@@ -1263,7 +1263,7 @@ Function Start-FileSearchAndCheck(){
         if($script:debug -ne 0){
             Write-ColorOut "`r`n`r`nFiles to skip / process (after history-check):" -ForegroundColor Yellow
             for($i = 0; $i -lt $files_in.Length; $i++){
-                [string]$inter = ($($files_in[$i].fullpath).Replace($InPath,'.'))
+                [string]$inter = ($($files_in[$i].FullName).Replace($InPath,'.'))
                 if($i -notin $dupliindex_hist){
                     Write-ColorOut "Copy:`t$inter" -ForegroundColor Gray
                 }else{
@@ -1301,7 +1301,7 @@ Function Start-FileSearchAndCheck(){
 
                 $counter++
                 [PSCustomObject]@{
-                    fullpath = $_.FullName
+                    FullName = $_.FullName
                     name = $_.Name
                     size = $_.Length
                     date = $_.LastWriteTime.ToString("yyyy-MM-dd_HH-mm-ss")
@@ -1327,7 +1327,7 @@ Function Start-FileSearchAndCheck(){
                     while($true){
                         # calculate hash only if date and size are the same:
                         if($($files_in[$i].date) -eq $($script:files_duplicheck[$j].date) -and $($files_in[$i].size) -eq $($script:files_duplicheck[$j].size)){
-                            $script:files_duplicheck[$j].hash = (Get-FileHash -LiteralPath $script:files_duplicheck.fullpath[$j] -Algorithm SHA1 | Select-Object -ExpandProperty Hash)
+                            $script:files_duplicheck[$j].hash = (Get-FileHash -LiteralPath $script:files_duplicheck.FullName[$j] -Algorithm SHA1 | Select-Object -ExpandProperty Hash)
                             if($files_in[$i].hash -eq $script:files_duplicheck[$j].hash){
                                 $dupliindex_out += $i
                                 Write-ColorOut "Existing: $($i + 1) - $($files_in[$i].inname.Replace("$InPath",'.'))" -ForegroundColor DarkGreen
@@ -1355,7 +1355,7 @@ Function Start-FileSearchAndCheck(){
             if($script:debug -ne 0){
                 Write-ColorOut "`r`n`r`nFiles to skip / process (after out-path-check):" -ForegroundColor Yellow
                 for($i = 0; $i -lt $script:files_duplicheck.Length; $i++){
-                    [string]$inter = ($($script:files_duplicheck.fullpath[$i]).Replace($InPath,'.'))
+                    [string]$inter = ($($script:files_duplicheck.FullName[$i]).Replace($InPath,'.'))
                     if($i -notin $dupliindex_out){
                         Write-ColorOut "Copy:`t$inter" -ForegroundColor Gray
                     }else{
@@ -1380,7 +1380,7 @@ Function Start-FileSearchAndCheck(){
     # calculate hash (if not yet done):
     if($script:VerifyCopies -eq 1){
         $files_in | Where-Object {$_.hash -eq "ZYX"} | Start-RSJob -Name "GetHash" -throttle $script:ThreadCount -ScriptBlock {
-            $_.hash = Get-FileHash -LiteralPath $_.fullpath -Algorithm SHA1 | Select-Object -ExpandProperty Hash
+            $_.hash = Get-FileHash -LiteralPath $_.FullName -Algorithm SHA1 | Select-Object -ExpandProperty Hash
         } | Wait-RSJob -ShowProgress | Receive-RSJob
         Get-RSJob -Name "GetHash" | Remove-RSJob
     }
@@ -1487,7 +1487,7 @@ Function Start-FileCopy(){
     for($i=0; $i -lt $InFiles.length; $i++){
         if($InFiles[$i].tocopy -eq 1){
             # check if files is qualified for robocopy (out-name = in-name):
-            if($InFiles[$i].outname -eq $(Split-Path -Leaf -Path $InFiles[$i].fullpath)){
+            if($InFiles[$i].outname -eq $(Split-Path -Leaf -Path $InFiles[$i].FullName)){
                 if($rc_inter_inpath.Length -eq 0 -or $rc_inter_outpath.Length -eq 0 -or $rc_inter_files.Length -eq 0){
                     $rc_inter_inpath = "`"$($InFiles[$i].inpath)`""
                     $rc_inter_outpath = "`"$($InFiles[$i].outpath)`""
@@ -1511,7 +1511,7 @@ Function Start-FileCopy(){
 
             # if NOT qualified for robocopy:
             }else{
-                $xc_command += "`"$($InFiles[$i].fullpath)`" `"$($InFiles[$i].outpath)\$($InFiles[$i].outname)*`" $xc_suffix"
+                $xc_command += "`"$($InFiles[$i].FullName)`" `"$($InFiles[$i].outpath)\$($InFiles[$i].outname)*`" $xc_suffix"
             }
         }
     }
@@ -1594,10 +1594,10 @@ Function Start-7zip(){
     [string]$inter_files = ""
     for($k = 0; $k -lt $InFiles.Length; $k++){
         if($($7z_prefix.Length + $7z_workdir.Length + $inter_files.Length) -lt 8100){
-            $inter_files += "`"$($InFiles[$k].fullpath)`" "
+            $inter_files += "`"$($InFiles[$k].FullName)`" "
         }else{
             $7z_command += "$7z_prefix $7z_workdir $inter_files"
-            $inter_files = "`"$($InFiles[$k].fullpath)`" "
+            $inter_files = "`"$($InFiles[$k].FullName)`" "
         }
     }
     if($inter_files -notin $7z_command){
@@ -1797,8 +1797,8 @@ Function Start-Everything(){
                 }else{
                     $inputfiles[$i].tocopy = 1
                 }
-                $inputfiles[$i].fullpath = "$($inputfiles[$i].outpath)\$($inputfiles[$i].outname)"
-                $inputfiles[$i].inpath = (Split-Path -Path $inputfiles[$i].fullpath -Parent)
+                $inputfiles[$i].FullName = "$($inputfiles[$i].outpath)\$($inputfiles[$i].outname)"
+                $inputfiles[$i].inpath = (Split-Path -Path $inputfiles[$i].FullName -Parent)
                 $inputfiles[$i].outname = "$($inputfiles[$i].basename)$($inputfiles[$i].extension)"
             }
             
