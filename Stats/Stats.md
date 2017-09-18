@@ -1,5 +1,5 @@
 ### i5-42210U, 8GB RAM - SD-Card-Reader
-#### Process (Jobs) | Time (sec.)
+Process (Jobs) | Time (sec.)
 ------------ | -------------
 For-loop | 140,21
 Job (1) | 142,24
@@ -20,7 +20,7 @@ RSJob (6) | 79,06
 RSJob (8) | 110,71
 
 ### i5-42210U, 8GB RAM - SSD
-#### Process (Jobs) | Time (sec.)
+Process (Jobs) | Time (sec.)
 ------------ | -------------
 For-loop | 43,62
 Job (1) | 44,62
@@ -41,7 +41,7 @@ RSJob (6) | 27,15
 RSJob (8) | 27,00
 
 ### i7-5820k, 32GB RAM - HDD
-#### Process (Jobs) | Time (sec.)
+Process (Jobs) | Time (sec.)
 ------------ | -------------
 For-loop | 23,78
 Job (1) | 20,51
@@ -62,7 +62,7 @@ RSJob (6) | 4,88
 RSJob (8) | 4,75
 
 ### i7-5820k, 32GB RAM - SSD
-#### Process (Jobs) | Time (sec.)
+Process (Jobs) | Time (sec.)
 ------------ | -------------
 For-loop | 23,44
 Job (1) | 21,15
@@ -83,7 +83,7 @@ RSJob (6) | 4,85
 RSJob (8) | 4,84
 
 ### i7-5820k, 32GB RAM - RAMdisk
-#### Process (Jobs) | Time (sec.)
+Process (Jobs) | Time (sec.)
 ------------ | -------------
 For-loop | 24,49
 Job (1) | 21,04
@@ -104,7 +104,7 @@ RSJob (6) | 4,92
 RSJob (8) | 4,73
 
 ### i7-5820k, 32GB RAM - USB2 SD-Card-Reader
-#### Process (Jobs) | Time (sec.)
+Process (Jobs) | Time (sec.)
 ------------ | -------------
 For-loop | 241,81
 Job (1) | 20,82
@@ -125,7 +125,7 @@ RSJob (6) | 4,81
 RSJob (8) | 4,80
 
 ### i7-5820k, 32GB RAM - USB3 SD-Card-Reader
-#### Process (Jobs) | Time (sec.)
+Process (Jobs) | Time (sec.)
 ------------ | -------------
 For-loop | 24,11
 Job (1) | 20,55
@@ -146,7 +146,7 @@ RSJob (6) | 4,83
 RSJob (8) | 4,73
 
 ### i5-42210U, 8GB RAM
-#### Process (Jobs) | Time (sec.)
+Process (Jobs) | Time (sec.)
 ------------ | -------------
 For-loop | 91,92
 Job (1) | 93,43
@@ -167,7 +167,7 @@ RSJob (6) | 53,10
 RSJob (8) | 68,85
 
 ### i7-5820k, 32GB RAM
-#### Process (Jobs) | Time (sec.)
+Process (Jobs) | Time (sec.)
 ------------ | -------------
 For-loop | 67,53
 Job (1) | 20,81
@@ -188,7 +188,7 @@ RSJob (6) | 4,86
 RSJob (8) | 4,77
 
 ### Combined
-#### Process (Jobs) | Time (sec.)
+Process (Jobs) | Time (sec.)
 ------------ | -------------
 For-loop | 74,50
 Job (1) | 41,56
