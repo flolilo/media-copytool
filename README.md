@@ -1,10 +1,9 @@
-# media-copytool - multi-threaded (MT)
+# media-copytool -  (MT)
 :de: [Hier geht es zur deutschen Readme-Datei](https://github.com/flolilo/media-copytool/blob/master/README_GER.md). :de:
 
 PowerShell-based, GUI-including script that not only copies your files, but also verifies them afterwards. *Now with multithreading for faster processing!*
 This script is an attempt to create a tool to easily (and switfly) copies files from my DSLR's memory-cards to my computer. Its feature-set now beats most (if not all) professional RAW-converters (except of course in converting RAWs ;-) ) and the fun doesn't end here - there are even more features to come! And best of all: it not only works with your camera, but with all files that you have!
 
-#### Unlike v0.6.x, v0.7.x will mainly consist of bugfixes, as most features are already built-in.
 
 **Bug-reports, questions, and feature-requests would be very much appreciated!**
 
@@ -42,6 +41,7 @@ This script is an attempt to create a tool to easily (and switfly) copies files 
 
 ## Troubleshooting
 #### If you cannot start the script:
+- Don't launch the script directly, but open a PowerShell-Console, `cd` (or `Set-Location`) to the script's folder and then start it by calling it - this way, it can't close before you can read the error message.
 - Check if PowerShell's `Set-ExecutionPolicy` [is set correctly](https://superuser.com/a/106363/703240),
     - Run PowerShell as administrator, type `Set-ExecutionPolicy RemoteSigned`.
 - Check if prerequisites are met.
