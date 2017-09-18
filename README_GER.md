@@ -13,7 +13,7 @@ Dieses Skript ist mein Versuch, die Dateien von den Speicherkarten meiner DSLR e
 - Möglichkeit, 2 verschiedene Ausgabe-Pfade anzugeben, um schnelle & einfache Backups zu ermöglichen.
 - Durch eine History-Datei ist es dem Skript möglich, das erneute Kopieren von Dateien zu vermeiden - großartig, wenn man seine Speicherkarten nicht jedes Mal formatiert.
 - Ansteuerung sowohl über GUI als auch über Parameter möglich
-- Durch Multithreading werden die Hash-Berechnungen und das Kopieren beschleunigt
+- Durch Multithreading werden die Hash-Berechnungen und das Kopieren beschleunigt (durchschnittlich 2-8x schneller als `for`-Schleifen - siehe [die eigens gefertigte Statistik!](https://github.com/flolilo/media-copytool/blob/master/Stats/Stats.md))
 - Durch das Verwenden von eingebauten Tools und Cmdlets wie Robocopy und Get-FileHash hat dieses Skript sehr wenige Voraussetzungen.
 - Möglichkeit, aus einer Vielzahl an Unterordner-Stilen zu wählen
 - Eingebaute Fail-Saves verhindern grobe Schnitzer durch den User (z.B. Kopieren auf nicht vorhandenes Laufwerk,...)
@@ -52,7 +52,7 @@ Dieses Skript ist mein Versuch, die Dateien von den Speicherkarten meiner DSLR e
 - Im Taksmanager nachsehen: Limitieren die CPU / das Laufwerk? Falls es das Laufwerk ist: schnelleres kaufen. ;-)
     - Wenn es die CPU ist (und sie neuer ist als ein [8086](https://de.wikipedia.org/wiki/8086)) bitte ich um Kontaktaufnahme mit Informationen zu den kopierten Daeien und wann genau der Vorgang anfing langsam zu werden.
 - Große History-Dateien verlangsamen den Duplikats-Check erheblich. Man kann diese History-Datei manuell (oder via Skript) löschen / überschreiben, sobald die Speicherkarte formatiert wurde und somit keine Gefahr mehr besteht, alte Dateien mitzukopieren.
-- `-ThreadCount 1` oder `-ThreadCount 2` versuchen
+- `-ThreadCount 2` oder `-ThreadCount 24` versuchen - gerade bei langsamen Laufwerken kann das helfen.
 
 #### Falls das Skript mit komischen Fehlern aufwartet:
 - Bitte so viele Dinge wie möglich notieren: Parameters, Pfade und wann genau die Fehler auftauchten. Bitte auch die Fehlermeldung kopieren (wird immer in English angezeigt, damit sie im Internet leichter auffindbar ist). Ticket öffnen und/oder mich kontaktieren!
@@ -74,7 +74,7 @@ Dieses Skript ist mein Versuch, die Dateien von den Speicherkarten meiner DSLR e
 - Kein Support für andere Betriebssysteme als Windows *- Support ist aber irgendwann geplant*.
 
 ## To do
-- [ ] Evaluierung von Posh-RSJob (**Mithilfe erwünscht!**) (Hohe Priorität)
+- [x] Evaluierung von Posh-RSJob (**Mithilfe erwünscht!**)
 - [x] GUI mit Tabs statt Dropdowns
 - [x] Option um Kopien-Verifikation zu deaktivieren, um so die Ausführung zu beschleunigen.
 - [x] Option um nur Robocopy zu verwenden und die originale Struktur mitzukopieren (also wie `robocopy InputPath OutputPath /MIR`)

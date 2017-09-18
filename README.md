@@ -13,7 +13,7 @@ This script is an attempt to create a tool to easily (and switfly) copies files 
 - Allowing to copy files to 2 different locations for a fast backup-option
 - By keeping a history-file with all already copied files, it can avoid copying files again. That's great if you don't like to format your memory card every time.
 - Offering both a GUI and command line parameters
-- Using multi-threaded hash-calculations and copy-streams for fast operation
+- Using multi-threaded hash-calculations and copy-streams for fast operation (usually 2-8 times faster than `for`-loops - see [the statoistics on this matter!](https://github.com/flolilo/media-copytool/blob/master/Stats/Stats.md))
 - By using built-in tools and cmdlets like Robocopy and Get-FileHash for all operations, very few prerequisites are needed
 - Allowing you to choose a variety of subfolder-styles
 - Built-in fail-saves should tell you when and if problems occur
@@ -46,13 +46,13 @@ This script is an attempt to create a tool to easily (and switfly) copies files 
     - Run PowerShell as administrator, type `Set-ExecutionPolicy RemoteSigned`.
 - Check if prerequisites are met.
 - Perhaps don't place the script on the root of `C:\` ;-)
-- Unfortunately, it is still required to avoid brackets `[ ]` in all file names and directories for the script to run. It should check for brackets and throw an error if it encounters some.
+- Unfortunately, it is still recommended to avoid brackets `[ ]` in all file names and directories for the script to run. It should check for brackets and throw an error if it encounters some.
 
 #### If the script takes very long to finish:
 - Check your task manager: is the CPU / drive bottlenecking? If it is the drive: buy a faster one ;-)
     - If it's your CPU (and it is a bit younger than an [8086](https://en.wikipedia.org/wiki/8086)), please tell me what file(s) you tried to copy (size, file count and fomrmat(s)) and where exactly it started to slow down.
 - Large history-files tend to slow down the duplicate-check. You can delete (manually or via the "overwrite"-option) it every time after formatting/emptying your sd-card (if you tend to use the script for importing photos as I do).
-- Try `-ThreadCount 1` or `-ThreadCount 2`
+- Try `-ThreadCount 2` or `-ThreadCount 24` - it can have an impact, especially on slow drives.
 
 #### If the script aborts or throws weird errors:
 - Please note as much as you can about your settings: parameters, paths and when it occured. Also copy the error message (it will always be shown in English, so one can look it up more easily). Open a ticket and/or contact me!
@@ -74,7 +74,7 @@ This script is an attempt to create a tool to easily (and switfly) copies files 
 - No support for non-Windows-OSs, *though I plan to achieve that someday*.
 
 ## To do
-- [ ] Evaluating the usefulness of Posh-RSJob (**Cuntributions are welcome!**) (high priority)
+- [x] Evaluating the usefulness of Posh-RSJob (**Cuntributions are welcome!**)
 - [x] GUI with tabs instead of dropdowns
 - [x] Option to deactivate copy-verification, thus enabling fast copying.
 - [x] Option to just Robocopy files over in their original subfolders (so like `robocopy InputPath OutputPath /MIR`)
