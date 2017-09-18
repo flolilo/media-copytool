@@ -174,7 +174,7 @@ param(
     [int]$ZipMirror=0,
     [int]$UnmountInputDrive=0,
     [int]$PreventStandby=1,
-    [int]$ThreadCount=2,
+    [int]$ThreadCount=$(Get-CimInstance win32_processor | select-object -ExpandProperty NumberOfLogicalProcessors),
     [int]$RememberInPath=0,
     [int]$RememberOutPath=0,
     [int]$RememberMirrorPath=0,
@@ -1175,9 +1175,14 @@ Function Start-FileSearchAndCheck(){
     [string]$inter = $(if($script:DupliCompareHashes -ne 0 -or $script:CheckOutputDupli -ne 0){"incl."}else{"excl."})
 
     for($i=0;$i -lt $script:allChosenFormats.Length; $i++){
-       $files_in += Get-ChildItem -LiteralPath $InPath -Filter $script:allChosenFormats[$i] -Recurse:$script:input_recurse -File | ForEach-Object {
+        if($sw.Elapsed.TotalMilliseconds -ge 500 -or $counter -eq 1){
+            Write-Progress -Id 1 -Activity "Find files in $InPath ($inter additional hash-calc.)..." -PercentComplete $(($i / $($script:allChosenFormats.Length)) * 100) -Status "Format #$($i + 1) / $($script:allChosenFormats.Length)"
+            $sw.Reset()
+            $sw.Start()
+        }
+        $files_in += Get-ChildItem -LiteralPath $InPath -Filter $script:allChosenFormats[$i] -Recurse:$script:input_recurse -File | ForEach-Object -Process {
             if($sw.Elapsed.TotalMilliseconds -ge 500 -or $counter -eq 1){
-                Write-Progress -Activity "Find files in $InPath ($inter additional hash-calc.)..." -PercentComplete -1 -Status "File #$counter - $($_.FullName.Replace("$InPath",'.'))"
+                Write-Progress -Id 2 -Activity "Looking for files..." -PercentComplete -1 -Status "File #$counter - $($_.FullName.Replace("$InPath",'.'))"
                 $sw.Reset()
                 $sw.Start()
             }
@@ -1198,8 +1203,11 @@ Function Start-FileSearchAndCheck(){
                 hash = "ZYX"
                 tocopy = 1
             }
+        } -End {
+            Write-Progress -Id 2 -Activity "Looking for files..." -Status "Done!" -Completed
         }
     }
+    Write-Progress -Id 1 -Activity "Find files in $InPath ($inter additional hash-calc.)..." -Status "Done!" -Completed
 
     if($debug -ne 0){
         if((Read-Host "Show all found files? `"1`" for `"yes`"") -eq 1){
@@ -1225,17 +1233,15 @@ Function Start-FileSearchAndCheck(){
     # dupli-check via history-file:
     [array]$dupliindex_hist = @()
     if($script:UseHistFile -eq 1){
-        # Comparing Files between History-File and Input-Folder via history-file:
         for($i = 0; $i -lt $files_in.Length; $i++){
             if($sw.Elapsed.TotalMilliseconds -ge 500 -or $i -eq 0){
-                Write-Progress -Activity "Comparing to already copied files (history-file).." -PercentComplete $($i / $files_in.Length * 100) -Status "File # $($i + 1) / $($files_in.Length) - $($files_in[$i].name)"
+                Write-Progress -Activity "Comparing to already copied files (history-file).." -PercentComplete $(($i / $files_in.Length) * 100) -Status "File # $($i + 1) / $($files_in.Length) - $($files_in[$i].name)"
                 $sw.Reset()
                 $sw.Start()
             }
             
             $j = $HistFiles.Length
             while($true){
-                # check resemblance between in_files and hist_files:
                 if($files_in[$i].inname -eq $HistFiles[$j].name -and $files_in[$i].date -eq $HistFiles[$j].date -and $files_in[$i].size -eq $HistFiles[$j].size -and ($script:DupliCompareHashes -eq 0 -or ($script:DupliCompareHashes -eq 1 -and $files_in[$i].hash -eq $HistFiles[$j].Hash))){
                     Write-ColorOut "Existing: $($i + 1) - $($files_in[$i].inname.Replace("$InPath",'.'))" -ForegroundColor DarkGreen
                     $dupliindex_hist += $i
@@ -1253,6 +1259,7 @@ Function Start-FileSearchAndCheck(){
                 }
             }
         }
+        Write-Progress -Activity "Comparing to already copied files (history-file).." -Status "Done!" -Completed
         $sw.Reset()
         if($script:debug -ne 0){
             Write-ColorOut "`r`n`r`nFiles to skip / process (after history-check):" -ForegroundColor Yellow
@@ -1281,9 +1288,14 @@ Function Start-FileSearchAndCheck(){
         Write-ColorOut "`r`nAdditional comparison to already existing files in the output-path..." -ForegroundColor Yellow
         [int]$counter = 1
         for($i=0;$i -lt $script:allChosenFormats.Length; $i++){
-            $script:files_duplicheck += Get-ChildItem -LiteralPath $OutPath -Filter $script:allChosenFormats[$i] -Recurse -File | ForEach-Object {
+            if($sw.Elapsed.TotalMilliseconds -ge 500 -or $counter -eq 1){
+                Write-Progress -Id 1 -Activity "Find files in $OutPath..." -PercentComplete $(($i / $($script:allChosenFormats.Length)) * 100) -Status "Format #$($i + 1) / $($script:allChosenFormats.Length)"
+                $sw.Reset()
+                $sw.Start()
+            }
+            $script:files_duplicheck += Get-ChildItem -LiteralPath $OutPath -Filter $script:allChosenFormats[$i] -Recurse -File | ForEach-Object -Process {
                 if($sw.Elapsed.TotalMilliseconds -ge 500 -or $counter -eq 1){
-                    Write-Progress -Activity "Find files in $OutPath..." -PercentComplete -1 -Status "File # $counter - $($_.FullName.Replace("$OutPath",'.'))"
+                    Write-Progress -Id 2 -Activity "Looking for files..." -PercentComplete -1 -Status "File #$counter - $($_.FullName.Replace("$OutPath",'.'))"
                     $sw.Reset()
                     $sw.Start()
                 }
@@ -1296,8 +1308,12 @@ Function Start-FileSearchAndCheck(){
                     date = $_.LastWriteTime.ToString("yyyy-MM-dd_HH-mm-ss")
                     hash ="ZYX"
                 }
+            } -End {
+                Write-Progress -Id 2 -Activity "Looking for files..." -Status "Done!" -Completed
             }
         }
+        Write-Progress -Id 1 -Activity "Find files in $OutPath..." -Status "Done!" -Completed
+
         $sw.Reset()
         if($script:files_duplicheck.Length -ne 0){
             for($i = 0; $i -lt $files_in.Length; $i++){
@@ -1335,6 +1351,7 @@ Function Start-FileSearchAndCheck(){
                     }
                 }
             }
+            Write-Progress -Activity "Comparing to files in out-path..." -Status "Done!" -Completed
 
             if($script:debug -ne 0){
                 Write-ColorOut "`r`n`r`nFiles to skip / process (after out-path-check):" -ForegroundColor Yellow
@@ -1432,6 +1449,7 @@ Function Start-OverwriteProtection(){
             }
         }
     }
+    Write-Progress -Activity "Prevent overwriting existing files..." -Status "Done!" -Completed
 
     return $InFiles
 }
@@ -1680,7 +1698,7 @@ Function Start-Everything(){
         }
         if($script:PreventStandby -eq 1){
             if((Test-Path -Path "$($PSScriptRoot)\media_copytool_preventsleep.ps1" -PathType Leaf) -eq $true){
-                $preventstandby = (Start-Process powershell -ArgumentList "$($PSScriptRoot)\media_copytool_preventsleep.ps1" -WindowStyle Hidden -PassThru).Id
+                $preventstandbyid = (Start-Process powershell -ArgumentList "$($PSScriptRoot)\media_copytool_preventsleep.ps1" -WindowStyle Hidden -PassThru).Id
             }else{
                 Write-Host "Couldn't find .\media_copytool_preventsleep.ps1, so can't prevent standby." -ForegroundColor Magenta
                 Start-Sleep -Seconds 3
@@ -1814,7 +1832,7 @@ Function Start-Everything(){
     }
     
     if($script:PreventStandby -eq 1){
-        Stop-Process -Id $preventstandby -Verbose
+        Stop-Process -Id $preventstandbyid
     }
     if($script:GUI_CLI_Direct -eq "GUI"){
         $script:Form.WindowState ='Normal'
