@@ -3,12 +3,20 @@ All notable changes to this project will be documented in this file.
 
 (The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html). )
 
+## 0.7.5-MT - 2017-09-18
+### Changed
+- Bugfix: `media_copytool_preventsleep` wouldn't close properly due to a wrongly named variable.
+- Bugfix: Progress-bars should now all close properly.
+- Change: `-ThreadCount`'s description was updated due to performance-tests. Default-value now is 6, range can go from 2-48.
+
+
 ## 0.7.3-MT - 2017-09-16
 ### Changed
 - Bugfix: preventsleep wasn't working with `PoshRSJob`, so reverted to `preventsleep.ps1`.
 
 ### Added
-- `preventsleep.ps1`.
+- `media_copytool_preventsleep.ps1`.
+
 
 ## 0.7.2-MT - 2017-09-08
 ### Changed

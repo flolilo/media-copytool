@@ -10,9 +10,9 @@
         Now supports multithreading via Boe Prox's PoshRSJob-cmdlet (https://github.com/proxb/PoshRSJob)
 
     .NOTES
-        Version:        0.7.3-MT (Beta)
+        Version:        0.7.5-MT (Beta)
         Author:         flolilo
-        Creation Date:  2017-09-08
+        Creation Date:  2017-09-18
         Legal stuff: This program is free software. It comes without any warranty, to the extent permitted by
         applicable law. Most of the script was written by myself (or heavily modified by me when searching for solutions
         on the WWW). However, some parts are copies or modifications of very genuine code - see
@@ -113,8 +113,7 @@
         Valid range: 0 (deactivate), 1 (activate)
         If enabled, automatic standby or shutdown is prevented as long as media-copytool is running.
     .PARAMETER ThreadCount
-        Thread-count for RSJobs.
-        You can experiment around with this: too high thread counts tend to be much slower than relatively low ones.
+        Thread-count for RSJobs, Xcopy-instances and Robocopy's /MT-switch. Recommended: 6, Valid: 2-48.
     .PARAMETER RememberInPath
         Valid range: 0 (deactivate), 1 (activate)
         If enabled, it remembers the value of -InputPath for future script-executions.
@@ -174,7 +173,7 @@ param(
     [int]$ZipMirror=0,
     [int]$UnmountInputDrive=0,
     [int]$PreventStandby=1,
-    [int]$ThreadCount=$(Get-CimInstance win32_processor | select-object -ExpandProperty NumberOfLogicalProcessors),
+    [int]$ThreadCount=6,
     [int]$RememberInPath=0,
     [int]$RememberOutPath=0,
     [int]$RememberMirrorPath=0,
@@ -593,8 +592,8 @@ Function Get-UserValues(){
             }
             # $ThreadCount
             while($true){
-                [int]$script:ThreadCount = Read-Host "Number of threads for multithreaded operations. Suggestion: Number in between 2 and 4."
-                if($script:ThreadCount -in (1..24)){
+                [int]$script:ThreadCount = Read-Host "Number of threads for multithreaded operations. Suggestion: 6."
+                if($script:ThreadCount -in (2..48)){
                     break
                 }else{
                     Write-ColorOut "Invalid choice!" -ForegroundColor Magenta
@@ -843,7 +842,7 @@ Function Get-UserValues(){
                 return $false
             }
             # $ThreadCount
-            if($script:ThreadCount -notin (0..999)){
+            if($script:ThreadCount -notin (2..48)){
                 Write-ColorOut "Invalid choice of -ThreadCount." -ForegroundColor Red
                 return $false
             }
@@ -1477,7 +1476,7 @@ Function Start-FileCopy(){
 
     # setting up robocopy:
     [array]$rc_command = @()
-    [string]$rc_suffix = "/R:5 /W:15 /MT:4 /XO /XC /XN /NJH /NC /J"
+    [string]$rc_suffix = "/R:5 /W:15 /MT:$script:ThreadCount /XO /XC /XN /NJH /NC /J"
     [string]$rc_inter_inpath = ""
     [string]$rc_inter_outpath = ""
     [string]$rc_inter_files = ""
@@ -1526,9 +1525,15 @@ Function Start-FileCopy(){
     
     if($script:debug -ne 0){
         Write-ColorOut "`r`nROBOCOPY:" -ForeGroundColor Yellow
-        foreach($i in $rc_command){Write-ColorOut "`'$i`'`r`r" -ForeGroundColor Gray; [System.IO.File]::AppendAllText("D:\robocopy_commands.txt", $i)}
+        foreach($i in $rc_command){
+            Write-ColorOut "`'$i`'`r`r" -ForeGroundColor Gray
+            [System.IO.File]::AppendAllText("D:\robocopy_commands.txt", $i)
+        }
         Write-ColorOut "`r`nXCOPY:" -ForeGroundColor Yellow
-        foreach($i in $xc_command){Write-ColorOut "`'$i`'`r`n" -ForeGroundColor Gray; [System.IO.File]::AppendAllText("D:\xcopy_commands.txt", $i)}
+        foreach($i in $xc_command){
+            Write-ColorOut "`'$i`'`r`n" -ForeGroundColor Gray
+            [System.IO.File]::AppendAllText("D:\xcopy_commands.txt", $i)
+        }
         Invoke-Pause
     }
 
@@ -1538,10 +1543,26 @@ Function Start-FileCopy(){
     }
 
     # start xcopy:
-    $xc_command | Start-RSJob -Name "Xcopy" -throttle $script:ThreadCount -ScriptBlock {
-        Start-Process xcopy -ArgumentList $_ -WindowStyle Hidden -Wait
-    } | Wait-RSJob -ShowProgress | Out-Null
-    Get-RSJob -Name "Xcopy" | Remove-RSJob
+    $sw = [diagnostics.stopwatch]::StartNew()
+    [int]$counter=0
+    for($i=0; $i -lt $xc_command.Length; $i++){
+        while($counter -ge $script:ThreadCount){
+            $counter = @(Get-Process -Name xcopy -ErrorAction SilentlyContinue).count
+            Start-Sleep -Milliseconds 25
+        }
+        if($sw.Elapsed.TotalMilliseconds -ge 500 -or $i -eq 0){
+            Write-Progress -Activity "Starting Xcopy.." -PercentComplete $($i / $xc_command.Length * 100) -Status "File # $($i + 1) / $($xc_command.Length)"
+            $sw.Reset()
+            $sw.Start()
+        }
+        Start-Process xcopy -ArgumentList $xc_command[$i] -WindowStyle Hidden
+        $counter++
+    }
+    while($counter -gt 0){
+        $counter = @(Get-Process -Name xcopy -ErrorAction SilentlyContinue).count
+        Start-Sleep -Milliseconds 50
+    }
+    Write-Progress -Activity "Starting Xcopy.." -Status "Done!" -Completed
 
     Start-Sleep -Milliseconds 250
 }
@@ -1677,7 +1698,7 @@ Function Set-HistFile(){
 # DEFINITION: Starts all the things.
 Function Start-Everything(){
     Write-ColorOut "`r`n`r`n            Welcome to flolilo's Media-Copytool!            " -ForegroundColor DarkCyan -BackgroundColor Gray
-    Write-ColorOut "                v0.7.3-MT (Beta) - 2017-09-08               `r`n" -ForegroundColor DarkCyan -BackgroundColor Gray
+    Write-ColorOut "                v0.7.5-MT (Beta) - 2017-09-18               `r`n" -ForegroundColor DarkCyan -BackgroundColor Gray
     Write-ColorOut "$(Get-Date -Format "dd.MM.yy HH:mm:ss")  -" -NoNewLine
     Write-ColorOut "-  Starting everything..." -ForegroundColor Cyan
     $script:timer = [diagnostics.stopwatch]::StartNew()
