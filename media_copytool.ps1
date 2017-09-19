@@ -188,7 +188,7 @@ param(
 [int]$paramline = 158
 
 #DEFINITION: Hopefully avoiding errors by wrong encoding now:
-$OutputEncoding = New-Object -typename System.Text.UTF8Encoding
+$OutputEncoding = New-Object -TypeName System.Text.UTF8Encoding
 
 # Get all error-outputs in English:
 [Threading.Thread]::CurrentThread.CurrentUICulture = 'en-US'
@@ -1460,7 +1460,9 @@ Function Start-InputGetHash(){
 # TODO: multithread if possible (Start-MTFileHash)
 Function Start-OverwriteProtection(){
     param(
+        [Parameter(Mandatory=$true)]
         [array]$InFiles,
+        [Parameter(Mandatory=$true)]
         [string]$OutPath
     )
     $sw = [diagnostics.stopwatch]::StartNew()
@@ -1536,9 +1538,12 @@ Function Start-OverwriteProtection(){
 # DEFINITION: Copy Files
 Function Start-FileCopy(){
     param(
+        [Parameter(Mandatory=$true)]
         [array]$InFiles,
-        [string]$InPath = "->In<-",
-        [string]$OutPath = "->Out<-"
+        [Parameter(Mandatory=$true)]
+        [string]$InPath,
+        [Parameter(Mandatory=$true)]
+        [string]$OutPath
     )
 
     if($script:OutputSubfolderStyle -eq "none"){
@@ -1652,6 +1657,7 @@ Function Start-FileCopy(){
 Function Start-7zip(){
     param(
         [string]$7zexe = "$($PSScriptRoot)\7z.exe",
+        [Parameter(Mandatory=$true)]
         [array]$InFiles
     )
     Write-ColorOut "`r`n$(Get-Date -Format "dd.MM.yy HH:mm:ss")  --  Zipping files..." -ForegroundColor Cyan
@@ -1693,6 +1699,7 @@ Function Start-7zip(){
 # DEFINITION: Verify newly copied files
 Function Start-FileVerification(){
     param(
+        [Parameter(Mandatory=$true)]
         [array]$InFiles
     )
 
