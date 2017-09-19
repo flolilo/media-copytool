@@ -86,7 +86,7 @@ Dieses Skript ist mein Versuch, die Dateien von den Speicherkarten meiner DSLR e
 - [x] Sonderzeichen wie eckige Klammern in Pfaden und Dateien erlauben (Alle Tests sagen, dass es funktioniert)
 - [x] Option um zip-Archive auf den Spiegel-Ausgabepfad abzulegen
 - [x] Option um USB-Geräte nach dem Abschluss der (ersten) Kopie sicher auszuwerfen
-- [ ] Option um das Kopieren doppelt vorhandener Dateien zu vermeiden. (Z.B. .\DCIM\File_1.jpeg & .\DCIM\Sub\File_1.jpeg -> .\Out\File_1.jpeg) (Niedrige Priorität)
+- [x] Option um das Kopieren doppelt vorhandener Dateien zu vermeiden. (Z.B. .\DCIM\File_1.jpeg & .\DCIM\Sub\File_1.jpeg -> .\Out\File_1.jpeg) (Niedrige Priorität)
 - [x] Schönere/lesbarere Ausgabe in der Konsole
 - [ ] Multithreading der GUI (Niedrige Priorität)
 - [ ] Zweite JSON-Datei für die Dateien, die im Ausgabepfad kontrolliert wurden (eventuell)

@@ -10,9 +10,9 @@
         Now supports multithreading via Boe Prox's PoshRSJob-cmdlet (https://github.com/proxb/PoshRSJob)
 
     .NOTES
-        Version:        0.7.6 (Beta)
+        Version:        0.7.7 (Beta)
         Author:         flolilo
-        Creation Date:  2017-09-18
+        Creation Date:  2017-09-19
         Legal stuff: This program is free software. It comes without any warranty, to the extent permitted by
         applicable law. Most of the script was written by myself (or heavily modified by me when searching for solutions
         on the WWW). However, some parts are copies or modifications of very genuine code - see
@@ -103,6 +103,9 @@
     .PARAMETER VerifyCopies
         Valid range: 0 (deactivate), 1 (activate)
         If enabled, copied files will be checked for their integrity via SHA1-hashes. Disabling will increase speed, but there is no absolute guarantee that your files are copied correctly.
+    .PARAMETER AvoidIdenticalFiles
+        Valid range: 0 (deactivate), 1 (activate)
+        If enabled, identical files from the input-path will only get copied once.
     .PARAMETER ZipMirror
         Valid range: 0 (deactivate), 1 (activate)
         Only enabled if -EnableMirror is enabled, too. Creates a zip-archive for archiving. Name will be <actual time>_Mirror.zip
@@ -170,6 +173,7 @@ param(
     [int]$DupliCompareHashes=0,
     [int]$CheckOutputDupli=0,
     [int]$VerifyCopies=1,
+    [int]$AvoidIdenticalFiles=0,
     [int]$ZipMirror=0,
     [int]$UnmountInputDrive=0,
     [int]$PreventStandby=1,
@@ -181,7 +185,7 @@ param(
     [int]$Debug=0
 )
 # First line of "param" (for remembering/restoring parameters):
-[int]$paramline = 155
+[int]$paramline = 158
 
 #DEFINITION: Hopefully avoiding errors by wrong encoding now:
 $OutputEncoding = New-Object -typename System.Text.UTF8Encoding
@@ -268,6 +272,7 @@ if($ShowParams -ne 0){
     Write-ColorOut "-InputSubfolderSearch`t=`t$InputSubfolderSearch" -ForegroundColor Cyan
     Write-ColorOut "-CheckOutputDupli`t=`t$CheckOutputDupli" -ForegroundColor Cyan
     Write-ColorOut "-VerifyCopies`t=`t$VerifyCopies" -ForegroundColor Cyan
+    Write-ColorOut "-AvoidIdenticalFiles`t=`t$AvoidIdenticalFiles" -ForegroundColor Cyan
     Write-ColorOut "-ZipMirror`t`t=`t$ZipMirror" -ForegroundColor Cyan
     Write-ColorOut "-UnmountInputDrive`t=`t$UnmountInputDrive" -ForegroundColor Cyan
     Write-ColorOut "-PreventStandby`t`t=`t$PreventStandby" -ForegroundColor Cyan
@@ -563,6 +568,16 @@ Function Get-UserValues(){
                     continue
                 }
             }
+            # $AvoidIdenticalFiles
+            while($true){
+                [int]$script:AvoidIdenticalFiles = Read-Host "`tAvoid copying identical input-files? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+                if($script:AvoidIdenticalFiles -in (0..1)){
+                    break
+                }else{
+                    Write-ColorOut "`tInvalid choice!" -ForegroundColor Magenta
+                    continue
+                }
+            }
             # $ZipMirror
             if($script:MirrorEnable -eq 1){
                 while($true){
@@ -733,6 +748,11 @@ Function Get-UserValues(){
                 if($script:WPFcheckBoxVerifyCopies.IsChecked -eq $true){1}
                 else{0}
             )
+            # $AvoidIdenticalFiles
+            $script:AvoidIdenticalFiles = $(
+                if($script:WPFcheckBoxAvoidIdenticalFiles.IsChecked -eq $true){1}
+                else{0}
+            )
             # $ZipMirror
             $script:ZipMirror = $(
                 if($script:WPFcheckBoxZipMirror.IsChecked -eq $true){1}
@@ -829,6 +849,11 @@ Function Get-UserValues(){
             # $VerifyCopies
             if($script:VerifyCopies -notin (0..1)){
                 Write-ColorOut "`tInvalid choice of -VerifyCopies." -ForegroundColor Red
+                return $false
+            }
+            # $AvoidIdenticalFiles
+            if($script:AvoidIdenticalFiles -notin (0..1)){
+                Write-ColorOut "`tInvalid choice of -AvoidIdenticalFiles." -ForegroundColor Red
                 return $false
             }
             # $ZipMirror
@@ -1030,7 +1055,7 @@ Function Start-Remembering(){
     # Remember settings
     if($script:RememberSettings -ne 0){
         Write-ColorOut "`tFrom:"
-        for($i = $($script:paramline + 1); $i -le $($script:paramline + 20); $i++){
+        for($i = $($script:paramline + 1); $i -le $($script:paramline + 21); $i++){
             if(-not ($i -eq $($script:paramline + 2) -or $i -eq $($script:paramline + 3) -or $i -eq $($script:paramline + 5))){
                 Write-ColorOut "`t$($lines_new[$i])" -ForegroundColor Gray
             }
@@ -1064,17 +1089,19 @@ Function Start-Remembering(){
         $lines_new[$($script:paramline + 15)] = '    [int]$CheckOutputDupli=' + "$script:CheckOutputDupli" + ','
         # $VerifyCopies
         $lines_new[$($script:paramline + 16)] = '    [int]$VerifyCopies=' + "$script:VerifyCopies" + ','
+        # $AvoidIdenticalFiles
+        $lines_new[$($script:paramline + 17)] = '    [int]$AvoidIdenticalFiles=' + "$script:AvoidIdenticalFiles" + ','
         # $ZipMirror
-        $lines_new[$($script:paramline + 17)] = '    [int]$ZipMirror=' + "$script:ZipMirror" + ','
+        $lines_new[$($script:paramline + 18)] = '    [int]$ZipMirror=' + "$script:ZipMirror" + ','
         # $UnmountInputDrive
-        $lines_new[$($script:paramline + 18)] = '    [int]$UnmountInputDrive=' + "$script:UnmountInputDrive" + ','
+        $lines_new[$($script:paramline + 19)] = '    [int]$UnmountInputDrive=' + "$script:UnmountInputDrive" + ','
         # $PreventStandby
-        $lines_new[$($script:paramline + 19)] = '    [int]$PreventStandby=' + "$script:PreventStandby" + ','
+        $lines_new[$($script:paramline + 20)] = '    [int]$PreventStandby=' + "$script:PreventStandby" + ','
         # $ThreadCount
-        $lines_new[$($script:paramline + 20)] = '    [int]$ThreadCount=' + "$script:ThreadCount" + ','
+        $lines_new[$($script:paramline + 21)] = '    [int]$ThreadCount=' + "$script:ThreadCount" + ','
 
         Write-ColorOut "`tTo:"
-        for($i = $($script:paramline + 1); $i -le $($script:paramline + 20); $i++){
+        for($i = $($script:paramline + 1); $i -le $($script:paramline + 21); $i++){
             if(-not ($i -eq $($script:paramline + 2) -or $i -eq $($script:paramline + 3) -or $i -eq $($script:paramline + 5))){
                 Write-ColorOut "`t$($lines_new[$i])" -ForegroundColor Yellow
             }
@@ -1395,7 +1422,7 @@ Function Start-DupliCheckOut(){
     return $InFiles
 }
 
-# DEFINITION: Cleaning away all files that will not get copied:
+# DEFINITION: Cleaning away all files that will not get copied. ALSO checks for Identical files:
 Function Start-InputGetHash(){
     param(
         [Parameter(Mandatory=$true)]
@@ -1403,12 +1430,24 @@ Function Start-InputGetHash(){
     )
     Write-ColorOut "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")  --  Calculate remaining hashes." -ForegroundColor Cyan
 
-    # Calculate hash (if not yet done):
-    if($script:VerifyCopies -eq 1 -and $script:DupliCompareHashes -eq 0){
+    # DEFINITION: Calculate hash (if not yet done):
+    if($script:VerifyCopies -eq 1 -or $script:AvoidIdenticalFiles -eq 1){
         $InFiles | Where-Object {$_.Hash -eq "ZYX"} | Start-RSJob -Name "GetHash" -throttle $script:ThreadCount -ScriptBlock {
             $_.Hash = Get-FileHash -LiteralPath $_.FullName -Algorithm SHA1 | Select-Object -ExpandProperty Hash
         } | Wait-RSJob -ShowProgress | Receive-RSJob
         Get-RSJob -Name "GetHash" | Remove-RSJob
+    }
+
+    # DEFINITION: if enabled, avoid copying identical files from the input-path:
+    if($script:AvoidIdenticalFiles -eq 1){
+        [array]$inter = ($InFiles | Sort-Object -Property InName,Date,Size,Hash -Unique)
+        if($inter.Length -ne $InFiles.Length){
+            Write-ColorOut "$($InFiles.Length - $inter.Length) identical files were found in the input-path - only copying one of each." -ForegroundColor Magenta
+            Start-Sleep -Seconds 5
+        }
+        [array]$InFiles = $inter
+        $InFiles | Out-Null
+        $script:resultvalues.identicalFiles = $($InFiles.Length - $inter.Length)
     }
 
     $script:resultvalues.copyfiles = $InFiles.Length
@@ -1743,7 +1782,7 @@ Function Set-HistFile(){
 # DEFINITION: Starts all the things.
 Function Start-Everything(){
     Write-ColorOut "`r`n`                                flolilo's Media-Copytool                                " -ForegroundColor DarkCyan -BackgroundColor Gray
-    Write-ColorOut "                               v0.7.6 (Beta) - 2017-09-18                               `r`n" -ForegroundColor DarkCyan -BackgroundColor Gray
+    Write-ColorOut "                               v0.7.7 (Beta) - 2017-09-19                               `r`n" -ForegroundColor DarkCyan -BackgroundColor Gray
     Write-ColorOut "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")  --  Starting everything..." -ForegroundColor Cyan
     $script:timer = [diagnostics.stopwatch]::StartNew()
     while($true){
@@ -1920,7 +1959,7 @@ Function Start-Everything(){
     Write-ColorOut "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")  --  Done!" -ForegroundColor Cyan
     Write-ColorOut "`r`n`tStats:" -ForegroundColor DarkCyan
     Write-ColorOut "`tFound:`t`t$($script:resultvalues.ingoing)`tfiles." -ForegroundColor Cyan
-    Write-ColorOut "`tSkipped:`t$($script:resultvalues.duplihist) (history) + $($script:resultvalues.dupliout) (out-path)`tfiles." -ForegroundColor DarkGreen
+    Write-ColorOut "`tSkipped:`t$($script:resultvalues.duplihist) (history) + $($script:resultvalues.dupliout) (out-path) + $($script:resultvalues.IdenticalFiles) (identical)`tfiles." -ForegroundColor DarkGreen
     Write-ColorOut "`tCopied: `t$($script:resultvalues.copyfiles)`tfiles." -ForegroundColor Yellow
     if($script:VerifyCopies -eq 1){
         Write-ColorOut "`tVerified:`t$($script:resultvalues.verified)`tfiles." -ForegroundColor Green
@@ -2031,6 +2070,7 @@ if($GUI_CLI_Direct -eq "GUI"){
     $WPFcheckBoxCheckInHash.IsChecked = $DupliCompareHashes
     $WPFcheckBoxOutputDupli.IsChecked = $CheckOutputDupli
     $WPFcheckBoxVerifyCopies.IsChecked = $VerifyCopies
+    $WPFcheckBoxAvoidIdenticalFiles.IsChecked = $AvoidIdenticalFiles
     $WPFcheckBoxZipMirror.IsChecked = $ZipMirror
     $WPFcheckBoxUnmountInputDrive.IsChecked = $UnmountInputDrive
     $WPFcheckBoxPreventStandby.IsChecked = $PreventStandby

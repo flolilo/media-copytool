@@ -86,7 +86,7 @@ This script is an attempt to create a tool to easily (and switfly) copies files 
 - [x] Allowing special characters like brackets in Paths
 - [x] Option to create a zip-archive for mirror-copying
 - [x] Option to unmount USB drives after finishing (first) copy (done with limitations)
-- [ ] Option to avoid copying a file that exists more than once in the input more than one time. (E.g. .\DCIM\File_1.jpeg & .\DCIM\Sub\File_1.jpeg -> .\Out\File_1.jpeg) (Low priority)
+- [x] Option to avoid copying a file that exists more than once in the input more than one time. (E.g. .\DCIM\File_1.jpeg & .\DCIM\Sub\File_1.jpeg -> .\Out\File_1.jpeg) (Low priority)
 - [x] Making the output look nice(r) and especially make errors more transparent to users (Low priority)
 - [ ] Multithreading the GUI (Low priority)
 - [ ] Creating a second JSON-file for looked up files in output-path (eventually)
