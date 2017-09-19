@@ -1,4 +1,4 @@
-# media-copytool -  (MT)
+# media-copytool
 :de: [Hier geht es zur deutschen Readme-Datei](https://github.com/flolilo/media-copytool/blob/master/README_GER.md). :de:
 
 PowerShell-based, GUI-including script that not only copies your files, but also verifies them afterwards. *Now with multithreading for faster processing!*
@@ -74,6 +74,7 @@ This script is an attempt to create a tool to easily (and switfly) copies files 
 - No support for non-Windows-OSs, *though I plan to achieve that someday*.
 
 ## To do
+- [ ] Making all `for`-loops multithreaded (high priority)
 - [x] Evaluating the usefulness of Posh-RSJob (**Cuntributions are welcome!**)
 - [x] GUI with tabs instead of dropdowns
 - [x] Option to deactivate copy-verification, thus enabling fast copying.

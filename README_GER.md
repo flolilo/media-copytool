@@ -1,4 +1,4 @@
-# media-copytool - multi-threaded (MT)
+# media-copytool
 :uk: [Here's the path to the English readme file](https://github.com/flolilo/media-copytool/blob/master/README.md). :uk:
 
 PowerShell-basiertes Skript mit GUI, das Datien nicht nur kopiert, sondern auch verifiziert. *Jetzt mit Multithreading für höhere Geschwindigkeiten!*
@@ -74,6 +74,7 @@ Dieses Skript ist mein Versuch, die Dateien von den Speicherkarten meiner DSLR e
 - Kein Support für andere Betriebssysteme als Windows *- Support ist aber irgendwann geplant*.
 
 ## To do
+- [ ] Alle `for`-Schleifen multithreaden (hohe Priorität)
 - [x] Evaluierung von Posh-RSJob (**Mithilfe erwünscht!**)
 - [x] GUI mit Tabs statt Dropdowns
 - [x] Option um Kopien-Verifikation zu deaktivieren, um so die Ausführung zu beschleunigen.
@@ -85,7 +86,7 @@ Dieses Skript ist mein Versuch, die Dateien von den Speicherkarten meiner DSLR e
 - [x] Sonderzeichen wie eckige Klammern in Pfaden und Dateien erlauben (Alle Tests sagen, dass es funktioniert)
 - [x] Option um zip-Archive auf den Spiegel-Ausgabepfad abzulegen
 - [x] Option um USB-Geräte nach dem Abschluss der (ersten) Kopie sicher auszuwerfen
-- [ ] Option to avoid copying a file that exists more than once in the input more than one time. (E.g. .\DCIM\File_1.jpeg & .\DCIM\Sub\File_1.jpeg -> .\Out\File_1.jpeg) (Niedrige Priorität)
+- [ ] Option um das Kopieren doppelt vorhandener Dateien zu vermeiden. (Z.B. .\DCIM\File_1.jpeg & .\DCIM\Sub\File_1.jpeg -> .\Out\File_1.jpeg) (Niedrige Priorität)
 - [x] Schönere/lesbarere Ausgabe in der Konsole
 - [ ] Multithreading der GUI (Niedrige Priorität)
 - [ ] Zweite JSON-Datei für die Dateien, die im Ausgabepfad kontrolliert wurden (eventuell)

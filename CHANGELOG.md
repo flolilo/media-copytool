@@ -1,10 +1,21 @@
 ﻿# Changelog
 All notable changes to this project will be documented in this file.
 
-(The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html). )
+(The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).)
 
-## 0.7.5-MT - 2017-09-18
+## 0.7.6 - 2017-09-18
 ### Changed
+- Split Function `StartFileSearchAndCheck` into sub-functions `Start-FileSearch`, `Start-DupliCheckHist`, `Start-DupliCheckOut`, `Start-InputGetHash`. Adapted code in `Start-Everything` to reflect this.
+- Bugfix: `"$($PSScriptRoot)"` instead of `"$PSScriptRoot"` in `Set-HistFile`
+- Bugfix: `"$($PSCommandPath)"` instead of `"$PSCommandPath"` in `$WPFbuttonAbout.Add_Click`
+- Bugfix: Check for compromised history-file in `Get-HistFile` would falsely alarm user in case of only one entry.
+- Cosmetic: Debug-Output is now competely optional
+- Cosmetic: Console-Outputs from Functions are now indented
+
+
+## 0.7.5 - 2017-09-18
+### Changed
+- Renamed script (removed "-MT", as both branches are now multithreaded).
 - Bugfix: `media_copytool_preventsleep` wouldn't close properly due to a wrongly named variable.
 - Bugfix: Progress-bars should now all close properly.
 - Change: `-ThreadCount`'s description was updated due to performance-tests. Default-value now is 6, range can go from 2-48.
