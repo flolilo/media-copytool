@@ -1,8 +1,7 @@
 # media-copytool
 :uk: [Here's the path to the English readme file](https://github.com/flolilo/media-copytool/blob/master/README.md). :uk:
 
-PowerShell-basiertes Skript mit GUI, das Datien nicht nur kopiert, sondern auch verifiziert. *Jetzt mit Multithreading für höhere Geschwindigkeiten!*
-Dieses Skript ist mein Versuch, die Dateien von den Speicherkarten meiner DSLR einfach (und schnell) auf den Computer zu kopieren. Die Funktionen des Skripts übertreffen inzwischen die der meisten (wenn nicht alle) professionellen RAW-Converter (natürlich nicht, wenn es um's Konvertieren von RAWs geht ;-) ). Doch der Spaß hört hier nicht auf: es kommen immer weitere Features! Und das beste daran: das Skript kann mit **jedem** Dateity umgehen!
+Media-Copytool ist mein Versuch, die Dateien von den Speicherkarten meiner DSLR einfach (und schnell) auf den Computer zu kopieren. Die Funktionen des Skripts übertreffen inzwischen die der meisten (wenn nicht alle) professionellen RAW-Converter (natürlich nicht, wenn es um's Konvertieren von RAWs geht ;-) ). Doch der Spaß hört hier nicht auf: es kommen immer weitere Features! Und das beste daran: das Skript kann mit **jedem** Dateity umgehen! (Außerdem ist es gratis.)
 
 
 **Bug-Reports, Fragen und Feature-Requests sind jederzeit gern gesehen!**

@@ -10,7 +10,7 @@
         Now supports multithreading via Boe Prox's PoshRSJob-cmdlet (https://github.com/proxb/PoshRSJob)
 
     .NOTES
-        Version:        0.7.7 (Beta)
+        Version:        0.7.8 (Beta)
         Author:         flolilo
         Creation Date:  2017-09-19
         Legal stuff: This program is free software. It comes without any warranty, to the extent permitted by
@@ -222,7 +222,10 @@ Function Write-ColorOut(){
         [ValidateSet("DarkBlue","DarkGreen","DarkCyan","DarkRed","Blue","Green","Cyan","Red","Magenta","Yellow","Black","DarkGray","Gray","DarkYellow","White","DarkMagenta")]
         [string]$BackgroundColor=[Console]::BackgroundColor,
 
-        [switch]$NoNewLine=$false
+        [switch]$NoNewLine=$false,
+
+        [ValidateRange(0,48)]
+        [int]$Indentation=0
     )
 
     if($ForegroundColor.Length -ge 3){
@@ -232,6 +235,9 @@ Function Write-ColorOut(){
     if($BackgroundColor.Length -ge 3){
         $old_bg_color = [Console]::BackgroundColor
         [Console]::BackgroundColor = $BackgroundColor
+    }
+    if($Indentation -gt 0){
+        [Console]::CursorLeft = $Indentation
     }
 
     if($NoNewLine -eq $false){
@@ -253,30 +259,32 @@ if($Debug -eq 0){
     $PSDefaultParameterValues = @{}
     $PSDefaultParameterValues += @{'*:ErrorAction' = 'Stop'}
     $ErrorActionPreference = 'Stop'
+}else{
+    Write-ColorOut "PID = $($pid)" -ForegroundColor Magenta -BackgroundColor DarkGray
 }
 
 if($ShowParams -ne 0){
     Write-ColorOut "flolilo's Media-Copytool's Parameters:`r`n" -ForegroundColor Green
-    Write-ColorOut "-GUI_CLI_Direct`t`t=`t$GUI_CLI_Direct" -ForegroundColor Cyan
-    Write-ColorOut "-InputPath`t`t=`t$InputPath" -ForegroundColor Cyan
-    Write-ColorOut "-OutputPath`t`t=`t$OutputPath" -ForegroundColor Cyan
-    Write-ColorOut "-MirrorEnable`t`t=`t$MirrorEnable" -ForegroundColor Cyan
-    Write-ColorOut "-MirrorPath`t`t=`t$MirrorPath" -ForegroundColor Cyan
-    Write-ColorOut "-PresetFormats`t`t=`t$PresetFormats" -ForegroundColor Cyan
-    Write-ColorOut "-CustomFormatsEnable`t=`t$CustomFormatsEnable" -ForegroundColor Cyan
-    Write-ColorOut "-CustomFormats`t`t=`t$CustomFormats" -ForegroundColor Cyan
-    Write-ColorOut "-OutputSubfolderStyle`t=`t$OutputSubfolderStyle" -ForegroundColor Cyan
-    Write-ColorOut "-OutputFileStyle`t=`t$OutputFileStyle" -ForegroundColor Cyan
-    Write-ColorOut "-UseHistFile`t`t=`t$UseHistFile" -ForegroundColor Cyan
-    Write-ColorOut "-WriteHistFile`t`t=`t$WriteHistFile" -ForegroundColor Cyan
-    Write-ColorOut "-InputSubfolderSearch`t=`t$InputSubfolderSearch" -ForegroundColor Cyan
-    Write-ColorOut "-CheckOutputDupli`t=`t$CheckOutputDupli" -ForegroundColor Cyan
-    Write-ColorOut "-VerifyCopies`t=`t$VerifyCopies" -ForegroundColor Cyan
-    Write-ColorOut "-AvoidIdenticalFiles`t=`t$AvoidIdenticalFiles" -ForegroundColor Cyan
-    Write-ColorOut "-ZipMirror`t`t=`t$ZipMirror" -ForegroundColor Cyan
-    Write-ColorOut "-UnmountInputDrive`t=`t$UnmountInputDrive" -ForegroundColor Cyan
-    Write-ColorOut "-PreventStandby`t`t=`t$PreventStandby" -ForegroundColor Cyan
-    Write-ColorOut "-ThreadCount`t`t=`t$ThreadCount`r`n" -ForegroundColor Cyan
+    Write-ColorOut "-GUI_CLI_Direct`t`t=`t$GUI_CLI_Direct" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-InputPath`t`t`t=`t$InputPath" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-OutputPath`t`t`t=`t$OutputPath" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-MirrorEnable`t`t=`t$MirrorEnable" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-MirrorPath`t`t`t=`t$MirrorPath" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-PresetFormats`t`t=`t$PresetFormats" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-CustomFormatsEnable`t=`t$CustomFormatsEnable" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-CustomFormats`t`t=`t$CustomFormats" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-OutputSubfolderStyle`t=`t$OutputSubfolderStyle" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-OutputFileStyle`t`t=`t$OutputFileStyle" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-UseHistFile`t`t=`t$UseHistFile" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-WriteHistFile`t`t=`t$WriteHistFile" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-InputSubfolderSearch`t=`t$InputSubfolderSearch" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-CheckOutputDupli`t`t=`t$CheckOutputDupli" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-VerifyCopies`t`t=`t$VerifyCopies" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-AvoidIdenticalFiles`t=`t$AvoidIdenticalFiles" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-ZipMirror`t`t`t=`t$ZipMirror" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-UnmountInputDrive`t`t=`t$UnmountInputDrive" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-PreventStandby`t`t=`t$PreventStandby" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-ThreadCount`t`t=`t$ThreadCount`r`n" -ForegroundColor Cyan -Indentation 4
     Pause
     Exit
 }
@@ -296,7 +304,7 @@ Function Invoke-Pause(){
     param($TotTime=0.0)
 
     if($script:Debug -gt 0 -and $TotTime -ne 0.0){
-        Write-ColorOut "Used time for process:`t$TotTime`r`n" -ForegroundColor Magenta
+        Write-ColorOut "Used time for process:`t$TotTime" -ForegroundColor Magenta
     }
     if($script:Debug -gt 1){
         if($TotTime -ne 0.0){
@@ -311,14 +319,14 @@ Function Invoke-Pause(){
 
 # DEFINITION: Exit the program (and close all windows) + option to pause before exiting.
 Function Invoke-Close(){
-    if($script:GUI_CLI_Direct -eq "GUI"){
-        $script:Form.Close()
+    if($script:PreventStandby -eq 1){
+        Stop-Process -Id $script:preventstandbyid
     }
     Write-ColorOut "Exiting - This could take some seconds. Please do not close window!" -ForegroundColor Magenta
     Get-RSJob | Stop-RSJob
     Start-Sleep -Milliseconds 5
     Get-RSJob | Remove-RSJob
-    if($script:Debug -ne 0){
+    if($script:Debug -gt 0){
         Pause
     }
     Exit
@@ -379,69 +387,69 @@ Function Get-UserValues(){
         if($script:GUI_CLI_Direct -eq "CLI"){
             # $InputPath
             while($true){
-                [string]$script:InputPath = Read-Host "`tPlease specify input-path"
+                [string]$script:InputPath = Read-Host "    Please specify input-path"
                 if($script:InputPath.Length -gt 1 -and (Test-Path -LiteralPath $script:InputPath -PathType Container) -eq $true){
                     break
                 }else{
-                    Write-ColorOut "`tInvalid selection!" -ForeGroundColor Magenta
+                    Write-ColorOut "Invalid selection!" -ForeGroundColor Magenta -Indentation 4
                     continue
                 }
             }
             # $OutputPath
             while($true){
-                [string]$script:OutputPath = Read-Host "`tPlease specify output-path"
+                [string]$script:OutputPath = Read-Host "    Please specify output-path"
                 if($script:OutputPath -eq $script:InputPath){
-                    Write-ColorOut "`r`n`tInput-path is the same as output-path.`r`n" -ForegroundColor Magenta
+                    Write-ColorOut "Input-path is the same as output-path.`r`n" -ForegroundColor Magenta -Indentation 4
                     continue
                 }else{
                     if($script:OutputPath.Length -gt 1 -and (Test-Path -LiteralPath $script:OutputPath -PathType Container) -eq $true){
                         break
                     }elseif((Split-Path -Parent -Path $script:OutputPath).Length -gt 1 -and (Test-Path -LiteralPath $(Split-Path -Qualifier -Path $script:OutputPath) -PathType Container) -eq $true){
-                        [int]$request = Read-Host "`tOutput-path not found, but it's pointing to a valid drive letter. Create chosen directory? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
-                        if($request -eq 1){
-                            New-Item -ItemType Directory -Path $script:OutputPath | Out-Null
+                        try{
+                            New-Item -ItemType Directory -LiteralPath $script:OutputPath | Out-Null
+                            Write-ColorOut "Directory $script:OutputPath created." -ForegroundColor Yellow -Indentation 4
                             break
-                        }elseif($request -eq 0){
-                            Write-ColorOut "`r`n`tOutput-path not found.`r`n" -ForegroundColor Magenta
-                            continue
+                        }catch{
+                            Write-ColorOut "Could not reate directory $script:OutputPath - aborting!" -ForegroundColor Magenta -Indentation 4
+                            return $false
                         }
                     }else{
-                        Write-ColorOut "`tInvalid selection!" -ForegroundColor Magenta
+                        Write-ColorOut "Invalid selection!" -ForegroundColor Magenta -Indentation 4
                         continue
                     }
                 }
             }
             # $MirrorEnable
             while($true){
-                [int]$script:MirrorEnable = Read-Host "`tCopy files to an additional folder? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+                [int]$script:MirrorEnable = Read-Host "    Copy files to an additional folder? 1 = yes, 0 = no."
                 if($script:MirrorEnable -eq 1 -or $script:MirrorEnable -eq 0){
                     break
                 }else{
-                    Write-ColorOut "`tInvalid selection!" -ForegroundColor Magenta
+                    Write-ColorOut "Invalid selection!" -ForegroundColor Magenta -Indentation 4
                     continue
                 }
             }
             # $MirrorPath
             if($script:MirrorEnable -eq 1){
                 while($true){
-                    [string]$script:MirrorPath = Read-Host "`tPlease specify additional output-path"
+                    [string]$script:MirrorPath = Read-Host "    Please specify additional output-path"
                     if($script:MirrorPath -eq $script:OutputPath -or $script:MirrorPath -eq $script:InputPath){
-                        Write-ColorOut "`r`n`tAdditional output-path is the same as input- or output-path.`r`n" -ForegroundColor Red
+                        Write-ColorOut "`r`nAdditional output-path is the same as input- or output-path.`r`n" -ForegroundColor Red -Indentation 4
                         continue
                     }
                     if($script:MirrorPath -gt 1 -and (Test-Path -LiteralPath $script:MirrorPath -PathType Container) -eq $true){
                         break
                     }elseif((Split-Path -Parent -Path $script:MirrorPath).Length -gt 1 -and (Test-Path -LiteralPath $(Split-Path -Qualifier -Path $script:MirrorPath) -PathType Container) -eq $true){
-                        [int]$request = Read-Host "`tAdditional output-path not found, but it's pointing to a valid drive letter. Create chosen directory? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
-                        if($request -eq 1){
-                            New-Item -ItemType Directory -Path $script:MirrorPath | Out-Null
+                        try{
+                            New-Item -ItemType Directory -LiteralPath $script:MirrorPath | Out-Null
+                            Write-ColorOut "Directory $script:OutputPath created." -ForegroundColor Yellow -Indentation 4
                             break
-                        }elseif($request -eq 0){
-                            Write-ColorOut "`r`n`tAdditional output-path not found.`r`n" -ForegroundColor Magenta
-                            continue
+                        }catch{
+                            Write-ColorOut "Could not reate directory $script:OutputPath - aborting!" -ForegroundColor Magenta -Indentation 4
+                            return $false
                         }
                     }else{
-                        Write-ColorOut "`tInvalid selection!" -ForegroundColor Magenta
+                        Write-ColorOut "Invalid selection!" -ForegroundColor Magenta -Indentation 4
                         continue
                     }
                 }
@@ -451,21 +459,21 @@ Function Get-UserValues(){
                 [array]$inter=@("Can","Nik","Son","Jpeg","Jpg","Mov","Aud")
                 $separator = ","
                 $option = [System.StringSplitOptions]::RemoveEmptyEntries
-                [array]$script:PresetFormats = (Read-Host "`tWhich preset file-formats would you like to copy? Options: `"Can`",`"Nik`",`"Son`",`"Jpg`",`"Mov`",`"Aud`", or leave empty for none. For multiple selection, separate with commata.").Split($separator,$option)
+                [array]$script:PresetFormats = (Read-Host "    Which preset file-formats would you like to copy? Options: `"Can`",`"Nik`",`"Son`",`"Jpg`",`"Mov`",`"Aud`", or leave empty for none. For multiple selection, separate with commata.").Split($separator,$option)
                 if($script:PresetFormats.Length -eq 0 -or $script:PresetFormats -in $inter){
                     break
                 }else{
-                    Write-ColorOut "`tInvalid selection!" -ForegroundColor Magenta
+                    Write-ColorOut "Invalid selection!" -ForegroundColor Magenta -Indentation 4
                     continue
                 }
             }
             # $CustomFormatsEnable - Number
             while($true){
-                [int]$script:CustomFormatsEnable = Read-Host "`tHow many custom file-formats? Range: From `"0`" (w/o quotes) for `"none`" to as many as you like."
+                [int]$script:CustomFormatsEnable = Read-Host "    How many custom file-formats? Range: From 0 for `"none`" to as many as you like."
                 if($script:CustomFormatsEnable -in (0..999)){
                     break
                 }else{
-                    Write-ColorOut "`tPlease choose a positive number!" -ForegroundColor Magenta
+                    Write-ColorOut "Please choose a positive number!" -ForegroundColor Magenta -Indentation 4
                     continue
                 }
             }
@@ -474,12 +482,12 @@ Function Get-UserValues(){
             if($script:CustomFormatsEnable -ne 0){
                 for($i = 1; $i -le $script:CustomFormatsEnable; $i++){
                     while($true){
-                        [string]$inter = Read-Host "`tSelect custom format no. $i. `"*`" (w/o quotes) means `"all files`", `"*.ext`" means `"all files with extension .ext`", `"file.*`" means `"all files named file`"."
+                        [string]$inter = Read-Host "    Select custom format no. $i. `"*`" (w/o quotes) = all files, `"*.ext`" = all files with extension .ext, `"file.*`" = all files named file."
                         if($inter.Length -ne 0){
                             $script:CustomFormats += $inter
                             break
                         }else{
-                            Write-ColorOut "`tInvalid input!" -ForegroundColor Magenta
+                            Write-ColorOut "Invalid input!" -ForegroundColor Magenta -Indentation 4
                             continue
                         }
                     }
@@ -488,175 +496,175 @@ Function Get-UserValues(){
             # $OutputSubfolderStyle
             while($true){
                 [array]$inter = @("none","unchanged","yyyy-MM-dd","yyyy_MM_dd","yyyy.MM.dd","yyyyMMdd","yy-MM-dd","yy_MM_dd","yy.MM.dd","yyMMdd")
-                [string]$script:OutputSubfolderStyle = Read-Host "`tWhich subfolder-style should be used in the output-path? Options: `"none`",`"unchanged`",`"yyyy-MM-dd`",`"yyyy_MM_dd`",`"yyyy.MM.dd`",`"yyyyMMdd`",`"yy-MM-dd`",`"yy_MM_dd`",`"yy.MM.dd`",`"yyMMdd`" (all w/o quotes)."
+                [string]$script:OutputSubfolderStyle = Read-Host "    Which subfolder-style should be used in the output-path? Options: none, unchanged, yyyy-MM-dd, yyyy_MM_dd, yyyy.MM.dd, yyyyMMdd, yy-MM-dd, yy_MM_dd, yy.MM.dd, yyMMdd."
                 if($script:OutputSubfolderStyle -in $inter){
                     break
                 }else{
-                    Write-ColorOut "`tInvalid choice!" -ForegroundColor Magenta
+                    Write-ColorOut "Invalid choice!" -ForegroundColor Magenta -Indentation 4
                     continue
                 }
             }
             # $OutputFileStyle
             while($true){
                 [array]$inter = @("unchanged","yyyy-MM-dd_HH-mm-ss","yyyyMMdd_HHmmss","yyyyMMddHHmmss","yy-MM-dd_HH-mm-ss","yyMMdd_HHmmss","yyMMddHHmmss","HH-mm-ss","HH_mm_ss","HHmmss")
-                [string]$script:OutputFileStyle = Read-Host "`tWhich subfolder-style should be used in the output-path? Options: `"unchanged`",`"yyyy-MM-dd_HH-mm-ss`",`"yyyyMMdd_HHmmss`",`"yyyyMMddHHmmss`",`"yy-MM-dd_HH-mm-ss`",`"yyMMdd_HHmmss`",`"yyMMddHHmmss`",`"HH-mm-ss`",`"HH_mm_ss`",`"HHmmss`" (all w/o quotes). Be aware that this time, you must match the case!"
+                [string]$script:OutputFileStyle = Read-Host "    Which subfolder-style should be used in the output-path? Options: unchanged, yyyy-MM-dd_HH-mm-ss, yyyyMMdd_HHmmss, yyyyMMddHHmmss, yy-MM-dd_HH-mm-ss, yyMMdd_HHmmss, yyMMddHHmmss, HH-mm-ss, HH_mm_ss, HHmmss."
                 if($script:OutputFileStyle -cin $inter){
                     break
                 }else{
-                    Write-ColorOut "`tInvalid choice!" -ForegroundColor Magenta
+                    Write-ColorOut "Invalid choice!" -ForegroundColor Magenta -Indentation 4
                     continue
                 }
             }
             # $UseHistFile
             while($true){
-                [int]$script:UseHistFile = Read-Host "`tCompare input-files with the history-file to prevent duplicates? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+                [int]$script:UseHistFile = Read-Host "    Compare input-files with the history-file to prevent duplicates? 1 = yes, 0 = no"
                 if($script:UseHistFile -in (0..1)){
                     break
                 }else{
-                    Write-ColorOut "`tInvalid choice!" -ForegroundColor Magenta
+                    Write-ColorOut "Invalid choice!" -ForegroundColor Magenta -Indentation 4
                     continue
                 }
             }
             # $WriteHistFile
             while($true){
                 [array]$inter = @("yes","no","overwrite")
-                [string]$script:WriteHistFile = Read-Host "`tWrite newly copied files to history-file? Options: `"yes`",`"no`",`"overwrite`". (all w/o quotes)"
+                [string]$script:WriteHistFile = Read-Host "    Write newly copied files to history-file? Options: yes, no, overwrite."
                 if($script:WriteHistFile -in $inter){
                     break
                 }else{
-                    Write-ColorOut "`tInvalid choice!" -ForegroundColor Magenta
+                    Write-ColorOut "Invalid choice!" -ForegroundColor Magenta -Indentation 4
                     continue
                 }
             }
             # $InputSubfolderSearch
             while($true){
-                [int]$script:InputSubfolderSearch = Read-Host "`tCheck input-path's subfolders? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+                [int]$script:InputSubfolderSearch = Read-Host "    Check input-path's subfolders? 1 = yes, 0 = no."
                 if($script:InputSubfolderSearch -in (0..1)){
                     break
                 }else{
-                    Write-ColorOut "`tInvalid choice!" -ForegroundColor Magenta
+                    Write-ColorOut "Invalid choice!" -ForegroundColor Magenta -Indentation 4
                     continue
                 }
             }
             # $DupliCompareHashes
             while($true){
-                [int]$script:DupliCompareHashes = Read-Host "`tAdditionally compare all input-files via hashes (slow)? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+                [int]$script:DupliCompareHashes = Read-Host "    Additionally compare all input-files via hashes? 1 = yes, 0 = no."
                 if($script:DupliCompareHashes -in (0..1)){
                     break
                 }else{
-                    Write-ColorOut "`tInvalid choice!" -ForegroundColor Magenta
+                    Write-ColorOut "Invalid choice!" -ForegroundColor Magenta -Indentation 4
                     continue
                 }
             }
             # $CheckOutputDupli
             while($true){
-                [int]$script:CheckOutputDupli = Read-Host "`tAdditionally check output-path for already copied files? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+                [int]$script:CheckOutputDupli = Read-Host "    Additionally check output-path for already copied files? 1 = yes, 0 = no."
                 if($script:CheckOutputDupli -in (0..1)){
                     break
                 }else{
-                    Write-ColorOut "`tInvalid choice!" -ForegroundColor Magenta
+                    Write-ColorOut "Invalid choice!" -ForegroundColor Magenta -Indentation 4
                     continue
                 }
             }
             # $VerifyCopies
             while($true){
-                [int]$script:VerifyCopies = Read-Host "`tEnable verifying copied files afterwards for guaranteed successfully copied files? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+                [int]$script:VerifyCopies = Read-Host "    Enable verifying copied files afterwards for guaranteed successfully copied files? 1 = yes, 0 = no."
                 if($script:VerifyCopies -in (0..1)){
                     break
                 }else{
-                    Write-ColorOut "`tInvalid choice!" -ForegroundColor Magenta
+                    Write-ColorOut "Invalid choice!" -ForegroundColor Magenta -Indentation 4
                     continue
                 }
             }
             # $AvoidIdenticalFiles
             while($true){
-                [int]$script:AvoidIdenticalFiles = Read-Host "`tAvoid copying identical input-files? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+                [int]$script:AvoidIdenticalFiles = Read-Host "    Avoid copying identical input-files? 1 = yes, 0 = no."
                 if($script:AvoidIdenticalFiles -in (0..1)){
                     break
                 }else{
-                    Write-ColorOut "`tInvalid choice!" -ForegroundColor Magenta
+                    Write-ColorOut "Invalid choice!" -ForegroundColor Magenta -Indentation 4
                     continue
                 }
             }
             # $ZipMirror
             if($script:MirrorEnable -eq 1){
                 while($true){
-                    [int]$script:ZipMirror = Read-Host "`tCopying files to additional output-path as 7zip-archive? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+                    [int]$script:ZipMirror = Read-Host "    Copying files to additional output-path as 7zip-archive? 1 = yes, 0 = no."
                     if($script:ZipMirror -in (0..1)){
                         break
                     }else{
-                        Write-ColorOut "`tInvalid choice!" -ForegroundColor Magenta
+                        Write-ColorOut "Invalid choice!" -ForegroundColor Magenta -Indentation 4
                         continue
                     }
                 }
             }
             # $UnmountInputDrive
             while($true){
-                [int]$script:UnmountInputDrive = Read-Host "`tRemoving input-drive after copying & verifying (before mirroring)? Only use it for external drives. `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+                [int]$script:UnmountInputDrive = Read-Host "    Removing input-drive after copying & verifying (before mirroring)? Only use it for external drives. 1 = yes, 0 = no."
                 if($script:UnmountInputDrive -in (0..1)){
                     break
                 }else{
-                    Write-ColorOut "`tInvalid choice!" -ForegroundColor Magenta
+                    Write-ColorOut "Invalid choice!" -ForegroundColor Magenta -Indentation 4
                     continue
                 }
             }
             # $PreventStandby
             while($true){
-                [int]$script:PreventStandby = Read-Host "`tAuto-prevent standby of computer while script is running? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+                [int]$script:PreventStandby = Read-Host "    Auto-prevent standby of computer while script is running? 1 = yes, 0 = no."
                 if($script:PreventStandby -in (0..1)){
                     break
                 }else{
-                    Write-ColorOut "`tInvalid choice!" -ForegroundColor Magenta
+                    Write-ColorOut "Invalid choice!" -ForegroundColor Magenta -Indentation 4
                     continue
                 }
             }
             # $ThreadCount
             while($true){
-                [int]$script:ThreadCount = Read-Host "`tNumber of threads for multithreaded operations. Suggestion: 6."
+                [int]$script:ThreadCount = Read-Host "    Number of threads for operations. Range: 2 - 48, suggestion: 6."
                 if($script:ThreadCount -in (2..48)){
                     break
                 }else{
-                    Write-ColorOut "`tInvalid choice!" -ForegroundColor Magenta
+                    Write-ColorOut "Invalid choice!" -ForegroundColor Magenta -Indentation 4
                     continue
                 }
             }
             # $RememberInPath
             while($true){
-                [int]$script:RememberInPath = Read-Host "`tRemember the input-path for future uses? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+                [int]$script:RememberInPath = Read-Host "    Remember the input-path for future uses? 1 = yes, 0 = no."
                 if($script:RememberInPath -in (0..1)){
                     break
                 }else{
-                    Write-ColorOut "`tInvalid choice!" -ForegroundColor Magenta
+                    Write-ColorOut "Invalid choice!" -ForegroundColor Magenta -Indentation 4
                     continue
                 }
             }
             # $RememberOutPath
             while($true){
-                [int]$script:RememberOutPath = Read-Host "`tRemember the output-path for future uses? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+                [int]$script:RememberOutPath = Read-Host "    Remember the output-path for future uses? 1 = yes, 0 = no."
                 if($script:RememberOutPath -in (0..1)){
                     break
                 }else{
-                    Write-ColorOut "`tInvalid choice!" -ForegroundColor Magenta
+                    Write-ColorOut "Invalid choice!" -ForegroundColor Magenta -Indentation 4
                     continue
                 }
             }
             # $RememberMirrorPath
             while($true){
-                [int]$script:RememberMirrorPath = Read-Host "`tRemember the additional output-path for future uses? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+                [int]$script:RememberMirrorPath = Read-Host "    Remember the additional output-path for future uses? 1 = yes, 0 = no."
                 if($script:RememberMirrorPath -in (0..1)){
                     break
                 }else{
-                    Write-ColorOut "`tInvalid choice!" -ForegroundColor Magenta
+                    Write-ColorOut "Invalid choice!" -ForegroundColor Magenta -Indentation 4
                     continue
                 }
             }
             # $RememberSettings
             while($true){
-                [int]$script:RememberSettings = Read-Host "`tRemember settings for future uses? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`""
+                [int]$script:RememberSettings = Read-Host "    Remember settings for future uses? 1 = yes, 0 = no."
                 if($script:RememberSettings -in (0..1)){
                     break
                 }else{
-                    Write-ColorOut "`tInvalid choice!" -ForegroundColor Magenta
+                    Write-ColorOut "Invalid choice!" -ForegroundColor Magenta -Indentation 4
                     continue
                 }
             }
@@ -793,107 +801,107 @@ Function Get-UserValues(){
         }elseif($script:GUI_CLI_Direct -eq "direct"){
             # $MirrorEnable
             if($script:MirrorEnable -notin (0..1)){
-                Write-ColorOut "`tInvalid choice of -MirrorEnable." -ForegroundColor Red
+                Write-ColorOut "Invalid choice of -MirrorEnable." -ForegroundColor Red -Indentation 4
                 return $false
             }
             # $PresetFormats
             [array]$inter = @("Can","Nik","Son","Jpeg","Jpg","Mov","Aud")
             if($script:PresetFormats.Length -gt 0 -and $(Compare-Object $inter $script:PresetFormats | Where-Object {$_.sideindicator -eq "=>"}).count -ne 0){
                 Write-ColorOut "$script:PresetFormats"
-                Write-ColorOut "`tInvalid choice of -PresetFormats." -ForegroundColor Red
+                Write-ColorOut "Invalid choice of -PresetFormats." -ForegroundColor Red -Indentation 4
                 return $false
             }
             # $CustomFormatsEnable
             if($script:CustomFormatsEnable -notin (0..1)){
-                Write-ColorOut "`tInvalid choice of -CustomFormatsEnable." -ForegroundColor Red
+                Write-ColorOut "Invalid choice of -CustomFormatsEnable." -ForegroundColor Red -Indentation 4
                 return $false
             }
             # $OutputSubfolderStyle
             [array]$inter = @("none","unchanged","yyyy-mm-dd","yyyy_mm_dd","yyyy.mm.dd","yyyymmdd","yy-mm-dd","yy_mm_dd","yy.mm.dd","yymmdd")
             if($script:OutputSubfolderStyle -inotin $inter){
-                Write-ColorOut "`tInvalid choice of -OutputSubfolderStyle." -ForegroundColor Red
+                Write-ColorOut "Invalid choice of -OutputSubfolderStyle." -ForegroundColor Red -Indentation 4
                 return $false
             }
             # $OutputFileStyle
             [array]$inter = @("unchanged","yyyy-MM-dd_HH-mm-ss","yyyyMMdd_HHmmss","yyyyMMddHHmmss","yy-MM-dd_HH-mm-ss","yyMMdd_HHmmss","yyMMddHHmmss","HH-mm-ss","HH_mm_ss","HHmmss")
             if($script:OutputFileStyle -cnotin $inter -or $script:OutputFileStyle.Length -gt $inter[1].Length){
-                Write-ColorOut "`tInvalid choice of -OutputFileStyle." -ForegroundColor Red
+                Write-ColorOut "Invalid choice of -OutputFileStyle." -ForegroundColor Red -Indentation 4
                 return $false
             }
             # $UseHistFile
             if($script:UseHistFile -notin (0..1)){
-                Write-ColorOut "`tInvalid choice of -UseHistFile." -ForegroundColor Red
+                Write-ColorOut "Invalid choice of -UseHistFile." -ForegroundColor Red -Indentation 4
                 return $false
             }
             # $WriteHistFile
             [array]$inter=@("yes","no","overwrite")
             if($script:WriteHistFile -notin $inter -or $script:WriteHistFile.Length -gt $inter[2].Length){
-                Write-ColorOut "`tInvalid choice of -WriteHistFile." -ForegroundColor Red
+                Write-ColorOut "Invalid choice of -WriteHistFile." -ForegroundColor Red -Indentation 4
                 return $false
             }
             # InputSubfolderSearch
             if($script:InputSubfolderSearch -notin (0..1)){
-                Write-ColorOut "`tInvalid choice of -InputSubfolderSearch." -ForegroundColor Red
+                Write-ColorOut "Invalid choice of -InputSubfolderSearch." -ForegroundColor Red -Indentation 4
                 return $false
             }
             # $DupliCompareHashes
             if($script:DupliCompareHashes -notin (0..1)){
-                Write-ColorOut "`tInvalid choice of -DupliCompareHashes." -ForegroundColor Red
+                Write-ColorOut "Invalid choice of -DupliCompareHashes." -ForegroundColor Red -Indentation 4
                 return $false
             }
             # $CheckOutputDupli
             if($script:CheckOutputDupli -notin (0..1)){
-                Write-ColorOut "`tInvalid choice of -CheckOutputDupli." -ForegroundColor Red
+                Write-ColorOut "Invalid choice of -CheckOutputDupli." -ForegroundColor Red -Indentation 4
                 return $false
             }
             # $VerifyCopies
             if($script:VerifyCopies -notin (0..1)){
-                Write-ColorOut "`tInvalid choice of -VerifyCopies." -ForegroundColor Red
+                Write-ColorOut "Invalid choice of -VerifyCopies." -ForegroundColor Red -Indentation 4
                 return $false
             }
             # $AvoidIdenticalFiles
             if($script:AvoidIdenticalFiles -notin (0..1)){
-                Write-ColorOut "`tInvalid choice of -AvoidIdenticalFiles." -ForegroundColor Red
+                Write-ColorOut "Invalid choice of -AvoidIdenticalFiles." -ForegroundColor Red -Indentation 4
                 return $false
             }
             # $ZipMirror
             if($script:ZipMirror -notin (0..1)){
-                Write-ColorOut "`tInvalid choice of -ZipMirror." -ForegroundColor Red
+                Write-ColorOut "Invalid choice of -ZipMirror." -ForegroundColor Red -Indentation 4
                 return $false
             }
             # $UnmountInputDrive
             if($script:UnmountInputDrive -notin (0..1)){
-                Write-ColorOut "`tInvalid choice of -UnmountInputDrive." -ForegroundColor Red
+                Write-ColorOut "Invalid choice of -UnmountInputDrive." -ForegroundColor Red -Indentation 4
                 return $false
             }
             # $PreventStandby
             if($script:PreventStandby -notin (0..1)){
-                Write-ColorOut "`tInvalid choice of -PreventStandby." -ForegroundColor Red
+                Write-ColorOut "Invalid choice of -PreventStandby." -ForegroundColor Red -Indentation 4
                 return $false
             }
             # $ThreadCount
             if($script:ThreadCount -notin (2..48)){
-                Write-ColorOut "`tInvalid choice of -ThreadCount." -ForegroundColor Red
+                Write-ColorOut "Invalid choice of -ThreadCount." -ForegroundColor Red -Indentation 4
                 return $false
             }
             # $RememberInPath
             if($script:RememberInPath -notin (0..1)){
-                Write-ColorOut "`tInvalid choice of -RememberInPath." -ForegroundColor Red
+                Write-ColorOut "Invalid choice of -RememberInPath." -ForegroundColor Red -Indentation 4
                 return $false
             }
             # $RememberOutPath
             if($script:RememberOutPath -notin (0..1)){
-                Write-ColorOut "`tInvalid choice of -RememberOutPath." -ForegroundColor Red
+                Write-ColorOut "Invalid choice of -RememberOutPath." -ForegroundColor Red -Indentation 4
                 return $false
             }
             # $RememberMirrorPath
             if($script:RememberMirrorPath -notin (0..1)){
-                Write-ColorOut "`tInvalid choice of -RememberMirrorPath." -ForegroundColor Red
+                Write-ColorOut "Invalid choice of -RememberMirrorPath." -ForegroundColor Red -Indentation 4
                 return $false
             }
             # $RememberSettings
             if($script:RememberSettings -notin (0..1)){
-                Write-ColorOut "`tInvalid choice of -RememberSettings." -ForegroundColor Red
+                Write-ColorOut "Invalid choice of -RememberSettings." -ForegroundColor Red -Indentation 4
                 return $false
             }
         }
@@ -902,35 +910,45 @@ Function Get-UserValues(){
         if($script:GUI_CLI_Direct -ne "CLI"){
             # $InputPath
             if($script:InputPath.Length -lt 2 -or (Test-Path -LiteralPath $script:InputPath -PathType Container) -eq $false){
-                Write-ColorOut "`r`n`tInput-path $script:InputPath could not be found.`r`n" -ForegroundColor Red
+                Write-ColorOut "`r`nInput-path $script:InputPath could not be found.`r`n" -ForegroundColor Red -Indentation 4
                 return $false
             }
             # $OutputPath
             if($script:OutputPath -eq $script:InputPath){
-                Write-ColorOut "`r`n`tOutput-path is the same as input-path.`r`n" -ForegroundColor Red
+                Write-ColorOut "`r`nOutput-path is the same as input-path.`r`n" -ForegroundColor Red -Indentation 4
                 return $false
             }
             if($script:OutputPath.Length -lt 2 -or (Test-Path -LiteralPath $script:OutputPath -PathType Container) -eq $false){
                 if((Split-Path -Parent -Path $script:OutputPath).Length -gt 1 -and (Test-Path -LiteralPath $(Split-Path -Qualifier -Path $script:OutputPath) -PathType Container) -eq $true){
-                    New-Item -ItemType Directory -Path $script:OutputPath | Out-Null
-                    Write-ColorOut "`tOutput-path $script:OutputPath created." -ForegroundColor Yellow
+                    try{
+                        New-Item -ItemType Directory -LiteralPath $script:OutputPath | Out-Null
+                        Write-ColorOut "Output-path $script:OutputPath created." -ForegroundColor Yellow -Indentation 4
+                    }catch{
+                        Write-ColorOut "Could not create output-path $script:OutputPath." -ForegroundColor Red -Indentation 4
+                        return $false
+                    }
                 }else{
-                    Write-ColorOut "`r`n`tOutput-path not found.`r`n" -ForegroundColor Red
+                    Write-ColorOut "`r`nOutput-path not found.`r`n" -ForegroundColor Red -Indentation 4
                     return $false
                 }
             }
             # $MirrorPath
             if($script:MirrorEnable -eq 1){
                 if($script:MirrorPath -eq $script:InputPath -or $script:MirrorPath -eq $script:OutputPath){
-                    Write-ColorOut "`r`n`tAdditional output-path is the same as input- or output-path.`r`n" -ForegroundColor Red
+                    Write-ColorOut "`r`nAdditional output-path is the same as input- or output-path.`r`n" -ForegroundColor Red -Indentation 4
                     return $false
                 }
                 if($script:MirrorPath.Length -lt 2 -or (Test-Path -LiteralPath $script:MirrorPath -PathType Container) -eq $false){
                     if((Test-Path -LiteralPath $(Split-Path -Qualifier -Path $script:MirrorPath) -PathType Container) -eq $true){
-                        New-Item -ItemType Directory -Path $script:MirrorPath | Out-Null
-                        Write-ColorOut "`tOutput-path $script:OutputPath created." -ForegroundColor Yellow
+                        try{
+                            New-Item -ItemType Directory -LiteralPath $script:MirrorPath | Out-Null
+                            Write-ColorOut "Mirror-path $script:MirrorPath created." -ForegroundColor Yellow -Indentation 4
+                        }catch{
+                            Write-ColorOut "Could not create mirror-path $script:MirrorPath." -ForegroundColor Red -Indentation 4
+                            return $false
+                        }
                     }else{
-                        Write-ColorOut "`r`n`tAdditional output-path not found.`r`n" -ForegroundColor Red
+                        Write-ColorOut "`r`nAdditional output-path not found.`r`n" -ForegroundColor Red -Indentation 4
                         return $false
                     }
                 }
@@ -938,7 +956,7 @@ Function Get-UserValues(){
         }
 
     }else{
-        Write-ColorOut "`tInvalid choice of -GUI_CLI_Direct." -ForegroundColor Magenta
+        Write-ColorOut "Invalid choice of -GUI_CLI_Direct." -ForegroundColor Magenta -Indentation 4
         return $false
     }
 
@@ -973,10 +991,10 @@ Function Get-UserValues(){
         }
     }
     if($script:allChosenFormats.Length -eq 0){
-        if((Read-Host "`tNo file-format selected. Copy all files? `"1`" (w/o quotes) for `"yes`", `"0`" for `"no`"") -eq 1){
+        if((Read-Host "    No file-format selected. Copy all files? 1 = yes, 0 = no.") -eq 1){
             [array]$script:allChosenFormats = "*"
         }else{
-            Write-ColorOut "`tNo file-format specified." -ForegroundColor Red
+            Write-ColorOut "No file-format specified." -ForegroundColor Red -Indentation 4
             return $false
         }
     }
@@ -1001,25 +1019,25 @@ Function Get-UserValues(){
         $script:MirrorPath = $script:MirrorPath.Substring(0,$script:MirrorPath.Length-1)
     }
 
-    if($script:Debug -ne 0){
-        Write-ColorOut "`tInputPath:`t`t$script:InputPath"
-        Write-ColorOut "`tOutputPath:`t`t$script:OutputPath"
-        Write-ColorOut "`tMirrorEnable:`t`t$script:MirrorEnable"
-        Write-ColorOut "`tMirrorPath:`t`t$script:MirrorPath"
-        Write-ColorOut "`tCustomFormatsEnable:`t$script:CustomFormatsEnable"
-        Write-ColorOut "`tAllChosenFormats:`t$script:allChosenFormats"
-        Write-ColorOut "`tOutputSubfolderStyle:`t$script:OutputSubfolderStyle"
-        Write-ColorOut "`tOutputFileStyle:`t$script:OutputFileStyle"
-        Write-ColorOut "`tUseHistFile:`t`t$script:UseHistFile"
-        Write-ColorOut "`tWriteHistFile:`t`t$script:WriteHistFile"
-        Write-ColorOut "`tInputSubfolderSearch:`t$script:InputSubfolderSearch"
-        Write-ColorOut "`tDupliCompareHashes:`t$script:DupliCompareHashes"
-        Write-ColorOut "`tCheckOutputDupli:`t$script:CheckOutputDupli"
-        Write-ColorOut "`tVerifyCopies:`t`t$script:VerifyCopies"
-        Write-ColorOut "`tZipMirror:`t`t$script:ZipMirror"
-        Write-ColorOut "`tUnmountInputDrive:`t$script:UnmountInputDrive"
-        Write-ColorOut "`tPreventStandby:`t`t$script:PreventStandby"
-        Write-ColorOut "`tThreadCount:`t`t$script:ThreadCount"
+    if($script:Debug -gt 1){
+        Write-ColorOut "InputPath:`t`t$script:InputPath" -Indentation 4
+        Write-ColorOut "OutputPath:`t`t$script:OutputPath" -Indentation 4
+        Write-ColorOut "MirrorEnable:`t`t$script:MirrorEnable" -Indentation 4
+        Write-ColorOut "MirrorPath:`t`t$script:MirrorPath" -Indentation 4
+        Write-ColorOut "CustomFormatsEnable:`t$script:CustomFormatsEnable" -Indentation 4
+        Write-ColorOut "AllChosenFormats:`t$script:allChosenFormats" -Indentation 4
+        Write-ColorOut "OutputSubfolderStyle:`t$script:OutputSubfolderStyle" -Indentation 4
+        Write-ColorOut "OutputFileStyle:`t$script:OutputFileStyle" -Indentation 4
+        Write-ColorOut "UseHistFile:`t`t$script:UseHistFile" -Indentation 4
+        Write-ColorOut "WriteHistFile:`t`t$script:WriteHistFile" -Indentation 4
+        Write-ColorOut "InputSubfolderSearch:`t$script:InputSubfolderSearch" -Indentation 4
+        Write-ColorOut "DupliCompareHashes:`t$script:DupliCompareHashes" -Indentation 4
+        Write-ColorOut "CheckOutputDupli:`t$script:CheckOutputDupli" -Indentation 4
+        Write-ColorOut "VerifyCopies:`t`t$script:VerifyCopies" -Indentation 4
+        Write-ColorOut "ZipMirror:`t`t$script:ZipMirror" -Indentation 4
+        Write-ColorOut "UnmountInputDrive:`t$script:UnmountInputDrive" -Indentation 4
+        Write-ColorOut "PreventStandby:`t`t$script:PreventStandby" -Indentation 4
+        Write-ColorOut "ThreadCount:`t`t$script:ThreadCount" -Indentation 4
     }
 
     # if everything was sucessful, return true:
@@ -1035,29 +1053,29 @@ Function Start-Remembering(){
     
     # $InputPath
     if($script:RememberInPath -ne 0){
-        Write-ColorOut "`tFrom:`t$($lines_new[$($script:paramline + 2)])" -ForegroundColor Gray
+        Write-ColorOut "From:`t$($lines_new[$($script:paramline + 2)])" -ForegroundColor Gray -Indentation 4
         $lines_new[$($script:paramline + 2)] = '    [string]$InputPath="' + "$script:InputPath" + '",'
-        Write-ColorOut "`tTo:`t$($lines_new[$($script:paramline + 2)])" -ForegroundColor Yellow
+        Write-ColorOut "To:`t$($lines_new[$($script:paramline + 2)])" -ForegroundColor Yellow -Indentation 4
     }
     # $OutputPath
     if($script:RememberOutPath -ne 0){
-        Write-ColorOut "`tFrom:`t$($lines_new[$($script:paramline + 3)])" -ForegroundColor Gray
+        Write-ColorOut "From:`t$($lines_new[$($script:paramline + 3)])" -ForegroundColor Gray -Indentation 4
         $lines_new[$($script:paramline + 3)] = '    [string]$OutputPath="' + "$script:OutputPath" + '",'
-        Write-ColorOut "`tTo:`t$($lines_new[$($script:paramline + 3)])" -ForegroundColor Yellow
+        Write-ColorOut "To:`t$($lines_new[$($script:paramline + 3)])" -ForegroundColor Yellow -Indentation 4
     }
     # $MirrorPath
     if($script:RememberMirrorPath -ne 0){
-        Write-ColorOut "`tFrom:`t$($lines_new[$($script:paramline + 5)])" -ForegroundColor Gray
+        Write-ColorOut "From:`t$($lines_new[$($script:paramline + 5)])" -ForegroundColor Gray -Indentation 4
         $lines_new[$($script:paramline + 5)] = '    [string]$MirrorPath="' + "$script:MirrorPath" + '",'
-        Write-ColorOut "`tTo:`t$($lines_new[$($script:paramline + 5)])" -ForegroundColor Yellow
+        Write-ColorOut "To:`t$($lines_new[$($script:paramline + 5)])" -ForegroundColor Yellow -Indentation 4
     }
 
     # Remember settings
     if($script:RememberSettings -ne 0){
-        Write-ColorOut "`tFrom:"
+        Write-ColorOut "From:" -Indentation 4
         for($i = $($script:paramline + 1); $i -le $($script:paramline + 21); $i++){
             if(-not ($i -eq $($script:paramline + 2) -or $i -eq $($script:paramline + 3) -or $i -eq $($script:paramline + 5))){
-                Write-ColorOut "`t$($lines_new[$i])" -ForegroundColor Gray
+                Write-ColorOut "$($lines_new[$i])" -ForegroundColor Gray -Indentation 4
             }
         }
 
@@ -1100,10 +1118,10 @@ Function Start-Remembering(){
         # $ThreadCount
         $lines_new[$($script:paramline + 21)] = '    [int]$ThreadCount=' + "$script:ThreadCount" + ','
 
-        Write-ColorOut "`tTo:"
+        Write-ColorOut "To:" -Indentation 4
         for($i = $($script:paramline + 1); $i -le $($script:paramline + 21); $i++){
             if(-not ($i -eq $($script:paramline + 2) -or $i -eq $($script:paramline + 3) -or $i -eq $($script:paramline + 5))){
-                Write-ColorOut "`t$($lines_new[$i])" -ForegroundColor Yellow
+                Write-ColorOut "$($lines_new[$i])" -ForegroundColor Yellow -Indentation 4
             }
         }
     }
@@ -1132,19 +1150,19 @@ Function Get-HistFile(){
             }
         }
         $files_history
-        if($script:Debug -gt 0){
-            if((Read-Host "`tShow fonud history-values? `"1`" means `"yes`"") -eq 1){
-                Write-ColorOut "`tFound values: $($files_history.Length)" -ForegroundColor Yellow
-                Write-ColorOut "`tName`t`tDate`t`tSize`t`tHash"
+        if($script:Debug -gt 1){
+            if((Read-Host "    Show fonud history-values? `"1`" means `"yes`"") -eq 1){
+                Write-ColorOut "Found values: $($files_history.Length)" -ForegroundColor Yellow -Indentation 4
+                Write-ColorOut "Name`t`tDate`t`tSize`t`tHash" -Indentation 4
                 for($i = 0; $i -lt $files_history.Length; $i++){
-                    Write-ColorOut "`t$($files_history[$i].InName)`t$($files_history[$i].Date)`t$($files_history[$i].Size)`t$($files_history[$i].Hash)" -ForegroundColor Gray
+                    Write-ColorOut "$($files_history[$i].InName)`t$($files_history[$i].Date)`t$($files_history[$i].Size)`t$($files_history[$i].Hash)" -ForegroundColor Gray -Indentation 4
                 }
             }
         }
         if("null" -in $files_history -or $files_history.InName.Length -lt 1 -or ($files_history.Length -gt 1 -and (($files_history.InName.Length -ne $files_history.Date.Length) -or ($files_history.InName.Length -ne $files_history.Size.Length) -or ($files_history.InName.Length -ne $files_history.Hash.Length)))){
-            Write-ColorOut "`tSome values in the history-file $HistFilePath seem wrong - it's safest to delete the whole file." -ForegroundColor Magenta
-            Write-ColorOut "`tInNames: $($files_history.InName.Length) Dates: $($files_history.Date.Length) Sizes: $($files_history.Size.Length) Hashes: $($files_history.Hash.Length)"
-            if((Read-Host "`tIs that okay? Type '1' (without quotes) to confirm or any other number to abort. Confirm by pressing Enter") -eq 1){
+            Write-ColorOut "Some values in the history-file $HistFilePath seem wrong - it's safest to delete the whole file." -ForegroundColor Magenta -Indentation 4
+            Write-ColorOut "InNames: $($files_history.InName.Length) Dates: $($files_history.Date.Length) Sizes: $($files_history.Size.Length) Hashes: $($files_history.Hash.Length)" -Indentation 4
+            if((Read-Host "    Is that okay? Type '1' (without quotes) to confirm or any other number to abort. Confirm by pressing Enter") -eq 1){
                 $script:UseHistFile = 0
                 $script:WriteHistFile = "Overwrite"
             }else{
@@ -1153,12 +1171,12 @@ Function Get-HistFile(){
             }
         }
         if("ZYX" -in $files_history.Hash -and $script:DupliCompareHashes -eq 1){
-            Write-ColorOut "`tSome hash-values in the history-file are missing (because -VerifyCopies wasn't activated when they were added). This could lead to duplicates." -ForegroundColor Magenta
+            Write-ColorOut "Some hash-values in the history-file are missing (because -VerifyCopies wasn't activated when they were added). This could lead to duplicates." -ForegroundColor Magenta -Indentation 4
             Start-Sleep -Seconds 2
         }
     }else{
-        Write-ColorOut "`tHistory-File $HistFilePath could not be found. This means it's possible that duplicates get copied." -ForegroundColor Magenta
-        if((Read-Host "`tIs that okay? Type '1' (without quotes) to confirm or any other number to abort. Confirm by pressing Enter") -eq 1){
+        Write-ColorOut "History-File $HistFilePath could not be found. This means it's possible that duplicates get copied." -ForegroundColor Magenta -Indentation 4
+        if((Read-Host "    Is that okay? Type '1' (without quotes) to confirm or any other number to abort. Confirm by pressing Enter") -eq 1){
             $script:UseHistFile = 0
             $script:WriteHistFile = "Overwrite"
         }else{
@@ -1201,13 +1219,13 @@ Function Start-FileSearch(){
             $counter++
             [PSCustomObject]@{
                 FullName = $_.FullName
-                InPath = (Split-Path $_.FullName -Parent)
+                InPath = (Split-Path -Path $_.FullName -Parent)
                 InName = $_.Name
                 BaseName = $(if($script:OutputFileStyle -eq "unchanged"){$_.BaseName}else{$_.LastWriteTime.ToString("$script:OutputFileStyle")})
                 Extension = $_.Extension
                 Size = $_.Length
                 Date = $_.LastWriteTime.ToString("yyyy-MM-dd_HH-mm-ss")
-                Sub_Date = $(if($script:OutputSubfolderStyle -eq "none"){""}elseif($script:OutputSubfolderStyle -eq "unchanged"){$($(Split-Path -Parent $_.FullName).Replace($script:InputPath,""))}else{"\$($_.LastWriteTime.ToString("$script:OutputSubfolderStyle"))"})
+                Sub_Date = $(if($script:OutputSubfolderStyle -eq "none"){""}elseif($script:OutputSubfolderStyle -eq "unchanged"){$($(Split-Path -Parent -Path $_.FullName).Replace($script:InputPath,""))}else{"\$($_.LastWriteTime.ToString("$script:OutputSubfolderStyle"))"})
                 OutPath = "ZYX"
                 OutName = $_.Name
                 OutBaseName = $(if($script:OutputFileStyle -eq "unchanged"){$_.BaseName}else{$_.LastWriteTime.ToString("$script:OutputFileStyle")})
@@ -1224,22 +1242,27 @@ Function Start-FileSearch(){
     $InFiles = $InFiles | Sort-Object -Property FullName
     $InFiles | Out-Null
 
-    if($script:Debug -gt 0){
-        if((Read-Host "`tShow all found files? `"1`" for `"yes`"") -eq 1){
+    if($script:Debug -gt 1){
+        if((Read-Host "    Show all found files? `"1`" for `"yes`"") -eq 1){
             for($i=0; $i -lt $InFiles.Length; $i++){
-                Write-ColorOut "`t$($InFiles[$i].FullName.Replace($InPath,"."))" -ForegroundColor Gray
+                Write-ColorOut "$($InFiles[$i].FullName.Replace($InPath,"."))" -ForegroundColor Gray -Indentation 4
             }
         }
     }
 
     if($script:DupliCompareHashes -eq 1 -or $script:CheckOutputDupli -eq 1){
-        $InFiles | Start-RSJob -Name "GetHash" -throttle $script:ThreadCount -ScriptBlock {
-            $_.Hash = Get-FileHash -LiteralPath $_.FullName -Algorithm SHA1 | Select-Object -ExpandProperty Hash
-        } | Wait-RSJob -ShowProgress | Receive-RSJob
-        Get-RSJob -Name "GetHash" | Remove-RSJob
+        $InFiles | Start-RSJob -Name "GetHashAll" <#-throttle $script:ThreadCount#> -ScriptBlock {
+            try{
+                $_.Hash = Get-FileHash -LiteralPath $_.FullName -Algorithm SHA1 -ErrorAction Stop | Select-Object -ExpandProperty Hash
+            }catch{
+                Write-ColorOut "Could not get Hash of $($_.FullName)" -ForegroundColor Red -Indentation 4
+                $_.Hash = "GetHashAllWRONG"
+            }
+        } -FunctionsToLoad Write-ColorOut | Wait-RSJob -ShowProgress | Receive-RSJob
+        Get-RSJob -Name "GetHashAll" | Remove-RSJob
     }
 
-    Write-ColorOut "`r`n`tTotal in-files:`t$($InFiles.Length)" -ForegroundColor Yellow
+    Write-ColorOut "Total in-files:`t$($InFiles.Length)" -ForegroundColor Yellow -Indentation 4
     $script:resultvalues.ingoing = $InFiles.Length
 
     return $InFiles
@@ -1254,54 +1277,150 @@ Function Start-DupliCheckHist(){
         [Parameter(Mandatory=$true)]
         [array]$HistFiles
     )
-    $sw = [diagnostics.stopwatch]::StartNew()
+    # $sw = [diagnostics.stopwatch]::StartNew()
     Write-ColorOut "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")  --  Checking for duplicates via history-file." -ForegroundColor Cyan
 
-    [array]$dupliindex_hist = @()
-    for($i=0; $i -lt $InFiles.Length; $i++){
-        if($sw.Elapsed.TotalMilliseconds -ge 750 -or $i -eq 0){
-            Write-Progress -Activity "Comparing to already copied files (history-file).." -PercentComplete $(($i / $InFiles.Length) * 100) -Status "File # $($i + 1) / $($InFiles.Length) - $($InFiles[$i].name)"
-            $sw.Reset()
-            $sw.Start()
-        }
-        
-        $j = $HistFiles.Length
-        while($true){
-            if($InFiles[$i].InName -eq $HistFiles[$j].InName -and $InFiles[$i].Date -eq $HistFiles[$j].Date -and $InFiles[$i].Size -eq $HistFiles[$j].Size -and ($script:DupliCompareHashes -eq 0 -or ($script:DupliCompareHashes -eq 1 -and $InFiles[$i].Hash -eq $HistFiles[$j].Hash))){
-                # Write-ColorOut "`tExisting: $($i + 1) - $($InFiles[$i].InName.Replace("$InPath",'.'))" -ForegroundColor DarkGreen
-                $dupliindex_hist += $i
-                $InFiles[$i].ToCopy = 0
-                break
-            }else{
-                if($script:DupliCompareHashes -eq 1 -and $HistFiles[$j].Hash -eq "ZYX"){
-                    Write-ColorOut "`tPossible duplicate (no hash found): $($i + 1) - $($InFiles[$i].InName.Replace("$InPath",'.'))" -ForegroundColor Green
-                }
-                if($j -le 0){
+    <# DEFINITION: This multithread-code made everything slower.
+        $InFiles | Start-RSJob -Name "CheckDupliHist" -ScriptBlock {
+            param(
+                [Parameter(Mandatory=$true)]
+                [array]$histi,
+                [Parameter(Mandatory=$true)]
+                [ValidateRange(0,1)]
+                [int]$dupli,
+                [Parameter(Mandatory=$true)]
+                [string]$inni
+            )
+            $j = $histi.Length
+            while($true){
+                if($_.InName -eq $histi[$j].InName -and $_.Date -eq $histi[$j].Date -and $_.Size -eq $histi[$j].Size -and ($dupli -eq 0 -or ($dupli -eq 1 -and $_.Hash -eq $histi[$j].Hash))){
+                    $_.ToCopy = 0
                     break
+                }elseif($_.InName -eq $histi[$j].InName -and $_.Date -eq $histi[$j].Date -and $_.Size -eq $histi[$j].Size -and $dupli -eq 1 -and $histi[$j].Hash -eq "ZYX"){
+                    Write-ColorOut "Possible duplicate (no hash found): $($i + 1) - $($_.FullName.Replace($inni,'.'))" -ForegroundColor Green -Indentation 4
+                    if($j -le 0){
+                        break
+                    }
+                    $j--
+                }else{
+                    if($j -le 0){
+                        break
+                    }
+                    $j--
                 }
-                $j--
-                continue
+            }
+        } -ArgumentList $HistFiles, $script:DupliCompareHashes, $script:InputPath -FunctionsToLoad Write-ColorOut | Wait-RSJob -ShowProgress | Receive-RSJob
+        Get-RSJob -Name "CheckDupliHist" | Remove-RSJob
+    #> 
+    <# DEFINITION: my own implementation of multithreading:
+        # Add a new PSCustomObject to the input-array:
+        $InFiles | Add-Member -MemberType NoteProperty -Name SplitPart -Value 0
+        $InFiles | Out-Null
+
+        for($i=1; $i -lt $script:ThreadCount; $i++){
+            for($j=0; $j -lt $InFiles.Length; $j++){
+                if($j -in (0..[math]::Floor(((1 * ($InFiles.Length - 1)) / $script:ThreadCount)))){
+                    $InFiles[$j].SplitPart = 0
+                }elseif($j -in ([math]::Floor(((($i * ($InFiles.Length - 1)) / $script:ThreadCount) + 1))..[math]::Floor(((($i + 1) * ($InFiles.Length - 1))) / $script:ThreadCount))){
+                    $InFiles[$j].SplitPart = $i
+                }
             }
         }
-    }
-    Write-Progress -Activity "Comparing to already copied files (history-file).." -Status "Done!" -Completed
-    $sw.Reset()
+        for($i=0; $i -lt $script:ThreadCount; $i++){
+            $array = $InFiles | Where-Object {$_.SplitPart -eq $i}
+            try{
+                Start-job -Name "HistCheck_$i" -ScriptBlock {
+                    param(
+                        [Parameter(Mandatory=$true)]
+                        [array]$InFiles,
+                        [Parameter(Mandatory=$true)]
+                        [array]$HistFiles,
+                        [Parameter(Mandatory=$true)]
+                        [ValidateRange(0,1)]
+                        [int]$DupliCheck,
+                        [Parameter(Mandatory=$true)]
+                        [string]$InPath
+                    )
+                    for($i=0; $i -lt $InFiles.Length; $i++){
+                    $j = $histi.Length
+                        while($true){
+                            if($InFiles[$i].InName -eq $HistFiles[$j].InName -and $InFiles[$i].Date -eq $HistFiles[$j].Date -and $InFiles[$i].Size -eq $HistFiles[$j].Size -and ($DupliCheck -eq 0 -or ($DupliCheck -eq 1 -and $InFiles[$i].Hash -eq $HistFiles[$j].Hash))){
+                                $InFiles[$i].ToCopy = 0
+                                break
+                            }elseif($InFiles[$i].InName -eq $HistFiles[$j].InName -and $DupliCheck -eq 1 -and $HistFiles[$j].Hash -eq "ZYX"  -and $InFiles[$i].Date -eq $HistFiles[$j].Date -and $InFiles[$i].Size -eq $HistFiles[$j].Size){
+                                Write-Host "    Possible duplicate (no hash found): $($i + 1) - $($InFiles[$i].FullName.Replace($InPath,'.'))" -ForegroundColor Green
+                                if($j -le 0){
+                                    break
+                                }
+                                $j--
+                            }else{
+                                if($j -le 0){
+                                    break
+                                }
+                                $j--
+                            }
+                        }
+                    }
+                } -ArgumentList $array, $HistFiles, $script:DupliCompareHashes, $script:InputPath -ErrorAction Stop
 
-    if($script:Debug -gt 0){
-        if((Read-Host "`tShow result? `"1`" for `"yes`"") -eq 1){
+                [array]$InFiles = @()
+                for($i=0; $i -lt $script:ThreadCount; $i++){
+                    $InFiles += Receive-Job -Wait -Name "HistCheck_$i" -ErrorAction Stop | Select-Object -Property * -ExcludeProperty RunspaceId,SplitPart
+                }
+            }catch{
+                Write-ColorOut "SERIOUS ISSUE." -ForegroundColor Red -Indentation 4
+                Invoke-Close
+            }
+        }
+    #>
+
+    # DEFINITION: This is the old single-threaded code.
+        $sw = [diagnostics.stopwatch]::StartNew()
+        for($i=0; $i -lt $InFiles.Length; $i++){
+            if($sw.Elapsed.TotalMilliseconds -ge 750){
+                Write-Progress -Activity "Comparing to already copied files (history-file).." -PercentComplete $(($i / $InFiles.Length) * 100) -Status "File # $($i + 1) / $($InFiles.Length) - $($InFiles[$i].name)"
+                $sw.Reset()
+                $sw.Start()
+            }
+            
+            $j = $HistFiles.Length
+            while($true){
+                if($InFiles[$i].InName -eq $HistFiles[$j].InName -and $InFiles[$i].Date -eq $HistFiles[$j].Date -and $InFiles[$i].Size -eq $HistFiles[$j].Size -and ($script:DupliCompareHashes -eq 0 -or ($script:DupliCompareHashes -eq 1 -and $InFiles[$i].Hash -eq $HistFiles[$j].Hash))){
+                    $InFiles[$i].ToCopy = 0
+                    break
+                }elseif($InFiles[$i].InName -eq $HistFiles[$j].InName -and $InFiles[$i].Date -eq $HistFiles[$j].Date -and $InFiles[$i].Size -eq $HistFiles[$j].Size -and $script:DupliCompareHashes -eq 1 -and $HistFiles[$j].Hash -eq "ZYX"){
+                    Write-ColorOut "`tPossible duplicate (no hash found): $($i + 1) - $($InFiles[$i].InName.Replace("$InPath",'.'))" -ForegroundColor Green
+                    if($j -le 0){
+                        break
+                    }
+                    $j--
+                }else{
+                    if($j -le 0){
+                        break
+                    }
+                    $j--
+                }
+            }
+        }
+        Write-Progress -Activity "Comparing to already copied files (history-file).." -Status "Done!" -Completed
+        $sw.Reset()
+
+
+    if($script:Debug -gt 1){
+        if((Read-Host "    Show result? `"1`" for `"yes`"") -eq 1){
             Write-ColorOut "`r`n`tFiles to skip / process:" -ForegroundColor Yellow
             for($i=0; $i -lt $InFiles.Length; $i++){
                 if($InFiles[$i].ToCopy -eq 1){
-                    Write-ColorOut "`tCopy $($InFiles[$i].FullName.Replace($InPath,"."))" -ForegroundColor Gray
+                    Write-ColorOut "Copy $($InFiles[$i].FullName.Replace($InPath,"."))" -ForegroundColor Gray -Indentation 4
                 }else{
-                    Write-ColorOut "`tOmit $($InFiles[$i].FullName.Replace($InPath,"."))" -ForegroundColor DarkGreen
+                    Write-ColorOut "Omit $($InFiles[$i].FullName.Replace($InPath,"."))" -ForegroundColor DarkGreen -Indentation 4
                 }
             }
         }
     }
 
-    Write-ColorOut "`tFiles to skip:`t$($dupliindex_hist.Length)" -ForegroundColor DarkGreen
-    $script:resultvalues.duplihist = $dupliindex_hist.Length
+    Write-ColorOut "Files to skip:`t$($($InFiles | Where-Object {$_.ToCopy -eq 0}).count)" -ForegroundColor DarkGreen -Indentation 4
+    $script:resultvalues.duplihist = $($InFiles | Where-Object {$_.ToCopy -eq 0}).count
 
     # Remove $HistFiles, as it only eats RAM:
     Remove-Variable histfiles
@@ -1325,7 +1444,7 @@ Function Start-DupliCheckOut(){
     Write-ColorOut "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")  --  Checking for duplicates in OutPath." -ForegroundColor Cyan
 
     # pre-defining variables:
-    $files_duplicheck = @() # not used here, but later on in the duplicheck-functions
+    $files_duplicheck = @()
 
     [array]$dupliindex_out = @()
 
@@ -1374,8 +1493,7 @@ Function Start-DupliCheckOut(){
                     $files_duplicheck[$j].hash = (Get-FileHash -LiteralPath $files_duplicheck.FullName[$j] -Algorithm SHA1 | Select-Object -ExpandProperty Hash)
                     if($InFiles[$i].hash -eq $files_duplicheck[$j].hash){
                         $dupliindex_out += $i
-                        # Write-ColorOut "`tExisting: $($i + 1) - $($InFiles[$i].InName.Replace("$InPath",'.'))" -ForegroundColor DarkGreen
-                        $InFiles[$i].tocopy = 0
+                        $InFiles[$i].ToCopy = 0
                         break
                     }else{
                         if($j -ge $files_duplicheck.Length){
@@ -1396,25 +1514,25 @@ Function Start-DupliCheckOut(){
         Write-Progress -Activity "Comparing to files in out-path..." -Status "Done!" -Completed
         $sw.Reset()
 
-        if($script:Debug -gt 0){
-            if((Read-Host "`tShow all files? `"1`" for `"yes`"") -eq 1){
+        if($script:Debug -gt1){
+            if((Read-Host "    Show all files? `"1`" for `"yes`"") -eq 1){
                 Write-ColorOut "`r`n`tFiles to skip / process:" -ForegroundColor Yellow
                 for($i=0; $i -lt $InFiles.Length; $i++){
                     if($InFiles[$i].ToCopy -eq 1){
-                        Write-ColorOut "`tCopy $($InFiles[$i].FullName.Replace($InPath,"."))" -ForegroundColor Gray
+                        Write-ColorOut "Copy $($InFiles[$i].FullName.Replace($InPath,"."))" -ForegroundColor Gray -Indentation 4
                     }else{
-                        Write-ColorOut "`tOmit $($InFiles[$i].FullName.Replace($InPath,"."))" -ForegroundColor DarkGreen
+                        Write-ColorOut "Omit $($InFiles[$i].FullName.Replace($InPath,"."))" -ForegroundColor DarkGreen -Indentation 4
                     }
                 }
             }
         }
 
-        Write-ColorOut "`tFiles to skip (outpath):`t$($dupliindex_out.Length)" -ForegroundColor DarkGreen
+        Write-ColorOut "Files to skip (outpath):`t$($dupliindex_out.Length)" -ForegroundColor DarkGreen -Indentation 4
     
         [array]$inter = $InFiles | Where-Object {$_.tocopy -eq 1}
         [array]$InFiles = $inter
     }else{
-        Write-ColorOut "`tNo files in $OutPath - skipping additional verification." -ForegroundColor Magenta
+        Write-ColorOut "No files in $OutPath - skipping additional verification." -ForegroundColor Magenta -Indentation 4
     }
 
     $script:resultvalues.dupliout = $dupliindex_out.Length
@@ -1428,14 +1546,22 @@ Function Start-InputGetHash(){
         [Parameter(Mandatory=$true)]
         [array]$InFiles
     )
-    Write-ColorOut "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")  --  Calculate remaining hashes." -ForegroundColor Cyan
+    Write-ColorOut "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")  --  Calculate remaining hashes" -ForegroundColor Cyan -NoNewLine
+    if($script:AvoidIdenticalFiles -eq 1){
+        Write-ColorOut " (& avoid identical input-files)." -ForegroundColor Cyan
+    }
 
     # DEFINITION: Calculate hash (if not yet done):
     if($script:VerifyCopies -eq 1 -or $script:AvoidIdenticalFiles -eq 1){
-        $InFiles | Where-Object {$_.Hash -eq "ZYX"} | Start-RSJob -Name "GetHash" -throttle $script:ThreadCount -ScriptBlock {
-            $_.Hash = Get-FileHash -LiteralPath $_.FullName -Algorithm SHA1 | Select-Object -ExpandProperty Hash
-        } | Wait-RSJob -ShowProgress | Receive-RSJob
-        Get-RSJob -Name "GetHash" | Remove-RSJob
+        $InFiles | Where-Object {$_.Hash -eq "ZYX"} | Start-RSJob -Name "GetHashRest" <#-throttle $script:ThreadCount#> -ScriptBlock {
+            try{
+                $_.Hash = Get-FileHash -LiteralPath $_.FullName -Algorithm SHA1 -ErrorAction Stop | Select-Object -ExpandProperty Hash
+            }catch{
+                Write-ColorOut "Failed to get Hash of $($_.FullName)!" -ForegroundColor Red -Indentation 4
+                $_.Hash = "GetHashRestWRONG"
+            }
+        } -FunctionsToLoad Write-ColorOut | Wait-RSJob -ShowProgress | Receive-RSJob
+        Get-RSJob -Name "GetHashRest" | Remove-RSJob
     }
 
     # DEFINITION: if enabled, avoid copying identical files from the input-path:
@@ -1451,7 +1577,7 @@ Function Start-InputGetHash(){
     }
 
     $script:resultvalues.copyfiles = $InFiles.Length
-    Write-ColorOut "`tFiles left after dupli-check(s):`t$($script:resultvalues.ingoing - $script:resultvalues.duplihist - $script:resultvalues.dupliout) = $($script:resultvalues.copyfiles)" -ForegroundColor Yellow
+    Write-ColorOut "Files left after dupli-check(s):`t$($script:resultvalues.ingoing - $script:resultvalues.duplihist - $script:resultvalues.dupliout) = $($script:resultvalues.copyfiles)" -ForegroundColor Yellow -Indentation 4
 
     return $InFiles
 }
@@ -1466,7 +1592,7 @@ Function Start-OverwriteProtection(){
         [string]$OutPath
     )
     $sw = [diagnostics.stopwatch]::StartNew()
-    Write-ColorOut "`r`n$(Get-Date -Format "dd.MM.yy HH:mm:ss")  --  Prevent overwriting existing files in $OutPath..." -ForegroundColor Cyan
+    Write-ColorOut "$(Get-Date -Format "dd.MM.yy HH:mm:ss")  --  Prevent overwriting existing files in $OutPath..." -ForegroundColor Cyan
 
     [array]$allpaths = @()
 
@@ -1517,12 +1643,12 @@ Function Start-OverwriteProtection(){
     }
     Write-Progress -Activity "Prevent overwriting existing files..." -Status "Done!" -Completed
 
-    if($script:Debug -gt 0){
-        if((Read-Host "`tShow all names? `"1`" for `"yes`"") -eq 1){
+    if($script:Debug -gt 1){
+        if((Read-Host "    Show all names? `"1`" for `"yes`"") -eq 1){
             [int]$indent=0
             for($i=0; $i -lt $InFiles.Length; $i++){
+                Write-ColorOut "    $($InFiles[$i].outpath.Replace($OutPath,"."))\$($InFiles[$i].outname)`t`t" -NoNewLine -ForegroundColor Gray
                 if($indent -lt 2){
-                    Write-ColorOut "    $($InFiles[$i].outpath.Replace($OutPath,"."))\$($InFiles[$i].outname)`t`t" -NoNewLine -ForegroundColor Gray
                     $indent++
                 }else{
                     Write-ColorOut " "
@@ -1535,7 +1661,7 @@ Function Start-OverwriteProtection(){
     return $InFiles
 }
 
-# DEFINITION: Copy Files
+# DEFINITION: Copy Files:
 Function Start-FileCopy(){
     param(
         [Parameter(Mandatory=$true)]
@@ -1546,12 +1672,13 @@ Function Start-FileCopy(){
         [string]$OutPath
     )
 
+    Write-ColorOut "$(Get-Date -Format "dd.MM.yy HH:mm:ss")  --  Copy files from $InPath to " -NoNewLine -ForegroundColor Cyan
     if($script:OutputSubfolderStyle -eq "none"){
-        Write-ColorOut "`r`n$(Get-Date -Format "dd.MM.yy HH:mm:ss")  --  Copy files from $InPath to $($OutPath)..." -ForegroundColor Cyan
+        Write-ColorOut "$($OutPath)..." -ForegroundColor Cyan
     }elseif($script:OutputSubfolderStyle -eq "unchanged"){
-        Write-ColorOut "`r`n$(Get-Date -Format "dd.MM.yy HH:mm:ss")  --  Copy files from $InPath to $($OutPath) with original subfolders:" -ForegroundColor Cyan
+        Write-ColorOut "$($OutPath) with original subfolders:" -ForegroundColor Cyan
     }else{
-        Write-ColorOut "`r`n$(Get-Date -Format "dd.MM.yy HH:mm:ss")  --  Copy files from $InPath to $OutPath\$($script:OutputSubfolderStyle)..." -ForegroundColor Cyan
+        Write-ColorOut "$OutPath\$($script:OutputSubfolderStyle)..." -ForegroundColor Cyan
     }
 
     $InFiles = $InFiles | Sort-Object -Property inpath,outpath
@@ -1605,17 +1732,17 @@ Function Start-FileCopy(){
     }
 
     
-    if($script:Debug -gt 0){
-        [int]$inter = Read-Host "`tShow all commands? `"1`" for yes, `"2`" for writing them as files to your script's path."
+    if($script:Debug -gt 1){
+        [int]$inter = Read-Host "    Show all commands? `"1`" for yes, `"2`" for writing them as files to your script's path."
         if($inter -gt 0){
             foreach($i in $rc_command){
-                Write-ColorOut "`trobocopy $i`r`n" -ForeGroundColor Gray
+                Write-ColorOut "robocopy $i`r`n" -ForeGroundColor Gray -Indentation 4
                 if($inter -eq 2){
                     [System.IO.File]::AppendAllText("$($PSScriptRoot)\robocopy_commands.txt", $i)
                 }
             }
             foreach($i in $xc_command){
-                Write-ColorOut "`txcopy $i`r`n" -ForeGroundColor Gray
+                Write-ColorOut "xcopy $i`r`n" -ForeGroundColor Gray -Indentation 4
                 if($inter -eq 2){
                     [System.IO.File]::AppendAllText("$($PSScriptRoot)\xcopy_commands.txt", $i)
                 }
@@ -1654,13 +1781,14 @@ Function Start-FileCopy(){
     Start-Sleep -Milliseconds 250
 }
 
+# DEFINITION: Starting 7zip:
 Function Start-7zip(){
     param(
         [string]$7zexe = "$($PSScriptRoot)\7z.exe",
         [Parameter(Mandatory=$true)]
         [array]$InFiles
     )
-    Write-ColorOut "`r`n$(Get-Date -Format "dd.MM.yy HH:mm:ss")  --  Zipping files..." -ForegroundColor Cyan
+    Write-ColorOut "$(Get-Date -Format "dd.MM.yy HH:mm:ss")  --  Zipping files..." -ForegroundColor Cyan
 
     if((Test-Path -LiteralPath "$($PSScriptRoot)\7z.exe" -PathType Leaf) -eq $false){
         if((Test-Path -LiteralPath "C:\Program Files\7-Zip\7z.exe" -PathType Leaf) -eq $true){
@@ -1668,7 +1796,7 @@ Function Start-7zip(){
         }elseif((Test-Path -LiteralPath "C:\Program Files (x86)\7-Zip\7z.exe" -PathType Leaf) -eq $true){
             $7zexe = "C:\Program Files (x86)\7-Zip\7z.exe"
         }else{
-            Write-ColorOut "`t7z.exe could not be found - aborting zipping!" -ForegroundColor Red
+            Write-ColorOut "7z.exe could not be found - aborting zipping!" -ForegroundColor Red -Indentation 4
             Pause
             break
         }
@@ -1703,43 +1831,61 @@ Function Start-FileVerification(){
         [array]$InFiles
     )
 
-    Write-ColorOut "`r`n$(Get-Date -Format "dd.MM.yy HH:mm:ss")  --  Verify newly copied files..." -ForegroundColor Cyan
+    Write-ColorOut "$(Get-Date -Format "dd.MM.yy HH:mm:ss")  --  Verify newly copied files..." -ForegroundColor Cyan
 
-    $InFiles | Where-Object {$_.tocopy -eq 1} | Start-RSJob -Name "GetHash" -throttle $script:ThreadCount -FunctionsToLoad Write-ColorOut -ScriptBlock {
-        [string]$inter = "$($_.outpath)\$($_.outname)"
+    $InFiles | Where-Object {$_.ToCopy -eq 1} | Start-RSJob -Name "VerifyHash" <#-throttle $script:ThreadCount#> -FunctionsToLoad Write-ColorOut -ScriptBlock {
+        [string]$inter = "$($_.OutPath)\$($_.OutName)"
         if((Test-Path -LiteralPath $inter -PathType Leaf) -eq $true){
-            if($_.hash -ne $(Get-FileHash -LiteralPath $inter -Algorithm SHA1 | Select-Object -ExpandProperty Hash)){
-                Write-ColorOut "Broken:`t$inter" -ForegroundColor Red
-                Rename-Item -LiteralPath $inter -NewName "$($inter)_broken"
+            try{
+                $hash = Get-FileHash -LiteralPath $inter -Algorithm SHA1 -ErrorAction Stop | Select-Object -ExpandProperty Hash
+            }catch{
+                Write-ColorOut "Could not calculate Hash of $($_.FullName)" -ForegroundColor Red -Indentation 4
+                $hash = "VerifyHashWRONG"
+            }
+            if($_.Hash -ne $hash){
+                Write-ColorOut "Broken:`t$inter" -ForegroundColor Red -Indentation 4
+                try{
+                    Rename-Item -LiteralPath $inter -NewName "$($inter)_broken" -ErrorAction Stop
+                }catch{
+                    Write-ColorOut "Renaming $inter failed." -ForegroundColor Magenta -Indentation 4
+                }
             }else{
-                $_.tocopy = 0
+                $_.ToCopy = 0
                 if((Test-Path -LiteralPath "$($inter)_broken" -PathType Leaf) -eq $true){
-                    Remove-Item -LiteralPath "$($inter)_broken"
+                    try{
+                        Remove-Item -LiteralPath "$($inter)_broken" -ErrorAction Stop
+                    }catch{
+                        Write-ColorOut "Removing $($inter)_broken failed." -ForegroundColor Magenta -Indentation 4
+                    }
                 }
             }
         }else{
-            Write-ColorOut "Missing:`t$inter" -ForegroundColor Red
-            New-Item -Path "$($inter)_broken" | Out-Null
+            Write-ColorOut "Missing:`t$inter" -ForegroundColor Red -Indentation 4
+            try{
+                New-Item -Path "$($inter)_broken" | Out-Null -ErrorAction Stop
+            }catch{
+                Write-ColorOut "Creating $($inter)_broken failed." -ForegroundColor Magenta -Indentation 4
+            }
         }
     } | Wait-RSJob -ShowProgress | Receive-RSJob
-    Get-RSJob -Name "GetHash" | Remove-RSJob
+    Get-RSJob -Name "VerifyHash" | Remove-RSJob
 
     [int]$verified = 0
     [int]$unverified = 0
     [int]$inter=0
-    if($script:Debug -gt 0){
-        [int]$inter = Read-Host "Show files? `"1`" for `"yes`""
+    if($script:Debug -gt 1){
+        [int]$inter = Read-Host "    Show files? `"1`" for `"yes`""
     }
     for($i=0; $i -lt $InFiles.Length; $i++){
         if($InFiles[$i].tocopy -eq 1){
             $unverified++
             if($inter -eq 1){
-                Write-ColorOut $InFiles[$i].outname -ForegroundColor Red
+                Write-ColorOut $InFiles[$i].outname -ForegroundColor Red -Indentation 4
             }
         }else{
             $verified++
             if($inter -eq 1){
-                Write-ColorOut $InFiles[$i].outname -ForegroundColor Green
+                Write-ColorOut $InFiles[$i].outname -ForegroundColor Green -Indentation 4
             }
         }
     }
@@ -1780,7 +1926,7 @@ Function Set-HistFile(){
         [System.IO.File]::WriteAllText($HistFilePath, $results)
     }
     catch{
-        Write-ColorOut "`tWriting to history-file failed! Trying again..." -ForegroundColor Red
+        Write-ColorOut "Writing to history-file failed! Trying again..." -ForegroundColor Red -Indentation 4
         Pause
         Continue
     }
@@ -1789,7 +1935,7 @@ Function Set-HistFile(){
 # DEFINITION: Starts all the things.
 Function Start-Everything(){
     Write-ColorOut "`r`n`                                flolilo's Media-Copytool                                " -ForegroundColor DarkCyan -BackgroundColor Gray
-    Write-ColorOut "                               v0.7.7 (Beta) - 2017-09-19                               `r`n" -ForegroundColor DarkCyan -BackgroundColor Gray
+    Write-ColorOut "                               v0.7.8 (Beta) - 2017-09-19                               `r`n" -ForegroundColor DarkCyan -BackgroundColor Gray
     Write-ColorOut "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")  --  Starting everything..." -ForegroundColor Cyan
     $script:timer = [diagnostics.stopwatch]::StartNew()
     while($true){
@@ -1797,7 +1943,7 @@ Function Start-Everything(){
             Start-Sound(0)
             Start-Sleep -Seconds 2
             if($script:GUI_CLI_Direct -eq "GUI"){
-                $script:Form.WindowState ='Normal'
+                Start-GUI
             }
             break
         }
@@ -1809,7 +1955,10 @@ Function Start-Everything(){
         }
         if($script:PreventStandby -eq 1){
             if((Test-Path -Path "$($PSScriptRoot)\media_copytool_preventsleep.ps1" -PathType Leaf) -eq $true){
-                $preventstandbyid = (Start-Process powershell -ArgumentList "$($PSScriptRoot)\media_copytool_preventsleep.ps1" -WindowStyle Hidden -PassThru).Id
+                $script:preventstandbyid = (Start-Process powershell -ArgumentList "$($PSScriptRoot)\media_copytool_preventsleep.ps1" -WindowStyle Hidden -PassThru).Id
+                if($script:Debug -gt 0){
+                    Write-ColorOut "preventsleep-ID is $script:preventstandbyid" -ForegroundColor Magenta -BackgroundColor DarkGray
+                }
             }else{
                 Write-Host "Couldn't find .\media_copytool_preventsleep.ps1, so can't prevent standby." -ForegroundColor Magenta
                 Start-Sleep -Seconds 3
@@ -1829,7 +1978,7 @@ Function Start-Everything(){
             Start-Sound(1)
             Start-Sleep -Seconds 2
             if($script:GUI_CLI_Direct -eq "GUI"){
-                $script:Form.WindowState ='Normal'
+                Start-GUI
             }
             break
         }
@@ -1844,7 +1993,7 @@ Function Start-Everything(){
             Start-Sound(1)
             Start-Sleep -Seconds 2
             if($script:GUI_CLI_Direct -eq "GUI"){
-                $script:Form.WindowState ='Normal'
+                Start-GUI
             }
             break
         }
@@ -1858,7 +2007,7 @@ Function Start-Everything(){
             Start-Sound(1)
             Start-Sleep -Seconds 2
             if($script:GUI_CLI_Direct -eq "GUI"){
-                $script:Form.WindowState ='Normal'
+                Start-GUI
             }
             break
         }
@@ -1869,7 +2018,7 @@ Function Start-Everything(){
             Start-Sound(1)
             Start-Sleep -Seconds 2
             if($script:GUI_CLI_Direct -eq "GUI"){
-                $script:Form.WindowState ='Normal'
+                Start-GUI
             }
             break
         }
@@ -1881,7 +2030,7 @@ Function Start-Everything(){
                     Write-ColorOut "Aborting." -ForegroundColor Cyan
                     Start-Sleep -Seconds 2
                     if($script:GUI_CLI_Direct -eq "GUI"){
-                        $script:Form.WindowState ='Normal'
+                        Start-GUI
                     }
                     break
                 }
@@ -1964,13 +2113,13 @@ Function Start-Everything(){
     }
 
     Write-ColorOut "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")  --  Done!" -ForegroundColor Cyan
-    Write-ColorOut "`r`n`tStats:" -ForegroundColor DarkCyan
-    Write-ColorOut "`tFound:`t`t$($script:resultvalues.ingoing)`tfiles." -ForegroundColor Cyan
-    Write-ColorOut "`tSkipped:`t$($script:resultvalues.duplihist) (history) + $($script:resultvalues.dupliout) (out-path) + $($script:resultvalues.IdenticalFiles) (identical)`tfiles." -ForegroundColor DarkGreen
-    Write-ColorOut "`tCopied: `t$($script:resultvalues.copyfiles)`tfiles." -ForegroundColor Yellow
+    Write-ColorOut "`r`nStats:" -ForegroundColor DarkCyan -Indentation 4
+    Write-ColorOut "Found:`t`t$($script:resultvalues.ingoing)`tfiles." -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "Skipped:`t$($script:resultvalues.duplihist) (history) + $($script:resultvalues.dupliout) (out-path) + $($script:resultvalues.IdenticalFiles) (identical)`tfiles." -ForegroundColor DarkGreen -Indentation 4
+    Write-ColorOut "Copied: `t$($script:resultvalues.copyfiles)`tfiles." -ForegroundColor Yellow -Indentation 4
     if($script:VerifyCopies -eq 1){
-        Write-ColorOut "`tVerified:`t$($script:resultvalues.verified)`tfiles." -ForegroundColor Green
-        Write-ColorOut "`tUnverified:`t$($script:resultvalues.unverified)`tfiles." -ForegroundColor DarkRed
+        Write-ColorOut "Verified:`t$($script:resultvalues.verified)`tfiles." -ForegroundColor Green -Indentation 4
+        Write-ColorOut "Unverified:`t$($script:resultvalues.unverified)`tfiles." -ForegroundColor DarkRed -Indentation 4
     }
     Write-ColorOut "                                                                                `r`n" -BackgroundColor Gray
     Write-ColorOut "                                                                                `r`n" -BackgroundColor Gray
@@ -1981,10 +2130,10 @@ Function Start-Everything(){
     }
     
     if($script:PreventStandby -eq 1){
-        Stop-Process -Id $preventstandbyid
+        Stop-Process -Id $script:preventstandbyid
     }
     if($script:GUI_CLI_Direct -eq "GUI"){
-        $script:Form.WindowState ='Normal'
+        Start-GUI
     }
 }
 
@@ -1995,7 +2144,8 @@ Function Start-Everything(){
 # ==============================================================================
 # ==================================================================================================
 
-if($GUI_CLI_Direct -eq "GUI"){
+# DEFINITION: Load and Start GUI:
+Function Start-GUI(){
     <# CREDIT:
         code of this section (except from small modifications) by
         https://foxdeploy.com/series/learning-gui-toolmaking-series/
@@ -2010,9 +2160,9 @@ if($GUI_CLI_Direct -eq "GUI"){
 
     [void][System.Reflection.Assembly]::LoadWithPartialName('presentationframework')
     [xml]$xaml = $inputXML -replace 'mc:Ignorable="d"','' -replace "x:Name",'Name'  -replace '^<Win.*', '<Window'
-    $reader=(New-Object System.Xml.XmlNodeReader $xaml)
+    $reader = (New-Object System.Xml.XmlNodeReader $xaml)
     try{
-        $Form=[Windows.Markup.XamlReader]::Load($reader)
+        $script:Form = [Windows.Markup.XamlReader]::Load($reader)
     }
     catch{
         Write-ColorOut "Unable to load Windows.Markup.XamlReader. Usually this means that you haven't installed .NET Framework. Please download and install the latest .NET Framework Web-Installer for your OS: " -ForegroundColor Red
@@ -2021,7 +2171,9 @@ if($GUI_CLI_Direct -eq "GUI"){
         Pause
         Exit
     }
-    $xaml.SelectNodes("//*[@Name]") | ForEach-Object {Set-Variable -Name "WPF$($_.Name)" -Value $Form.FindName($_.Name)}
+    $xaml.SelectNodes("//*[@Name]") | ForEach-Object {
+        Set-Variable -Name "WPF$($_.Name)" -Value $script:Form.FindName($_.Name) -Scope Script
+    }
 
     if($getWPF -ne 0){
         Write-ColorOut "Found the following interactable elements:`r`n" -ForegroundColor Cyan
@@ -2031,92 +2183,95 @@ if($GUI_CLI_Direct -eq "GUI"){
     }
 
     # Fill the TextBoxes and buttons with user parameters:
-    $WPFtextBoxInput.Text = $InputPath
-    $WPFtextBoxOutput.Text = $OutputPath
-    $WPFcheckBoxMirror.IsChecked = $MirrorEnable
-    $WPFtextBoxMirror.Text = $MirrorPath
-    $WPFcheckBoxCan.IsChecked = $(if("Can" -in $PresetFormats){$true}else{$false})
-    $WPFcheckBoxNik.IsChecked = $(if("Nik" -in $PresetFormats){$true}else{$false})
-    $WPFcheckBoxSon.IsChecked = $(if("Son" -in $PresetFormats){$true}else{$false})
-    $WPFcheckBoxJpg.IsChecked = $(if("Jpg" -in $PresetFormats -or "Jpeg" -in $PresetFormats){$true}else{$false})
-    $WPFcheckBoxMov.IsChecked = $(if("Mov" -in $PresetFormats){$true}else{$false})
-    $WPFcheckBoxAud.IsChecked = $(if("Aud" -in $PresetFormats){$true}else{$false})
-    $WPFcheckBoxCustom.IsChecked = $CustomFormatsEnable
-    $WPFtextBoxCustom.Text = $CustomFormats -join ","
-    $WPFcomboBoxOutSubStyle.SelectedIndex = $(
-        if("none" -eq $OutputSubfolderStyle){0}
-        elseif("unchanged" -eq $OutputSubfolderStyle){1}
-        elseif("yyyy-mm-dd" -eq $OutputSubfolderStyle){2}
-        elseif("yyyy_mm_dd" -eq $OutputSubfolderStyle){3}
-        elseif("yyyy.mm.dd" -eq $OutputSubfolderStyle){4}
-        elseif("yyyymmdd" -eq $OutputSubfolderStyle){5}
-        elseif("yy-mm-dd" -eq $OutputSubfolderStyle){6}
-        elseif("yy_mm_dd" -eq $OutputSubfolderStyle){7}
-        elseif("yy.mm.dd" -eq $OutputSubfolderStyle){8}
-        elseif("yymmdd" -eq $OutputSubfolderStyle){9}
+    $script:WPFtextBoxInput.Text = $script:InputPath
+    $script:WPFtextBoxOutput.Text = $script:OutputPath
+    $script:WPFcheckBoxMirror.IsChecked = $script:MirrorEnable
+    $script:WPFtextBoxMirror.Text = $script:MirrorPath
+    $script:WPFcheckBoxCan.IsChecked = $(if("Can" -in $script:PresetFormats){$true}else{$false})
+    $script:WPFcheckBoxNik.IsChecked = $(if("Nik" -in $script:PresetFormats){$true}else{$false})
+    $script:WPFcheckBoxSon.IsChecked = $(if("Son" -in $script:PresetFormats){$true}else{$false})
+    $script:WPFcheckBoxJpg.IsChecked = $(if("Jpg" -in $script:PresetFormats -or "Jpeg" -in $script:PresetFormats){$true}else{$false})
+    $script:WPFcheckBoxMov.IsChecked = $(if("Mov" -in $script:PresetFormats){$true}else{$false})
+    $script:WPFcheckBoxAud.IsChecked = $(if("Aud" -in $script:PresetFormats){$true}else{$false})
+    $script:WPFcheckBoxCustom.IsChecked = $script:CustomFormatsEnable
+    $script:WPFtextBoxCustom.Text = $script:CustomFormats -join ","
+    $script:WPFcomboBoxOutSubStyle.SelectedIndex = $(
+        if("none" -eq $script:OutputSubfolderStyle){0}
+        elseif("unchanged" -eq $script:OutputSubfolderStyle){1}
+        elseif("yyyy-mm-dd" -eq $script:OutputSubfolderStyle){2}
+        elseif("yyyy_mm_dd" -eq $script:OutputSubfolderStyle){3}
+        elseif("yyyy.mm.dd" -eq $script:OutputSubfolderStyle){4}
+        elseif("yyyymmdd" -eq $script:OutputSubfolderStyle){5}
+        elseif("yy-mm-dd" -eq $script:OutputSubfolderStyle){6}
+        elseif("yy_mm_dd" -eq $script:OutputSubfolderStyle){7}
+        elseif("yy.mm.dd" -eq $script:OutputSubfolderStyle){8}
+        elseif("yymmdd" -eq $script:OutputSubfolderStyle){9}
     )
-    $WPFcomboBoxOutFileStyle.SelectedIndex = $(
-        if("Unchanged" -eq $OutputFileStyle){0}
-        elseif("yyyy-MM-dd_HH-mm-ss" -eq $OutputFileStyle){1}
-        elseif("yyyyMMdd_HHmmss" -eq $OutputFileStyle){2}
-        elseif("yyyyMMddHHmmss" -eq $OutputFileStyle){3}
-        elseif("yy-MM-dd_HH-mm-ss" -eq $OutputFileStyle){4}
-        elseif("yyMMdd_HHmmss" -eq $OutputFileStyle){5}
-        elseif("yyMMddHHmmss" -eq $OutputFileStyle){6}
-        elseif("HH-mm-ss" -eq $OutputFileStyle){7}
-        elseif("HH_mm_ss" -eq $OutputFileStyle){8}
-        elseif("HHmmss" -eq $OutputFileStyle){9}
+    $script:WPFcomboBoxOutFileStyle.SelectedIndex = $(
+        if("Unchanged" -eq $script:OutputFileStyle){0}
+        elseif("yyyy-MM-dd_HH-mm-ss" -eq $script:OutputFileStyle){1}
+        elseif("yyyyMMdd_HHmmss" -eq $script:OutputFileStyle){2}
+        elseif("yyyyMMddHHmmss" -eq $script:OutputFileStyle){3}
+        elseif("yy-MM-dd_HH-mm-ss" -eq $script:OutputFileStyle){4}
+        elseif("yyMMdd_HHmmss" -eq $script:OutputFileStyle){5}
+        elseif("yyMMddHHmmss" -eq $script:OutputFileStyle){6}
+        elseif("HH-mm-ss" -eq $script:OutputFileStyle){7}
+        elseif("HH_mm_ss" -eq $script:OutputFileStyle){8}
+        elseif("HHmmss" -eq $script:OutputFileStyle){9}
     )
-    $WPFcheckBoxUseHistFile.IsChecked = $UseHistFile
-    $WPFcomboBoxWriteHistFile.SelectedIndex = $(
-        if("yes" -eq $OutputSubfolderStyle){0}
-        elseif("Overwrite" -eq $WriteHistFile){1}
-        elseif("no" -eq $WriteHistFile){2}
+    $script:WPFcheckBoxUseHistFile.IsChecked = $script:UseHistFile
+    $script:WPFcomboBoxWriteHistFile.SelectedIndex = $(
+        if("yes" -eq $script:OutputSubfolderStyle){0}
+        elseif("Overwrite" -eq $script:WriteHistFile){1}
+        elseif("no" -eq $script:WriteHistFile){2}
     )
-    $WPFcheckBoxInSubSearch.IsChecked = $InputSubfolderSearch
-    $WPFcheckBoxCheckInHash.IsChecked = $DupliCompareHashes
-    $WPFcheckBoxOutputDupli.IsChecked = $CheckOutputDupli
-    $WPFcheckBoxVerifyCopies.IsChecked = $VerifyCopies
-    $WPFcheckBoxAvoidIdenticalFiles.IsChecked = $AvoidIdenticalFiles
-    $WPFcheckBoxZipMirror.IsChecked = $ZipMirror
-    $WPFcheckBoxUnmountInputDrive.IsChecked = $UnmountInputDrive
-    $WPFcheckBoxPreventStandby.IsChecked = $PreventStandby
-    $WPFtextBoxThreadCount.Text = $ThreadCount
-    $WPFcheckBoxRememberIn.IsChecked = $RememberInPath
-    $WPFcheckBoxRememberOut.IsChecked = $RememberOutPath
-    $WPFcheckBoxRememberMirror.IsChecked = $RememberMirrorPath
-    $WPFcheckBoxRememberSettings.IsChecked = $RememberSettings
+    $script:WPFcheckBoxInSubSearch.IsChecked = $script:InputSubfolderSearch
+    $script:WPFcheckBoxCheckInHash.IsChecked = $script:DupliCompareHashes
+    $script:WPFcheckBoxOutputDupli.IsChecked = $script:CheckOutputDupli
+    $script:WPFcheckBoxVerifyCopies.IsChecked = $script:VerifyCopies
+    $script:WPFcheckBoxAvoidIdenticalFiles.IsChecked = $script:AvoidIdenticalFiles
+    $script:WPFcheckBoxZipMirror.IsChecked = $script:ZipMirror
+    $script:WPFcheckBoxUnmountInputDrive.IsChecked = $script:UnmountInputDrive
+    $script:WPFcheckBoxPreventStandby.IsChecked = $script:PreventStandby
+    $script:WPFtextBoxThreadCount.Text = $script:ThreadCount
+    $script:WPFcheckBoxRememberIn.IsChecked = $script:RememberInPath
+    $script:WPFcheckBoxRememberOut.IsChecked = $script:RememberOutPath
+    $script:WPFcheckBoxRememberMirror.IsChecked = $script:RememberMirrorPath
+    $script:WPFcheckBoxRememberSettings.IsChecked = $script:RememberSettings
 
     # DEFINITION: InPath-Button
-    $WPFbuttonSearchIn.Add_Click({
+    $script:WPFbuttonSearchIn.Add_Click({
         Get-Folder("input")
     })
     # DEFINITION: OutPath-Button
-    $WPFbuttonSearchOut.Add_Click({
+    $script:WPFbuttonSearchOut.Add_Click({
         Get-Folder("output")
     })
     # DEFINITION: MirrorPath-Button
-    $WPFbuttonSearchMirror.Add_Click({
+    $script:WPFbuttonSearchMirror.Add_Click({
         Get-Folder("mirror")
     })
     # DEFINITION: Start-Button
-    $WPFbuttonStart.Add_Click({
-        $Form.WindowState = 'Minimized'
+    $script:WPFbuttonStart.Add_Click({
+        $script:Form.Close()
         Start-Everything
-        $Form.WindowState ='Normal'
     })
     # DEFINITION: About-Button
-    $WPFbuttonAbout.Add_Click({
+    $script:WPFbuttonAbout.Add_Click({
         Start-Process powershell -ArgumentList "Get-Help $($PSCommandPath) -detailed" -NoNewWindow -Wait
     })
     # DEFINITION: Close-Button
-    $WPFbuttonClose.Add_Click({
+    $script:WPFbuttonClose.Add_Click({
+        $script:Form.Close()
         Invoke-Close
     })
 
     # DEFINITION: Start GUI
-    $Form.ShowDialog() | Out-Null
+    $script:Form.ShowDialog() | Out-Null
+}
 
+if($GUI_CLI_Direct -eq "GUI"){
+    Start-GUI
 }else{
     Start-Everything
 }

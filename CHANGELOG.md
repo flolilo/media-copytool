@@ -3,6 +3,18 @@ All notable changes to this project will be documented in this file.
 
 (The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).)
 
+## 0.7.8 - 2017-09-19
+### Changed
+- GUI gets now called from within function `Start-GUI`, so it can close and open up again (no more window-debris!)
+- Unthrottled the `RSJobs`, as it seemingly decreases use of ressources
+- `try-catch`ing all file-operations (`Get-FileHash`, `Remove-Item`, `Rename-Item`, `New-Item`)
+- Changed the way `Write-ColorOut`-indentations work.
+
+### Added
+- Some parts about multithreading the last parts: as they all take longer when multithreaded, these parts are commented out. (They were a lot of work, that's why they stay there.)
+- `Write-ColorOut` now has a parameter `-Indentation` which will change the `LeftCursor`-position. 
+
+
 ## 0.7.7. - 2017-09-19
 ### Added
 - `-AvoidIdenticalFiles`-Parameter + GUI-checkbox. Now one can opt to only copy one of multiple identical files that are present on the input-path.
