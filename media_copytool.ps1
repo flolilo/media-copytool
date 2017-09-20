@@ -321,7 +321,7 @@ Function Invoke-Pause(){
 # DEFINITION: Exit the program (and close all windows) + option to pause before exiting.
 Function Invoke-Close(){
     if($script:PreventStandby -eq 1 -and $script:preventstandbyid -ne 999999999){
-        Stop-Process -Id $script:preventstandbyid
+        Stop-Process -Id $script:preventstandbyid -ErrorAction SilentlyContinue
     }
     Write-ColorOut "Exiting - This could take some seconds. Please do not close this window!" -ForegroundColor Magenta
     Get-RSJob | Stop-RSJob
