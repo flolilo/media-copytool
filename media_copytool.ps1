@@ -187,7 +187,7 @@ param(
 # First line of "param" (for remembering/restoring parameters):
 [int]$paramline = 158
 
-#DEFINITION: Hopefully avoiding errors by wrong encoding now:
+# DEFINITION: Hopefully avoiding errors by wrong encoding now:
 $OutputEncoding = New-Object -TypeName System.Text.UTF8Encoding
 
 # Get all error-outputs in English:
@@ -291,7 +291,7 @@ if($ShowParams -ne 0){
 
 # If you want to see the variables (buttons, checkboxes, ...) the GUI has to offer, set this to 1:
 [int]$getWPF = 0
-
+[int]$preventstandbyid = 999999999
 
 # ==================================================================================================
 # ==============================================================================
@@ -319,7 +319,7 @@ Function Invoke-Pause(){
 
 # DEFINITION: Exit the program (and close all windows) + option to pause before exiting.
 Function Invoke-Close(){
-    if($script:PreventStandby -eq 1){
+    if($script:PreventStandby -eq 1 -and $script:preventstandbyid -ne 999999999){
         Stop-Process -Id $script:preventstandbyid
     }
     Write-ColorOut "Exiting - This could take some seconds. Please do not close window!" -ForegroundColor Magenta
