@@ -293,6 +293,7 @@ if($ShowParams -ne 0){
 [int]$getWPF = 0
 [int]$preventstandbyid = 999999999
 
+
 # ==================================================================================================
 # ==============================================================================
 #   Defining Functions:
@@ -1139,7 +1140,13 @@ Function Get-HistFile(){
 
     [array]$files_history = @()
     if(Test-Path -LiteralPath $HistFilePath -PathType Leaf){
-        $JSONFile = Get-Content -LiteralPath $HistFilePath -Raw -Encoding UTF8 | ConvertFrom-Json
+        try{
+            $JSONFile = Get-Content -LiteralPath $HistFilePath -Raw -Encoding UTF8 | ConvertFrom-Json
+        }catch{
+            Write-ColorOut "Could not load $HistFilePath." -ForegroundColor Red -Indentation 4
+            Start-Sleep -Seconds 5
+            Invoke-Close
+        }
         $JSONFile | Out-Null
         $files_history = $JSONFile | ForEach-Object {
             [PSCustomObject]@{
@@ -1907,7 +1914,12 @@ Function Set-HistFile(){
     [array]$results = @($InFiles | Where-Object {$_.ToCopy -eq 0} | Select-Object -Property InName,Date,Size,Hash)
 
     if($script:WriteHistFile -eq "Yes" -and (Test-Path -LiteralPath $HistFilePath -PathType Leaf) -eq $true){
-        $JSON = Get-Content -LiteralPath $HistFilePath -Raw -Encoding UTF8 | ConvertFrom-Json
+        try{
+            $JSON = Get-Content -LiteralPath $HistFilePath -Raw -Encoding UTF8 | ConvertFrom-Json
+        }catch{
+            Write-ColorOut "Could not load $HistFilePath." -ForegroundColor Red -Indentation 4
+            Pause
+        }
         $JSON | Out-Null
         $results += $JSON | ForEach-Object {
             [PSCustomObject]@{
