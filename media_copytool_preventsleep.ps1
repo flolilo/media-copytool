@@ -2,9 +2,9 @@
 [Threading.Thread]::CurrentThread.CurrentUICulture = 'en-US'
 
 # DEFINITION: For button-emulation:
-$myShell = New-Object -com "Wscript.Shell"
+$MyShell = New-Object -ComObject "Wscript.Shell"
 
 while($true){
-    $myShell.sendkeys("{F15}")
+    $MyShell.sendkeys("{F15}")
     Start-Sleep -Seconds 150
 }

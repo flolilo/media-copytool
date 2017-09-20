@@ -4,11 +4,9 @@
 <#
     .SYNOPSIS
         Copy (and verify) user-defined filetypes from A to B (and optionally C).
-
     .DESCRIPTION
         Uses Windows' Robocopy and Xcopy for file-copy, then uses PowerShell's Get-FileHash (SHA1) for verifying that files were copied without errors.
         Now supports multithreading via Boe Prox's PoshRSJob-cmdlet (https://github.com/proxb/PoshRSJob)
-
     .NOTES
         Version:        0.7.8 (Beta)
         Author:         flolilo
@@ -116,7 +114,7 @@
         Valid range: 0 (deactivate), 1 (activate)
         If enabled, automatic standby or shutdown is prevented as long as media-copytool is running.
     .PARAMETER ThreadCount
-        Thread-count for RSJobs, Xcopy-instances and Robocopy's /MT-switch. Recommended: 6, Valid: 2-48.
+        Thread-count for RSJobs (not ATM), Xcopy-instances and Robocopy's /MT-switch. Recommended: 6, Valid: 2-48.
     .PARAMETER RememberInPath
         Valid range: 0 (deactivate), 1 (activate)
         If enabled, it remembers the value of -InputPath for future script-executions.
@@ -133,13 +131,14 @@
         Gives more verbose so one can see what is happening (and where it goes wrong).
         Valid options:
             0 - no debug (default)
-            1 - only stop on end
-            2 - pause after every function
-            3 - additional speedtest (ATM not implemented)
+            1 - only stop on end, show information
+            2 - pause after every function, option to show files and their status
+            3 - ???
 
     .INPUTS
-        "media_copytool_filehistory.json" if -UseHistFile is 1
-        "media_copytool_GUI.xaml" if -GUI_CLI_direct "GUI"
+        media_copytool_filehistory.json if -UseHistFile is 1
+        media_copytool_GUI.xaml if -GUI_CLI_direct is "GUI"
+        media_copytool_preventsleep.ps1 if -PreventStandby is 1
         File(s) must be located in the script's directory and must not be renamed.
     .OUTPUTS
         "media_copytool_filehistory.json" if -WriteHistFile is "Yes" or "Overwrite".
@@ -184,14 +183,10 @@ param(
     [int]$RememberSettings=0,
     [int]$Debug=0
 )
-# First line of "param" (for remembering/restoring parameters):
-[int]$paramline = 158
-
+# DEFINITION: Get all error-outputs in English:
+[Threading.Thread]::CurrentThread.CurrentUICulture = 'en-US'
 # DEFINITION: Hopefully avoiding errors by wrong encoding now:
 $OutputEncoding = New-Object -TypeName System.Text.UTF8Encoding
-
-# Get all error-outputs in English:
-[Threading.Thread]::CurrentThread.CurrentUICulture = 'en-US'
 
 # DEFINITION: Making Write-Host much, much faster:
 Function Write-ColorOut(){
@@ -254,7 +249,7 @@ Function Write-ColorOut(){
     }
 }
 
-# CREDIT: Set default ErrorAction to Stop: https://stackoverflow.com/a/21260623/8013879
+# DEFINITION: Set default ErrorAction to Stop: CREDIT: https://stackoverflow.com/a/21260623/8013879
 if($Debug -eq 0){
     $PSDefaultParameterValues = @{}
     $PSDefaultParameterValues += @{'*:ErrorAction' = 'Stop'}
@@ -263,6 +258,7 @@ if($Debug -eq 0){
     Write-ColorOut "PID = $($pid)" -ForegroundColor Magenta -BackgroundColor DarkGray
 }
 
+# DEFINITION: Show parameters on the console, then exit:
 if($ShowParams -ne 0){
     Write-ColorOut "flolilo's Media-Copytool's Parameters:`r`n" -ForegroundColor Green
     Write-ColorOut "-GUI_CLI_Direct`t`t=`t$GUI_CLI_Direct" -ForegroundColor Cyan -Indentation 4
@@ -289,8 +285,12 @@ if($ShowParams -ne 0){
     Exit
 }
 
+# DEFINITION: Some relevant variables from the start:
+# First line of "param" (for remembering/restoring parameters):
+[int]$paramline = 157
 # If you want to see the variables (buttons, checkboxes, ...) the GUI has to offer, set this to 1:
 [int]$getWPF = 0
+# Creating it here for Invoke-Close:
 [int]$preventstandbyid = 999999999
 
 
@@ -323,7 +323,7 @@ Function Invoke-Close(){
     if($script:PreventStandby -eq 1 -and $script:preventstandbyid -ne 999999999){
         Stop-Process -Id $script:preventstandbyid
     }
-    Write-ColorOut "Exiting - This could take some seconds. Please do not close window!" -ForegroundColor Magenta
+    Write-ColorOut "Exiting - This could take some seconds. Please do not close this window!" -ForegroundColor Magenta
     Get-RSJob | Stop-RSJob
     Start-Sleep -Milliseconds 5
     Get-RSJob | Remove-RSJob
@@ -351,13 +351,17 @@ Function Start-Sound($Success){
         .EXAMPLE
             For success: Start-Sound(1)
     #>
-    $sound = New-Object System.Media.SoundPlayer -ErrorAction SilentlyContinue
-    if($Success -eq 1){
-        $sound.SoundLocation = "C:\Windows\Media\tada.wav"
-    }else{
-        $sound.SoundLocation = "C:\Windows\Media\chimes.wav"
+    try{
+        $sound = New-Object System.Media.SoundPlayer -ErrorAction stop
+        if($Success -eq 1){
+            $sound.SoundLocation = "C:\Windows\Media\tada.wav"
+        }else{
+            $sound.SoundLocation = "C:\Windows\Media\chimes.wav"
+        }
+        $sound.Play()
+    }catch{
+        Write-Host "`a"
     }
-    $sound.Play()
 }
 
 
@@ -1276,7 +1280,7 @@ Function Start-FileSearch(){
 }
 
 # DEFINITION: dupli-check via history-file:
-# TODO: multithread if possible (Start-MTFileHash)
+# TODO: multithread if possible (Start-MTFileHash?)
 Function Start-DupliCheckHist(){
     param(
         [Parameter(Mandatory=$true)]
@@ -1439,7 +1443,7 @@ Function Start-DupliCheckHist(){
 }
 
 # DEFINITION: dupli-check via output-folder:
-# TODO: multithread if possible (Start-MTFileHash)
+# TODO: multithread if possible (Start-MTFileHash?)
 Function Start-DupliCheckOut(){
     param(
         [Parameter(Mandatory=$true)]
@@ -1590,7 +1594,7 @@ Function Start-InputGetHash(){
 }
 
 # DEFINITION: Check if filename already exists and if so, then choose new name for copying:
-# TODO: multithread if possible (Start-MTFileHash)
+# TODO: multithread if possible (Start-MTFileHash?)
 Function Start-OverwriteProtection(){
     param(
         [Parameter(Mandatory=$true)]
@@ -2163,7 +2167,7 @@ Function Start-GUI(){
         https://foxdeploy.com/series/learning-gui-toolmaking-series/
     #>
     if((Test-Path -LiteralPath "$($PSScriptRoot)/media_copytool_GUI.xaml" -PathType Leaf)){
-        $inputXML = Get-Content -Path "$($PSScriptRoot)/media_copytool_GUI.xaml" -Encoding UTF8
+        $inputXML = Get-Content -LiteralPath "$($PSScriptRoot)/media_copytool_GUI.xaml" -Encoding UTF8
     }else{
         Write-ColorOut "Could not find $($PSScriptRoot)/media_copytool_GUI.xaml - GUI can therefore not start." -ForegroundColor Red
         Pause
