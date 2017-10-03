@@ -87,7 +87,7 @@ Media-Copytool ist mein Versuch, die Dateien von den Speicherkarten meiner DSLR 
 - [x] Option um USB-Geräte nach dem Abschluss der (ersten) Kopie sicher auszuwerfen
 - [x] Option um das Kopieren doppelt vorhandener Dateien zu vermeiden. (Z.B. .\DCIM\File_1.jpeg & .\DCIM\Sub\File_1.jpeg -> .\Out\File_1.jpeg) (Niedrige Priorität)
 - [x] Schönere/lesbarere Ausgabe in der Konsole
-- [ ] Multithreading der GUI (Niedrige Priorität)
-- [ ] Zweite JSON-Datei für die Dateien, die im Ausgabepfad kontrolliert wurden (eventuell)
+- [x] Multithreading der GUI
+- [x] ~~Zweite JSON-Datei für~~ Inkuldiere die Dateien, die im Ausgabepfad kontrolliert wurden, in die History-Datei.
 - [ ] :de: Deutsche Übersetzung (sinnvollerweise erst mit Message-Variablen, daher in weiter Ferne)
 - [ ] :de: Parameter des Skripts hier auf Deutsch beschreiben.

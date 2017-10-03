@@ -3,6 +3,17 @@ All notable changes to this project will be documented in this file.
 
 (The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).)
 
+
+## 0.7.9 - 2017-10-03
+### Changed
+- Bugfix: As Windows has an unattended timeout-counter, `preventsleep` will now poll every 90 seconds.
+- Improvement: `Write-ColorOut` needs fewer `[Console]`-queries.
+- Improvement: `Start-DupliCheckHist` has realigned `properties`-variable for `Compare-Object` (now before `for`-loop, not inside it).
+
+### Added
+- `Start-DupliCheckOut` and `Set-HistFile` now include found files in history-file.
+
+
 ## 0.7.8 - 2017-09-19
 ### Changed
 - GUI gets now called from within function `Start-GUI`, so it can close and open up again (no more window-debris!)

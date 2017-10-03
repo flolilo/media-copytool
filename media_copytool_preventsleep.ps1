@@ -6,5 +6,6 @@ $MyShell = New-Object -ComObject "Wscript.Shell"
 
 while($true){
     $MyShell.sendkeys("{F15}")
-    Start-Sleep -Seconds 150
+    # DEFINITION:/CREDIT: https://superuser.com/a/1023836/703240
+    Start-Sleep -Seconds 90
 }
