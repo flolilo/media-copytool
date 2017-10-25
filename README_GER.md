@@ -73,6 +73,7 @@ Media-Copytool ist mein Versuch, die Dateien von den Speicherkarten meiner DSLR 
 - Kein Support für andere Betriebssysteme als Windows *- Support ist aber irgendwann geplant*.
 
 ## To do
+- [ ] Nur eine JSON-Parameter-Datei, aber mit Presets (hohe Priorität)
 - [ ] Alle `for`-Schleifen multithreaden (hohe Priorität)
 - [x] Evaluierung von Posh-RSJob (**Mithilfe erwünscht!**)
 - [x] GUI mit Tabs statt Dropdowns

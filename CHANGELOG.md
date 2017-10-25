@@ -3,6 +3,16 @@ All notable changes to this project will be documented in this file.
 
 (The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).)
 
+## 0.7.10 - 2017-10-25
+### Changed
+- Renamed subfiles from `media_copytool_` to `mc_`
+- Improvement: Parameters are now available through a JSON-file via `-JSONParamPath`.
+- Improvement: History-file can be set via `-JSONHistFilePath`.
+
+### Added
+- `-JSONParamPath` & `parameters.json`
+- `-JSONHistFilePath`
+
 
 ## 0.7.9 - 2017-10-03
 ### Changed

@@ -1,0 +1,30 @@
+{
+    "GUI_CLI_Direct": "GUI",
+    "InputPath": "F:\\DCIM",
+    "OutputPath": "D:\\MyPictures",
+    "MirrorEnable": 0,
+    "MirrorPath": "E:\\Backup",
+    "PresetFormats": [
+        "Can",
+        "Jpg",
+        "Mov"
+    ],
+    "CustomFormatsEnable": 0,
+    "CustomFormats": [
+        "*"
+    ],
+    "OutputSubfolderStyle": "yyyy-MM-dd",
+    "OutputFileStyle": "unchanged",
+    "JSONHistFilePath": "$($PSScriptRoot)\\mc_historyfile.json",
+    "UseHistFile": 1,
+    "WriteHistFile": "yes",
+    "InputSubfolderSearch": 1,
+    "DupliCompareHashes": 0,
+    "CheckOutputDupli": 0,
+    "VerifyCopies": 1,
+    "AvoidIdenticalFiles": 0,
+    "ZipMirror": 0,
+    "UnmountInputDrive": 0,
+    "PreventStandby": 1,
+    "ThreadCount": 4
+}
