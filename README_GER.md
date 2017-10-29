@@ -73,7 +73,6 @@ Media-Copytool ist mein Versuch, die Dateien von den Speicherkarten meiner DSLR 
 - Kein Support für andere Betriebssysteme als Windows *- Support ist aber irgendwann geplant*.
 
 ## To do
-- [ ] Nur eine JSON-Parameter-Datei, aber mit Presets (hohe Priorität)
 - [ ] Alle `for`-Schleifen multithreaden (hohe Priorität)
 - [x] Evaluierung von Posh-RSJob (**Mithilfe erwünscht!**)
 - [x] GUI mit Tabs statt Dropdowns
@@ -90,5 +89,6 @@ Media-Copytool ist mein Versuch, die Dateien von den Speicherkarten meiner DSLR 
 - [x] Schönere/lesbarere Ausgabe in der Konsole
 - [x] Multithreading der GUI
 - [x] ~~Zweite JSON-Datei für~~ Inkuldiere die Dateien, die im Ausgabepfad kontrolliert wurden, in die History-Datei.
+- [x] Nur eine JSON-Parameter-Datei, aber mit Presets (hohe Priorität)
 - [ ] :de: Deutsche Übersetzung (sinnvollerweise erst mit Message-Variablen, daher in weiter Ferne)
 - [ ] :de: Parameter des Skripts hier auf Deutsch beschreiben.

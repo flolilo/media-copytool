@@ -3,6 +3,20 @@ All notable changes to this project will be documented in this file.
 
 (The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).)
 
+## 0.8.0 - 2017-10-28
+### Changed
+- Parameter-JSON-file is now fixed, but different presets can be saved to and loaded from it.
+- `-JSONHistFilePath` is now `-HistFilePath`.
+- GUI, so it reflects the changes.
+
+### Added
+- `-LoadParameterPresetName` to load parameters from mc_parameters.json.
+- `-SaveParameterPresetName` to save parameters to mc_parameters.json.
+
+### Removed
+- `-JSONParamPath`.
+
+
 ## 0.7.10 - 2017-10-25
 ### Changed
 - Renamed subfiles from `media_copytool_` to `mc_`
