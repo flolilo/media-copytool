@@ -73,6 +73,7 @@ Media-Copytool is my attempt to create a tool to easily (and switfly) copies fil
 - No support for non-Windows-OSs, *though I plan to achieve that someday*.
 
 ## To do
+- [ ] Creating a Pester-script (high priority)
 - [ ] Making all `for`-loops multithreaded (high priority)
 - [x] Evaluating the usefulness of Posh-RSJob (**Cuntributions are welcome!**)
 - [x] GUI with tabs instead of dropdowns
