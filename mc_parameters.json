@@ -28,38 +28,6 @@
                                   "ZipMirror":  0,
                                   "UnmountInputDrive":  0,
                                   "PreventStandby":  1,
-                                  "ThreadCount":  4
-                              }
-    },
-    {
-        "ParamPresetName":  "testing",
-        "ParamPresetValues":  {
-                                  "InputPath":  "F:\\test",
-                                  "OutputPath":  "D:\\teretest",
-                                  "MirrorEnable":  1,
-                                  "MirrorPath":  "E:\\Backup",
-                                  "PresetFormats":  [
-                                                        "Nik",
-                                                        "Jpg",
-                                                        "Mov"
-                                                    ],
-                                  "CustomFormatsEnable":  0,
-                                  "CustomFormats":  [
-                                                        "*"
-                                                    ],
-                                  "OutputSubfolderStyle":  "yyyy-MM-dd",
-                                  "OutputFileStyle":  "HH-mm-ss",
-                                  "HistFilePath":  "$($PSScriptRoot)\\mc_historyfile.json",
-                                  "UseHistFile":  0,
-                                  "WriteHistFile":  "overwrite",
-                                  "InputSubfolderSearch":  1,
-                                  "DupliCompareHashes":  0,
-                                  "CheckOutputDupli":  0,
-                                  "VerifyCopies":  1,
-                                  "AvoidIdenticalFiles":  0,
-                                  "ZipMirror":  0,
-                                  "UnmountInputDrive":  0,
-                                  "PreventStandby":  1,
                                   "ThreadCount":  6
                               }
     }

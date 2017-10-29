@@ -1,5 +1,4 @@
 #requires -version 3
-#requires -module PoshRSJob
 
 <#
     .SYNOPSIS
@@ -231,6 +230,20 @@ param(
         $ErrorActionPreference = 'Stop'
     }else{
         Write-Host "PID = $($pid)" -ForegroundColor Magenta -BackgroundColor DarkGray
+    }
+    # DEFINITION: Load PoshRSJob:
+    try{
+        Import-Module -Name "PoshRSJob" -NoClobber -Global -ErrorAction Stop
+    }catch{
+        Write-Host "Could not load Module `"PoshRSJob`" - Please install it in an " -ForegroundColor Red -NoNewline
+        Write-Host "administrative console " -ForegroundColor Magenta -NoNewline
+        Write-Host "via " -ForegroundColor Red -NoNewline
+        Write-Host "Install-Module PoshRSJob" -NoNewline
+        Write-Host ", or run this script with " -ForegroundColor Red -NoNewline
+        Write-Host "-GUI_CLI_Direct CLI" -NoNewline
+        Write-Host "." -ForegroundColor Red
+        Pause
+        Exit
     }
 # DEFINITION: Hopefully avoiding errors by wrong encoding now:
     $OutputEncoding = New-Object -TypeName System.Text.UTF8Encoding
@@ -557,7 +570,7 @@ Function Get-Folder(){
         $browse.Filter = 'JSON (*.json)|*.json'
 
         if($browse.ShowDialog() -eq "OK"){
-            if($browse.FileName -contains ".json"){
+            if($browse.FileName -like "*.json"){
                 $script:WPFtextBoxHistFile.Text = $browse.FileName
             }
         }
