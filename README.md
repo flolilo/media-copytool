@@ -73,7 +73,7 @@ Media-Copytool is my attempt to create a tool to easily (and switfly) copies fil
 - No support for non-Windows-OSs, *though I plan to achieve that someday*.
 
 ## To do
-- [ ] Only one JSON-Parameter-file, but with preset-arrays (high priority)
+- [ ] Creating a Pester-script (high priority)
 - [ ] Making all `for`-loops multithreaded (high priority)
 - [x] Evaluating the usefulness of Posh-RSJob (**Cuntributions are welcome!**)
 - [x] GUI with tabs instead of dropdowns
@@ -90,4 +90,5 @@ Media-Copytool is my attempt to create a tool to easily (and switfly) copies fil
 - [x] Making the output look nice(r) and especially make errors more transparent to users (Low priority)
 - [x] Multithreading the GUI
 - [x] ~~Creating a second JSON-file for~~ Include looked up files in output-path into history-file.
+- [x] Only one JSON-Parameter-file, but with preset-arrays (high priority)
 - [ ] :de: Deutsche Übersetzung (sinnvollerweise erst mit Message-Variablen, daher in weiter Ferne)

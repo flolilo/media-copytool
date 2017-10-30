@@ -1,5 +1,4 @@
 #requires -version 3
-#requires -module PoshRSJob
 
 <#
     .SYNOPSIS
@@ -8,15 +7,16 @@
         Uses Windows' Robocopy and Xcopy for file-copy, then uses PowerShell's Get-FileHash (SHA1) for verifying that files were copied without errors.
         Now supports multithreading via Boe Prox's PoshRSJob-cmdlet (https://github.com/proxb/PoshRSJob)
     .NOTES
-        Version:        0.7.10 (Beta)
+        Version:        0.8.0 (Beta)
         Author:         flolilo
-        Creation Date:  2017-10-25
+        Creation Date:  2017-10-28
         Legal stuff: This program is free software. It comes without any warranty, to the extent permitted by
         applicable law. Most of the script was written by myself (or heavily modified by me when searching for solutions
         on the WWW). However, some parts are copies or modifications of very genuine code - see
         the "CREDIT:"-tags to find them.
 
     .PARAMETER ShowParams
+        Cannot be specified in mc_parameters.json.
         Valid range: 0 (deactivate), 1 (activate)
         If enabled, it shows the pre-set parameters, so you can see what would happen if you e.g. try 'media_copytool.ps1 -GUI_CLI_Direct "direct"'
     .PARAMETER GUI_CLI_Direct
@@ -25,6 +25,36 @@
             "GUI" - Graphical User Interface (default)
             "CLI" - interactive console
             "direct" - instant execution with given parameters.
+    .PARAMETER LoadParamPresetName
+        Cannot be specified in mc_parameters.json. (Of course, as it is part of the preset's description).
+        The name of the preset that the user wants to load. Default: preset. Valid characters: A-z,0-9,+,-,_ ; max. 64 characters
+    .PARAMETER SaveParamPresetName
+        Cannot be specified in mc_parameters.json. (Of course, as it is part of the preset's description).
+        The name of the preset that the user wants to save to. Default: preset. Valid characters: A-z,0-9,+,-,_ ; max. 64 characters
+    .PARAMETER RememberInPath
+        Cannot be specified in mc_parameters.json.
+        Valid range: 0 (deactivate), 1 (activate)
+        If enabled, it remembers the value of -InputPath for future script-executions.
+    .PARAMETER RememberOutPath
+        Cannot be specified in mc_parameters.json.
+        Valid range: 0 (deactivate), 1 (activate)
+        If enabled, it remembers the value of -OutputPath for future script-executions.
+    .PARAMETER RememberMirrorPath
+        Cannot be specified in mc_parameters.json.
+        Valid range: 0 (deactivate), 1 (activate)
+        If enabled, it remembers the value of -MirrorPath for future script-executions.
+    .PARAMETER RememberSettings
+        Cannot be specified in mc_parameters.json.
+        Valid range: 0 (deactivate), 1 (activate)
+        If enabled, it remembers all parameters (excl. '-Remember*', '-ShowParams', and '-*Path') for future script-executions.
+    .PARAMETER Debug
+    Cannot be specified in mc_parameters.json.
+        Gives more verbose so one can see what is happening (and where it goes wrong).
+        Valid options:
+            0 - no debug (default)
+            1 - only stop on end, show information
+            2 - pause after every function, option to show files and their status
+            3 - ???
     .PARAMETER InputPath
         Path from which files will be copied.
     .PARAMETER OutputPath
@@ -79,6 +109,8 @@
             "HH-mm-ss"          -   E.g. 13-59-58.ext
             "HH_mm_ss"          -   E.g. 13_59_58.ext
             "HHmmss"            -   E.g. 135958.ext
+    .PARAMETER HistFilePath
+        Path to the JSON-file that represents the history-file.
     .PARAMETER UseHistFile
         Valid range: 0 (deactivate), 1 (activate)
         The history-file is a fast way to rule out the creation of duplicates by comparing the files from -InputPath against the values stored earlier.
@@ -115,38 +147,21 @@
         If enabled, automatic standby or shutdown is prevented as long as media-copytool is running.
     .PARAMETER ThreadCount
         Thread-count for RSJobs (not ATM), Xcopy-instances and Robocopy's /MT-switch. Recommended: 6, Valid: 2-48.
-    .PARAMETER RememberInPath
-        Valid range: 0 (deactivate), 1 (activate)
-        If enabled, it remembers the value of -InputPath for future script-executions.
-    .PARAMETER RememberOutPath
-        Valid range: 0 (deactivate), 1 (activate)
-        If enabled, it remembers the value of -OutputPath for future script-executions.
-    .PARAMETER RememberMirrorPath
-        Valid range: 0 (deactivate), 1 (activate)
-        If enabled, it remembers the value of -MirrorPath for future script-executions.
-    .PARAMETER RememberSettings
-        Valid range: 0 (deactivate), 1 (activate)
-        If enabled, it remembers all parameters (excl. '-Remember*', '-showparams', and '-*Path') for future script-executions.
-    .PARAMETER Debug
-        Gives more verbose so one can see what is happening (and where it goes wrong).
-        Valid options:
-            0 - no debug (default)
-            1 - only stop on end, show information
-            2 - pause after every function, option to show files and their status
-            3 - ???
 
     .INPUTS
-        mc_historyfile.json if -UseHistFile is 1
-        mc_GUI.xaml if -GUI_CLI_direct is "GUI"
-        mc_preventsleep.ps1 if -PreventStandby is 1
+        mc_parameters.json,
+        any valid UTF8- *.json if -UseHistFile is 1 (file specified by -HistFilePath),
+        mc_GUI.xaml if -GUI_CLI_direct is "GUI",
+        mc_preventsleep.ps1 if -PreventStandby is 1,
         File(s) must be located in the script's directory and must not be renamed.
     .OUTPUTS
-        "mc_historyfile.json" if -WriteHistFile is "Yes" or "Overwrite".
+        any valid UTF8- *.json if -WriteHistFile is "Yes" or "Overwrite" (file specified by -HistFilePath),
+        mc_parameters.json if -Remember* is specified
         File(s) will be saved into the script's directory.
     
     .EXAMPLE
         See the preset/saved parameters of this script:
-        media_copytool.ps1 -showparams 1
+        media_copytool.ps1 -ShowParams 1
     .EXAMPLE
         Start Media-Copytool with the Graphical user interface:
         media_copytool.ps1 -GUI_CLI_Direct "GUI"
@@ -154,17 +169,17 @@
         Copy Canon's Raw-Files, Movies, JPEGs from G:\ to D:\Backup and prevent the computer from ging to standby:
         media_copytool.ps1 -PresetFormats "Can","Mov","Jpg" .InputPath "G:\" -OutputPath "D:\Backup" -PreventStandby 1 
 #>
-# TODO: write params to JSON file instead of param. (create them in param, but leave them empty. If empty, read them out via JSON. If changed, write to JSON.)
 param(
     [int]$ShowParams =              0,
-    [string]$JSONParamPath =        "$($PSScriptRoot)\mc_parameters.json",
+    [string]$GUI_CLI_Direct =       "GUI",
+    [string]$LoadParamPresetName =  "",
+    [string]$SaveParamPresetName =  "",
     [int]$RememberInPath =          0,
     [int]$RememberOutPath =         0,
     [int]$RememberMirrorPath =      0,
     [int]$RememberSettings =        0,
     [int]$Debug =                   0,
     # From here on, parameters can be set both via parameters and via JSON file(s).
-    [string]$GUI_CLI_Direct =       "",
     [string]$InputPath =            "",
     [string]$OutputPath =           "",
     [int]$MirrorEnable =            -1,
@@ -174,7 +189,7 @@ param(
     [array]$CustomFormats =         @(),
     [string]$OutputSubfolderStyle = "",
     [string]$OutputFileStyle =      "",
-    [string]$JSONHistFilePath =     "",
+    [string]$HistFilePath =         "",
     [int]$UseHistFile =             -1,
     [string]$WriteHistFile =        "",
     [int]$InputSubfolderSearch =    -1,
@@ -187,11 +202,58 @@ param(
     [int]$PreventStandby =          -1,
     [int]$ThreadCount =             -1
 )
+# DEFINITION: Some relevant variables from the start:
+    # Setting up the Parameter-JSON (mc_parameters.json):
+        [string]$JSONParamPath = "$($PSScriptRoot)\mc_parameters.json"
+        if($LoadParamPresetName.Length -le 0){
+            [string]$LoadParamPresetName = "default"
+        }else{
+            [string]$LoadParamPresetName = $($LoadParamPresetName.ToLower() -Replace '[^A-Za-z0-9_+-]','')
+            [string]$LoadParamPresetName = $LoadParamPresetName.Substring(0, [math]::Min($LoadParamPresetName.Length, 64))
+        }
+        if($SaveParamPresetName.Length -le 0){
+            [string]$SaveParamPresetName = $LoadParamPresetName
+        }else{
+            [string]$SaveParamPresetName = $($SaveParamPresetName.ToLower() -Replace '[^A-Za-z0-9_+-]','').Substring(0, 64)
+        }
+    # If you want to see the variables (buttons, checkboxes, ...) the GUI has to offer, set this to 1:
+        [int]$getWPF = 0
+    # Creating preventsleep.ps1's PID-variable here - for Invoke-Close:
+        [int]$preventstandbyid = 999999999
 
 # DEFINITION: Get all error-outputs in English:
-[Threading.Thread]::CurrentThread.CurrentUICulture = 'en-US'
+    [Threading.Thread]::CurrentThread.CurrentUICulture = 'en-US'
+# DEFINITION: Set default ErrorAction to Stop: CREDIT: https://stackoverflow.com/a/21260623/8013879
+    if($Debug -eq 0){
+        $PSDefaultParameterValues = @{}
+        $PSDefaultParameterValues += @{'*:ErrorAction' = 'Stop'}
+        $ErrorActionPreference = 'Stop'
+    }else{
+        Write-Host "PID = $($pid)" -ForegroundColor Magenta -BackgroundColor DarkGray
+    }
+    # DEFINITION: Load PoshRSJob:
+    try{
+        Import-Module -Name "PoshRSJob" -NoClobber -Global -ErrorAction Stop
+    }catch{
+        Write-Host "Could not load Module `"PoshRSJob`" - Please install it in an " -ForegroundColor Red -NoNewline
+        Write-Host "administrative console " -ForegroundColor Magenta -NoNewline
+        Write-Host "via " -ForegroundColor Red -NoNewline
+        Write-Host "Install-Module PoshRSJob" -NoNewline
+        Write-Host ", or run this script with " -ForegroundColor Red -NoNewline
+        Write-Host "-GUI_CLI_Direct CLI" -NoNewline
+        Write-Host "." -ForegroundColor Red
+        Pause
+        Exit
+    }
 # DEFINITION: Hopefully avoiding errors by wrong encoding now:
-$OutputEncoding = New-Object -TypeName System.Text.UTF8Encoding
+    $OutputEncoding = New-Object -TypeName System.Text.UTF8Encoding
+
+
+# ==================================================================================================
+# ==============================================================================
+#    Defining generic functions:
+# ==============================================================================
+# ==================================================================================================
 
 # DEFINITION: Making Write-Host much, much faster:
 Function Write-ColorOut(){
@@ -201,7 +263,7 @@ Function Write-ColorOut(){
         .DESCRIPTION
             Using the [Console]-commands to make everything faster.
         .NOTES
-            Date: 2017-10-03
+            Date: 2017-10-25
         
         .PARAMETER Object
             String to write out
@@ -211,16 +273,17 @@ Function Write-ColorOut(){
             Color of background. If not specified, uses color that was set before calling. Valid: DarkMagenta (PS-Default), White, Red, Yellow, Cyan, Green, Gray, Magenta, Blue, Black, DarkRed, DarkYellow, DarkCyan, DarkGreen, DarkGray, DarkBlue
         .PARAMETER NoNewLine
             When enabled, no line-break will be created.
+
+        .EXAMPLE
+            Just use it like Write-Host.
     #>
     param(
         [Parameter(Mandatory=$true)]
         [string]$Object,
 
-        [Parameter(Mandatory=$false)]
         [ValidateSet("DarkBlue","DarkGreen","DarkCyan","DarkRed","Blue","Green","Cyan","Red","Magenta","Yellow","Black","DarkGray","Gray","DarkYellow","White","DarkMagenta")]
         [string]$ForegroundColor,
 
-        [Parameter(Mandatory=$false)]
         [ValidateSet("DarkBlue","DarkGreen","DarkCyan","DarkRed","Blue","Green","Cyan","Red","Magenta","Yellow","Black","DarkGray","Gray","DarkYellow","White","DarkMagenta")]
         [string]$BackgroundColor,
 
@@ -256,148 +319,11 @@ Function Write-ColorOut(){
     }
 }
 
-# DEFINITION: Set default ErrorAction to Stop: CREDIT: https://stackoverflow.com/a/21260623/8013879
-if($Debug -eq 0){
-    $PSDefaultParameterValues = @{}
-    $PSDefaultParameterValues += @{'*:ErrorAction' = 'Stop'}
-    $ErrorActionPreference = 'Stop'
-}else{
-    Write-ColorOut "PID = $($pid)" -ForegroundColor Magenta -BackgroundColor DarkGray
-}
-
-# DEFINITION: Get parameters from JSON file:
-if($JSONParamPath.Length -gt 4 -and (Test-Path -LiteralPath $JSONParamPath -PathType Leaf) -eq $true){
-    try{
-        $jsonparams = Get-Content -Path $JSONParamPath -Raw -Encoding UTF8 | ConvertFrom-Json
-        if($GUI_CLI_Direct.Length -eq 0){
-            [string]$GUI_CLI_Direct = $jsonparams.GUI_CLI_Direct
-        }
-        if($InputPath.Length -eq 0){
-            [string]$InputPath = $jsonparams.InputPath
-        }
-        if($OutputPath.Length -eq 0){
-            [string]$OutputPath = $jsonparams.OutputPath
-        }
-        if($MirrorEnable -eq -1){
-            [int]$MirrorEnable = $jsonparams.MirrorEnable
-        }
-        if($MirrorPath.Length -eq 0){
-            [string]$MirrorPath = $jsonparams.MirrorPath
-        }
-        if($PresetFormats.Length -eq 0){
-            [array]$PresetFormats = @($jsonparams.PresetFormats)
-        }
-        if($CustomFormatsEnable -eq -1){
-            [int]$CustomFormatsEnable = $jsonparams.CustomFormatsEnable
-        }
-        if($CustomFormats.Length -eq 0){
-            [array]$CustomFormats = @($jsonparams.CustomFormats)
-        }
-        if($OutputSubfolderStyle.Length -eq 0){
-            [string]$OutputSubfolderStyle = $jsonparams.OutputSubfolderStyle
-        }
-        if($OutputFileStyle.Length -eq 0){
-            [string]$OutputFileStyle = $jsonparams.OutputFileStyle
-        }
-        if($JSONHistFilePath.Length -eq 0){
-            [string]$JSONHistFilePath = $jsonparams.JSONHistFilePath.Replace('$($PSScriptRoot)',"$PSScriptRoot")
-        }
-        if($UseHistFile -eq -1){
-            [int]$UseHistFile = $jsonparams.UseHistFile
-        }
-        if($WriteHistFile.Length -eq 0){
-            [string]$WriteHistFile = $jsonparams.WriteHistFile
-        }
-        if($InputSubfolderSearch -eq -1){
-            [int]$InputSubfolderSearch = $jsonparams.InputSubfolderSearch
-        }
-        if($DupliCompareHashes -eq -1){
-            [int]$DupliCompareHashes = $jsonparams.DupliCompareHashes
-        }
-        if($CheckOutputDupli -eq -1){
-            [int]$CheckOutputDupli = $jsonparams.CheckOutputDupli
-        }
-        if($VerifyCopies -eq -1){
-            [int]$VerifyCopies = $jsonparams.VerifyCopies
-        }
-        if($AvoidIdenticalFiles -eq -1){
-            [int]$AvoidIdenticalFiles = $jsonparams.AvoidIdenticalFiles
-        }
-        if($ZipMirror -eq -1){
-            [int]$ZipMirror = $jsonparams.ZipMirror
-        }
-        if($UnmountInputDrive -eq -1){
-            [int]$UnmountInputDrive = $jsonparams.UnmountInputDrive
-        }
-        if($PreventStandby -eq -1){
-            [int]$PreventStandby = $jsonparams.PreventStandby
-        }
-        if($ThreadCount -eq -1){
-            [int]$ThreadCount = $jsonparams.ThreadCount
-        }
-    }catch{
-        Write-ColorOut "Getting parameters from $JsonParamPath failed - aborting!" -ForegroundColor Red
-        Start-Sleep -Seconds 5
-        Exit
-    }
-    Clear-Variable -Name jsonparams
-}elseif($JSONParamPath.Length -gt 4 -and (Test-Path -LiteralPath $JSONParamPath -PathType Leaf) -eq $false){
-    Write-ColorOut "$JsonParamPath does not exist - aborting!" -ForegroundColor Red
-    Start-Sleep -Seconds 5
-    Exit
-}
-
-# DEFINITION: Show parameters on the console, then exit:
-if($ShowParams -ne 0){
-    Write-ColorOut "flolilo's Media-Copytool's Parameters:`r`n" -ForegroundColor Green
-    Write-ColorOut "-JSONParamPath`t`t=`t$JSONParamPath" -ForegroundColor Cyan -Indentation 4
-    Write-ColorOut "-RememberInPath`t`t=`t$RememberInPath" -ForegroundColor Cyan -Indentation 4
-    Write-ColorOut "-RememberOutPath`t`t=`t$RememberOutPath" -ForegroundColor Cyan -Indentation 4
-    Write-ColorOut "-RememberMirrorPath`t`t=`t$RememberMirrorPath" -ForegroundColor Cyan -Indentation 4
-    Write-ColorOut "-RememberSettings`t`t=`t$RememberSettings" -ForegroundColor Cyan -Indentation 4
-    Write-ColorOut "-Debug`t`t=`t$Debug" -ForegroundColor Cyan -Indentation 4
-    Write-ColorOut "If `$JSONParamPath was specified and values weren't added per parameter-switches, these values come from $($JSONParamPath):" -ForegroundColor DarkCyan -Indentation 2
-    Write-ColorOut "-GUI_CLI_Direct`t`t=`t$GUI_CLI_Direct" -ForegroundColor Cyan -Indentation 4
-    Write-ColorOut "-InputPath`t`t`t=`t$InputPath" -ForegroundColor Cyan -Indentation 4
-    Write-ColorOut "-OutputPath`t`t`t=`t$OutputPath" -ForegroundColor Cyan -Indentation 4
-    Write-ColorOut "-MirrorEnable`t`t=`t$MirrorEnable" -ForegroundColor Cyan -Indentation 4
-    Write-ColorOut "-MirrorPath`t`t`t=`t$MirrorPath" -ForegroundColor Cyan -Indentation 4
-    Write-ColorOut "-PresetFormats`t`t=`t$PresetFormats" -ForegroundColor Cyan -Indentation 4
-    Write-ColorOut "-CustomFormatsEnable`t=`t$CustomFormatsEnable" -ForegroundColor Cyan -Indentation 4
-    Write-ColorOut "-CustomFormats`t`t=`t$CustomFormats" -ForegroundColor Cyan -Indentation 4
-    Write-ColorOut "-OutputSubfolderStyle`t=`t$OutputSubfolderStyle" -ForegroundColor Cyan -Indentation 4
-    Write-ColorOut "-OutputFileStyle`t`t=`t$OutputFileStyle" -ForegroundColor Cyan -Indentation 4
-    Write-ColorOut "-JSONHistFilePath`t=`t$JSONHistFilePath" -ForegroundColor Cyan -Indentation 4
-    Write-ColorOut "-UseHistFile`t`t=`t$UseHistFile" -ForegroundColor Cyan -Indentation 4
-    Write-ColorOut "-WriteHistFile`t`t=`t$WriteHistFile" -ForegroundColor Cyan -Indentation 4
-    Write-ColorOut "-InputSubfolderSearch`t=`t$InputSubfolderSearch" -ForegroundColor Cyan -Indentation 4
-    Write-ColorOut "-CheckOutputDupli`t`t=`t$CheckOutputDupli" -ForegroundColor Cyan -Indentation 4
-    Write-ColorOut "-VerifyCopies`t`t=`t$VerifyCopies" -ForegroundColor Cyan -Indentation 4
-    Write-ColorOut "-AvoidIdenticalFiles`t=`t$AvoidIdenticalFiles" -ForegroundColor Cyan -Indentation 4
-    Write-ColorOut "-ZipMirror`t`t`t=`t$ZipMirror" -ForegroundColor Cyan -Indentation 4
-    Write-ColorOut "-UnmountInputDrive`t`t=`t$UnmountInputDrive" -ForegroundColor Cyan -Indentation 4
-    Write-ColorOut "-PreventStandby`t`t=`t$PreventStandby" -ForegroundColor Cyan -Indentation 4
-    Write-ColorOut "-ThreadCount`t`t=`t$ThreadCount`r`n" -ForegroundColor Cyan -Indentation 4
-    Pause
-    Exit
-}
-
-# DEFINITION: Some relevant variables from the start:
-# If you want to see the variables (buttons, checkboxes, ...) the GUI has to offer, set this to 1:
-[int]$getWPF = 0
-# Creating it here for Invoke-Close:
-[int]$preventstandbyid = 999999999
-
-
-# ==================================================================================================
-# ==============================================================================
-#   Defining Functions:
-# ==============================================================================
-# ==================================================================================================
-
 # DEFINITION: Pause the programme if debug-var is active. Also, enable measuring times per command with -debug 3.
 Function Invoke-Pause(){
-    param($TotTime=0.0)
+    param(
+        $TotTime=0.0
+    )
 
     if($script:Debug -gt 0 -and $TotTime -ne 0.0){
         Write-ColorOut "Used time for process:`t$TotTime" -ForegroundColor Magenta
@@ -415,13 +341,15 @@ Function Invoke-Pause(){
 
 # DEFINITION: Exit the program (and close all windows) + option to pause before exiting.
 Function Invoke-Close(){
+    Write-ColorOut "Exiting - This could take some seconds. Please do not close this window!" -ForegroundColor Magenta
     if($script:PreventStandby -eq 1 -and $script:preventstandbyid -ne 999999999){
         Stop-Process -Id $script:preventstandbyid -ErrorAction SilentlyContinue
     }
-    Write-ColorOut "Exiting - This could take some seconds. Please do not close this window!" -ForegroundColor Magenta
-    Get-RSJob | Stop-RSJob
-    Start-Sleep -Milliseconds 5
-    Get-RSJob | Remove-RSJob
+    if((Get-RSJob).count -gt 0){
+        Get-RSJob | Stop-RSJob
+        Start-Sleep -Milliseconds 5
+        Get-RSJob | Remove-RSJob
+    }
     if($script:Debug -gt 0){
         Pause
     }
@@ -429,23 +357,27 @@ Function Invoke-Close(){
 }
 
 # DEFINITION: For the auditory experience:
-Function Start-Sound($Success){
+Function Start-Sound(){
     <#
         .SYNOPSIS
             Gives auditive feedback for fails and successes
-        
         .DESCRIPTION
             Uses SoundPlayer and Windows's own WAVs to play sounds.
-
         .NOTES
-            Date: 2018-08-22
+            Date: 2018-10-25
 
-        .PARAMETER success
-            If 1 it plays Windows's "tada"-sound, if 0 it plays Windows's "chimes"-sound.
+        .PARAMETER Success
+            1 plays Windows's "tada"-sound, 0 plays Windows's "chimes"-sound.
         
         .EXAMPLE
-            For success: Start-Sound(1)
+            For success: Start-Sound 1
+        .EXAMPLE
+            For fail: Start-Sound 0
     #>
+    param(
+        [Parameter(Mandatory=$true)]
+        [int]$Success
+    )
     try{
         $sound = New-Object System.Media.SoundPlayer -ErrorAction stop
         if($Success -eq 1){
@@ -455,25 +387,192 @@ Function Start-Sound($Success){
         }
         $sound.Play()
     }catch{
-        Write-Host "`a"
+        Write-Output "`a"
     }
 }
 
 
+# ==================================================================================================
+# ==============================================================================
+#    Defining specific functions:
+# ==============================================================================
+# ==================================================================================================
+
+# DEFINITION: Get parameters from JSON file:
+Function Get-Parameters(){
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]$JSONPath,
+        [Parameter(Mandatory=$true)]
+        [int]$Renew
+    )
+
+    if((Test-Path -LiteralPath $JSONPath -PathType Leaf) -eq $true){
+        try{
+            $jsonparams = Get-Content -Path $JSONPath -Raw -Encoding UTF8 | ConvertFrom-Json
+
+            if($script:LoadParamPresetName -in $jsonparams.ParamPresetName){
+                $jsonparams = $jsonparams | Where-Object {$_.ParamPresetName -eq $script:LoadParamPresetName}
+                Write-ColorOut "Loaded preset `"$script:LoadParamPresetName`" from mc_parameters.json." -ForegroundColor Yellow
+            }elseif("default" -in $jsonparams.ParamPresetName){
+                $jsonparams = $jsonparams | Where-Object {$_.ParamPresetName -eq "default"}
+                Write-ColorOut "Loaded preset `"$($jsonparams.ParamPresetName)`", as `"$script:LoadParamPresetName`" is not specified in mc_parameters.json." -ForegroundColor Magenta
+            }else{
+                $jsonparams = $jsonparams | Select-Object -Index 0
+                Write-ColorOut "Loaded first preset from mc_parameters.json (`"$($jsonparams.ParamPresetName)`"), as neither `"$script:LoadParamPresetName`" nor `"default`" were found." -ForegroundColor Magenta
+            }
+            $jsonparams = $jsonparams.ParamPresetValues
+
+            if($script:InputPath.Length -eq 0 -or $Renew -eq 1){
+                [string]$script:InputPath = $jsonparams.InputPath
+            }
+            if($script:OutputPath.Length -eq 0 -or $Renew -eq 1){
+                [string]$script:OutputPath = $jsonparams.OutputPath
+            }
+            if($script:MirrorEnable -eq -1 -or $Renew -eq 1){
+                [int]$script:MirrorEnable = $jsonparams.MirrorEnable
+            }
+            if($script:MirrorPath.Length -eq 0 -or $Renew -eq 1){
+                [string]$script:MirrorPath = $jsonparams.MirrorPath
+            }
+            if($script:PresetFormats.Length -eq 0 -or $Renew -eq 1){
+                [array]$script:PresetFormats = @($jsonparams.PresetFormats)
+            }
+            if($script:CustomFormatsEnable -eq -1 -or $Renew -eq 1){
+                [int]$script:CustomFormatsEnable = $jsonparams.CustomFormatsEnable
+            }
+            if($script:CustomFormats.Length -eq 0 -or $Renew -eq 1){
+                [array]$script:CustomFormats = @($jsonparams.CustomFormats)
+            }
+            if($script:OutputSubfolderStyle.Length -eq 0 -or $Renew -eq 1){
+                [string]$script:OutputSubfolderStyle = $jsonparams.OutputSubfolderStyle
+            }
+            if($script:OutputFileStyle.Length -eq 0 -or $Renew -eq 1){
+                [string]$script:OutputFileStyle = $jsonparams.OutputFileStyle
+            }
+            if($script:HistFilePath.Length -eq 0 -or $Renew -eq 1){
+                [string]$script:HistFilePath = $jsonparams.HistFilePath.Replace('$($PSScriptRoot)',"$PSScriptRoot")
+            }
+            if($script:UseHistFile -eq -1 -or $Renew -eq 1){
+                [int]$script:UseHistFile = $jsonparams.UseHistFile
+            }
+            if($script:WriteHistFile.Length -eq 0 -or $Renew -eq 1){
+                [string]$script:WriteHistFile = $jsonparams.WriteHistFile
+            }
+            if($script:InputSubfolderSearch -eq -1 -or $Renew -eq 1){
+                [int]$script:InputSubfolderSearch = $jsonparams.InputSubfolderSearch
+            }
+            if($script:DupliCompareHashes -eq -1 -or $Renew -eq 1){
+                [int]$script:DupliCompareHashes = $jsonparams.DupliCompareHashes
+            }
+            if($script:CheckOutputDupli -eq -1 -or $Renew -eq 1){
+                [int]$script:CheckOutputDupli = $jsonparams.CheckOutputDupli
+            }
+            if($script:VerifyCopies -eq -1 -or $Renew -eq 1){
+                [int]$script:VerifyCopies = $jsonparams.VerifyCopies
+            }
+            if($script:AvoidIdenticalFiles -eq -1 -or $Renew -eq 1){
+                [int]$script:AvoidIdenticalFiles = $jsonparams.AvoidIdenticalFiles
+            }
+            if($script:ZipMirror -eq -1 -or $Renew -eq 1){
+                [int]$script:ZipMirror = $jsonparams.ZipMirror
+            }
+            if($script:UnmountInputDrive -eq -1 -or $Renew -eq 1){
+                [int]$script:UnmountInputDrive = $jsonparams.UnmountInputDrive
+            }
+            if($script:PreventStandby -eq -1 -or $Renew -eq 1){
+                [int]$script:PreventStandby = $jsonparams.PreventStandby
+            }
+            if($script:ThreadCount -eq -1 -or $Renew -eq 1){
+                [int]$script:ThreadCount = $jsonparams.ThreadCount
+            }
+        }catch{
+            Write-ColorOut "Getting parameters from $JSONPath failed - aborting!" -ForegroundColor Red
+            Start-Sleep -Seconds 5
+            Exit
+        }
+        Clear-Variable -Name jsonparams
+    }else{
+        Write-ColorOut "$JSONPath does not exist - aborting!" -ForegroundColor Red
+        Start-Sleep -Seconds 5
+        Exit
+    }
+}
+
+# DEFINITION: Show parameters on the console, then exit:
+Function Show-Parameters(){
+    Write-ColorOut "flolilo's Media-Copytool's Parameters:`r`n" -ForegroundColor Green
+    Write-ColorOut "-LoadParamPresetName`t=`t$script:LoadParamPresetName" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-SaveParamPresetName`t=`t$script:SaveParamPresetName" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-RememberInPath`t`t=`t$script:RememberInPath" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-RememberOutPath`t`t=`t$script:RememberOutPath" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-RememberMirrorPath`t`t=`t$script:RememberMirrorPath" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-RememberSettings`t`t=`t$script:RememberSettings" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-Debug`t`t=`t$script:Debug" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "These values come from $script:JSONParamPath :" -ForegroundColor DarkCyan -Indentation 2
+    Write-ColorOut "-GUI_CLI_Direct`t`t=`t$script:GUI_CLI_Direct" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-InputPath`t`t`t=`t$script:InputPath" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-OutputPath`t`t`t=`t$script:OutputPath" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-MirrorEnable`t`t=`t$script:MirrorEnable" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-MirrorPath`t`t`t=`t$script:MirrorPath" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-PresetFormats`t`t=`t$script:PresetFormats" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-CustomFormatsEnable`t=`t$script:CustomFormatsEnable" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-CustomFormats`t`t=`t$script:CustomFormats" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-OutputSubfolderStyle`t=`t$script:OutputSubfolderStyle" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-OutputFileStyle`t`t=`t$script:OutputFileStyle" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-HistFilePath`t=`t$script:HistFilePath" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-UseHistFile`t`t=`t$script:UseHistFile" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-WriteHistFile`t`t=`t$script:WriteHistFile" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-InputSubfolderSearch`t=`t$script:InputSubfolderSearch" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-CheckOutputDupli`t`t=`t$script:CheckOutputDupli" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-VerifyCopies`t`t=`t$script:VerifyCopies" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-AvoidIdenticalFiles`t=`t$script:AvoidIdenticalFiles" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-ZipMirror`t`t`t=`t$script:ZipMirror" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-UnmountInputDrive`t`t=`t$script:UnmountInputDrive" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-PreventStandby`t`t=`t$script:PreventStandby" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-ThreadCount`t`t=`t$script:ThreadCount`r`n" -ForegroundColor Cyan -Indentation 4
+}
+
+
 # DEFINITION: "Select"-Window for buttons to choose a path.
-Function Get-Folder($InOutMirror){
-    [void][System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
-    $folderdialog = New-Object System.Windows.Forms.FolderBrowserDialog
-    $folderdialog.rootfolder = "MyComputer"
-    if($folderdialog.ShowDialog() -eq "OK"){
-        if($InOutMirror -eq "input"){
-            $script:WPFtextBoxInput.Text = $folderdialog.SelectedPath
+Function Get-Folder(){
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]$ToInfluence
+    )
+
+    if($ToInfluence -ne "histfile"){
+        [Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms") | Out-Null
+        $browse = New-Object System.Windows.Forms.FolderBrowserDialog
+        $browse.rootfolder = "MyComputer"
+        $browse.ShowNewFolderButton = $true
+        if($ToInfluence -eq "input"){
+            $browse.Description = "Select an input-path:"
+        }elseif($ToInfluence -eq "output"){
+            $browse.Description = "Select an output-path:"
+        }elseif($ToInfluence -eq "mirror"){
+            $browse.Description = "Select a mirror-path:"
         }
-        if($InOutMirror -eq "output"){
-            $script:WPFtextBoxOutput.Text = $folderdialog.SelectedPath
+
+        if($browse.ShowDialog() -eq "OK"){
+            if($ToInfluence -eq "input"){
+                $script:WPFtextBoxInput.Text = $browse.SelectedPath
+            }elseif($ToInfluence -eq "output"){
+                $script:WPFtextBoxOutput.Text = $browse.SelectedPath
+            }elseif($ToInfluence -eq "mirror"){
+                $script:WPFtextBoxMirror.Text = $browse.SelectedPath
+            }
         }
-        if($InOutMirror -eq "mirror"){
-            $script:WPFtextBoxMirror.Text = $folderdialog.SelectedPath
+    }else{
+        [Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms") | Out-Null
+        $browse = New-Object System.Windows.Forms.OpenFileDialog
+        $browse.Multiselect = $false
+        $browse.Filter = 'JSON (*.json)|*.json'
+
+        if($browse.ShowDialog() -eq "OK"){
+            if($browse.FileName -like "*.json"){
+                $script:WPFtextBoxHistFile.Text = $browse.FileName
+            }
         }
     }
 }
@@ -615,11 +714,11 @@ Function Get-UserValues(){
                     continue
                 }
             }
-            # $JSONHistFilePath
+            # $HistFilePath
             if($script:UseHistFile -eq 1 -or $script:WriteHistFile -ne "no"){
                 while($true){
-                    [string]$script:JSONHistFilePath = Read-Host "    Please specify path for the history-file"
-                    if($script:JSONHistFilePath.Length -gt 1 -and (Test-Path -LiteralPath $script:JSONHistFilePath -PathType Leaf) -eq $true){
+                    [string]$script:HistFilePath = Read-Host "    Please specify path for the history-file"
+                    if($script:HistFilePath.Length -gt 1 -and (Test-Path -LiteralPath $script:HistFilePath -PathType Leaf) -eq $true){
                         break
                     }else{
                         Write-ColorOut "Invalid selection!" -ForegroundColor Magenta -Indentation 4
@@ -780,8 +879,24 @@ Function Get-UserValues(){
                     continue
                 }
             }
+            # $SaveParamPresetName
+            if($script:RememberSettings -eq 1 -or $script:RememberMirrorPath -eq 1 -or $script:RememberOutPath -eq 1 -or $script:RememberInPath -eq 1){
+                while($true){
+                    [string]$script:SaveParamPresetName = $((Read-Host "    Which preset do you want to save your settings to? (Valid cahracters: A-z,0-9,+,-,_ ; max. 64 cahracters)`t").ToLower() -Replace '[^A-Za-z0-9_+-]','')
+                    [string]$script:SaveParamPresetName = $script:SaveParamPresetName.Substring(0, [math]::Min($SaveParamPresetName.Length, 64))
+                    if($script:SaveParamPresetName.Length -gt 1){
+                        break
+                    }else{
+                        Write-ColorOut "Invalid selection!" -ForeGroundColor Magenta -Indentation 4
+                        continue
+                    }
+                }
+            }
             return $true
         }elseif($script:GUI_CLI_Direct -eq "GUI"){
+            # $SaveParamPresetName
+            $script:SaveParamPresetName = $($script:WPFtextBoxSavePreset.Text.ToLower() -Replace '[^A-Za-z0-9_+-]','')
+            $script:SaveParamPresetName = $script:SaveParamPresetName.Substring(0, [math]::Min($script:SaveParamPresetName.Length, 64))
             # $InputPath
             $script:InputPath = $script:WPFtextBoxInput.Text
             # $OutputPath
@@ -793,6 +908,8 @@ Function Get-UserValues(){
             )
             # $MirrorPath
             $script:MirrorPath = $script:WPFtextBoxMirror.Text
+            # $HistFilePath
+            $script:HistFilePath = $script:WPFtextBoxHistFile.Text
             # $PresetFormats
             [array]$script:PresetFormats = @()
             if($script:WPFcheckBoxCan.IsChecked -eq $true){$script:PresetFormats += "Can"}
@@ -940,9 +1057,9 @@ Function Get-UserValues(){
                 Write-ColorOut "Invalid choice of -OutputFileStyle." -ForegroundColor Red -Indentation 4
                 return $false
             }
-            # $JSONHistFilePath
-            if(($script:UseHistFile -eq 1 -or $script:WriteHistFile -ne "no") -and (Test-Path -LiteralPath $script:JSONHistFilePath -PathType Leaf) -eq $false){
-                Write-ColorOut "Invalid choice of -JSONHistFilePath." -ForegroundColor Red -Indentation 4
+            # $HistFilePath
+            if(($script:UseHistFile -eq 1 -or $script:WriteHistFile -ne "no") -and (Test-Path -LiteralPath $script:HistFilePath -PathType Leaf) -eq $false){
+                Write-ColorOut "Invalid choice of -HistFilePath." -ForegroundColor Red -Indentation 4
                 return $false
             }
             # $UseHistFile
@@ -1070,6 +1187,13 @@ Function Get-UserValues(){
                     }
                 }
             }
+            # $HistFilePath
+            if($script:UseHistFile -eq 1 -or $script:WriteHistFile -ne "no"){
+                if((Test-Path -LiteralPath $script:HistFilePath -PathType Leaf) -eq $false){
+                    Write-ColorOut "`r`nHistory-file $script:HistFilePath could not be found.`r`n" -ForegroundColor Red -Indentation 4
+                    return $false
+                }
+            }
         }
 
     }else{
@@ -1145,7 +1269,7 @@ Function Get-UserValues(){
         Write-ColorOut "AllChosenFormats:`t`t$script:allChosenFormats" -Indentation 4
         Write-ColorOut "OutputSubfolderStyle:`t$script:OutputSubfolderStyle" -Indentation 4
         Write-ColorOut "OutputFileStyle:`t`t$script:OutputFileStyle" -Indentation 4
-        Write-ColorOut "JSONHistFilePath:`t`t$script:JSONHistFilePath" -Indentation 4
+        Write-ColorOut "HistFilePath:`t`t$script:HistFilePath" -Indentation 4
         Write-ColorOut "UseHistFile:`t`t$script:UseHistFile" -Indentation 4
         Write-ColorOut "WriteHistFile:`t`t$script:WriteHistFile" -Indentation 4
         Write-ColorOut "InputSubfolderSearch:`t$script:InputSubfolderSearch" -Indentation 4
@@ -1163,101 +1287,111 @@ Function Get-UserValues(){
 }
 
 # DEFINITION: If checked, remember values for future use:
-Function Start-Remembering(){
-    Write-ColorOut "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")  --  Remembering settings..." -ForegroundColor Cyan
+Function Set-Parameters(){
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]$JSONPath
+    )
+    Write-ColorOut "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")  --  Remembering parameters as preset `"$script:SaveParamPresetName`"..." -ForegroundColor Cyan
 
-    if($script:JSONParamPath.Length -gt 4 -and (Test-Path -LiteralPath $script:JSONParamPath -PathType Leaf) -eq $true){
-        while($true){
-            try{
-                $jsonvalues = Get-Content -Path $script:JSONParamPath -Raw -Encoding UTF8 | ConvertFrom-Json
-                break
-            }catch{
-                Write-ColorOut "Getting parameter-file failed! Trying again..." -ForegroundColor Red -Indentation 4
-                Pause
-                Continue
-            }
+    [array]$inter = @()
+    $inter = [PSCustomObject]@{
+        ParamPresetName = $script:SaveParamPresetName
+        ParamPresetValues = [PSCustomObject]@{
+            GUI_CLI_Direct = $script:GUI_CLI_Direct
+            InputPath = $script:InputPath
+            OutputPath = $script:OutputPath
+            MirrorEnable = $script:MirrorEnable
+            MirrorPath = $script:MirrorPath
+            PresetFormats = $script:PresetFormats
+            CustomFormatsEnable = $script:CustomFormatsEnable
+            CustomFormats = $script:CustomFormats
+            OutputSubfolderStyle = $script:OutputSubfolderStyle
+            OutputFileStyle = $script:OutputFileStyle
+            HistFilePath = $script:HistFilePath
+            UseHistFile = $script:UseHistFile
+            WriteHistFile = $script:WriteHistFile
+            InputSubfolderSearch = $script:InputSubfolderSearch
+            DupliCompareHashes = $script:DupliCompareHashes
+            CheckOutputDupli = $script:CheckOutputDupli
+            VerifyCopies = $script:VerifyCopies
+            AvoidIdenticalFiles = $script:AvoidIdenticalFiles
+            ZipMirror = $script:ZipMirror
+            UnmountInputDrive = $script:UnmountInputDrive
+            PreventStandby = $script:PreventStandby
+            ThreadCount = $script:ThreadCount
         }
     }
-
-    # [string]$InputPath
-    if($script:RememberInPath -eq 1){
-        Write-ColorOut "From `$InputPath =`t$($jsonvalues.InputPath)" -ForegroundColor Gray -Indentation 4
-        [string]$jsonvalues.InputPath = $script:InputPath
-        $jsonvalues | Out-Null
-        Write-ColorOut "To `$InputPath =`t$($jsonvalues.InputPath)" -ForegroundColor Yellow -Indentation 4
+    if((Test-Path -LiteralPath $JSONPath -PathType Leaf) -eq $true){
+        try{
+            $jsonparams = Get-Content -Path $JSONPath -Raw -Encoding UTF8 | ConvertFrom-Json
+            if($script:Debug -gt 1){
+                Write-ColorOut "From:" -ForegroundColor Yellow -Indentation 2
+                $jsonparams | ConvertTo-Json | Out-Host
+            }
+        }catch{
+            Write-ColorOut "Getting parameters from $JSONPath failed - aborting!" -ForegroundColor Red
+            Start-Sleep -Seconds 5
+            Exit
+        }
+        if($script:SaveParamPresetName -in $jsonparams.ParamPresetName -or $script:SaveParamPresetName -eq $jsonparams.ParamPresetName){
+            if($jsonparams.ParamPresetName -is [array]){
+                for($i=0; $i -lt $jsonparams.ParamPresetName.Length; $i++){
+                    if($jsonparams.ParamPresetName[$i] -eq $inter.ParamPresetName){
+                        if($script:RememberInPath -eq 1){
+                            $jsonparams.ParamPresetValues[$i].InputPath = $inter.ParamPresetValues.InputPath
+                        }
+                        if($script:RememberOutPath -eq 1){
+                            $jsonparams.ParamPresetValues[$i].OutputPath = $inter.ParamPresetValues.OutputPath
+                        }
+                        if($script:RememberMirrorPath -eq 1){
+                            $jsonparams.ParamPresetValues[$i].MirrorPath = $inter.ParamPresetValues.MirrorPath
+                        }
+                        if($script:RememberSettings -eq 1){
+                            $jsonparams.ParamPresetValues[$i].GUI_CLI_Direct = $inter.ParamPresetValues.GUI_CLI_Direct
+                            $jsonparams.ParamPresetValues[$i].MirrorEnable = $inter.ParamPresetValues.MirrorEnable
+                            $jsonparams.ParamPresetValues[$i].PresetFormats = @($inter.ParamPresetValues.PresetFormats)
+                            $jsonparams.ParamPresetValues[$i].CustomFormatsEnable = $inter.ParamPresetValues.CustomFormatsEnable
+                            $jsonparams.ParamPresetValues[$i].CustomFormats = @($inter.ParamPresetValues.CustomFormats)
+                            $jsonparams.ParamPresetValues[$i].OutputSubfolderStyle = $inter.ParamPresetValues.OutputSubfolderStyle
+                            $jsonparams.ParamPresetValues[$i].OutputFileStyle = $inter.ParamPresetValues.OutputFileStyle
+                            $jsonparams.ParamPresetValues[$i].HistFilePath = $inter.ParamPresetValues.HistFilePath
+                            $jsonparams.ParamPresetValues[$i].UseHistFile = $inter.ParamPresetValues.UseHistFile
+                            $jsonparams.ParamPresetValues[$i].WriteHistFile = $inter.ParamPresetValues.WriteHistFile
+                            $jsonparams.ParamPresetValues[$i].InputSubfolderSearch = $inter.ParamPresetValues.InputSubfolderSearch
+                            $jsonparams.ParamPresetValues[$i].DupliCompareHashes = $inter.ParamPresetValues.DupliCompareHashes
+                            $jsonparams.ParamPresetValues[$i].CheckOutputDupli = $inter.ParamPresetValues.CheckOutputDupli
+                            $jsonparams.ParamPresetValues[$i].VerifyCopies = $inter.ParamPresetValues.VerifyCopies
+                            $jsonparams.ParamPresetValues[$i].AvoidIdenticalFiles = $inter.ParamPresetValues.AvoidIdenticalFiles
+                            $jsonparams.ParamPresetValues[$i].ZipMirror = $inter.ParamPresetValues.ZipMirror
+                            $jsonparams.ParamPresetValues[$i].UnmountInputDrive = $inter.ParamPresetValues.UnmountInputDrive
+                            $jsonparams.ParamPresetValues[$i].PreventStandby = $inter.ParamPresetValues.PreventStandby
+                            $jsonparams.ParamPresetValues[$i].ThreadCount = $inter.ParamPresetValues.ThreadCount
+                            $jsonparams.ParamPresetValues[$i].Debug = $inter.ParamPresetValues.Debug
+                        }
+                    }
+                }
+            }else{
+                $jsonparams = $inter
+            }
+        }else{
+            $jsonparams += $inter
+        }
+    }else{
+        $jsonparams = $inter
     }
-    # [string]$OutputPath
-    if($script:RememberOutPath -eq 1){
-        Write-ColorOut "From `$OutputPath =`t$($jsonvalues.OutputPath)" -ForegroundColor Gray -Indentation 4
-        [string]$jsonvalues.OutputPath = $script:OutputPath
-        $jsonvalues | Out-Null
-        Write-ColorOut "To `$OutputPath =`t$($jsonvalues.OutputPath)" -ForegroundColor Yellow -Indentation 4
+    $jsonparams | Out-Null
+    $jsonparams = $jsonparams | ConvertTo-Json -Depth 5
+    $jsonparams | Out-Null
+
+    if($script:Debug -gt 1){
+        Write-ColorOut "To:" -ForegroundColor Yellow -Indentation 2
+        $jsonparams | Out-Host
     }
-    # [string]$MirrorPath
-    if($script:RememberMirrorPath -eq 1){
-        Write-ColorOut "From `$MirrorPath =`t$($jsonvalues.MirrorPath)" -ForegroundColor Gray -Indentation 4
-        [string]$jsonvalues.MirrorPath = $script:MirrorPath
-        $jsonvalues | Out-Null
-        Write-ColorOut "To `$MirrorPath =`t$($jsonvalues.MirrorPath)" -ForegroundColor Yellow -Indentation 4
-    }
-
-    # Remember settings
-    if($script:RememberSettings -eq 1){
-        Write-ColorOut "From:" -Indentation 4
-        $jsonvalues | Select-Object -Property * -ExcludeProperty InputPath,OutputPath,MirrorPath | Format-List | Out-Host
-
-        # [string]$GUI_CLI_Direct
-        [string]$jsonvalues.GUI_CLI_Direct = $script:GUI_CLI_Direct
-        # [int]$MirrorEnable
-        [int]$jsonvalues.MirrorEnable = $script:MirrorEnable
-        # [array]$PresetFormats
-        [array]$jsonvalues.PresetFormats = $script:PresetFormats
-        # [int]$CustomFormatsEnable
-        [int]$jsonvalues.CustomFormatsEnable = $script:CustomFormatsEnable
-        # [array]$CustomFormats
-        [array]$jsonvalues.CustomFormats = $script:CustomFormats
-        # [string]$OutputSubfolderStyle
-        [string]$jsonvalues.OutputSubfolderStyle = $script:OutputSubfolderStyle
-        # [string]$OutputFileStyle
-        [string]$jsonvalues.OutputFileStyle = $script:OutputFileStyle
-        # [string]$JSONHistFilePath
-        [string]$jsonvalues.JSONHistFilePath = $script:JSONHistFilePath
-        # [int]$UseHistFile
-        [int]$jsonvalues.UseHistFile = $script:UseHistFile
-        # [string]$WriteHistFile
-        [string]$jsonvalues.WriteHistFile = $script:WriteHistFile
-        # [int]$InputSubfolderSearch
-        [int]$jsonvalues.InputSubfolderSearch = $script:InputSubfolderSearch
-        # [int]$DupliCompareHashes
-        [int]$jsonvalues.DupliCompareHashes = $script:DupliCompareHashes
-        # [int]$CheckOutputDupli
-        [int]$jsonvalues.CheckOutputDupli = $script:CheckOutputDupli
-        # [int]$VerifyCopies
-        [int]$jsonvalues.VerifyCopies = $script:VerifyCopies
-        # [int]$AvoidIdenticalFiles
-        [int]$jsonvalues.AvoidIdenticalFiles = $script:AvoidIdenticalFiles
-        # [int]$ZipMirror
-        [int]$jsonvalues.ZipMirror = $script:ZipMirror
-        # [int]$UnmountInputDrive
-        [int]$jsonvalues.UnmountInputDrive = $script:UnmountInputDrive
-        # [int]$PreventStandby
-        [int]$jsonvalues.PreventStandby = $script:PreventStandby
-        # [int]$ThreadCount
-        [int]$jsonvalues.ThreadCount = $script:ThreadCount
-
-        $jsonvalues | Out-Null
-
-        Write-ColorOut "To:" -Indentation 4
-        $jsonvalues | Select-Object -Property * -ExcludeProperty InputPath,OutputPath,MirrorPath | Format-List | Out-Host
-    }
-
-    Invoke-Pause
-    $jsonvalues = $jsonvalues | ConvertTo-Json
-    $jsonvalues | Out-Null
 
     while($true){
         try{
-            [System.IO.File]::WriteAllText($script:JSONParamPath, $jsonvalues)
+            [System.IO.File]::WriteAllText($script:JSONParamPath, $jsonparams)
             break
         }catch{
             Write-ColorOut "Writing to parameter-file failed! Trying again..." -ForegroundColor Red -Indentation 4
@@ -2083,23 +2217,24 @@ Function Set-HistFile(){
 
 # DEFINITION: Starts all the things.
 Function Start-Everything(){
-    Write-ColorOut "`r`n`                                flolilo's Media-Copytool                                " -ForegroundColor DarkCyan -BackgroundColor Gray
-    Write-ColorOut "                               v0.7.10 (Beta) - 2017-10-25                               `r`n" -ForegroundColor DarkCyan -BackgroundColor Gray
+    Write-ColorOut "`r`n`                                 flolilo's Media-Copytool                                " -ForegroundColor DarkCyan -BackgroundColor Gray
+    Write-ColorOut "                               v0.8.0 (Beta) - 2017-10-28                               `r`n" -ForegroundColor DarkCyan -BackgroundColor Gray
     Write-ColorOut "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")  --  Starting everything..." -ForegroundColor Cyan
+
     $script:timer = [diagnostics.stopwatch]::StartNew()
     while($true){
         if((Get-UserValues) -eq $false){
-            Start-Sound(0)
+            Start-Sound 0
             Start-Sleep -Seconds 2
             if($script:GUI_CLI_Direct -eq "GUI"){
-                Start-GUI
+                Start-GUI -GUIPath "$($PSScriptRoot)/mc_GUI.xaml"
             }
             break
         }
         Invoke-Pause -TotTime $script:timer.elapsed.TotalSeconds
         iF($script:RememberInPath -ne 0 -or $script:RememberOutPath -ne 0 -or $script:RememberMirrorPath -ne 0 -or $script:RememberSettings -ne 0){
             $script:timer.start()
-            Start-Remembering
+            Set-Parameters -JSONPath $JSONParamPath
             Invoke-Pause -TotTime $script:timer.elapsed.TotalSeconds
         }
         if($script:PreventStandby -eq 1){
@@ -2116,7 +2251,7 @@ Function Start-Everything(){
         [array]$histfiles = @()
         if($script:UseHistFile -eq 1){
             $script:timer.start()
-            [array]$histfiles = Get-HistFile -HistFilePath $script:JSONHistFilePath
+            [array]$histfiles = Get-HistFile -HistFilePath $script:HistFilePath
             Invoke-Pause -TotTime $script:timer.elapsed.TotalSeconds
         }
         $script:timer.start()
@@ -2124,10 +2259,10 @@ Function Start-Everything(){
         Invoke-Pause -TotTime $script:timer.elapsed.TotalSeconds
         if($inputfiles.Length -lt 1){
             Write-ColorOut "$($inputfiles.Length) files left to copy - aborting rest of the script." -ForegroundColor Magenta
-            Start-Sound(1)
+            Start-Sound 1
             Start-Sleep -Seconds 2
             if($script:GUI_CLI_Direct -eq "GUI"){
-                Start-GUI
+                Start-GUI -GUIPath "$($PSScriptRoot)/mc_GUI.xaml"
             }
             break
         }
@@ -2139,10 +2274,10 @@ Function Start-Everything(){
         }
         if($inputfiles.Length -lt 1){
             Write-ColorOut "$($inputfiles.Length) files left to copy - aborting rest of the script." -ForegroundColor Magenta
-            Start-Sound(1)
+            Start-Sound 1
             Start-Sleep -Seconds 2
             if($script:GUI_CLI_Direct -eq "GUI"){
-                Start-GUI
+                Start-GUI -GUIPath "$($PSScriptRoot)/mc_GUI.xaml"
             }
             break
         }
@@ -2153,10 +2288,10 @@ Function Start-Everything(){
         }
         if($inputfiles.Length -lt 1){
             Write-ColorOut "$($inputfiles.Length) files left to copy - aborting rest of the script." -ForegroundColor Magenta
-            Start-Sound(1)
+            Start-Sound 1
             Start-Sleep -Seconds 2
             if($script:GUI_CLI_Direct -eq "GUI"){
-                Start-GUI
+                Start-GUI -GUIPath "$($PSScriptRoot)/mc_GUI.xaml"
             }
             break
         }
@@ -2164,10 +2299,10 @@ Function Start-Everything(){
         Invoke-Pause -TotTime $script:timer.elapsed.TotalSeconds
         if($inputfiles.Length -lt 1){
             Write-ColorOut "$($inputfiles.count) files left to copy - aborting rest of the script." -ForegroundColor Magenta
-            Start-Sound(1)
+            Start-Sound 1
             Start-Sleep -Seconds 2
             if($script:GUI_CLI_Direct -eq "GUI"){
-                Start-GUI
+                Start-GUI -GUIPath "$($PSScriptRoot)/mc_GUI.xaml"
             }
             break
         }
@@ -2179,7 +2314,7 @@ Function Start-Everything(){
                     Write-ColorOut "Aborting." -ForegroundColor Cyan
                     Start-Sleep -Seconds 2
                     if($script:GUI_CLI_Direct -eq "GUI"){
-                        Start-GUI
+                        Start-GUI -GUIPath "$($PSScriptRoot)/mc_GUI.xaml"
                     }
                     break
                 }
@@ -2213,7 +2348,7 @@ Function Start-Everything(){
         }
         if($script:WriteHistFile -ne "no"){
             $script:timer.start()
-            Set-HistFile -InFiles $inputfiles -HistFilePath $script:JSONHistFilePath
+            Set-HistFile -InFiles $inputfiles -HistFilePath $script:HistFilePath
             Invoke-Pause -TotTime $script:timer.elapsed.TotalSeconds
         }
         if($script:MirrorEnable -eq 1){
@@ -2273,36 +2408,43 @@ Function Start-Everything(){
     Write-ColorOut "                                                                                " -BackgroundColor Gray
     Write-ColorOut "                                                                                `r`n" -BackgroundColor Gray
     if($script:resultvalues.unverified -eq 0){
-        Start-Sound(1)
+        Start-Sound 1
     }else{
-        Start-Sound(0)
+        Start-Sound 0
     }
     
     if($script:PreventStandby -eq 1){
         Stop-Process -Id $script:preventstandbyid
     }
     if($script:GUI_CLI_Direct -eq "GUI"){
-        Start-GUI
+        Start-GUI -GUIPath "$($PSScriptRoot)/mc_GUI.xaml"
     }
 }
 
 
 # ==================================================================================================
 # ==============================================================================
-#   Programming GUI & starting everything:
+#    Programming GUI & starting everything:
 # ==============================================================================
 # ==================================================================================================
 
 # DEFINITION: Load and Start GUI:
 Function Start-GUI(){
-    <# CREDIT:
-        code of this section (except from small modifications) by
-        https://foxdeploy.com/series/learning-gui-toolmaking-series/
-    #>
-    if((Test-Path -LiteralPath "$($PSScriptRoot)/mc_GUI.xaml" -PathType Leaf)){
-        $inputXML = Get-Content -LiteralPath "$($PSScriptRoot)/mc_GUI.xaml" -Encoding UTF8
+    <#
+        .NOTES
+            CREDIT:
+                code of this section (except from small modifications) by
+                https://foxdeploy.com/series/learning-gui-toolmaking-series/
+    #> 
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]$GUIPath
+    )
+
+    if((Test-Path -LiteralPath $GUIPath -PathType Leaf)){
+        $inputXML = Get-Content -LiteralPath $GUIPath -Encoding UTF8
     }else{
-        Write-ColorOut "Could not find $($PSScriptRoot)/mc_GUI.xaml - GUI can therefore not start." -ForegroundColor Red
+        Write-ColorOut "Could not find $GUIPath - GUI can therefore not start." -ForegroundColor Red
         Pause
         Exit
     }
@@ -2316,7 +2458,7 @@ Function Start-GUI(){
     catch{
         Write-ColorOut "Unable to load Windows.Markup.XamlReader. Usually this means that you haven't installed .NET Framework. Please download and install the latest .NET Framework Web-Installer for your OS: " -ForegroundColor Red
         Write-ColorOut "https://duckduckgo.com/?q=net+framework+web+installer&t=h_&ia=web"
-        Write-ColorOut "Alternatively, start this script with '-GUI_CLI_Direct `"CLI`"' (w/o single-quotes) to run it via CLI (find other parameters via '-showparams 1' '-Get-Help media_copytool.ps1 -detailed'." -ForegroundColor Yellow
+        Write-ColorOut "Alternatively, start this script with '-GUI_CLI_Direct CLI' (w/o single-quotes) to run it via CLI (find other parameters via '-ShowParams 1' or '-Get-Help media_copytool.ps1 -detailed'." -ForegroundColor Yellow
         Pause
         Exit
     }
@@ -2324,7 +2466,7 @@ Function Start-GUI(){
         Set-Variable -Name "WPF$($_.Name)" -Value $script:Form.FindName($_.Name) -Scope Script
     }
 
-    if($getWPF -ne 0){
+    if($script:getWPF -ne 0){
         Write-ColorOut "Found the following interactable elements:`r`n" -ForegroundColor Cyan
         Get-Variable WPF*
         Pause
@@ -2332,10 +2474,30 @@ Function Start-GUI(){
     }
 
     # Fill the TextBoxes and buttons with user parameters:
+    try{
+        $jsonparams = Get-Content -Path $script:JSONParamPath -Raw -Encoding UTF8 | ConvertFrom-Json
+        if($jsonparams.ParamPresetName -is [array]){
+            $jsonparams.ParamPresetName | ForEach-Object {
+                $script:WPFcomboBoxLoadPreset.AddChild($_)
+            }
+            for($i=0; $i -lt $jsonparams.ParamPresetName.length; $i++){
+                if($jsonparams.ParamPresetName[$i] -eq $script:LoadParamPresetName){
+                    $script:WPFcomboBoxLoadPreset.SelectedIndex = $i
+                }
+            }
+        }else{
+            $script:WPFcomboBoxLoadPreset.AddChild($jsonparams.ParamPresetName)
+            $script:WPFcomboBoxLoadPreset.SelectedIndex = 0
+        }
+    }catch{
+        Write-ColorOut "Getting parameters from $JSONPath failed - aborting!" -ForegroundColor Red
+    }
+    $script:WPFtextBoxSavePreset.Text = $script:SaveParamPresetName
     $script:WPFtextBoxInput.Text = $script:InputPath
     $script:WPFtextBoxOutput.Text = $script:OutputPath
     $script:WPFcheckBoxMirror.IsChecked = $script:MirrorEnable
     $script:WPFtextBoxMirror.Text = $script:MirrorPath
+    $script:WPFtextBoxHistFile.Text = $script:HistFilePath
     $script:WPFcheckBoxCan.IsChecked = $(if("Can" -in $script:PresetFormats){$true}else{$false})
     $script:WPFcheckBoxNik.IsChecked = $(if("Nik" -in $script:PresetFormats){$true}else{$false})
     $script:WPFcheckBoxSon.IsChecked = $(if("Son" -in $script:PresetFormats){$true}else{$false})
@@ -2388,17 +2550,36 @@ Function Start-GUI(){
     $script:WPFcheckBoxRememberMirror.IsChecked = $script:RememberMirrorPath
     $script:WPFcheckBoxRememberSettings.IsChecked = $script:RememberSettings
 
+    # DEFINITION: Load-Preset-Button
+    $script:WPFbuttonLoadPreset.Add_Click({
+        if($jsonparams.ParamPresetName -is [array]){
+            for($i=0; $i -lt $jsonparams.ParamPresetName.Length; $i++){
+                if($i -eq $script:WPFcomboBoxLoadPreset.SelectedIndex){
+                    [string]$script:LoadParamPresetName = $jsonparams.ParamPresetName[$i]
+                }
+            }
+        }else{
+            [string]$script:LoadParamPresetName = $jsonparams.ParamPresetName
+        }
+        $script:Form.Close()
+        Get-Parameters -JSONPath $script:JSONParamPath  -Renew 1
+        Start-Sleep -Milliseconds 2
+        Start-GUI -GUIPath "$($PSScriptRoot)/mc_GUI.xaml"
+    })
     # DEFINITION: InPath-Button
     $script:WPFbuttonSearchIn.Add_Click({
-        Get-Folder("input")
+        Get-Folder "input"
     })
     # DEFINITION: OutPath-Button
     $script:WPFbuttonSearchOut.Add_Click({
-        Get-Folder("output")
+        Get-Folder "output"
     })
     # DEFINITION: MirrorPath-Button
     $script:WPFbuttonSearchMirror.Add_Click({
-        Get-Folder("mirror")
+        Get-Folder "mirror"
+    })
+    $script:WPFbuttonSearchHistFile.Add_Click({
+        Get-Folder "histfile"
     })
     # DEFINITION: Start-Button
     $script:WPFbuttonStart.Add_Click({
@@ -2419,8 +2600,19 @@ Function Start-GUI(){
     $script:Form.ShowDialog() | Out-Null
 }
 
+Get-Parameters -JSONPath $JSONParamPath -Renew 0
+if($script:ShowParams -ne 0){
+    Show-Parameters
+    Pause
+    Exit
+}
+
 if($GUI_CLI_Direct -eq "GUI"){
-    Start-GUI
-}else{
+    Start-GUI -GUIPath "$($PSScriptRoot)/mc_GUI.xaml"
+}elseif($GUI_CLI_Direct -eq "CLI" -or $GUI_CLI_Direct -eq "direct"){
     Start-Everything
+}else{
+    Write-ColorOut "Please choose a valid -GUI_CLI_Direct value (`"GUI`", `"CLI`", or `"Direct`")." -ForegroundColor Red
+    Pause
+    Exit
 }
