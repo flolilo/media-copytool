@@ -1,6 +1,6 @@
 <!--
     Description:    This is the GUI for media_copytool.ps1
-    Date:           2017-10-25
+    Date:           2017-11-26
     Author:         flolilo
 -->
 <Window x:Class="MediaCopytool.MainWindow"
@@ -9,7 +9,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="flolilo's Media-Copytool v0.8.0 (Beta)" Height="340" Width="800" ResizeMode="CanMinimize"
+        Title="flolilo's Media-Copytool v0.8.2 (Beta)" Height="340" Width="800" ResizeMode="CanMinimize"
         FontFamily="Segoe UI,Arial"
     >
     <Grid Background="#FFB3B6B5">
@@ -284,7 +284,7 @@
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,20,0,0"
                         Width="220"
                     />
-                    <CheckBox x:Name="checkBoxCheckInHash"
+                    <CheckBox x:Name="checkBoxCheckHashHist"
                         Content="Check hashes of all input-files" ToolTip="If unchecked, duplicate-check is done via name, size, date. If checked, hash is added. Enabling duplicate-check in output-path disables this function." VerticalContentAlignment="Center"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,40,0,0"
                         Width="220"
