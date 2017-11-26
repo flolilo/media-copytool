@@ -75,7 +75,7 @@ Media-Copytool is my attempt to create a tool to easily (and switfly) copies fil
 ## To do
 - [ ] Evaluate option for overwriting existing files
 - [ ] Creating a Pester-script (high priority)
-- [ ] Making all `for`-loops multithreaded (high priority)
+- [x] Making all `for`-loops multithreaded (where possible)
 - [x] Evaluating the usefulness of Posh-RSJob (**Cuntributions are welcome!**)
 - [x] GUI with tabs instead of dropdowns
 - [x] Option to deactivate copy-verification, thus enabling fast copying.

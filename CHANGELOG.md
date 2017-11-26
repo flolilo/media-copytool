@@ -3,6 +3,19 @@ All notable changes to this project will be documented in this file.
 
 (The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).)
 
+
+## 0.8.1 - 2017-11-26
+### Changed
+- Comparison in `Start-DupliCheckOut()`.
+- Small bugfixes and improvements (one `$script:Debug -gt1`, several `$a = $inter; $inter = $a`s were condensed)
+
+### Removed
+- Only old code that was already commented out.
+
+### Added
+- `Compare-Object` in `Start-DupliCheckOut()`.
+
+
 ## 0.8.0 - 2017-10-28
 ### Changed
 - Parameter-JSON-file is now fixed, but different presets can be saved to and loaded from it.

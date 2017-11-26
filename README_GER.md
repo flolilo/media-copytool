@@ -75,7 +75,7 @@ Media-Copytool ist mein Versuch, die Dateien von den Speicherkarten meiner DSLR 
 ## To do
 - [ ] Überprüfen, ob Überschreib-Option Sinn macht
 - [ ] Pester-Skript schreiben (hohe Priorität)
-- [ ] Alle `for`-Schleifen multithreaden (hohe Priorität)
+- [x] Alle `for`-Schleifen multithreaden (wo möglich)
 - [x] Evaluierung von Posh-RSJob (**Mithilfe erwünscht!**)
 - [x] GUI mit Tabs statt Dropdowns
 - [x] Option um Kopien-Verifikation zu deaktivieren, um so die Ausführung zu beschleunigen.

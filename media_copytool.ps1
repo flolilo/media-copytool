@@ -7,9 +7,9 @@
         Uses Windows' Robocopy and Xcopy for file-copy, then uses PowerShell's Get-FileHash (SHA1) for verifying that files were copied without errors.
         Now supports multithreading via Boe Prox's PoshRSJob-cmdlet (https://github.com/proxb/PoshRSJob)
     .NOTES
-        Version:        0.8.0 (Beta)
+        Version:        0.8.1 (Beta)
         Author:         flolilo
-        Creation Date:  2017-10-28
+        Creation Date:  2017-11-26
         Legal stuff: This program is free software. It comes without any warranty, to the extent permitted by
         applicable law. Most of the script was written by myself (or heavily modified by me when searching for solutions
         on the WWW). However, some parts are copies or modifications of very genuine code - see
@@ -532,7 +532,6 @@ Function Show-Parameters(){
     Write-ColorOut "-PreventStandby`t`t=`t$script:PreventStandby" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-ThreadCount`t`t=`t$script:ThreadCount`r`n" -ForegroundColor Cyan -Indentation 4
 }
-
 
 # DEFINITION: "Select"-Window for buttons to choose a path.
 Function Get-Folder(){
@@ -1189,8 +1188,9 @@ Function Get-UserValues(){
             }
             # $HistFilePath
             if($script:UseHistFile -eq 1 -or $script:WriteHistFile -ne "no"){
-                if((Test-Path -LiteralPath $script:HistFilePath -PathType Leaf) -eq $false){
-                    Write-ColorOut "`r`nHistory-file $script:HistFilePath could not be found.`r`n" -ForegroundColor Red -Indentation 4
+                [string]$inter = Split-Path $script:HistFilePath -Qualifier
+                if((Test-Path -LiteralPath $inter -PathType Container) -eq $false){
+                    Write-ColorOut "`r`nHistory-file-volume $inter could not be found.`r`n" -ForegroundColor Red -Indentation 4
                     return $false
                 }
             }
@@ -1546,7 +1546,6 @@ Function Start-FileSearch(){
 }
 
 # DEFINITION: dupli-check via history-file:
-# TODO: multithread if possible (Start-MTFileHash?)
 Function Start-DupliCheckHist(){
     param(
         [Parameter(Mandatory=$true)]
@@ -1557,101 +1556,6 @@ Function Start-DupliCheckHist(){
     $sw = [diagnostics.stopwatch]::StartNew()
     Write-ColorOut "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")  --  Checking for duplicates via history-file." -ForegroundColor Cyan
 
-    <# DEFINITION: This multithread-code made everything slower.
-        $InFiles | Start-RSJob -Name "CheckDupliHist" -ScriptBlock {
-            param(
-                [Parameter(Mandatory=$true)]
-                [array]$histi,
-                [Parameter(Mandatory=$true)]
-                [ValidateRange(0,1)]
-                [int]$dupli,
-                [Parameter(Mandatory=$true)]
-                [string]$inni
-            )
-            $j = $histi.Length
-            while($true){
-                if($_.InName -eq $histi[$j].InName -and $_.Date -eq $histi[$j].Date -and $_.Size -eq $histi[$j].Size -and ($dupli -eq 0 -or ($dupli -eq 1 -and $_.Hash -eq $histi[$j].Hash))){
-                    $_.ToCopy = 0
-                    break
-                }elseif($_.InName -eq $histi[$j].InName -and $_.Date -eq $histi[$j].Date -and $_.Size -eq $histi[$j].Size -and $dupli -eq 1 -and $histi[$j].Hash -eq "ZYX"){
-                    Write-ColorOut "Possible duplicate (no hash found): $($i + 1) - $($_.FullName.Replace($inni,'.'))" -ForegroundColor Green -Indentation 4
-                    if($j -le 0){
-                        break
-                    }
-                    $j--
-                }else{
-                    if($j -le 0){
-                        break
-                    }
-                    $j--
-                }
-            }
-        } -ArgumentList $HistFiles, $script:DupliCompareHashes, $script:InputPath -FunctionsToLoad Write-ColorOut | Wait-RSJob -ShowProgress | Receive-RSJob
-        Get-RSJob -Name "CheckDupliHist" | Remove-RSJob
-    #> 
-    <# DEFINITION: my own implementation of multithreading:
-        # Add a new PSCustomObject to the input-array:
-        $InFiles | Add-Member -MemberType NoteProperty -Name SplitPart -Value 0
-        $InFiles | Out-Null
-
-        for($i=1; $i -lt $script:ThreadCount; $i++){
-            for($j=0; $j -lt $InFiles.Length; $j++){
-                if($j -in (0..[math]::Floor(((1 * ($InFiles.Length - 1)) / $script:ThreadCount)))){
-                    $InFiles[$j].SplitPart = 0
-                }elseif($j -in ([math]::Floor(((($i * ($InFiles.Length - 1)) / $script:ThreadCount) + 1))..[math]::Floor(((($i + 1) * ($InFiles.Length - 1))) / $script:ThreadCount))){
-                    $InFiles[$j].SplitPart = $i
-                }
-            }
-        }
-        for($i=0; $i -lt $script:ThreadCount; $i++){
-            $array = $InFiles | Where-Object {$_.SplitPart -eq $i}
-            try{
-                Start-job -Name "HistCheck_$i" -ScriptBlock {
-                    param(
-                        [Parameter(Mandatory=$true)]
-                        [array]$InFiles,
-                        [Parameter(Mandatory=$true)]
-                        [array]$HistFiles,
-                        [Parameter(Mandatory=$true)]
-                        [ValidateRange(0,1)]
-                        [int]$DupliCheck,
-                        [Parameter(Mandatory=$true)]
-                        [string]$InPath
-                    )
-                    for($i=0; $i -lt $InFiles.Length; $i++){
-                    $j = $histi.Length
-                        while($true){
-                            if($InFiles[$i].InName -eq $HistFiles[$j].InName -and $InFiles[$i].Date -eq $HistFiles[$j].Date -and $InFiles[$i].Size -eq $HistFiles[$j].Size -and ($DupliCheck -eq 0 -or ($DupliCheck -eq 1 -and $InFiles[$i].Hash -eq $HistFiles[$j].Hash))){
-                                $InFiles[$i].ToCopy = 0
-                                break
-                            }elseif($InFiles[$i].InName -eq $HistFiles[$j].InName -and $DupliCheck -eq 1 -and $HistFiles[$j].Hash -eq "ZYX"  -and $InFiles[$i].Date -eq $HistFiles[$j].Date -and $InFiles[$i].Size -eq $HistFiles[$j].Size){
-                                Write-Host "    Possible duplicate (no hash found): $($i + 1) - $($InFiles[$i].FullName.Replace($InPath,'.'))" -ForegroundColor Green
-                                if($j -le 0){
-                                    break
-                                }
-                                $j--
-                            }else{
-                                if($j -le 0){
-                                    break
-                                }
-                                $j--
-                            }
-                        }
-                    }
-                } -ArgumentList $array, $HistFiles, $script:DupliCompareHashes, $script:InputPath -ErrorAction Stop
-
-                [array]$InFiles = @()
-                for($i=0; $i -lt $script:ThreadCount; $i++){
-                    $InFiles += Receive-Job -Wait -Name "HistCheck_$i" -ErrorAction Stop | Select-Object -Property * -ExcludeProperty RunspaceId,SplitPart
-                }
-            }catch{
-                Write-ColorOut "SERIOUS ISSUE." -ForegroundColor Red -Indentation 4
-                Invoke-Close
-            }
-        }
-    #>
-
-    # DEFINITION:single-threaded code:
     $properties = @("InName","Date","Size")
     if($script:DupliCompareHashes -eq 1){
         $properties += "Hash"
@@ -1659,17 +1563,16 @@ Function Start-DupliCheckHist(){
 
     for($i=0; $i -lt $InFiles.Length; $i++){
         if($sw.Elapsed.TotalMilliseconds -ge 750){
-            Write-Progress -Activity "Comparing to already copied files (history-file).." -PercentComplete $(($i / $InFiles.Length) * 100) -Status "File # $($i + 1) / $($InFiles.Length) - $($InFiles[$i].name)"
+            Write-Progress -Activity "Comparing input-files to already copied files (history-file).." -PercentComplete $(($i / $InFiles.Length) * 100) -Status "File # $($i + 1) / $($InFiles.Length) - $($InFiles[$i].name)"
             $sw.Reset()
             $sw.Start()
         }
 
-        [int]$duplicount = @(Compare-Object -ReferenceObject $InFiles[$i] -DifferenceObject $HistFiles -Property $properties -ExcludeDifferent -IncludeEqual -ErrorAction Stop).count
-        if($duplicount -gt 0){
+        if(@(Compare-Object -ReferenceObject $InFiles[$i] -DifferenceObject $HistFiles -Property $properties -ExcludeDifferent -IncludeEqual -ErrorAction Stop).count -gt 0){
             $InFiles[$i].ToCopy = 0
         }
     }
-    Write-Progress -Activity "Comparing to already copied files (history-file).." -Status "Done!" -Completed
+    Write-Progress -Activity "Comparing input-files to already copied files (history-file).." -Status "Done!" -Completed
     $sw.Reset()
 
     if($script:Debug -gt 1){
@@ -1688,14 +1591,12 @@ Function Start-DupliCheckHist(){
     Write-ColorOut "Files to skip:`t$($($InFiles | Where-Object {$_.ToCopy -eq 0}).count)" -ForegroundColor DarkGreen -Indentation 4
     $script:resultvalues.duplihist = $($InFiles | Where-Object {$_.ToCopy -eq 0}).count
 
-    [array]$inter = $InFiles | Where-Object {$_.ToCopy -eq 1}
-    [array]$InFiles = $inter
+    [array]$InFiles = @($InFiles | Where-Object {$_.ToCopy -eq 1})
 
     return $InFiles
 }
 
 # DEFINITION: dupli-check via output-folder:
-# TODO: multithread if possible (Start-MTFileHash?)
 Function Start-DupliCheckOut(){
     param(
         [Parameter(Mandatory=$true)]
@@ -1707,7 +1608,7 @@ Function Start-DupliCheckOut(){
     Write-ColorOut "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")  --  Checking for duplicates in OutPath." -ForegroundColor Cyan
 
     # pre-defining variables:
-    $files_duplicheck = @()
+    [array]$files_duplicheck = @()
 
     [int]$dupliindex_out = 0
 
@@ -1743,37 +1644,46 @@ Function Start-DupliCheckOut(){
 
     $sw.Start()
     if($files_duplicheck.Length -gt 0){
-        for($i = 0; $i -lt $InFiles.Length; $i++){
+        # TODO: implement
+        $properties = @("Date","Size")
+        for($i=0; $i -lt $files_duplicheck.Length; $i++){
             if($sw.Elapsed.TotalMilliseconds -ge 750 -or $i -eq 0){
-                Write-Progress -Activity "Comparing to files in out-path..." -PercentComplete $($i / $($InFiles.Length - $dupliindex_hist.Length) * 100) -Status "File # $($i + 1) / $($InFiles.Length) - $($InFiles[$i].name)"
+                Write-Progress -Id 1 -Activity "Determine files in output that need to be checked..." -PercentComplete $($i * 100 / $($files_duplicheck.Length)) -Status "File # $($i + 1) / $($files_duplicheck.Length)"
                 $sw.Reset()
                 $sw.Start()
             }
+            if(@(Compare-Object -ReferenceObject $files_duplicheck[$i] -DifferenceObject $InFiles -Property $properties -ExcludeDifferent -IncludeEqual -ErrorAction Stop).count -gt 0){
+                $files_duplicheck[$i].Hash = (Get-FileHash -LiteralPath $files_duplicheck[$i].FullName -Algorithm SHA1 -ErrorAction Stop | Select-Object -ExpandProperty Hash)
+            }
+        }
+        $files_duplicheck = $files_duplicheck | Where-Object {$_.Hash -ne $null}
+        Write-Progress -Id 1 -Activity "Determine files in output that need to be checked..." -Status "Done!" -PercentComplete 100
 
-            $j = $files_duplicheck.Length
+        $properties += "Hash"
+        for($i = 0; $i -lt $InFiles.Length; $i++){
+            if($sw.Elapsed.TotalMilliseconds -ge 750 -or $i -eq 0){
+                Write-Progress -Id 2 -Activity "Comparing input-files with files in output..." -PercentComplete $($i * 100 / $($InFiles.Length)) -Status "File # $($i + 1) / $($InFiles.Length)"
+                $sw.Reset()
+                $sw.Start()
+            }
+            if(@(Compare-Object -ReferenceObject $InFiles[$i] -DifferenceObject $files_duplicheck -Property $properties -ExcludeDifferent -IncludeEqual -ErrorAction Stop).count -gt 0){
+                $InFiles[$i].ToCopy = 0
+                $dupliindex_out++
+                # $files_duplicheck[$j].InName = $InFiles[$i].InName
+            }
+        }
+        Write-Progress -Id 1 -Activity "Determine files in output that need to be checked..." -Status "Done!" -Completed
+        Write-Progress -Id 2 -Activity "Comparing input-files with files in output..." -Status "Done!" -Completed
+        $sw.Reset()
+
+        [array]$inter = @($InFiles | Where-Object {$_.ToCopy -eq 0})
+        for($i=0; $i -lt $inter.Length; $i++){
+            [int]$j = $files_duplicheck.Length
             while($true){
                 # calculate hash only if date and size are the same:
-                if($($InFiles[$i].date) -eq $($files_duplicheck[$j].date) -and $($InFiles[$i].size) -eq $($files_duplicheck[$j].size)){
-                    try{
-                        $files_duplicheck[$j].Hash = (Get-FileHash -LiteralPath $files_duplicheck[$j].FullName -Algorithm SHA1 -ErrorAction Stop | Select-Object -ExpandProperty Hash)
-                    }catch{
-                        Write-ColorOut "Getting hash of $($files_duplicheck[$j].FullName) failed." -ForegroundColor Red -Indentation 4
-                        if($j -le 0){
-                            break
-                        }
-                        $j--
-                    }
-                    if($InFiles[$i].Hash -eq $files_duplicheck[$j].Hash){
-                        $dupliindex_out++
-                        $InFiles[$i].ToCopy = 0
-                        $files_duplicheck[$j].InName = $InFiles[$i].InName
+                if($inter[$i].date -eq $files_duplicheck[$j].date -and $inter[$i].size -eq $files_duplicheck[$j].size -and $inter[$i].Hash -eq $files_duplicheck[$j].Hash){
+                        $files_duplicheck[$j].InName = $inter[$i].InName
                         break
-                    }else{
-                        if($j -le 0){
-                            break
-                        }
-                        $j--
-                    }
                 }else{
                     if($j -le 0){
                         break
@@ -1782,10 +1692,52 @@ Function Start-DupliCheckOut(){
                 }
             }
         }
-        Write-Progress -Activity "Comparing to files in out-path..." -Status "Done!" -Completed
-        $sw.Reset()
 
-        if($script:Debug -gt1){
+        <# DEFINITION: old code
+            for($i = 0; $i -lt $InFiles.Length; $i++){
+                if($sw.Elapsed.TotalMilliseconds -ge 750 -or $i -eq 0){
+                    Write-Progress -Activity "Comparing to files in out-path..." -PercentComplete $($i / $($InFiles.Length - $dupliindex_hist.Length) * 100) -Status "File # $($i + 1) / $($InFiles.Length) - $($InFiles[$i].name)"
+                    $sw.Reset()
+                    $sw.Start()
+                }
+
+                $j = $files_duplicheck.Length
+                while($true){
+                    # calculate hash only if date and size are the same:
+                    if($($InFiles[$i].date) -eq $($files_duplicheck[$j].date) -and $($InFiles[$i].size) -eq $($files_duplicheck[$j].size)){
+                        try{
+                            $files_duplicheck[$j].Hash = (Get-FileHash -LiteralPath $files_duplicheck[$j].FullName -Algorithm SHA1 -ErrorAction Stop | Select-Object -ExpandProperty Hash)
+                        }catch{
+                            Write-ColorOut "Getting hash of $($files_duplicheck[$j].FullName) failed." -ForegroundColor Red -Indentation 4
+                            if($j -le 0){
+                                break
+                            }
+                            $j--
+                        }
+                        if($InFiles[$i].Hash -eq $files_duplicheck[$j].Hash){
+                            $dupliindex_out++
+                            $InFiles[$i].ToCopy = 0
+                            $files_duplicheck[$j].InName = $InFiles[$i].InName
+                            break
+                        }else{
+                            if($j -le 0){
+                                break
+                            }
+                            $j--
+                        }
+                    }else{
+                        if($j -le 0){
+                            break
+                        }
+                        $j--
+                    }
+                }
+            }
+            Write-Progress -Activity "Comparing to files in out-path..." -Status "Done!" -Completed
+            $sw.Reset()
+        #>
+
+        if($script:Debug -gt 1){
             if((Read-Host "    Show all files? `"1`" for `"yes`"") -eq 1){
                 Write-ColorOut "`r`n`tFiles to skip / process:" -ForegroundColor Yellow
                 for($i=0; $i -lt $InFiles.Length; $i++){
@@ -1797,16 +1749,14 @@ Function Start-DupliCheckOut(){
                 }
             }
         }
-
         Write-ColorOut "Files to skip (outpath):`t$dupliindex_out" -ForegroundColor DarkGreen -Indentation 4
 
-        [array]$inter = $InFiles | Where-Object {$_.tocopy -eq 1}
-        [array]$InFiles = $inter
+        [array]$InFiles = @($InFiles | Where-Object {$_.ToCopy -eq 1})
     }else{
         Write-ColorOut "No files in $OutPath - skipping additional verification." -ForegroundColor Magenta -Indentation 4
     }
 
-    [array]$script:dupliout = $files_duplicheck | Where-Object {$_.InName -ne $null}
+    [array]$script:dupliout = $files_duplicheck
     $script:resultvalues.dupliout = $dupliindex_out
 
     return $InFiles
@@ -1827,14 +1777,14 @@ Function Start-InputGetHash(){
 
     # DEFINITION: Calculate hash (if not yet done):
     if($script:VerifyCopies -eq 1 -or $script:AvoidIdenticalFiles -eq 1){
-        $InFiles | Where-Object {$_.Hash -eq "ZYX"} | Start-RSJob -Name "GetHashRest" <#-throttle $script:ThreadCount#> -ScriptBlock {
+        $InFiles | Where-Object {$_.Hash -eq "ZYX"} | Start-RSJob -Name "GetHashRest" -FunctionsToLoad Write-ColorOut -ScriptBlock {
             try{
-                $_.Hash = Get-FileHash -LiteralPath $_.FullName -Algorithm SHA1 -ErrorAction Stop | Select-Object -ExpandProperty Hash
+                $_.Hash = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA1 -ErrorAction Stop | Select-Object -ExpandProperty Hash)
             }catch{
-                Write-ColorOut "Failed to get Hash of $($_.FullName)!" -ForegroundColor Red -Indentation 4
+                Write-ColorOut "Failed to get hash of `"$($_.FullName)`"" -ForegroundColor Red -Indentation 4
                 $_.Hash = "GetHashRestWRONG"
             }
-        } -FunctionsToLoad Write-ColorOut | Wait-RSJob -ShowProgress | Receive-RSJob
+        } | Wait-RSJob -ShowProgress | Receive-RSJob
         Get-RSJob -Name "GetHashRest" | Remove-RSJob
     }
 
@@ -1857,7 +1807,6 @@ Function Start-InputGetHash(){
 }
 
 # DEFINITION: Check if filename already exists and if so, then choose new name for copying:
-# TODO: multithread if possible (Start-MTFileHash?)
 Function Start-OverwriteProtection(){
     param(
         [Parameter(Mandatory=$true)]
@@ -1865,61 +1814,58 @@ Function Start-OverwriteProtection(){
         [Parameter(Mandatory=$true)]
         [string]$OutPath
     )
-    $sw = [diagnostics.stopwatch]::StartNew()
     Write-ColorOut "$(Get-Date -Format "dd.MM.yy HH:mm:ss")  --  Prevent overwriting existing files in $OutPath..." -ForegroundColor Cyan
 
     [array]$allpaths = @()
 
+    $sw = [diagnostics.stopwatch]::StartNew()
     for($i=0; $i -lt $InFiles.Length; $i++){
-        if($InFiles[$i].tocopy -eq 1){
-            if($sw.Elapsed.TotalMilliseconds -ge 750 -or $i -eq 0){
-                Write-Progress -Activity "Prevent overwriting existing files..." -PercentComplete $($i / $InFiles.Length * 100) -Status "File # $($i + 1) / $($InFiles.Length) - $($InFiles[$i].name)"
-                $sw.Reset()
-                $sw.Start()
-            }
+        if($sw.Elapsed.TotalMilliseconds -ge 750 -or $i -eq 0){
+            Write-Progress -Activity "Prevent overwriting existing files..." -PercentComplete $($i / $InFiles.Length * 100) -Status "File # $($i + 1) / $($InFiles.Length) - $($InFiles[$i].name)"
+            $sw.Reset()
+            $sw.Start()
+        }
 
-            # create outpath:
-            $InFiles[$i].outpath = $("$OutPath$($InFiles[$i].sub_date)").Replace("\\","\").Replace("\\","\")
-            $InFiles[$i].outbasename = $InFiles[$i].basename
-            $InFiles[$i].outname = "$($InFiles[$i].basename)$($InFiles[$i].extension)"
-            # check for files with same name from input:
-            [int]$j = 1
-            [int]$k = 1
-            while($true){
-                [string]$check = "$($InFiles[$i].outpath)\$($InFiles[$i].outname)"
-                if($check -notin $allpaths -and (Test-Path -LiteralPath $check -PathType Leaf) -eq $false){
-                    $allpaths += $check
-                    break
-                }elseif($check -in $allpaths){
-                    if($j -eq 1){
-                        $InFiles[$i].outbasename = "$($InFiles[$i].outbasename)_InCopy$j"
-                    }else{
-                        $InFiles[$i].outbasename = $InFiles[$i].outbasename -replace "_InCopy$($j - 1)","_InCopy$j"
-                    }
-                    $InFiles[$i].outname = "$($InFiles[$i].outbasename)$($InFiles[$i].extension)"
-                    $j++
-                    # if($script:Debug -ne 0){Write-ColorOut $InFiles[$i].outbasename}
-                    continue
-                }elseif((Test-Path -LiteralPath $check -PathType Leaf) -eq $true){
-                    if($k -eq 1){
-                        $InFiles[$i].outbasename = "$($InFiles[$i].outbasename)_OutCopy$k"
-                    }else{
-                        $InFiles[$i].outbasename = $InFiles[$i].outbasename -replace "_OutCopy$($k - 1)","_OutCopy$k"
-                    }
-                    $InFiles[$i].outname = "$($InFiles[$i].outbasename)$($InFiles[$i].extension)"
-                    $k++
-                    # if($script:Debug -ne 0){Write-ColorOut $InFiles[$i].outbasename}
-                    continue
+        # create outpath:
+        $InFiles[$i].outpath = $("$OutPath$($InFiles[$i].sub_date)").Replace("\\","\").Replace("\\","\")
+        $InFiles[$i].outbasename = $InFiles[$i].basename
+        $InFiles[$i].outname = "$($InFiles[$i].basename)$($InFiles[$i].extension)"
+        # check for files with same name from input:
+        [int]$j = 1
+        [int]$k = 1
+        while($true){
+            [string]$check = "$($InFiles[$i].outpath)\$($InFiles[$i].outname)"
+            if($check -notin $allpaths -and (Test-Path -LiteralPath $check -PathType Leaf) -eq $false){
+                $allpaths += $check
+                break
+            }elseif($check -in $allpaths){
+                if($j -eq 1){
+                    $InFiles[$i].outbasename = "$($InFiles[$i].outbasename)_InCopy$j"
+                }else{
+                    $InFiles[$i].outbasename = $InFiles[$i].outbasename -replace "_InCopy$($j - 1)","_InCopy$j"
                 }
+                $InFiles[$i].outname = "$($InFiles[$i].outbasename)$($InFiles[$i].extension)"
+                $j++
+                # if($script:Debug -ne 0){Write-ColorOut $InFiles[$i].outbasename}
+                continue
+            }elseif((Test-Path -LiteralPath $check -PathType Leaf) -eq $true){
+                if($k -eq 1){
+                    $InFiles[$i].outbasename = "$($InFiles[$i].outbasename)_OutCopy$k"
+                }else{
+                    $InFiles[$i].outbasename = $InFiles[$i].outbasename -replace "_OutCopy$($k - 1)","_OutCopy$k"
+                }
+                $InFiles[$i].outname = "$($InFiles[$i].outbasename)$($InFiles[$i].extension)"
+                $k++
+                # if($script:Debug -ne 0){Write-ColorOut $InFiles[$i].outbasename}
+                continue
             }
-            
         }
     }
     Write-Progress -Activity "Prevent overwriting existing files..." -Status "Done!" -Completed
 
     if($script:Debug -gt 1){
         if((Read-Host "    Show all names? `"1`" for `"yes`"") -eq 1){
-            [int]$indent=0
+            [int]$indent = 0
             for($i=0; $i -lt $InFiles.Length; $i++){
                 Write-ColorOut "    $($InFiles[$i].outpath.Replace($OutPath,"."))\$($InFiles[$i].outname)`t`t" -NoNewLine -ForegroundColor Gray
                 if($indent -lt 2){
@@ -2036,7 +1982,7 @@ Function Start-FileCopy(){
     for($i=0; $i -lt $xc_command.Length; $i++){
         while($counter -ge $script:ThreadCount){
             $counter = @(Get-Process -Name xcopy -ErrorAction SilentlyContinue).count
-            Start-Sleep -Milliseconds 25
+            Start-Sleep -Milliseconds 10
         }
         if($sw.Elapsed.TotalMilliseconds -ge 750 -or $i -eq 0){
             Write-Progress -Activity "Starting Xcopy.." -PercentComplete $($i / $xc_command.Length * 100) -Status "File # $($i + 1) / $($xc_command.Length)"
@@ -2048,7 +1994,7 @@ Function Start-FileCopy(){
     }
     while($counter -gt 0){
         $counter = @(Get-Process -Name xcopy -ErrorAction SilentlyContinue).count
-        Start-Sleep -Milliseconds 50
+        Start-Sleep -Milliseconds 25
     }
     Write-Progress -Activity "Starting Xcopy.." -Status "Done!" -Completed
 
@@ -2104,7 +2050,6 @@ Function Start-FileVerification(){
         [Parameter(Mandatory=$true)]
         [array]$InFiles
     )
-
     Write-ColorOut "$(Get-Date -Format "dd.MM.yy HH:mm:ss")  --  Verify newly copied files..." -ForegroundColor Cyan
 
     $InFiles | Where-Object {$_.ToCopy -eq 1} | Start-RSJob -Name "VerifyHash" <#-throttle $script:ThreadCount#> -FunctionsToLoad Write-ColorOut -ScriptBlock {
@@ -2199,7 +2144,14 @@ Function Set-HistFile(){
         }
     }
     if($script:CheckOutputDupli -gt 0){
-        $results += $script:dupliout
+        $results += $script:dupliout | ForEach-Object {
+            [PSCustomObject]@{
+                InName = $_.InName
+                Date = $_.Date
+                Size = $_.Size
+                Hash = $_.Hash
+            }
+        }
     }
     $results = $results | Sort-Object -Property InName,Date,Size,Hash -Unique | ConvertTo-Json
     $results | Out-Null
@@ -2216,8 +2168,8 @@ Function Set-HistFile(){
 
 # DEFINITION: Starts all the things.
 Function Start-Everything(){
-    Write-ColorOut "`r`n`                                 flolilo's Media-Copytool                                " -ForegroundColor DarkCyan -BackgroundColor Gray
-    Write-ColorOut "                               v0.8.0 (Beta) - 2017-10-28                               `r`n" -ForegroundColor DarkCyan -BackgroundColor Gray
+    Write-ColorOut "`r`n`                                flolilo's Media-Copytool                                " -ForegroundColor DarkCyan -BackgroundColor Gray
+    Write-ColorOut "                               v0.8.1 (Beta) - 2017-11-26                               `r`n" -ForegroundColor DarkCyan -BackgroundColor Gray
     Write-ColorOut "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")  --  Starting everything..." -ForegroundColor Cyan
 
     $script:timer = [diagnostics.stopwatch]::StartNew()
