@@ -1,4 +1,4 @@
 ﻿*.todo
 *.json
 *.xlsx
-mc_parameters.json
+!mc_parameters.json
