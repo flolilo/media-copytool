@@ -295,7 +295,7 @@ Function Write-ColorOut(){
 
     if($ForegroundColor.Length -ge 3){
         $old_fg_color = [Console]::ForegroundColor
-        [Console]::ForegroundColor = $ForeGroundColor
+        [Console]::ForegroundColor = $ForegroundColor
     }
     if($BackgroundColor.Length -ge 3){
         $old_bg_color = [Console]::BackgroundColor
@@ -502,6 +502,7 @@ Function Get-Parameters(){
 # DEFINITION: Show parameters on the console, then exit:
 Function Show-Parameters(){
     Write-ColorOut "flolilo's Media-Copytool's Parameters:`r`n" -ForegroundColor Green
+    Write-ColorOut "-GUI_CLI_Direct`t`t=`t$script:GUI_CLI_Direct" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-LoadParamPresetName`t=`t$script:LoadParamPresetName" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-SaveParamPresetName`t=`t$script:SaveParamPresetName" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-RememberInPath`t`t=`t$script:RememberInPath" -ForegroundColor Cyan -Indentation 4
@@ -510,7 +511,6 @@ Function Show-Parameters(){
     Write-ColorOut "-RememberSettings`t`t=`t$script:RememberSettings" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-Debug`t`t=`t$script:Debug" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "These values come from $script:JSONParamPath :" -ForegroundColor DarkCyan -Indentation 2
-    Write-ColorOut "-GUI_CLI_Direct`t`t=`t$script:GUI_CLI_Direct" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-InputPath`t`t`t=`t$script:InputPath" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-OutputPath`t`t`t=`t$script:OutputPath" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-MirrorEnable`t`t=`t$script:MirrorEnable" -ForegroundColor Cyan -Indentation 4
@@ -579,7 +579,7 @@ Function Get-Folder(){
 
 # DEFINITION: Get values from GUI, then check the main input- and outputfolder:
 Function Get-UserValues(){
-    Write-ColorOut "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")  --  Getting user-values..." -ForeGroundColor Cyan
+    Write-ColorOut "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")  --  Getting user-values..." -ForegroundColor Cyan
     
     # get values, test paths:
     if($script:GUI_CLI_Direct -eq "GUI" -or $script:GUI_CLI_Direct -eq "CLI" -or $script:GUI_CLI_Direct -eq "direct"){
@@ -590,7 +590,7 @@ Function Get-UserValues(){
                 if($script:InputPath.Length -gt 1 -and (Test-Path -LiteralPath $script:InputPath -PathType Container) -eq $true){
                     break
                 }else{
-                    Write-ColorOut "Invalid selection!" -ForeGroundColor Magenta -Indentation 4
+                    Write-ColorOut "Invalid selection!" -ForegroundColor Magenta -Indentation 4
                     continue
                 }
             }
@@ -887,7 +887,7 @@ Function Get-UserValues(){
                     if($script:SaveParamPresetName.Length -gt 1){
                         break
                     }else{
-                        Write-ColorOut "Invalid selection!" -ForeGroundColor Magenta -Indentation 4
+                        Write-ColorOut "Invalid selection!" -ForegroundColor Magenta -Indentation 4
                         continue
                     }
                 }
@@ -1298,7 +1298,6 @@ Function Set-Parameters(){
     $inter = [PSCustomObject]@{
         ParamPresetName = $script:SaveParamPresetName
         ParamPresetValues = [PSCustomObject]@{
-            GUI_CLI_Direct = $script:GUI_CLI_Direct
             InputPath = $script:InputPath
             OutputPath = $script:OutputPath
             MirrorEnable = $script:MirrorEnable
@@ -2011,13 +2010,13 @@ Function Start-FileCopy(){
         [int]$inter = Read-Host "    Show all commands? `"1`" for yes, `"2`" for writing them as files to your script's path."
         if($inter -gt 0){
             foreach($i in $rc_command){
-                Write-ColorOut "robocopy $i`r`n" -ForeGroundColor Gray -Indentation 4
+                Write-ColorOut "robocopy $i`r`n" -ForegroundColor Gray -Indentation 4
                 if($inter -eq 2){
                     [System.IO.File]::AppendAllText("$($PSScriptRoot)\robocopy_commands.txt", $i)
                 }
             }
             foreach($i in $xc_command){
-                Write-ColorOut "xcopy $i`r`n" -ForeGroundColor Gray -Indentation 4
+                Write-ColorOut "xcopy $i`r`n" -ForegroundColor Gray -Indentation 4
                 if($inter -eq 2){
                     [System.IO.File]::AppendAllText("$($PSScriptRoot)\xcopy_commands.txt", $i)
                 }
