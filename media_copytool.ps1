@@ -2259,18 +2259,22 @@ Function Start-Everything(){
         if($script:UseHistFile -eq 1){
             [array]$histfiles = @(Get-HistFile -HistFilePath $script:HistFilePath)
             Invoke-Pause
-            # DEFINITION: If enabled: Check for duplicates against history-files:
-            [array]$inputfiles = (Start-DupliCheckHist -InFile $inputfiles -HistFiles $histfiles)
-            if($inputfiles.Length -lt 1){
-                Write-ColorOut "$($inputfiles.Length) files left to copy - aborting rest of the script." -ForegroundColor Magenta
-                Start-Sound 1
-                Start-Sleep -Seconds 2
-                if($script:GUI_CLI_Direct -eq "GUI"){
-                    Start-GUI -GUIPath "$($PSScriptRoot)/mc_GUI.xaml"
+            if($histfiles.Length -gt 0){
+                # DEFINITION: If enabled: Check for duplicates against history-files:
+                [array]$inputfiles = @(Start-DupliCheckHist -InFile $inputfiles -HistFiles $histfiles)
+                if($inputfiles.Length -lt 1){
+                    Write-ColorOut "$($inputfiles.Length) files left to copy - aborting rest of the script." -ForegroundColor Magenta
+                    Start-Sound 1
+                    Start-Sleep -Seconds 2
+                    if($script:GUI_CLI_Direct -eq "GUI"){
+                        Start-GUI -GUIPath "$($PSScriptRoot)/mc_GUI.xaml"
+                    }
+                    break
                 }
-                break
+                Invoke-Pause
+            }else{
+                Write-ColorOut "No History-files found" -ForegroundColor Gray -Indentation 4
             }
-            Invoke-Pause
         }
 
         # DEFINITION: If enabled: Check for duplicates against output-files:
