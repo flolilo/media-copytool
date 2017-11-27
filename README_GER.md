@@ -68,12 +68,11 @@ Media-Copytool ist mein Versuch, die Dateien von den Speicherkarten meiner DSLR 
 ## Was nicht funktioniert
 - MTP-Geräte (wie Android-Smartphones). Workaround: Dateien zuerst via Explorer vom MTP-Gerät zum Computer kopieren, dann mit media-copytool weitermachen.
 - Das sichere Entfernen funktioniert bei manchen Geräten nicht. *Soll behoben werden, ist aber scheinbar schwierig.*
-- Auch wenn Fail-Saves eingebaut sind, die grobe Probleme vermeiden sollten: Wenn man es drauf anlegt ist es dennoch möglich, das Skript zu Fehlern zu bewegen. (Datenverlust sollte aber nicht möglich sein.)
-- Obwohl das Multi-Threading funktioniert, kannes gerade bei höheren Nummern das Skript immens verlangsamen - deswegen gibt es einen Parameter bzw. einen Slider hierfür.
+- Auch wenn Fail-Saves eingebaut sind, die grobe Probleme vermeiden sollten: Wenn man es drauf anlegt ist es dennoch möglich, das Skript zu Fehlern zu bewegen. **Datenverlust sollte aber auch dann nicht möglich sein**.
 - Kein Support für andere Betriebssysteme als Windows *- Support ist aber irgendwann geplant*.
 
 ## To do
-- [ ] Überprüfen, ob Überschreib-Option Sinn macht
+- [ ] Überprüfen, ob eine Überschreib-Option Sinn machen würde
 - [ ] Pester-Skript schreiben (hohe Priorität)
 - [x] Alle `for`-Schleifen multithreaden (wo möglich)
 - [x] Evaluierung von Posh-RSJob (**Mithilfe erwünscht!**)

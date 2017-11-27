@@ -68,12 +68,11 @@ Media-Copytool is my attempt to create a tool to easily (and switfly) copies fil
 ## Limitations
 - Does not work with MTP-devices (such as Android smartphones). Workaround: Copy the files from your MTP-device to your computer and then run media-copytool.
 - Safely removing devices does not work with all external drives. *This is on my list, though it seems complicated.*
-- While there are many failsaves built-in, one can break things if one wants to. Though even then, no data-loss should occur.
-- Although multi-threading works, the thread-count is a tricky thing: setting it too high will slow the script down, even. That's why there's a slider for that.
+- While there are many failsaves built-in, one can break things if one wants to. **Note: Even then, no data-loss should occur**.
 - No support for non-Windows-OSs, *though I plan to achieve that someday*.
 
 ## To do
-- [ ] Evaluate option for overwriting existing files
+- [ ] Evaluate if option for overwriting existing files would make sense
 - [ ] Creating a Pester-script (high priority)
 - [x] Making all `for`-loops multithreaded (where possible)
 - [x] Evaluating the usefulness of Posh-RSJob (**Cuntributions are welcome!**)
