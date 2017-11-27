@@ -1,6 +1,6 @@
 <!--
     Description:    This is the GUI for media_copytool.ps1
-    Date:           2017-11-26
+    Date:           2017-11-27
     Author:         flolilo
 -->
 <Window x:Class="MediaCopytool.MainWindow"
@@ -9,7 +9,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="flolilo's Media-Copytool v0.8.2 (Beta)" Height="340" Width="800" ResizeMode="CanMinimize"
+        Title="flolilo's Media-Copytool v0.8.3 (Beta)" Height="340" Width="800" ResizeMode="CanMinimize"
         FontFamily="Segoe UI,Arial"
     >
     <Grid Background="#FFB3B6B5">
@@ -136,10 +136,10 @@
                     <TextBlock Name="textBlockPresetFormats"
                         Text="Formats to copy:"
                         FontWeight="Bold"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,0,0,0"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,8,0,0"
                     />
                     <CheckBox x:Name="checkBoxCan"
-                        Content="Canon" FontFamily="Consolas,Segoe UI,Arial"
+                        Content="Canon" FontFamily="Segoe UI,Arial"
                         VerticalContentAlignment="Center"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,30,0,0"
                         Width="180"
@@ -147,9 +147,10 @@
                     <TextBlock x:Name="textBlockCan"
                         Text="- CR2" FontFamily="Consolas,Segoe UI,Arial"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,30,0,0"
+                        Padding="0,1,0,0"
                     />
                     <CheckBox x:Name="checkBoxNik"
-                        Content="Nikon" FontFamily="Consolas,Segoe UI,Arial"
+                        Content="Nikon" FontFamily="Segoe UI,Arial"
                         VerticalContentAlignment="Center"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,55,0,0"
                         Width="180"
@@ -157,9 +158,10 @@
                     <TextBlock x:Name="textBlockNik"
                         Text="- NEF &amp; NRW" FontFamily="Consolas,Segoe UI,Arial"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,55,0,0"
+                        Padding="0,1,0,0"
                     />
                     <CheckBox x:Name="checkBoxSon"
-                        Content="Sony" FontFamily="Consolas,Segoe UI,Arial"
+                        Content="Sony" FontFamily="Segoe UI,Arial"
                         VerticalContentAlignment="Center"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,80,0,0"
                         Width="180"
@@ -167,9 +169,10 @@
                     <TextBlock x:Name="textBlockSon"
                         Text="- ARW" FontFamily="Consolas,Segoe UI,Arial"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,80,0,0"
+                        Padding="0,1,0,0"
                     />
                     <CheckBox x:Name="checkBoxJpg"
-                        Content="JPEG" FontFamily="Consolas,Segoe UI,Arial"
+                        Content="JPEG" FontFamily="Segoe UI,Arial"
                         VerticalContentAlignment="Center"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,105,0,0"
                         Width="180"
@@ -177,37 +180,51 @@
                     <TextBlock x:Name="textBlockJpg"
                         Text="- JPG &amp; JPEG" FontFamily="Consolas,Segoe UI,Arial"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,105,0,0"
+                        Padding="0,1,0,0"
                     />
-                    <CheckBox x:Name="checkBoxMov"
-                        Content="Movies" FontFamily="Consolas,Segoe UI,Arial"
+                    <CheckBox x:Name="checkBoxInter"
+                        Content="Intermed." FontFamily="Segoe UI,Arial"
                         VerticalContentAlignment="Center"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,130,0,0"
                         Width="180"
                     />
-                    <TextBlock x:Name="textBlockMov"
-                        Text="- MOV &amp; MP4" FontFamily="Consolas,Segoe UI,Arial"
+                    <TextBlock x:Name="textBlockInter"
+                        Text="- DNG &amp; TIF" FontFamily="Consolas,Segoe UI,Arial"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,130,0,0"
+                        Padding="0,1,0,0"
                     />
-                    <CheckBox x:Name="checkBoxAud"
-                        Content="Audio" FontFamily="Consolas,Segoe UI,Arial"
+                    <CheckBox x:Name="checkBoxMov"
+                        Content="Movies" FontFamily="Segoe UI,Arial"
                         VerticalContentAlignment="Center"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,155,0,0"
                         Width="180"
                     />
+                    <TextBlock x:Name="textBlockMov"
+                        Text="- MOV &amp; MP4" FontFamily="Consolas,Segoe UI,Arial"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,155,0,0"
+                        Padding="0,1,0,0"
+                    />
+                    <CheckBox x:Name="checkBoxAud"
+                        Content="Audio" FontFamily="Segoe UI,Arial"
+                        VerticalContentAlignment="Center"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,180,0,0"
+                        Width="180"
+                    />
                     <TextBlock x:Name="textBlockAud"
                         Text="- WAV &amp; MP3 &amp; M4A" FontFamily="Consolas,Segoe UI,Arial"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,155,0,0"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,180,0,0"
+                        Padding="0,1,0,0"
                     />
                     <CheckBox x:Name="checkBoxCustom"
                         Content="Custom:" ToolTip="Enable to copy customised file-formats."
                         VerticalContentAlignment="Center"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,180,0,0" Padding="4,-2,0,0"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,205,0,0" Padding="4,-2,0,0"
                         Height="22" Width="78"
                     />
                     <TextBox x:Name="textBoxCustom"
                         Text="textBoxCustoms" FontFamily="Consolas,Segoe UI,Arial" ToolTip="*.ext1,*.ext2,*.ext3"
                         VerticalContentAlignment="Center" VerticalScrollBarVisibility="Disabled" TextWrapping="Wrap"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,180,0,0"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,205,0,0"
                         Height="22" Width="140"
                     />
                     <Rectangle Fill="#FFB3B6B5" Stroke="#FF878787" Panel.ZIndex="-1" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="250,0,0,0" Height="240" Width="2"/>

@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 (The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).)
 
 
+## 0.8.3 - 2017-11-27
+### Changed
+- Bugfix: If no history-entries are found, the duplicate-check would fail because of the `null`-array.
+- Improvement/change: if a different preset is loaded, `-SaveParamPresetName` will get changed accordingly. (I always accidentally updated the old profile before...)
+- Bugfix: `Set-Parameters()` would also try to save `-GUI_CLI_Direct` and `-Debug`.
+- Improvement/change: Always check for specific parameters stored in your `mc_parameters.json` via `Get-Parameters()` if you leave them empty and when `-GUI_CLI_Direct` is `GUI` or `direct`.
+- Aesthetics: show PID regardless of `Debug`-level, condense the bars a bit to improve readability.
+
+### Added
+- `-PresetFormats "Inter"` - will look for `.DNG`- and `.TIF`-files.
+- Parameter `-JSONParamPath`.
+
+
 ## 0.8.2 - 2017-11-26
 ### Changed
 - Improvement towards hashes: calculate only what's needed - when it's needed.
