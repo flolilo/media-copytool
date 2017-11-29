@@ -1,6 +1,6 @@
 <!--
     Description:    This is the GUI for media_copytool.ps1
-    Date:           2017-11-27
+    Date:           2017-11-29
     Author:         flolilo
 -->
 <Window x:Class="MediaCopytool.MainWindow"
@@ -9,7 +9,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="flolilo's Media-Copytool v0.8.3 (Beta)" Height="340" Width="800" ResizeMode="CanMinimize"
+        Title="flolilo's Media-Copytool v0.8.4 (Beta)" Height="340" Width="800" ResizeMode="CanMinimize"
         FontFamily="Segoe UI,Arial"
     >
     <Grid Background="#FFB3B6B5">
@@ -51,18 +51,18 @@
                         Text="textBoxInput" FontFamily="Consolas,Segoe UI,Arial"
                         VerticalScrollBarVisibility="Disabled" VerticalContentAlignment="Center"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,60,0,0"
-                        Height="22" Width="490"
+                        Height="22" Width="510"
                     />
                     <Button x:Name="buttonSearchIn"
                         Content="Select Path..."
-                        VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,60,100,0"
+                        VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,60,80,0"
                         Height="22" Width="80"
                     />
                     <CheckBox x:Name="checkBoxRememberIn"
                         Content="Save" ToolTip="Remembers the Input-Path for future executions." VerticalContentAlignment="Center"
                         Foreground="#FFC90000" FontWeight="Bold"
                         VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,60,15,0" Padding="4,-2,0,0" 
-                        Height="22" Width="80"
+                        Height="22" Width="60"
                     />
                     <TextBlock x:Name="textBlockOutput"
                         Text="Output-path:" TextAlignment="Right"
@@ -73,18 +73,18 @@
                         Text="textBoxOutput" FontFamily="Consolas,Segoe UI,Arial"
                         VerticalScrollBarVisibility="Disabled" VerticalContentAlignment="Center"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,90,0,0" 
-                        Height="22" Width="490"
+                        Height="22" Width="510"
                     />
                     <Button x:Name="buttonSearchOut"
                         Content="Select Path..."
-                        VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,90,100,0"
+                        VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,90,80,0"
                         Height="22" Width="80"
                     />
                     <CheckBox x:Name="checkBoxRememberOut"
                         Content="Save" ToolTip="Remembers the Output-Path for future executions." VerticalContentAlignment="Center"
                         Foreground="#FFC90000" FontWeight="Bold"
                         VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,90,15,0" Padding="4,-2,0,0"
-                        Height="22" Width="80"
+                        Height="22" Width="60"
                     />
                     <CheckBox x:Name="checkBoxMirror"
                         Content=":Mirror" ToolTip="Enable if you want to Mirror the copied files to a second path." FlowDirection="RightToLeft" VerticalContentAlignment="Center" UseLayoutRounding="False"
@@ -95,18 +95,18 @@
                         Text="textBoxMirror" FontFamily="Consolas,Segoe UI,Arial"
                         VerticalScrollBarVisibility="Disabled" VerticalContentAlignment="Center"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,120,0,0"
-                        Height="22" Width="490"
+                        Height="22" Width="510"
                     />
                     <Button x:Name="buttonSearchMirror"
                         Content="Select Path..."
-                        VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,120,100,0"
+                        VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,120,80,0"
                         Height="22" Width="80"
                     />
                     <CheckBox x:Name="checkBoxRememberMirror"
                         Content="Save" ToolTip="Remembers the additional Output-Path for future executions." VerticalContentAlignment="Center"
                         Foreground="#FFC90000" FontWeight="Bold"
                         VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,120,15,0" Padding="4,-2,0,0"
-                        Height="22" Width="80"
+                        Height="22" Width="60"
                     />
                     <TextBlock x:Name="textBlockHistFilePath"
                         Text="HistFile-path:" TextAlignment="Right"
@@ -117,11 +117,11 @@
                         Text="textBoxHistFile" FontFamily="Consolas,Segoe UI,Arial"
                         VerticalScrollBarVisibility="Disabled" VerticalContentAlignment="Center"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,160,0,0" 
-                        Height="22" Width="490"
+                        Height="22" Width="510"
                     />
                     <Button x:Name="buttonSearchHistFile"
                         Content="Select File..."
-                        VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,160,100,0"
+                        VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,160,80,0"
                         Height="22" Width="80"
                     />
                     <TextBlock x:Name="textBlockReminder"
@@ -142,7 +142,8 @@
                         Content="Canon" FontFamily="Segoe UI,Arial"
                         VerticalContentAlignment="Center"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,30,0,0"
-                        Width="180"
+                        Panel.ZIndex="1"
+                        Width="200"
                     />
                     <TextBlock x:Name="textBlockCan"
                         Text="- CR2" FontFamily="Consolas,Segoe UI,Arial"
@@ -153,7 +154,8 @@
                         Content="Nikon" FontFamily="Segoe UI,Arial"
                         VerticalContentAlignment="Center"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,55,0,0"
-                        Width="180"
+                        Panel.ZIndex="1"
+                        Width="200"
                     />
                     <TextBlock x:Name="textBlockNik"
                         Text="- NEF &amp; NRW" FontFamily="Consolas,Segoe UI,Arial"
@@ -164,7 +166,8 @@
                         Content="Sony" FontFamily="Segoe UI,Arial"
                         VerticalContentAlignment="Center"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,80,0,0"
-                        Width="180"
+                        Panel.ZIndex="1"
+                        Width="200"
                     />
                     <TextBlock x:Name="textBlockSon"
                         Text="- ARW" FontFamily="Consolas,Segoe UI,Arial"
@@ -175,7 +178,8 @@
                         Content="JPEG" FontFamily="Segoe UI,Arial"
                         VerticalContentAlignment="Center"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,105,0,0"
-                        Width="180"
+                        Panel.ZIndex="1"
+                        Width="200"
                     />
                     <TextBlock x:Name="textBlockJpg"
                         Text="- JPG &amp; JPEG" FontFamily="Consolas,Segoe UI,Arial"
@@ -186,7 +190,8 @@
                         Content="Intermed." FontFamily="Segoe UI,Arial"
                         VerticalContentAlignment="Center"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,130,0,0"
-                        Width="180"
+                        Panel.ZIndex="1"
+                        Width="200"
                     />
                     <TextBlock x:Name="textBlockInter"
                         Text="- DNG &amp; TIF" FontFamily="Consolas,Segoe UI,Arial"
@@ -197,7 +202,8 @@
                         Content="Movies" FontFamily="Segoe UI,Arial"
                         VerticalContentAlignment="Center"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,155,0,0"
-                        Width="180"
+                        Panel.ZIndex="1"
+                        Width="200"
                     />
                     <TextBlock x:Name="textBlockMov"
                         Text="- MOV &amp; MP4" FontFamily="Consolas,Segoe UI,Arial"
@@ -208,7 +214,8 @@
                         Content="Audio" FontFamily="Segoe UI,Arial"
                         VerticalContentAlignment="Center"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,180,0,0"
-                        Width="180"
+                        Panel.ZIndex="1"
+                        Width="200"
                     />
                     <TextBlock x:Name="textBlockAud"
                         Text="- WAV &amp; MP3 &amp; M4A" FontFamily="Consolas,Segoe UI,Arial"
@@ -225,6 +232,7 @@
                         Text="textBoxCustoms" FontFamily="Consolas,Segoe UI,Arial" ToolTip="*.ext1,*.ext2,*.ext3"
                         VerticalContentAlignment="Center" VerticalScrollBarVisibility="Disabled" TextWrapping="Wrap"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,205,0,0"
+                        Panel.ZIndex="1"
                         Height="22" Width="140"
                     />
                     <Rectangle Fill="#FFB3B6B5" Stroke="#FF878787" Panel.ZIndex="-1" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="250,0,0,0" Height="240" Width="2"/>
@@ -290,9 +298,14 @@
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="270,180,0,0"
                         Height="23" Width="215">
                         <ComboBoxItem Content="Write old &amp; new files to history-file"/>
-                        <ComboBoxItem Content="Delete old files, write new ones"/>
+                        <ComboBoxItem Content="Overwrite old files with new ones"/>
                         <ComboBoxItem Content="Don't add new files to history-file"/>
                     </ComboBox>
+                    <CheckBox x:Name="checkBoxCheckHashHist"
+                        Content="Include hashes in duplicate-check" ToolTip="If unchecked, duplicate-check is done via name, size, date. If checked, hash is added. Enabling duplicate-check in output-path disables this function." VerticalContentAlignment="Center"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="270,208,0,0"
+                        Width="215"
+                    />
                     <Rectangle Fill="#FFB3B6B5" Stroke="#FF878787" Panel.ZIndex="-1" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="500,0,0,0" Height="240" Width="2"/>
 
                     <TextBlock x:Name="textBlockOptions" Text="Other options:" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,0,0,0" FontWeight="Bold"/>
@@ -301,19 +314,20 @@
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,20,0,0"
                         Width="220"
                     />
-                    <CheckBox x:Name="checkBoxCheckHashHist"
-                        Content="Check hashes of all input-files" ToolTip="If unchecked, duplicate-check is done via name, size, date. If checked, hash is added. Enabling duplicate-check in output-path disables this function." VerticalContentAlignment="Center"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,40,0,0"
-                        Width="220"
-                    />
                     <CheckBox x:Name="checkBoxOutputDupli"
                         Content="Check for duplicates in output-path" ToolTip="Searches for duplicates in the output-path (incl. subfolders). Ideal if you have used LR or other import-tools since the last card-formatting." VerticalContentAlignment="Center"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,60,0,0"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,40,0,0"
                         Width="220"
                     />
                     <CheckBox x:Name="checkBoxVerifyCopies"
                         Content="Verify copied files" ToolTip="Suggestted. After copying, script will check if files were copied successfully. Disabling will save time." VerticalContentAlignment="Center"
                         Foreground="#FF00A22C"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,60,0,0"
+                        Width="220"
+                    />
+                    <CheckBox x:Name="checkBoxOverwriteExistingFiles"
+                        Content="Overwrite existing files" ToolTip="If disabled, new files will get unique names. If enabled, existing files will be overwritten." VerticalContentAlignment="Center"
+                        Foreground="#FFDE0000"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,80,0,0"
                         Width="220"
                     />
@@ -329,7 +343,6 @@
                     />
                     <CheckBox x:Name="checkBoxUnmountInputDrive"
                         Content="Remove input-drive after copying" ToolTip="Safely removing the input-drive after successful verification (before mirroring). Note: It does not work with all drives - so double-check if your drive was removed!" VerticalContentAlignment="Center"
-                        Foreground="#FFFF1717"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,140,0,0"
                         Width="220"
                     />
@@ -339,21 +352,11 @@
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,160,0,0"
                         Width="220"
                     />
-                    <TextBlock x:Name="textBlockThreadCount"
-                        Text="Thread Count:"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,185,0,0"
-                    />
-                    <Slider x:Name="sliderThreadCount" ToolTip="Number of threads for operations. Recommended: 6." Minimum="2" Maximum="48" TickPlacement="TopLeft" Width="118" Height="26" SmallChange="2" Value="6" IsSnapToTickEnabled="True" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="612,180,0,0" LargeChange="2" TickFrequency="2"/>
-                    <TextBox x:Name="textBoxThreadCount"
-                        Text="{Binding ElementName=sliderThreadCount, Path=Value, UpdateSourceTrigger=PropertyChanged}" ToolTip="Number of threads for operations. Recommended: 6." TextAlignment="Center" VerticalContentAlignment="Center"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" HorizontalContentAlignment="Center" Margin="735,180,0,0"
-                        Height="26" Width="30"
-                    />
                     <CheckBox x:Name="checkBoxRememberSettings"
                         Content="Save settings" ToolTip="Save all parameters (excl. Save-Checkboxes)" VerticalContentAlignment="Center"
                         Foreground="#FFC90000" FontWeight="Bold"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,210,0,0" Padding="4,-2,0,0"
-                        Height="20"
+                        Height="20" Width="110"
                     />
                 </Grid>
             </TabItem>

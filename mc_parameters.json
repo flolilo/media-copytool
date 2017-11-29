@@ -20,15 +20,15 @@
                                   "HistFilePath":  "$($PSScriptRoot)\\mc_historyfile.json",
                                   "UseHistFile":  1,
                                   "WriteHistFile":  "yes",
+                                  "HistCompareHashes":  1,
                                   "InputSubfolderSearch":  1,
-                                  "HistCompareHashes":  0,
                                   "CheckOutputDupli":  0,
                                   "VerifyCopies":  1,
+                                  "OverwriteExistingFiles":  0,
                                   "AvoidIdenticalFiles":  0,
                                   "ZipMirror":  0,
                                   "UnmountInputDrive":  0,
-                                  "PreventStandby":  1,
-                                  "ThreadCount":  6
+                                  "PreventStandby":  1
                               }
     }
 ]

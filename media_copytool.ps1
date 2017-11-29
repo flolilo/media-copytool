@@ -7,9 +7,9 @@
         Uses Windows' Robocopy and Xcopy for file-copy, then uses PowerShell's Get-FileHash (SHA1) for verifying that files were copied without errors.
         Now supports multithreading via Boe Prox's PoshRSJob-cmdlet (https://github.com/proxb/PoshRSJob)
     .NOTES
-        Version:        0.8.3 (Beta)
+        Version:        0.8.4 (Beta)
         Author:         flolilo
-        Creation Date:  2017-11-27
+        Creation Date:  2017-11-29
         Legal stuff: This program is free software. It comes without any warranty, to the extent permitted by
         applicable law. Most of the script was written by myself (or heavily modified by me when searching for solutions
         on the WWW). However, some parts are copies or modifications of very genuine code - see
@@ -124,15 +124,18 @@
             "No"        -   New values will NOT be added to the history-file, the old values will remain.
             "Yes"       -   Old + new values will be added to the history-file, with old values still saved.
             "Overwrite" -   Old values will be deleted, new values will be written. Best to use after the card got formatted, as it will make the history-file smaller and therefore faster.
-    .PARAMETER InputSubfolderSearch
-        Valid range: 0 (deactivate), 1 (activate)
-        If enabled, it enables file-search in subfolders of the input-path.
     .PARAMETER HistCompareHashes
         Valid range: 0 (deactivate), 1 (activate)
         If enabled, it additionally checks for duplicates in the history-file via hash-calculation of all input-files (slow!)
+    .PARAMETER InputSubfolderSearch
+        Valid range: 0 (deactivate), 1 (activate)
+        If enabled, it enables file-search in subfolders of the input-path.
     .PARAMETER CheckOutputDupli
         Valid range: 0 (deactivate), 1 (activate)
         If enabled, it checks for already copied files in the output-path (and its subfolders).
+    .PARAMETER OverwriteExistingFiles
+        Valid range: 0 (deactivate), 1 (activate)
+        If enabled, existing files will be overwritten. If disabled, new files will get a unique name.
     .PARAMETER VerifyCopies
         Valid range: 0 (deactivate), 1 (activate)
         If enabled, copied files will be checked for their integrity via SHA1-hashes. Disabling will increase speed, but there is no absolute guarantee that your files are copied correctly.
@@ -148,8 +151,6 @@
     .PARAMETER PreventStandby
         Valid range: 0 (deactivate), 1 (activate)
         If enabled, automatic standby or shutdown is prevented as long as media-copytool is running.
-    .PARAMETER ThreadCount
-        Thread-count for RSJobs (not ATM), Xcopy-instances and Robocopy's /MT-switch. Recommended: 6, Valid: 2-48.
 
     .INPUTS
         mc_parameters.json,
@@ -196,17 +197,18 @@ param(
     [string]$HistFilePath =         "",
     [int]$UseHistFile =             -1,
     [string]$WriteHistFile =        "",
-    [int]$InputSubfolderSearch =    -1,
     [int]$HistCompareHashes =       -1,
+    [int]$InputSubfolderSearch =    -1,
     [int]$CheckOutputDupli =        -1,
     [int]$VerifyCopies =            -1,
+    [int]$OverwriteExistingFiles =  -1,
     [int]$AvoidIdenticalFiles =     -1,
     [int]$ZipMirror =               -1,
     [int]$UnmountInputDrive =       -1,
-    [int]$PreventStandby =          -1,
-    [int]$ThreadCount =             -1
+    [int]$PreventStandby =          -1
 )
 # DEFINITION: Some relevant variables from the start:
+    [int]$ThreadCount = 4
     # Setting up the parameters for mc_parameters.json:
         if($LoadParamPresetName.Length -le 0){
             [string]$LoadParamPresetName = "default"
@@ -412,15 +414,15 @@ Function Get-Parameters(){
         $script:HistFilePath.Length -eq 0 -or
         $script:UseHistFile -eq -1 -or
         $script:WriteHistFile.Length -eq 0 -or
-        $script:InputSubfolderSearch -eq -1 -or
         $script:HistCompareHashes -eq -1 -or
+        $script:InputSubfolderSearch -eq -1 -or
         $script:CheckOutputDupli -eq -1 -or
         $script:VerifyCopies -eq -1 -or
+        $script:OverwriteExistingFiles -eq -1 -or
         $script:AvoidIdenticalFiles -eq -1 -or
         $script:ZipMirror -eq -1 -or
         $script:UnmountInputDrive -eq -1 -or
-        $script:PreventStandby -eq -1 -or
-        $script:ThreadCount -eq -1
+        $script:PreventStandby -eq -1
     ){
         if((Test-Path -LiteralPath $JSONPath -PathType Leaf) -eq $true){
             try{
@@ -477,17 +479,20 @@ Function Get-Parameters(){
                 if($script:WriteHistFile.Length -eq 0 -or $Renew -eq 1){
                     [string]$script:WriteHistFile = $jsonparams.WriteHistFile
                 }
-                if($script:InputSubfolderSearch -eq -1 -or $Renew -eq 1){
-                    [int]$script:InputSubfolderSearch = $jsonparams.InputSubfolderSearch
-                }
                 if($script:HistCompareHashes -eq -1 -or $Renew -eq 1){
                     [int]$script:HistCompareHashes = $jsonparams.HistCompareHashes
+                }
+                if($script:InputSubfolderSearch -eq -1 -or $Renew -eq 1){
+                    [int]$script:InputSubfolderSearch = $jsonparams.InputSubfolderSearch
                 }
                 if($script:CheckOutputDupli -eq -1 -or $Renew -eq 1){
                     [int]$script:CheckOutputDupli = $jsonparams.CheckOutputDupli
                 }
                 if($script:VerifyCopies -eq -1 -or $Renew -eq 1){
                     [int]$script:VerifyCopies = $jsonparams.VerifyCopies
+                }
+                if($script:OverwriteExistingFiles -eq -1 -or $Renew -eq 1){
+                    [int]$script:OverwriteExistingFiles = $jsonparams.OverwriteExistingFiles
                 }
                 if($script:AvoidIdenticalFiles -eq -1 -or $Renew -eq 1){
                     [int]$script:AvoidIdenticalFiles = $jsonparams.AvoidIdenticalFiles
@@ -500,9 +505,6 @@ Function Get-Parameters(){
                 }
                 if($script:PreventStandby -eq -1 -or $Renew -eq 1){
                     [int]$script:PreventStandby = $jsonparams.PreventStandby
-                }
-                if($script:ThreadCount -eq -1 -or $Renew -eq 1){
-                    [int]$script:ThreadCount = $jsonparams.ThreadCount
                 }
             }catch{
                 if($script:GUI_CLI_Direct -eq "direct"){
@@ -536,13 +538,14 @@ Function Get-Parameters(){
 Function Show-Parameters(){
     Write-ColorOut "flolilo's Media-Copytool's Parameters:`r`n" -ForegroundColor Green
     Write-ColorOut "-GUI_CLI_Direct`t`t=`t$script:GUI_CLI_Direct" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-JSONParamPath`t`t=`t$script:JSONParamPath" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-LoadParamPresetName`t=`t$script:LoadParamPresetName" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-SaveParamPresetName`t=`t$script:SaveParamPresetName" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-RememberInPath`t`t=`t$script:RememberInPath" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-RememberOutPath`t`t=`t$script:RememberOutPath" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-RememberMirrorPath`t`t=`t$script:RememberMirrorPath" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-RememberSettings`t`t=`t$script:RememberSettings" -ForegroundColor Cyan -Indentation 4
-    Write-ColorOut "-Debug`t`t=`t$script:Debug" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-Debug`t`t`t=`t$script:Debug" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "These values come from $script:JSONParamPath :" -ForegroundColor DarkCyan -Indentation 2
     Write-ColorOut "-InputPath`t`t`t=`t$script:InputPath" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-OutputPath`t`t`t=`t$script:OutputPath" -ForegroundColor Cyan -Indentation 4
@@ -553,17 +556,18 @@ Function Show-Parameters(){
     Write-ColorOut "-CustomFormats`t`t=`t$script:CustomFormats" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-OutputSubfolderStyle`t=`t$script:OutputSubfolderStyle" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-OutputFileStyle`t`t=`t$script:OutputFileStyle" -ForegroundColor Cyan -Indentation 4
-    Write-ColorOut "-HistFilePath`t=`t$script:HistFilePath" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-HistFilePath`t`t=`t$script:HistFilePath" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-UseHistFile`t`t=`t$script:UseHistFile" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-WriteHistFile`t`t=`t$script:WriteHistFile" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-HistCompareHashes`t`t=`t$script:HistCompareHashes" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-InputSubfolderSearch`t=`t$script:InputSubfolderSearch" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-CheckOutputDupli`t`t=`t$script:CheckOutputDupli" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-VerifyCopies`t`t=`t$script:VerifyCopies" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-OverwriteExistingFiles`t=`t$script:OverwriteExistingFiles" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-AvoidIdenticalFiles`t=`t$script:AvoidIdenticalFiles" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-ZipMirror`t`t`t=`t$script:ZipMirror" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-UnmountInputDrive`t`t=`t$script:UnmountInputDrive" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-PreventStandby`t`t=`t$script:PreventStandby" -ForegroundColor Cyan -Indentation 4
-    Write-ColorOut "-ThreadCount`t`t=`t$script:ThreadCount`r`n" -ForegroundColor Cyan -Indentation 4
 }
 
 # DEFINITION: "Select"-Window for buttons to choose a path.
@@ -778,20 +782,20 @@ Function Get-UserValues(){
                     continue
                 }
             }
-            # $InputSubfolderSearch
+            # $HistCompareHashes
             while($true){
-                [int]$script:InputSubfolderSearch = Read-Host "    Check input-path's subfolders? 1 = yes, 0 = no."
-                if($script:InputSubfolderSearch -in (0..1)){
+                [int]$script:HistCompareHashes = Read-Host "    Additionally compare all input-files via hashes? 1 = yes, 0 = no."
+                if($script:HistCompareHashes -in (0..1)){
                     break
                 }else{
                     Write-ColorOut "Invalid choice!" -ForegroundColor Magenta -Indentation 4
                     continue
                 }
             }
-            # $HistCompareHashes
+            # $InputSubfolderSearch
             while($true){
-                [int]$script:HistCompareHashes = Read-Host "    Additionally compare all input-files via hashes? 1 = yes, 0 = no."
-                if($script:HistCompareHashes -in (0..1)){
+                [int]$script:InputSubfolderSearch = Read-Host "    Check input-path's subfolders? 1 = yes, 0 = no."
+                if($script:InputSubfolderSearch -in (0..1)){
                     break
                 }else{
                     Write-ColorOut "Invalid choice!" -ForegroundColor Magenta -Indentation 4
@@ -812,6 +816,16 @@ Function Get-UserValues(){
             while($true){
                 [int]$script:VerifyCopies = Read-Host "    Enable verifying copied files afterwards for guaranteed successfully copied files? 1 = yes, 0 = no."
                 if($script:VerifyCopies -in (0..1)){
+                    break
+                }else{
+                    Write-ColorOut "Invalid choice!" -ForegroundColor Magenta -Indentation 4
+                    continue
+                }
+            }
+            # $OverwriteExistingFiles
+            while($true){
+                [int]$script:OverwriteExistingFiles = Read-Host "    Overwrite existing files? 1 = yes, 0 = no."
+                if($script:OverwriteExistingFiles -in (0..1)){
                     break
                 }else{
                     Write-ColorOut "Invalid choice!" -ForegroundColor Magenta -Indentation 4
@@ -854,16 +868,6 @@ Function Get-UserValues(){
             while($true){
                 [int]$script:PreventStandby = Read-Host "    Auto-prevent standby of computer while script is running? 1 = yes, 0 = no."
                 if($script:PreventStandby -in (0..1)){
-                    break
-                }else{
-                    Write-ColorOut "Invalid choice!" -ForegroundColor Magenta -Indentation 4
-                    continue
-                }
-            }
-            # $ThreadCount
-            while($true){
-                [int]$script:ThreadCount = Read-Host "    Number of threads for operations. Range: 2 - 48, suggestion: 6."
-                if($script:ThreadCount -in (2..48)){
                     break
                 }else{
                     Write-ColorOut "Invalid choice!" -ForegroundColor Magenta -Indentation 4
@@ -997,14 +1001,14 @@ Function Get-UserValues(){
                 elseif($script:WPFcomboBoxWriteHistFile.SelectedIndex -eq 1){"overwrite"}
                 elseif($script:WPFcomboBoxWriteHistFile.SelectedIndex -eq 2){"no"}
             )
-            # $InputSubfolderSearch
-            $script:InputSubfolderSearch = $(
-                if($script:WPFcheckBoxInSubSearch.IsChecked -eq $true){1}
-                else{0}
-            )
             # $HistCompareHashes
             $script:HistCompareHashes = $(
                 if($script:WPFcheckBoxCheckHashHist.IsChecked -eq $true){1}
+                else{0}
+            )
+            # $InputSubfolderSearch
+            $script:InputSubfolderSearch = $(
+                if($script:WPFcheckBoxInSubSearch.IsChecked -eq $true){1}
                 else{0}
             )
             # $CheckOutputDupli
@@ -1015,6 +1019,11 @@ Function Get-UserValues(){
             # $VerifyCopies
             $script:VerifyCopies = $(
                 if($script:WPFcheckBoxVerifyCopies.IsChecked -eq $true){1}
+                else{0}
+            )
+            # $OverwriteExistingFiles
+            $script:OverwriteExistingFiles = $(
+                if($script:WPFcheckBoxOverwriteExistingFiles.IsChecked -eq $true){1}
                 else{0}
             )
             # $AvoidIdenticalFiles
@@ -1037,8 +1046,6 @@ Function Get-UserValues(){
                 if($script:WPFcheckBoxPreventStandby.IsChecked -eq $true){1}
                 else{0}
             )
-            # $ThreadCount
-            $script:ThreadCount = $script:WPFtextBoxThreadCount.Text
             # $RememberInPath
             $script:RememberInPath = $(
                 if($script:WPFcheckBoxRememberIn.IsChecked -eq $true){1}
@@ -1105,14 +1112,14 @@ Function Get-UserValues(){
                 Write-ColorOut "Invalid choice of -WriteHistFile." -ForegroundColor Red -Indentation 4
                 return $false
             }
-            # InputSubfolderSearch
-            if($script:InputSubfolderSearch -notin (0..1)){
-                Write-ColorOut "Invalid choice of -InputSubfolderSearch." -ForegroundColor Red -Indentation 4
-                return $false
-            }
             # $HistCompareHashes
             if($script:HistCompareHashes -notin (0..1)){
                 Write-ColorOut "Invalid choice of -HistCompareHashes." -ForegroundColor Red -Indentation 4
+                return $false
+            }
+            # InputSubfolderSearch
+            if($script:InputSubfolderSearch -notin (0..1)){
+                Write-ColorOut "Invalid choice of -InputSubfolderSearch." -ForegroundColor Red -Indentation 4
                 return $false
             }
             # $CheckOutputDupli
@@ -1123,6 +1130,11 @@ Function Get-UserValues(){
             # $VerifyCopies
             if($script:VerifyCopies -notin (0..1)){
                 Write-ColorOut "Invalid choice of -VerifyCopies." -ForegroundColor Red -Indentation 4
+                return $false
+            }
+            # $OverwriteExistingFiles
+            if($script:OverwriteExistingFiles -notin (0..1)){
+                Write-ColorOut "Invalid choice of -OverwriteExistingFiles." -ForegroundColor Red -Indentation 4
                 return $false
             }
             # $AvoidIdenticalFiles
@@ -1143,11 +1155,6 @@ Function Get-UserValues(){
             # $PreventStandby
             if($script:PreventStandby -notin (0..1)){
                 Write-ColorOut "Invalid choice of -PreventStandby." -ForegroundColor Red -Indentation 4
-                return $false
-            }
-            # $ThreadCount
-            if($script:ThreadCount -notin (2..48)){
-                Write-ColorOut "Invalid choice of -ThreadCount." -ForegroundColor Red -Indentation 4
                 return $false
             }
             # $RememberInPath
@@ -1305,14 +1312,14 @@ Function Get-UserValues(){
             Write-ColorOut "HistFilePath:`t`t$script:HistFilePath" -Indentation 4
             Write-ColorOut "UseHistFile:`t`t$script:UseHistFile" -Indentation 4
             Write-ColorOut "WriteHistFile:`t`t$script:WriteHistFile" -Indentation 4
-            Write-ColorOut "InputSubfolderSearch:`t$script:InputSubfolderSearch" -Indentation 4
             Write-ColorOut "HistCompareHashes:`t`t$script:HistCompareHashes" -Indentation 4
+            Write-ColorOut "InputSubfolderSearch:`t$script:InputSubfolderSearch" -Indentation 4
             Write-ColorOut "CheckOutputDupli:`t`t$script:CheckOutputDupli" -Indentation 4
             Write-ColorOut "VerifyCopies:`t`t$script:VerifyCopies" -Indentation 4
+            Write-ColorOut "OverwriteExistingFiles:`t$script:OverwriteExistingFiles" -Indentation 4
             Write-ColorOut "ZipMirror:`t`t`t$script:ZipMirror" -Indentation 4
             Write-ColorOut "UnmountInputDrive:`t`t$script:UnmountInputDrive" -Indentation 4
             Write-ColorOut "PreventStandby:`t`t$script:PreventStandby" -Indentation 4
-            Write-ColorOut "ThreadCount:`t`t$script:ThreadCount" -Indentation 4
         }
 
     # If everything was sucessful, return true:
@@ -1342,15 +1349,15 @@ Function Set-Parameters(){
             HistFilePath = $script:HistFilePath
             UseHistFile = $script:UseHistFile
             WriteHistFile = $script:WriteHistFile
-            InputSubfolderSearch = $script:InputSubfolderSearch
             HistCompareHashes = $script:HistCompareHashes
+            InputSubfolderSearch = $script:InputSubfolderSearch
             CheckOutputDupli = $script:CheckOutputDupli
             VerifyCopies = $script:VerifyCopies
+            OverwriteExistingFiles = $script:OverwriteExistingFiles
             AvoidIdenticalFiles = $script:AvoidIdenticalFiles
             ZipMirror = $script:ZipMirror
             UnmountInputDrive = $script:UnmountInputDrive
             PreventStandby = $script:PreventStandby
-            ThreadCount = $script:ThreadCount
         }
     })
     if((Test-Path -LiteralPath $JSONPath -PathType Leaf) -eq $true){
@@ -1389,15 +1396,15 @@ Function Set-Parameters(){
                             $jsonparams.ParamPresetValues[$i].HistFilePath = $inter.ParamPresetValues.HistFilePath
                             $jsonparams.ParamPresetValues[$i].UseHistFile = $inter.ParamPresetValues.UseHistFile
                             $jsonparams.ParamPresetValues[$i].WriteHistFile = $inter.ParamPresetValues.WriteHistFile
-                            $jsonparams.ParamPresetValues[$i].InputSubfolderSearch = $inter.ParamPresetValues.InputSubfolderSearch
                             $jsonparams.ParamPresetValues[$i].HistCompareHashes = $inter.ParamPresetValues.HistCompareHashes
+                            $jsonparams.ParamPresetValues[$i].InputSubfolderSearch = $inter.ParamPresetValues.InputSubfolderSearch
                             $jsonparams.ParamPresetValues[$i].CheckOutputDupli = $inter.ParamPresetValues.CheckOutputDupli
                             $jsonparams.ParamPresetValues[$i].VerifyCopies = $inter.ParamPresetValues.VerifyCopies
+                            $jsonparams.ParamPresetValues[$i].OverwriteExistingFiles = $inter.ParamPresetValues.OverwriteExistingFiles
                             $jsonparams.ParamPresetValues[$i].AvoidIdenticalFiles = $inter.ParamPresetValues.AvoidIdenticalFiles
                             $jsonparams.ParamPresetValues[$i].ZipMirror = $inter.ParamPresetValues.ZipMirror
                             $jsonparams.ParamPresetValues[$i].UnmountInputDrive = $inter.ParamPresetValues.UnmountInputDrive
                             $jsonparams.ParamPresetValues[$i].PreventStandby = $inter.ParamPresetValues.PreventStandby
-                            $jsonparams.ParamPresetValues[$i].ThreadCount = $inter.ParamPresetValues.ThreadCount
                         }
                     }
                 }
@@ -1798,6 +1805,29 @@ Function Start-DupliCheckOut(){
     return $InFiles
 }
 
+# DEFINITION: Check for free space on the destination volume:
+Function Start-SpaceCheck(){
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]$OutPath,
+        [Parameter(Mandatory=$true)]
+        [array]$InFiles
+    )
+    Write-ColorOut "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")  --  Checking if free space is sufficient..." -ForegroundColor Cyan
+
+    [string]$OutPath = Split-Path -Path $OutPath -Qualifier
+    [int]$free = ((Get-PSDrive -PSProvider 'FileSystem' | Where-Object {$_.root -match $OutPath} | Select-Object -ExpandProperty Free) / 1MB)
+    [int]$needed = $(($InFiles | Measure-Object -Sum -Property Size | Select-Object -ExpandProperty Sum) / 1MB)
+    
+    if($needed -lt $free){
+        Write-ColorOut "Free: $free MB; Needed: $needed MB - Okay!" -ForegroundColor Green -Indentation 4
+        return $true
+    }else{
+        Write-ColorOut "Free: $free MB; Needed: $needed MB - Too big!" -ForegroundColor Red -Indentation 4
+        return $false
+    }
+}
+
 # DEFINITION: Cleaning away all files that will not get copied. ALSO checks for Identical files:
 Function Start-InputGetHash(){
     param(
@@ -1849,7 +1879,12 @@ Function Start-OverwriteProtection(){
         [Parameter(Mandatory=$true)]
         [string]$OutPath
     )
-    Write-ColorOut "$(Get-Date -Format "dd.MM.yy HH:mm:ss")  --  Prevent overwriting existing files in $OutPath..." -ForegroundColor Cyan
+    Write-ColorOut "$(Get-Date -Format "dd.MM.yy HH:mm:ss")  --  Prevent overwriting " -ForegroundColor Cyan -NoNewLine
+    if($script:OverwriteExistingFiles -eq 0){
+        Write-ColorOut "both freshly copied and existing files..." -ForegroundColor Cyan
+    }else{
+        Write-ColorOut "only freshly copied files..." -ForegroundColor Cyan
+    }
 
     [array]$allpaths = @()
 
@@ -1870,10 +1905,22 @@ Function Start-OverwriteProtection(){
         [int]$k = 1
         while($true){
             [string]$check = "$($InFiles[$i].outpath)\$($InFiles[$i].outname)"
-            if($check -notin $allpaths -and (Test-Path -LiteralPath $check -PathType Leaf) -eq $false){
-                $allpaths += $check
-                break
-            }elseif($check -in $allpaths){
+            if($check -notin $allpaths){
+                if((Test-Path -LiteralPath $check -PathType Leaf) -eq $false -or $script:OverwriteExistingFiles -eq 1){
+                    $allpaths += $check
+                    break
+                }else{
+                    if($k -eq 1){
+                        $InFiles[$i].outbasename = "$($InFiles[$i].outbasename)_OutCopy$k"
+                    }else{
+                        $InFiles[$i].outbasename = $InFiles[$i].outbasename -replace "_OutCopy$($k - 1)","_OutCopy$k"
+                    }
+                    $InFiles[$i].outname = "$($InFiles[$i].outbasename)$($InFiles[$i].extension)"
+                    $k++
+                    # if($script:Debug -ne 0){Write-ColorOut $InFiles[$i].outbasename}
+                    continue
+                }
+            }else{
                 if($j -eq 1){
                     $InFiles[$i].outbasename = "$($InFiles[$i].outbasename)_InCopy$j"
                 }else{
@@ -1881,16 +1928,6 @@ Function Start-OverwriteProtection(){
                 }
                 $InFiles[$i].outname = "$($InFiles[$i].outbasename)$($InFiles[$i].extension)"
                 $j++
-                # if($script:Debug -ne 0){Write-ColorOut $InFiles[$i].outbasename}
-                continue
-            }elseif((Test-Path -LiteralPath $check -PathType Leaf) -eq $true){
-                if($k -eq 1){
-                    $InFiles[$i].outbasename = "$($InFiles[$i].outbasename)_OutCopy$k"
-                }else{
-                    $InFiles[$i].outbasename = $InFiles[$i].outbasename -replace "_OutCopy$($k - 1)","_OutCopy$k"
-                }
-                $InFiles[$i].outname = "$($InFiles[$i].outbasename)$($InFiles[$i].extension)"
-                $k++
                 # if($script:Debug -ne 0){Write-ColorOut $InFiles[$i].outbasename}
                 continue
             }
@@ -1946,7 +1983,7 @@ Function Start-FileCopy(){
     [string]$rc_inter_files = ""
     # setting up xcopy:
     [array]$xc_command = @()
-    [string]$xc_suffix = " /Q /J /-Y"
+    [string]$xc_suffix = " /Q /J /Y"
 
     for($i=0; $i -lt $InFiles.length; $i++){
         if($InFiles[$i].tocopy -eq 1){
@@ -2212,7 +2249,7 @@ Function Start-Everything(){
 
     while($true){
         # DEFINITION: Get User-Values:
-        if((Get-UserValues) -eq $false){
+        if((Get-UserValues) -eq $false -and $script:ShowParams -eq 0){
             Start-Sound 0
             Start-Sleep -Seconds 2
             if($script:GUI_CLI_Direct -eq "GUI"){
@@ -2221,6 +2258,13 @@ Function Start-Everything(){
             break
         }
         Invoke-Pause
+
+        # DEFINITION: Show parameters, then close:
+        if($script:ShowParams -ne 0){
+            Show-Parameters
+            Pause
+            Invoke-Close
+        }
 
         # DEFINITION: If enabled: remember parameters:
         if($script:RememberInPath -ne 0 -or $script:RememberOutPath -ne 0 -or $script:RememberMirrorPath -ne 0 -or $script:RememberSettings -ne 0){
@@ -2292,6 +2336,17 @@ Function Start-Everything(){
             Invoke-Pause
         }
 
+        # DEFINITION: Get free space:
+        if((Start-SpaceCheck -InFiles $inputfiles -OutPath $script:OutputPath) -eq $false){
+            Start-Sound 0
+            Start-Sleep -Seconds 2
+            if($script:GUI_CLI_Direct -eq "GUI"){
+                Start-GUI -GUIPath "$($PSScriptRoot)/mc_GUI.xaml"
+            }
+            break
+        }
+        Invoke-Pause
+
         # DEFINITION: Get hashes of all remaining input-files:
         [array]$inputfiles = (Start-InputGetHash -InFiles $inputfiles)
         Invoke-Pause
@@ -2338,6 +2393,16 @@ Function Start-Everything(){
             Invoke-Pause
         }
         if($script:MirrorEnable -eq 1){
+            # DEFINITION: Get free space:
+            if((Start-SpaceCheck -InFiles $inputfiles -OutPath $script:MirrorPath) -eq $false){
+                Start-Sound 0
+                Start-Sleep -Seconds 2
+                if($script:GUI_CLI_Direct -eq "GUI"){
+                    Start-GUI -GUIPath "$($PSScriptRoot)/mc_GUI.xaml"
+                }
+                break
+            }
+            Invoke-Pause
             for($i=0; $i -lt $inputfiles.length; $i++){
                 if($inputfiles[$i].tocopy -eq 1){
                     $inputfiles[$i].tocopy = 0
@@ -2524,15 +2589,15 @@ Function Start-GUI(){
         elseif("Overwrite" -eq $script:WriteHistFile){1}
         elseif("no" -eq $script:WriteHistFile){2}
     )
-    $script:WPFcheckBoxInSubSearch.IsChecked = $script:InputSubfolderSearch
     $script:WPFcheckBoxCheckHashHist.IsChecked = $script:HistCompareHashes
+    $script:WPFcheckBoxInSubSearch.IsChecked = $script:InputSubfolderSearch
     $script:WPFcheckBoxOutputDupli.IsChecked = $script:CheckOutputDupli
     $script:WPFcheckBoxVerifyCopies.IsChecked = $script:VerifyCopies
+    $script:WPFcheckBoxOverwriteExistingFiles.IsChecked = $script:OverwriteExistingFiles
     $script:WPFcheckBoxAvoidIdenticalFiles.IsChecked = $script:AvoidIdenticalFiles
     $script:WPFcheckBoxZipMirror.IsChecked = $script:ZipMirror
     $script:WPFcheckBoxUnmountInputDrive.IsChecked = $script:UnmountInputDrive
     $script:WPFcheckBoxPreventStandby.IsChecked = $script:PreventStandby
-    $script:WPFtextBoxThreadCount.Text = $script:ThreadCount
     $script:WPFcheckBoxRememberIn.IsChecked = $script:RememberInPath
     $script:WPFcheckBoxRememberOut.IsChecked = $script:RememberOutPath
     $script:WPFcheckBoxRememberMirror.IsChecked = $script:RememberMirrorPath
@@ -2588,16 +2653,9 @@ Function Start-GUI(){
     $script:Form.ShowDialog() | Out-Null
 }
 
-# DEFINITION: Show parameters, then close:
-if($script:ShowParams -ne 0){
-    Show-Parameters
-    Pause
-    Exit
-}
-
 # DEFINITION: Banner:
     Write-ColorOut "`r`n                            flolilo's Media-Copytool                            " -ForegroundColor DarkCyan -BackgroundColor Gray
-    Write-ColorOut "                           v0.8.3 (Beta) - 2017-11-27           " -ForegroundColor DarkMagenta -BackgroundColor DarkGray -NoNewLine
+    Write-ColorOut "                           v0.8.4 (Beta) - 2017-11-29           " -ForegroundColor DarkMagenta -BackgroundColor DarkGray -NoNewLine
     Write-ColorOut "(PID = $("{0:D8}" -f $pid))`r`n" -ForegroundColor Gray -BackgroundColor DarkGray
 
 # DEFINITION: Start-up:
