@@ -11,7 +11,6 @@
 - Im Taksmanager nachsehen: Limitieren die CPU / das Laufwerk? Falls es das Laufwerk ist: schnelleres kaufen. ;-)
     - Wenn es die CPU ist (und sie neuer ist als ein [8086](https://de.wikipedia.org/wiki/8086)) bitte ich um Kontaktaufnahme mit Informationen zu den kopierten Daeien und wann genau der Vorgang anfing langsam zu werden.
 - Große History-Dateien verlangsamen den Duplikats-Check erheblich. Man kann diese History-Datei manuell (oder via Skript) löschen / überschreiben, sobald die Speicherkarte formatiert wurde und somit keine Gefahr mehr besteht, alte Dateien mitzukopieren.
-- `-ThreadCount 2` oder `-ThreadCount 24` versuchen - gerade bei langsamen Laufwerken kann das helfen.
 
 #### Falls das Skript mit komischen Fehlern aufwartet:
 - Bitte so viele Dinge wie möglich notieren: Parameters, Pfade und wann genau die Fehler auftauchten. Bitte auch die Fehlermeldung kopieren (wird immer in English angezeigt, damit sie im Internet leichter auffindbar ist). Ticket öffnen und/oder mich kontaktieren!
