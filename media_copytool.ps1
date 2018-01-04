@@ -7,9 +7,9 @@
         Uses Windows' Robocopy and Xcopy for file-copy, then uses PowerShell's Get-FileHash (SHA1) for verifying that files were copied without errors.
         Now supports multithreading via Boe Prox's PoshRSJob-cmdlet (https://github.com/proxb/PoshRSJob)
     .NOTES
-        Version:        0.8.4 (Beta)
+        Version:        0.8.5 (Beta)
         Author:         flolilo
-        Creation Date:  2017-11-29
+        Creation Date:  2018-01-04
         Legal stuff: This program is free software. It comes without any warranty, to the extent permitted by
         applicable law. Most of the script was written by myself (or heavily modified by me when searching for solutions
         on the WWW). However, some parts are copies or modifications of very genuine code - see
@@ -1702,71 +1702,30 @@ Function Start-DupliCheckOut(){
         $files_duplicheck = $files_duplicheck | Where-Object {$_.Hash -ne $null}
         Write-Progress -Id 1 -Activity "Determine files in output that need to be checked..." -Status "Done!" -PercentComplete 100
 
-        $properties += "Hash"
-        for($i = 0; $i -lt $InFiles.Length; $i++){
-            if($sw.Elapsed.TotalMilliseconds -ge 750 -or $i -eq 0){
-                Write-Progress -Id 2 -Activity "Comparing input-files with files in output..." -PercentComplete $($i * 100 / $($InFiles.Length)) -Status "File # $($i + 1) / $($InFiles.Length)"
-                $sw.Reset()
-                $sw.Start()
-            }
-            if(@(Compare-Object -ReferenceObject $InFiles[$i] -DifferenceObject $files_duplicheck -Property $properties -ExcludeDifferent -IncludeEqual -ErrorAction Stop).count -gt 0){
-                $InFiles[$i].ToCopy = 0
-                $dupliindex_out++
-                # $files_duplicheck[$j].InName = $InFiles[$i].InName
-            }
-        }
-        Write-Progress -Id 1 -Activity "Determine files in output that need to be checked..." -Status "Done!" -Completed
-        Write-Progress -Id 2 -Activity "Comparing input-files with files in output..." -Status "Done!" -Completed
-
-        [array]$inter = @($InFiles | Where-Object {$_.ToCopy -eq 0})
-        for($i=0; $i -lt $inter.Length; $i++){
-            [int]$j = $files_duplicheck.Length
-            while($true){
-                # calculate hash only if date and size are the same:
-                if($inter[$i].date -eq $files_duplicheck[$j].date -and $inter[$i].size -eq $files_duplicheck[$j].size -and $inter[$i].Hash -eq $files_duplicheck[$j].Hash){
-                        $files_duplicheck[$j].InName = $inter[$i].InName
-                        break
-                }else{
-                    if($j -le 0){
-                        break
-                    }
-                    $j--
-                }
-            }
-        }
-
-        <# DEFINITION: old code
+        if($files_duplicheck.Count -gt 0){
+            $properties += "Hash"
             for($i = 0; $i -lt $InFiles.Length; $i++){
                 if($sw.Elapsed.TotalMilliseconds -ge 750 -or $i -eq 0){
-                    Write-Progress -Activity "Comparing to files in out-path..." -PercentComplete $($i / $($InFiles.Length - $dupliindex_hist.Length) * 100) -Status "File # $($i + 1) / $($InFiles.Length) - $($InFiles[$i].name)"
+                    Write-Progress -Id 2 -Activity "Comparing input-files with files in output..." -PercentComplete $($i * 100 / $($InFiles.Length)) -Status "File # $($i + 1) / $($InFiles.Length)"
                     $sw.Reset()
                     $sw.Start()
                 }
+                if(@(Compare-Object -ReferenceObject $InFiles[$i] -DifferenceObject $files_duplicheck -Property $properties -ExcludeDifferent -IncludeEqual -ErrorAction Stop).count -gt 0){
+                    $InFiles[$i].ToCopy = 0
+                    $dupliindex_out++
+                    # $files_duplicheck[$j].InName = $InFiles[$i].InName
+                }
+            }
+            Write-Progress -Id 2 -Activity "Comparing input-files with files in output..." -Status "Done!" -Completed
 
-                $j = $files_duplicheck.Length
+            [array]$inter = @($InFiles | Where-Object {$_.ToCopy -eq 0})
+            for($i=0; $i -lt $inter.Length; $i++){
+                [int]$j = $files_duplicheck.Length
                 while($true){
                     # calculate hash only if date and size are the same:
-                    if($($InFiles[$i].date) -eq $($files_duplicheck[$j].date) -and $($InFiles[$i].size) -eq $($files_duplicheck[$j].size)){
-                        try{
-                            $files_duplicheck[$j].Hash = (Get-FileHash -LiteralPath $files_duplicheck[$j].FullName -Algorithm SHA1 -ErrorAction Stop | Select-Object -ExpandProperty Hash)
-                        }catch{
-                            Write-ColorOut "Getting hash of $($files_duplicheck[$j].FullName) failed." -ForegroundColor Red -Indentation 4
-                            if($j -le 0){
-                                break
-                            }
-                            $j--
-                        }
-                        if($InFiles[$i].Hash -eq $files_duplicheck[$j].Hash){
-                            $dupliindex_out++
-                            $InFiles[$i].ToCopy = 0
-                            $files_duplicheck[$j].InName = $InFiles[$i].InName
+                    if($inter[$i].date -eq $files_duplicheck[$j].date -and $inter[$i].size -eq $files_duplicheck[$j].size -and $inter[$i].Hash -eq $files_duplicheck[$j].Hash){
+                            $files_duplicheck[$j].InName = $inter[$i].InName
                             break
-                        }else{
-                            if($j -le 0){
-                                break
-                            }
-                            $j--
-                        }
                     }else{
                         if($j -le 0){
                             break
@@ -1775,31 +1734,75 @@ Function Start-DupliCheckOut(){
                     }
                 }
             }
-            Write-Progress -Activity "Comparing to files in out-path..." -Status "Done!" -Completed
-            $sw.Reset()
-        #>
 
-        if($script:Debug -gt 1){
-            if((Read-Host "    Show all files? `"1`" for `"yes`"") -eq 1){
-                Write-ColorOut "`r`n`tFiles to skip / process:" -ForegroundColor Yellow
-                for($i=0; $i -lt $InFiles.Length; $i++){
-                    if($InFiles[$i].ToCopy -eq 1){
-                        Write-ColorOut "Copy $($InFiles[$i].FullName.Replace($InPath,"."))" -ForegroundColor Gray -Indentation 4
-                    }else{
-                        Write-ColorOut "Omit $($InFiles[$i].FullName.Replace($InPath,"."))" -ForegroundColor DarkGreen -Indentation 4
+            <# DEFINITION: old code
+                for($i = 0; $i -lt $InFiles.Length; $i++){
+                    if($sw.Elapsed.TotalMilliseconds -ge 750 -or $i -eq 0){
+                        Write-Progress -Activity "Comparing to files in out-path..." -PercentComplete $($i / $($InFiles.Length - $dupliindex_hist.Length) * 100) -Status "File # $($i + 1) / $($InFiles.Length) - $($InFiles[$i].name)"
+                        $sw.Reset()
+                        $sw.Start()
+                    }
+
+                    $j = $files_duplicheck.Length
+                    while($true){
+                        # calculate hash only if date and size are the same:
+                        if($($InFiles[$i].date) -eq $($files_duplicheck[$j].date) -and $($InFiles[$i].size) -eq $($files_duplicheck[$j].size)){
+                            try{
+                                $files_duplicheck[$j].Hash = (Get-FileHash -LiteralPath $files_duplicheck[$j].FullName -Algorithm SHA1 -ErrorAction Stop | Select-Object -ExpandProperty Hash)
+                            }catch{
+                                Write-ColorOut "Getting hash of $($files_duplicheck[$j].FullName) failed." -ForegroundColor Red -Indentation 4
+                                if($j -le 0){
+                                    break
+                                }
+                                $j--
+                            }
+                            if($InFiles[$i].Hash -eq $files_duplicheck[$j].Hash){
+                                $dupliindex_out++
+                                $InFiles[$i].ToCopy = 0
+                                $files_duplicheck[$j].InName = $InFiles[$i].InName
+                                break
+                            }else{
+                                if($j -le 0){
+                                    break
+                                }
+                                $j--
+                            }
+                        }else{
+                            if($j -le 0){
+                                break
+                            }
+                            $j--
+                        }
+                    }
+                }
+                Write-Progress -Activity "Comparing to files in out-path..." -Status "Done!" -Completed
+                $sw.Reset()
+            #>
+
+            if($script:Debug -gt 1){
+                if((Read-Host "    Show all files? `"1`" for `"yes`"") -eq 1){
+                    Write-ColorOut "`r`n`tFiles to skip / process:" -ForegroundColor Yellow
+                    for($i=0; $i -lt $InFiles.Length; $i++){
+                        if($InFiles[$i].ToCopy -eq 1){
+                            Write-ColorOut "Copy $($InFiles[$i].FullName.Replace($InPath,"."))" -ForegroundColor Gray -Indentation 4
+                        }else{
+                            Write-ColorOut "Omit $($InFiles[$i].FullName.Replace($InPath,"."))" -ForegroundColor DarkGreen -Indentation 4
+                        }
                     }
                 }
             }
-        }
-        Write-ColorOut "Files to skip (outpath):`t$dupliindex_out" -ForegroundColor DarkGreen -Indentation 4
+            Write-ColorOut "Files to skip (outpath):`t$dupliindex_out" -ForegroundColor DarkGreen -Indentation 4
 
-        [array]$InFiles = @($InFiles | Where-Object {$_.ToCopy -eq 1})
+            [array]$InFiles = @($InFiles | Where-Object {$_.ToCopy -eq 1})
+        }else{
+            Write-ColorOut "No potential dupli-files in $OutPath - skipping additional verification." -ForegroundColor Gray -Indentation 4
+        }
+
+        [array]$script:dupliout = $files_duplicheck
+        $script:resultvalues.dupliout = $dupliindex_out
     }else{
         Write-ColorOut "No files in $OutPath - skipping additional verification." -ForegroundColor Magenta -Indentation 4
     }
-
-    [array]$script:dupliout = $files_duplicheck
-    $script:resultvalues.dupliout = $dupliindex_out
 
     $sw.Reset()
     return $InFiles
@@ -2655,7 +2658,7 @@ Function Start-GUI(){
 
 # DEFINITION: Banner:
     Write-ColorOut "`r`n                            flolilo's Media-Copytool                            " -ForegroundColor DarkCyan -BackgroundColor Gray
-    Write-ColorOut "                           v0.8.4 (Beta) - 2017-11-29           " -ForegroundColor DarkMagenta -BackgroundColor DarkGray -NoNewLine
+    Write-ColorOut "                           v0.8.5 (Beta) - 2018-01-04           " -ForegroundColor DarkMagenta -BackgroundColor DarkGray -NoNewLine
     Write-ColorOut "(PID = $("{0:D8}" -f $pid))`r`n" -ForegroundColor Gray -BackgroundColor DarkGray
 
 # DEFINITION: Start-up:
