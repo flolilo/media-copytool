@@ -2354,6 +2354,7 @@ Function Start-Everything(){
         [array]$inputfiles = (Start-InputGetHash -InFiles $inputfiles)
         Invoke-Pause
 
+        # DEFINITION: Copy stuff and check it:
         $j = 0
         while(1 -in $inputfiles.tocopy){
             if($j -gt 0){
@@ -2379,6 +2380,7 @@ Function Start-Everything(){
                 foreach($instance in $inputfiles.tocopy){$instance = 0}
             }
         }
+        # DEFINITION: Unmount input-drive:
         if($script:UnmountInputDrive -eq 1){
             # CREDIT: https://serverfault.com/a/580298
             # TODO: Find a solution that works with all drives.
