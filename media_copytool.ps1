@@ -7,9 +7,9 @@
         Uses Windows' Robocopy and Xcopy for file-copy, then uses PowerShell's Get-FileHash (SHA1) for verifying that files were copied without errors.
         Now supports multithreading via Boe Prox's PoshRSJob-cmdlet (https://github.com/proxb/PoshRSJob)
     .NOTES
-        Version:        0.8.6 (Beta)
+        Version:        0.8.7 (Beta)
         Author:         flolilo
-        Creation Date:  2018-02-04
+        Creation Date:  2018-02-17
         Legal stuff: This program is free software. It comes without any warranty, to the extent permitted by
         applicable law. Most of the script was written by myself (or heavily modified by me when searching for solutions
         on the WWW). However, some parts are copies or modifications of very genuine code - see
@@ -386,6 +386,10 @@ Function Start-Sound(){
     }
 }
 
+# DEFINITION: Getting date and time in pre-formatted string:
+Function Get-CurrentDate(){
+    return $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
+}
 
 # ==================================================================================================
 # ==============================================================================
@@ -401,7 +405,7 @@ Function Get-Parameters(){
         [Parameter(Mandatory=$true)]
         [int]$Renew
     )
-    Write-ColorOut "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")  --  Getting parameter-values..." -ForegroundColor Cyan
+    Write-ColorOut "$(Get-CurrentDate)  --  Getting parameter-values..." -ForegroundColor Cyan
 
     if( $Renew -eq 1 -or
         $script:InputPath.Length -eq 0 -or
@@ -615,7 +619,7 @@ Function Get-Folder(){
 
 # DEFINITION: Get values from GUI, then check the main input- and outputfolder:
 Function Get-UserValues(){
-    Write-ColorOut "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")  --  Getting user-values..." -ForegroundColor Cyan
+    Write-ColorOut "$(Get-CurrentDate)  --  Getting user-values..." -ForegroundColor Cyan
 
     # DEFINITION: Get values, test paths:
         if($script:GUI_CLI_Direct -eq "CLI"){
@@ -1332,7 +1336,7 @@ Function Set-Parameters(){
         [Parameter(Mandatory=$true)]
         [string]$JSONPath
     )
-    Write-ColorOut "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")  --  Remembering parameters as preset `"$script:SaveParamPresetName`"..." -ForegroundColor Cyan
+    Write-ColorOut "$(Get-CurrentDate)  --  Remembering parameters as preset `"$script:SaveParamPresetName`"..." -ForegroundColor Cyan
 
     [array]$inter = @([PSCustomObject]@{
         ParamPresetName = $script:SaveParamPresetName
@@ -1447,7 +1451,7 @@ Function Start-FileSearch(){
         [string]$InPath
     )
     $sw = [diagnostics.stopwatch]::StartNew()
-    Write-ColorOut "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")  --  Finding files." -ForegroundColor Cyan
+    Write-ColorOut "$(Get-CurrentDate)  --  Finding files." -ForegroundColor Cyan
 
     # pre-defining variables:
     [array]$InFiles = @()
@@ -1529,7 +1533,7 @@ Function Get-HistFile(){
         [Parameter(Mandatory=$true)]
         [string]$HistFilePath
     )
-    Write-ColorOut "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")  --  Checking for history-file, importing values..." -ForegroundColor Cyan
+    Write-ColorOut "$(Get-CurrentDate)  --  Checking for history-file, importing values..." -ForegroundColor Cyan
 
     [array]$files_history = @()
     if(Test-Path -LiteralPath $HistFilePath -PathType Leaf){
@@ -1597,7 +1601,7 @@ Function Start-DupliCheckHist(){
         [array]$HistFiles
     )
     $sw = [diagnostics.stopwatch]::StartNew()
-    Write-ColorOut "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")  --  Checking for duplicates via history-file." -ForegroundColor Cyan
+    Write-ColorOut "$(Get-CurrentDate)  --  Checking for duplicates via history-file." -ForegroundColor Cyan
 
     $properties = @("InName","Date","Size")
     if($script:HistCompareHashes -eq 1){
@@ -1648,7 +1652,7 @@ Function Start-DupliCheckOut(){
         [string]$OutPath
     )
     $sw = [diagnostics.stopwatch]::StartNew()
-    Write-ColorOut "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")  --  Checking for duplicates in OutPath." -ForegroundColor Cyan
+    Write-ColorOut "$(Get-CurrentDate)  --  Checking for duplicates in OutPath." -ForegroundColor Cyan
 
     # pre-defining variables:
     [array]$files_duplicheck = @()
@@ -1816,7 +1820,7 @@ Function Start-SpaceCheck(){
         [Parameter(Mandatory=$true)]
         [array]$InFiles
     )
-    Write-ColorOut "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")  --  Checking if free space is sufficient..." -ForegroundColor Cyan
+    Write-ColorOut "$(Get-CurrentDate)  --  Checking if free space is sufficient..." -ForegroundColor Cyan
 
     [string]$OutPath = Split-Path -Path $OutPath -Qualifier
     [int]$free = ((Get-PSDrive -PSProvider 'FileSystem' | Where-Object {$_.root -match $OutPath} | Select-Object -ExpandProperty Free) / 1MB)
@@ -1837,7 +1841,7 @@ Function Start-InputGetHash(){
         [Parameter(Mandatory=$true)]
         [array]$InFiles
     )
-    Write-ColorOut "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")  --  Calculate remaining hashes" -ForegroundColor Cyan -NoNewLine
+    Write-ColorOut "$(Get-CurrentDate)  --  Calculate remaining hashes" -ForegroundColor Cyan -NoNewLine
     if($script:AvoidIdenticalFiles -eq 1){
         Write-ColorOut " (& avoid identical input-files)." -ForegroundColor Cyan
     }else{
@@ -2197,7 +2201,7 @@ Function Set-HistFile(){
         [Parameter(Mandatory=$true)]
         [string]$HistFilePath
     )
-    Write-ColorOut "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")  --  Write attributes of successfully copied files to history-file..." -ForegroundColor Cyan
+    Write-ColorOut "$(Get-CurrentDate)  --  Write attributes of successfully copied files to history-file..." -ForegroundColor Cyan
 
     [array]$results = @($InFiles | Where-Object {$_.ToCopy -eq 0} | Select-Object -Property InName,Date,Size,Hash)
 
@@ -2243,7 +2247,7 @@ Function Set-HistFile(){
 
 # DEFINITION: Starts all the things.
 Function Start-Everything(){
-    Write-ColorOut "`r`n$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")  --  Starting everything..." -NoNewLine -ForegroundColor Cyan -BackgroundColor DarkGray
+    Write-ColorOut "`r`n$(Get-CurrentDate)  --  Starting everything..." -NoNewLine -ForegroundColor Cyan -BackgroundColor DarkGray
     Write-ColorOut "A                               A" -ForegroundColor DarkGray -BackgroundColor DarkGray
 
     if($script:Debug -gt 0){
@@ -2448,7 +2452,7 @@ Function Start-Everything(){
         break
     }
 
-    Write-ColorOut "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")  --  Done!" -ForegroundColor Cyan
+    Write-ColorOut "$(Get-CurrentDate)  --  Done!" -ForegroundColor Cyan
     Write-ColorOut "`r`nStats:" -ForegroundColor DarkCyan -Indentation 4
     Write-ColorOut "Found:`t$($script:resultvalues.ingoing)`tfiles." -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "Skipped:`t$($script:resultvalues.duplihist)`t(history) +`r`n`t`t$($script:resultvalues.dupliout)`t(out-path) +`r`n`t`t$($script:resultvalues.IdenticalFiles)`t(identical) files." -ForegroundColor DarkGreen -Indentation 4
@@ -2660,7 +2664,7 @@ Function Start-GUI(){
 
 # DEFINITION: Banner:
     Write-ColorOut "`r`n                            flolilo's Media-Copytool                            " -ForegroundColor DarkCyan -BackgroundColor Gray
-    Write-ColorOut "                           v0.8.6 (Beta) - 2018-02-04           " -ForegroundColor DarkMagenta -BackgroundColor DarkGray -NoNewLine
+    Write-ColorOut "                           v0.8.7 (Beta) - 2018-02-17           " -ForegroundColor DarkMagenta -BackgroundColor DarkGray -NoNewLine
     Write-ColorOut "(PID = $("{0:D8}" -f $pid))`r`n" -ForegroundColor Gray -BackgroundColor DarkGray
 
 # DEFINITION: Start-up:
