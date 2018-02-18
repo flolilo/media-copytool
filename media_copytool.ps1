@@ -7,9 +7,9 @@
         Uses Windows' Robocopy and Xcopy for file-copy, then uses PowerShell's Get-FileHash (SHA1) for verifying that files were copied without errors.
         Now supports multithreading via Boe Prox's PoshRSJob-cmdlet (https://github.com/proxb/PoshRSJob)
     .NOTES
-        Version:        0.8.7 (Beta)
+        Version:        0.8.8 (Beta)
         Author:         flolilo
-        Creation Date:  2018-02-17
+        Creation Date:  2018-02-18
         Legal stuff: This program is free software. It comes without any warranty, to the extent permitted by
         applicable law. Most of the script was written by myself (or heavily modified by me when searching for solutions
         on the WWW). However, some parts are copies or modifications of very genuine code - see
@@ -1656,7 +1656,6 @@ Function Start-DupliCheckOut(){
 
     # pre-defining variables:
     [array]$files_duplicheck = @()
-
     [int]$dupliindex_out = 0
 
     [int]$counter = 1
@@ -1691,7 +1690,6 @@ Function Start-DupliCheckOut(){
 
     $sw.Start()
     if($files_duplicheck.Length -gt 0){
-        # DEFINITION: New implementation:
         $properties = @("Date","Size")
         for($i=0; $i -lt $files_duplicheck.Length; $i++){
             if($sw.Elapsed.TotalMilliseconds -ge 750 -or $i -eq 0){
@@ -1739,50 +1737,6 @@ Function Start-DupliCheckOut(){
                 }
             }
 
-            <# DEFINITION: old code
-                for($i = 0; $i -lt $InFiles.Length; $i++){
-                    if($sw.Elapsed.TotalMilliseconds -ge 750 -or $i -eq 0){
-                        Write-Progress -Activity "Comparing to files in out-path..." -PercentComplete $($i / $($InFiles.Length - $dupliindex_hist.Length) * 100) -Status "File # $($i + 1) / $($InFiles.Length) - $($InFiles[$i].name)"
-                        $sw.Reset()
-                        $sw.Start()
-                    }
-
-                    $j = $files_duplicheck.Length
-                    while($true){
-                        # calculate hash only if date and size are the same:
-                        if($($InFiles[$i].date) -eq $($files_duplicheck[$j].date) -and $($InFiles[$i].size) -eq $($files_duplicheck[$j].size)){
-                            try{
-                                $files_duplicheck[$j].Hash = (Get-FileHash -LiteralPath $files_duplicheck[$j].FullName -Algorithm SHA1 -ErrorAction Stop | Select-Object -ExpandProperty Hash)
-                            }catch{
-                                Write-ColorOut "Getting hash of $($files_duplicheck[$j].FullName) failed." -ForegroundColor Red -Indentation 4
-                                if($j -le 0){
-                                    break
-                                }
-                                $j--
-                            }
-                            if($InFiles[$i].Hash -eq $files_duplicheck[$j].Hash){
-                                $dupliindex_out++
-                                $InFiles[$i].ToCopy = 0
-                                $files_duplicheck[$j].InName = $InFiles[$i].InName
-                                break
-                            }else{
-                                if($j -le 0){
-                                    break
-                                }
-                                $j--
-                            }
-                        }else{
-                            if($j -le 0){
-                                break
-                            }
-                            $j--
-                        }
-                    }
-                }
-                Write-Progress -Activity "Comparing to files in out-path..." -Status "Done!" -Completed
-                $sw.Reset()
-            #>
-
             if($script:Debug -gt 1){
                 if((Read-Host "    Show all files? `"1`" for `"yes`"") -eq 1){
                     Write-ColorOut "`r`n`tFiles to skip / process:" -ForegroundColor Yellow
@@ -1812,6 +1766,55 @@ Function Start-DupliCheckOut(){
     return $InFiles
 }
 
+# DEFINITION: Calculate hash (if not yet done):
+Function Start-InputGetHash(){
+    param(
+        [Parameter(Mandatory=$true)]
+        [array]$InFiles
+    )
+    Write-ColorOut "$(Get-CurrentDate)  --  Calculate remaining hashes" -ForegroundColor Cyan
+
+    if($script:VerifyCopies -eq 1 -and "ZYX" -in $InFiles.Hash){
+        $InFiles | Where-Object {$_.Hash -eq "ZYX"} | Start-RSJob -Name "GetHashRest" -FunctionsToLoad Write-ColorOut -ScriptBlock {
+            try{
+                $_.Hash = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA1 -ErrorAction Stop | Select-Object -ExpandProperty Hash)
+            }catch{
+                Write-ColorOut "Failed to get hash of `"$($_.FullName)`"" -ForegroundColor Red -Indentation 4
+                $_.Hash = "GetHashRestWRONG"
+            }
+        } | Wait-RSJob -ShowProgress | Receive-RSJob
+        Get-RSJob -Name "GetHashRest" | Remove-RSJob
+    }else{
+        Write-ColorOut "No more hashes to get!" -ForegroundColor DarkGreen -Indentation 4
+    }
+
+    return $InFiles
+}
+
+# DEFINITION: Avoid copying identical files from the input-path:
+Function Start-PreventingDoubleCopies(){
+    param(
+        [Parameter(Mandatory=$true)]
+        [array]$InFiles
+    )
+    Write-ColorOut "$(Get-CurrentDate)  --  Avoid identical input-files" -ForegroundColor Cyan -NoNewLine
+
+    if($script:AvoidIdenticalFiles -eq 1){
+        [array]$inter = ($InFiles | Sort-Object -Property InName,Date,Size,Hash -Unique)
+        if($inter.Length -ne $InFiles.Length){
+            Write-ColorOut "$($InFiles.Length - $inter.Length) identical files were found in the input-path - only copying one of each." -ForegroundColor Magenta -Indentation 4
+            Start-Sleep -Seconds 3
+            [array]$InFiles = ($inter)
+        }
+        $script:resultvalues.identicalFiles = $($InFiles.Length - $inter.Length)
+    }
+
+    $script:resultvalues.copyfiles = $InFiles.Length
+    Write-ColorOut "Files left after dupli-check(s):`t$($script:resultvalues.ingoing - $script:resultvalues.duplihist - $script:resultvalues.dupliout - $script:resultvalues.identicalFiles) = $($script:resultvalues.copyfiles)" -ForegroundColor Yellow -Indentation 4
+
+    return $InFiles
+}
+
 # DEFINITION: Check for free space on the destination volume:
 Function Start-SpaceCheck(){
     param(
@@ -1833,49 +1836,6 @@ Function Start-SpaceCheck(){
         Write-ColorOut "Free: $free MB; Needed: $needed MB - Too big!" -ForegroundColor Red -Indentation 4
         return $false
     }
-}
-
-# DEFINITION: Cleaning away all files that will not get copied. ALSO checks for Identical files:
-Function Start-InputGetHash(){
-    param(
-        [Parameter(Mandatory=$true)]
-        [array]$InFiles
-    )
-    Write-ColorOut "$(Get-CurrentDate)  --  Calculate remaining hashes" -ForegroundColor Cyan -NoNewLine
-    if($script:AvoidIdenticalFiles -eq 1){
-        Write-ColorOut " (& avoid identical input-files)." -ForegroundColor Cyan
-    }else{
-        Write-ColorOut " "
-    }
-
-    # DEFINITION: Calculate hash (if not yet done):
-    if($script:VerifyCopies -eq 1 -and "ZYX" -in $InFiles.Hash){
-        $InFiles | Where-Object {$_.Hash -eq "ZYX"} | Start-RSJob -Name "GetHashRest" -FunctionsToLoad Write-ColorOut -ScriptBlock {
-            try{
-                $_.Hash = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA1 -ErrorAction Stop | Select-Object -ExpandProperty Hash)
-            }catch{
-                Write-ColorOut "Failed to get hash of `"$($_.FullName)`"" -ForegroundColor Red -Indentation 4
-                $_.Hash = "GetHashRestWRONG"
-            }
-        } | Wait-RSJob -ShowProgress | Receive-RSJob
-        Get-RSJob -Name "GetHashRest" | Remove-RSJob
-    }
-
-    # DEFINITION: if enabled, avoid copying identical files from the input-path:
-    if($script:AvoidIdenticalFiles -eq 1){
-        [array]$inter = ($InFiles | Sort-Object -Property InName,Date,Size,Hash -Unique)
-        if($inter.Length -ne $InFiles.Length){
-            Write-ColorOut "$($InFiles.Length - $inter.Length) identical files were found in the input-path - only copying one of each." -ForegroundColor Magenta
-            Start-Sleep -Seconds 3
-        }
-        $script:resultvalues.identicalFiles = $($InFiles.Length - $inter.Length)
-        [array]$InFiles = $inter
-    }
-
-    $script:resultvalues.copyfiles = $InFiles.Length
-    Write-ColorOut "Files left after dupli-check(s):`t$($script:resultvalues.ingoing - $script:resultvalues.duplihist - $script:resultvalues.dupliout - $script:resultvalues.identicalFiles) = $($script:resultvalues.copyfiles)" -ForegroundColor Yellow -Indentation 4
-
-    return $InFiles
 }
 
 # DEFINITION: Check if filename already exists and if so, then choose new name for copying:
@@ -2343,6 +2303,14 @@ Function Start-Everything(){
             Invoke-Pause
         }
 
+        # DEFINITION: Avoid copying input-files more than once:
+        if($script:AvoidIdenticalFiles -eq 1){
+            [array]$inputfiles = (Start-InputGetHash -InFiles $inputfiles)
+            Invoke-Pause
+            Start-PreventingDoubleCopies -InFiles $inputfiles
+            Invoke-Pause
+        }
+
         # DEFINITION: Get free space:
         if((Start-SpaceCheck -InFiles $inputfiles -OutPath $script:OutputPath) -eq $false){
             Start-Sound 0
@@ -2352,10 +2320,6 @@ Function Start-Everything(){
             }
             break
         }
-        Invoke-Pause
-
-        # DEFINITION: Get hashes of all remaining input-files:
-        [array]$inputfiles = (Start-InputGetHash -InFiles $inputfiles)
         Invoke-Pause
 
         # DEFINITION: Copy stuff and check it:
@@ -2377,6 +2341,9 @@ Function Start-Everything(){
             Start-FileCopy -InFiles $inputfiles -InPath $script:InputPath -OutPath $script:OutputPath
             Invoke-Pause
             if($script:VerifyCopies -eq 1){
+                # DEFINITION: Get hashes of all remaining input-files:
+                [array]$inputfiles = (Start-InputGetHash -InFiles $inputfiles)
+                Invoke-Pause
                 [array]$inputfiles = (Start-FileVerification -InFiles $inputfiles)
                 Invoke-Pause
                 $j++
@@ -2664,7 +2631,7 @@ Function Start-GUI(){
 
 # DEFINITION: Banner:
     Write-ColorOut "`r`n                            flolilo's Media-Copytool                            " -ForegroundColor DarkCyan -BackgroundColor Gray
-    Write-ColorOut "                           v0.8.7 (Beta) - 2018-02-17           " -ForegroundColor DarkMagenta -BackgroundColor DarkGray -NoNewLine
+    Write-ColorOut "                           v0.8.8 (Beta) - 2018-02-18           " -ForegroundColor DarkMagenta -BackgroundColor DarkGray -NoNewLine
     Write-ColorOut "(PID = $("{0:D8}" -f $pid))`r`n" -ForegroundColor Gray -BackgroundColor DarkGray
 
 # DEFINITION: Start-up:

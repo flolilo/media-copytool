@@ -30,5 +30,69 @@
                                   "UnmountInputDrive":  0,
                                   "PreventStandby":  1
                               }
+    },
+    {
+        "ParamPresetName":  "safespeed",
+        "ParamPresetValues":  {
+                                  "InputPath":  "F:\\DCIM",
+                                  "OutputPath":  "D:\\MyPictures",
+                                  "MirrorEnable":  0,
+                                  "MirrorPath":  "E:\\Backup",
+                                  "PresetFormats":  [
+                                                        "Can",
+                                                        "Jpg",
+                                                        "Mov"
+                                                    ],
+                                  "CustomFormatsEnable":  0,
+                                  "CustomFormats":  [
+                                                        "*"
+                                                    ],
+                                  "OutputSubfolderStyle":  "yyyy-MM-dd",
+                                  "OutputFileStyle":  "unchanged",
+                                  "HistFilePath":  "$($PSScriptRoot)\\mc_historyfile.json",
+                                  "UseHistFile":  1,
+                                  "WriteHistFile":  "yes",
+                                  "HistCompareHashes":  0,
+                                  "InputSubfolderSearch":  1,
+                                  "CheckOutputDupli":  0,
+                                  "VerifyCopies":  1,
+                                  "OverwriteExistingFiles":  0,
+                                  "AvoidIdenticalFiles":  0,
+                                  "ZipMirror":  0,
+                                  "UnmountInputDrive":  0,
+                                  "PreventStandby":  1
+                              }
+    },
+    {
+        "ParamPresetName":  "backup",
+        "ParamPresetValues":  {
+                                  "InputPath":  "F:\\DCIM",
+                                  "OutputPath":  "D:\\MyPictures",
+                                  "MirrorEnable":  1,
+                                  "MirrorPath":  "E:\\Backup",
+                                  "PresetFormats":  [
+                                                        "Can",
+                                                        "Jpg",
+                                                        "Mov"
+                                                    ],
+                                  "CustomFormatsEnable":  0,
+                                  "CustomFormats":  [
+                                                        "*"
+                                                    ],
+                                  "OutputSubfolderStyle":  "yyyy-MM-dd",
+                                  "OutputFileStyle":  "unchanged",
+                                  "HistFilePath":  "$($PSScriptRoot)\\mc_historyfile.json",
+                                  "UseHistFile":  1,
+                                  "WriteHistFile":  "yes",
+                                  "HistCompareHashes":  1,
+                                  "InputSubfolderSearch":  1,
+                                  "CheckOutputDupli":  1,
+                                  "VerifyCopies":  1,
+                                  "OverwriteExistingFiles":  0,
+                                  "AvoidIdenticalFiles":  0,
+                                  "ZipMirror":  0,
+                                  "UnmountInputDrive":  0,
+                                  "PreventStandby":  1
+                              }
     }
 ]

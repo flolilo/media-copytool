@@ -1,6 +1,6 @@
 Todo:
     ☐ Allow y/n and yes/no as answers (instead/additional to 1/0). @low 
-    ☐ Option to verify everything after copying when not checking for duplis.
+    ✔ Option to verify everything after copying when not checking for duplis. @done (18.2.2018, 21:40:59)
     ☐ Create a prefix-/suffix-option for renaming both subfolders and files. @low
     ☐ remove preset-formats and change system to all/only/except.
     ✔ rename $($PSScriptRoot) in history-path. @high @done (4.2.2018, 17:48:11)

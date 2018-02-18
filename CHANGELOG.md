@@ -4,10 +4,21 @@ All notable changes to this project will be documented in this file.
 (The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).)
 
 
+## 0.8.8 - 2018-02-18
+### Added
+- `Start-PreventingDoubleCopies` - it includes the `-AvoidIdenticalFiles 1`-routine that was formerly included in `Start-InputGetHash`.
+- Some presets to `mc_parameter.json`.
+
+### Changed
+- `Start-InputGetHash` now happens after copying (if `-AvoidIdenticalFiles 0`). Files will be copied first, then the (remaining) hashes will be computed for verification. Therefore, files will be available faster while overall operation times should stay the same.
+
+### Removed
+- Some old, already out-commented code from pre 0.8.1's `Start-DupliCheckOut()`.
+
+
 ## 0.8.7 - 2018-02-17
 ### Added
 - Function `Get-CurrentDate` - thus replacing all those `Get-Date -Format "yyyy-MM-dd HH:mm:ss"`-stuff.
-
 
 ## 0.8.6 - 2018-02-04
 ### Changed
