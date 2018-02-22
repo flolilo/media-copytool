@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 (The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).)
 
 
+## 0.8.9 - 2018-02-22
+### Added
+- Function `Invoke-PreventSleep` to replace `mc_preventsleep.ps1`.
+
+### Removed
+- `mc_preventsleep.ps1`, as function `Invoke-PreventSleep` takes over.
+
+
 ## 0.8.8 - 2018-02-18
 ### Added
 - `Start-PreventingDoubleCopies` - it includes the `-AvoidIdenticalFiles 1`-routine that was formerly included in `Start-InputGetHash`.

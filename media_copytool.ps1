@@ -7,9 +7,9 @@
         Uses Windows' Robocopy and Xcopy for file-copy, then uses PowerShell's Get-FileHash (SHA1) for verifying that files were copied without errors.
         Now supports multithreading via Boe Prox's PoshRSJob-cmdlet (https://github.com/proxb/PoshRSJob)
     .NOTES
-        Version:        0.8.8 (Beta)
+        Version:        0.8.9 (Beta)
         Author:         flolilo
-        Creation Date:  2018-02-18
+        Creation Date:  2018-02-22
         Legal stuff: This program is free software. It comes without any warranty, to the extent permitted by
         applicable law. Most of the script was written by myself (or heavily modified by me when searching for solutions
         on the WWW). However, some parts are copies or modifications of very genuine code - see
@@ -156,7 +156,6 @@
         mc_parameters.json,
         any valid UTF8- *.json if -UseHistFile is 1 (file specified by -HistFilePath),
         mc_GUI.xaml if -GUI_CLI_direct is "GUI",
-        mc_preventsleep.ps1 if -PreventStandby is 1,
         File(s) must be located in the script's directory and must not be renamed.
     .OUTPUTS
         any valid UTF8- *.json if -WriteHistFile is "Yes" or "Overwrite" (file specified by -HistFilePath),
@@ -384,6 +383,40 @@ Function Start-Sound(){
     }catch{
         Write-Output "`a"
     }
+}
+
+# DEFINITION: Start equivalent to PreventSleep.ps1:
+Function Invoke-PreventSleep(){
+    <#
+        .NOTES
+            v1.0 - 2018-02-22
+    #>
+    Write-ColorOut "$(Get-CurrentDate)  --  Starting preventsleep-script..." -ForegroundColor Cyan
+
+$standby = @'
+    # DEFINITION: For button-emulation:
+    Write-Host "(PID = $("{0:D8}" -f $pid))" -ForegroundColor Gray
+    $MyShell = New-Object -ComObject "Wscript.Shell"
+    while($true){
+        # DEFINITION:/CREDIT: https://superuser.com/a/1023836/703240
+        $MyShell.sendkeys("{F15}")
+        Start-Sleep -Seconds 90
+    }
+'@
+    $standby = [System.Text.Encoding]::Unicode.GetBytes($standby)
+    $standby = [Convert]::ToBase64String($standby)
+
+    [int]$preventstandbyid = (Start-Process powershell -ArgumentList "-EncodedCommand $standby" -WindowStyle Hidden -PassThru).Id
+    if($script:Debug -gt 0){
+        Write-ColorOut "preventsleep-PID is $("{0:D8}" -f $preventstandbyid)" -ForegroundColor Gray -BackgroundColor DarkGray -Indentation 4
+    }
+    Start-Sleep -Milliseconds 25
+    if((Get-Process -Id $preventstandbyid -ErrorVariable SilentlyContinue).count -ne 1){
+        Write-ColorOut "Cannot prevent standby" -ForegroundColor Magenta -Indentation 4
+        Start-Sleep -Seconds 3
+    }
+
+    return $preventstandbyid
 }
 
 # DEFINITION: Getting date and time in pre-formatted string:
@@ -2241,15 +2274,7 @@ Function Start-Everything(){
 
         # DEFINITION: If enabled: start preventsleep.ps1:
         if($script:PreventStandby -eq 1){
-            if((Test-Path -Path "$($PSScriptRoot)\mc_preventsleep.ps1" -PathType Leaf) -eq $true){
-                $script:preventstandbyid = (Start-Process powershell -ArgumentList "$($PSScriptRoot)\mc_preventsleep.ps1" -WindowStyle Hidden -PassThru).Id
-                if($script:Debug -gt 0){
-                    Write-ColorOut "preventsleep-ID is $script:preventstandbyid" -ForegroundColor Magenta -BackgroundColor DarkGray
-                }
-            }else{
-                Write-Host "Couldn't find .\mc_preventsleep.ps1, so can't prevent standby." -ForegroundColor Magenta
-                Start-Sleep -Seconds 3
-            }
+            [int]$script:preventstandbyid = Invoke-PreventSleep
         }
 
         # DEFINITION: Search for files:
@@ -2631,7 +2656,7 @@ Function Start-GUI(){
 
 # DEFINITION: Banner:
     Write-ColorOut "`r`n                            flolilo's Media-Copytool                            " -ForegroundColor DarkCyan -BackgroundColor Gray
-    Write-ColorOut "                           v0.8.8 (Beta) - 2018-02-18           " -ForegroundColor DarkMagenta -BackgroundColor DarkGray -NoNewLine
+    Write-ColorOut "                           v0.8.9 (Beta) - 2018-02-22           " -ForegroundColor DarkMagenta -BackgroundColor DarkGray -NoNewLine
     Write-ColorOut "(PID = $("{0:D8}" -f $pid))`r`n" -ForegroundColor Gray -BackgroundColor DarkGray
 
 # DEFINITION: Start-up:
