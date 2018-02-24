@@ -257,7 +257,7 @@ param(
 # DEFINITION: Hopefully avoiding errors by wrong encoding now:
     $OutputEncoding = New-Object -TypeName System.Text.UTF8Encoding
 # DEFINITION: Set current date and version number:
-$MCVersion = "v0.8.12 (Beta) - 2018-02-24"
+$VersionNumber = "v0.8.12 (Beta) - 2018-02-24"
 
 # ==================================================================================================
 # ==============================================================================
@@ -355,6 +355,8 @@ Function Invoke-Close(){
     if($script:Debug -gt 0){
         Pause
     }
+
+    $Host.UI.RawUI.WindowTitle = "Windows PowerShell"
     Exit
 }
 
@@ -556,7 +558,7 @@ Function Get-Parameters(){
                     Write-ColorOut "$JSONPath does not exist - aborting!" -ForegroundColor Red -Indentation 4
                     Write-ColorOut "(You can specify the path with -JSONParamPath. Also, if you use `"-GUI_CLI_Direct direct`", you can circumvent this error by setting all parameters by yourself - or use `"-GUI_CLI_Direct CLI`" or `"-GUI_CLI_Direct GUI`".)" -ForegroundColor Magenta -Indentation 4
                     Start-Sleep -Seconds 5
-                    Exit
+                    Invoke-Close
                 }else{
                     Write-ColorOut "$JSONPath does not exist - cannot load presets!" -ForegroundColor Magenta -Indentation 4
                     Write-ColorOut "(It is recommended to use a JSON-file to save your parameters. You can save one when activating one of the `"Save`"-checkboxes in the GUI - or simply download the one from GitHub.)" -ForegroundColor Blue -Indentation 4
@@ -569,7 +571,7 @@ Function Get-Parameters(){
                 Write-ColorOut "$JSONPath does not exist - aborting!" -ForegroundColor Red -Indentation 4
                 Write-ColorOut "(You can specify the path with -JSONParamPath. Also, if you use `"-GUI_CLI_Direct direct`", you can circumvent this error by setting all parameters by yourself - or use `"-GUI_CLI_Direct CLI`" or `"-GUI_CLI_Direct GUI`".)" -ForegroundColor Magenta -Indentation 4
                 Start-Sleep -Seconds 5
-                Exit
+                Invoke-Close
             }else{
                 Write-ColorOut "$JSONPath does not exist - cannot load presets!" -ForegroundColor Magenta -Indentation 4
                 Write-ColorOut "(It is recommended to use a JSON-file to save your parameters. You can save one when activating one of the `"Save`"-checkboxes in the GUI - or simply download the one from GitHub.)" -ForegroundColor Blue -Indentation 4
@@ -1415,7 +1417,7 @@ Function Set-Parameters(){
         }catch{
             Write-ColorOut "Getting parameters from $JSONPath failed - aborting!" -ForegroundColor Red
             Start-Sleep -Seconds 5
-            Exit
+            Invoke-Close
         }
         if($script:SaveParamPresetName -in $jsonparams.ParamPresetName -or $script:SaveParamPresetName -eq $jsonparams.ParamPresetName){
             if($jsonparams.ParamPresetName -is [array]){
@@ -2503,11 +2505,11 @@ Function Start-GUI(){
     }else{
         Write-ColorOut "Could not find $GUIPath - GUI can therefore not start." -ForegroundColor Red
         Pause
-        Exit
+        Invoke-Close
     }
 
     [void][System.Reflection.Assembly]::LoadWithPartialName('presentationframework')
-    [xml]$xaml = $inputXML -replace "<MCVersion>","$script:MCVersion" -replace 'mc:Ignorable="d"','' -replace "x:Name",'Name'  -replace '^<Win.*', '<Window'
+    [xml]$xaml = $inputXML -replace "<MCVersion>","$script:VersionNumber" -replace 'mc:Ignorable="d"','' -replace "x:Name",'Name'  -replace '^<Win.*', '<Window'
     $reader = (New-Object System.Xml.XmlNodeReader $xaml)
     try{
         $script:Form = [Windows.Markup.XamlReader]::Load($reader)
@@ -2527,7 +2529,7 @@ Function Start-GUI(){
         Write-ColorOut "Found the following interactable elements:`r`n" -ForegroundColor Cyan
         Get-Variable WPF*
         Start-Sleep -Seconds 5
-        Exit
+        Invoke-Close
     }
 
     # Fill the TextBoxes and buttons with user parameters:
@@ -2666,11 +2668,11 @@ Function Start-GUI(){
 
 # DEFINITION: Banner:
     Write-ColorOut "`r`n                            flolilo's Media-Copytool                            " -ForegroundColor DarkCyan -BackgroundColor Gray
-    Write-ColorOut "                          $MCVersion           " -ForegroundColor DarkMagenta -BackgroundColor DarkGray -NoNewLine
+    Write-ColorOut "                          $VersionNumber           " -ForegroundColor DarkMagenta -BackgroundColor DarkGray -NoNewLine
     Write-ColorOut "(PID = $("{0:D8}" -f $pid))`r`n" -ForegroundColor Gray -BackgroundColor DarkGray
+    $Host.UI.RawUI.WindowTitle = "CLI: Media-Copytool $VersionNumber"
 
 # DEFINITION: Start-up:
-    $host.ui.rawui.WindowTitle = "CLI: Media-Copytool $MCVersion"
     while($true){
         if($GUI_CLI_Direct -eq "GUI"){
             Get-Parameters -JSONPath $JSONParamPath -Renew 0
@@ -2689,6 +2691,7 @@ Function Start-GUI(){
         }else{
             Write-ColorOut "Please choose a valid -GUI_CLI_Direct value (`"GUI`", `"CLI`", or `"Direct`")." -ForegroundColor Red
             Pause
-            Exit
+            $Host.UI.RawUI.WindowTitle = "Windows PowerShell"
+            Invoke-Close
         }
     }

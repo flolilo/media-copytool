@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 
 
+## 0.8.12 - 2018-02-24
+### Changed
+- Some functions still used `Exit` - changed them all to `Invoke-Close`
+- Improved VersionNumber-Variable.
+
+
 ## 0.8.11 - 2018-02-24
 ### Changed
 - Added a variable to change the version without having to go through the GUI and half of the script.
