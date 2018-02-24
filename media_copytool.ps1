@@ -7,9 +7,9 @@
         Uses Windows' Robocopy and Xcopy for file-copy, then uses PowerShell's Get-FileHash (SHA1) for verifying that files were copied without errors.
         Now supports multithreading via Boe Prox's PoshRSJob-cmdlet (https://github.com/proxb/PoshRSJob)
     .NOTES
-        Version:        0.8.9 (Beta)
+        Version:        0.8.10 (Beta)
         Author:         flolilo
-        Creation Date:  2018-02-22
+        Creation Date:  2018-02-24
         Legal stuff: This program is free software. It comes without any warranty, to the extent permitted by
         applicable law. Most of the script was written by myself (or heavily modified by me when searching for solutions
         on the WWW). However, some parts are copies or modifications of very genuine code - see
@@ -237,15 +237,22 @@ param(
     try{
         Import-Module -Name "PoshRSJob" -NoClobber -Global -ErrorAction Stop
     }catch{
-        Write-Host "Could not load Module `"PoshRSJob`" - Please install it in an " -ForegroundColor Red -NoNewline
-        Write-Host "administrative console " -ForegroundColor Magenta -NoNewline
-        Write-Host "via " -ForegroundColor Red -NoNewline
-        Write-Host "Install-Module PoshRSJob" -NoNewline
-        Write-Host ", or run this script with " -ForegroundColor Red -NoNewline
-        Write-Host "-GUI_CLI_Direct CLI" -NoNewline
-        Write-Host "." -ForegroundColor Red
-        Pause
-        Exit
+        try{
+            [string]$PoshRSJobPath = Get-ChildItem -LiteralPath $PSScriptRoot -Recurse -Filter PoshRSJob.psm1 | Select-Object -ExpandProperty FullName
+            Import-Module $PoshRSJobPath -NoClobber -Global -ErrorAction Stop
+        }catch{
+            Write-Host "Could not load Module `"PoshRSJob`" - Please install it in an " -ForegroundColor Red -NoNewline
+            Write-Host "administrative console " -ForegroundColor Yellow -NoNewline
+            Write-Host "via " -ForegroundColor Red -NoNewline
+            Write-Host "Install-Module PoshRSJob" -NoNewline
+            Write-Host ", download it from " -ForegroundColor Red -NoNewline
+            Write-Host "github.com/proxb/PoshRSJob/releases " -NoNewline
+            Write-Host "and install it to " -ForegroundColor Red -NoNewline
+            Write-Host "<SCRIPT_PATH>\Modules\<VERSION.NUMBER>" -NoNewline -ForegroundColor Gray
+            Write-Host "." -ForegroundColor Red
+            Pause
+            Exit
+        }
     }
 # DEFINITION: Hopefully avoiding errors by wrong encoding now:
     $OutputEncoding = New-Object -TypeName System.Text.UTF8Encoding
@@ -2507,9 +2514,9 @@ Function Start-GUI(){
     catch{
         Write-ColorOut "Unable to load Windows.Markup.XamlReader. Usually this means that you haven't installed .NET Framework. Please download and install the latest .NET Framework Web-Installer for your OS: " -ForegroundColor Red
         Write-ColorOut "https://duckduckgo.com/?q=net+framework+web+installer&t=h_&ia=web"
-        Write-ColorOut "Alternatively, start this script with '-GUI_CLI_Direct CLI' (w/o single-quotes) to run it via CLI (find other parameters via '-ShowParams 1' or '-Get-Help media_copytool.ps1 -detailed'." -ForegroundColor Yellow
+        Write-ColorOut "Alternatively, this script will now start in CLI-mode, asking you for variables inside the terminal." -ForegroundColor Yellow
         Pause
-        Exit
+        return $false
     }
     $xaml.SelectNodes("//*[@Name]") | ForEach-Object {
         Set-Variable -Name "WPF$($_.Name)" -Value $script:Form.FindName($_.Name) -Scope Script
@@ -2518,7 +2525,7 @@ Function Start-GUI(){
     if($script:getWPF -ne 0){
         Write-ColorOut "Found the following interactable elements:`r`n" -ForegroundColor Cyan
         Get-Variable WPF*
-        Pause
+        Start-Sleep -Seconds 5
         Exit
     }
 
@@ -2652,24 +2659,34 @@ Function Start-GUI(){
 
     # DEFINITION: Start GUI
     $script:Form.ShowDialog() | Out-Null
+
+    return $true
 }
 
 # DEFINITION: Banner:
     Write-ColorOut "`r`n                            flolilo's Media-Copytool                            " -ForegroundColor DarkCyan -BackgroundColor Gray
-    Write-ColorOut "                           v0.8.9 (Beta) - 2018-02-22           " -ForegroundColor DarkMagenta -BackgroundColor DarkGray -NoNewLine
+    Write-ColorOut "                           v0.8.10 (Beta) - 2018-02-24           " -ForegroundColor DarkMagenta -BackgroundColor DarkGray -NoNewLine
     Write-ColorOut "(PID = $("{0:D8}" -f $pid))`r`n" -ForegroundColor Gray -BackgroundColor DarkGray
 
 # DEFINITION: Start-up:
-    if($GUI_CLI_Direct -eq "GUI"){
-        Get-Parameters -JSONPath $JSONParamPath -Renew 0
-        Start-GUI -GUIPath "$($PSScriptRoot)/mc_GUI.xaml"
-    }elseif($GUI_CLI_Direct -eq "Direct"){
-        Get-Parameters -JSONPath $JSONParamPath -Renew 0
-        Start-Everything
-    }elseif($GUI_CLI_Direct -eq "CLI"){
-        Start-Everything
-    }else{
-        Write-ColorOut "Please choose a valid -GUI_CLI_Direct value (`"GUI`", `"CLI`", or `"Direct`")." -ForegroundColor Red
-        Pause
-        Exit
+    while($true){
+        if($GUI_CLI_Direct -eq "GUI"){
+            Get-Parameters -JSONPath $JSONParamPath -Renew 0
+            if((Start-GUI -GUIPath "$($PSScriptRoot)/mc_GUI.xaml") -eq $false){
+                $GUI_CLI_Direct = "CLI"
+                Continue
+            }
+            Break
+        }elseif($GUI_CLI_Direct -eq "Direct"){
+            Get-Parameters -JSONPath $JSONParamPath -Renew 0
+            Start-Everything
+            Break
+        }elseif($GUI_CLI_Direct -eq "CLI"){
+            Start-Everything
+            Break
+        }else{
+            Write-ColorOut "Please choose a valid -GUI_CLI_Direct value (`"GUI`", `"CLI`", or `"Direct`")." -ForegroundColor Red
+            Pause
+            Exit
+        }
     }

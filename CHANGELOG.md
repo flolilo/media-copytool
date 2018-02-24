@@ -6,6 +6,14 @@ All notable changes to this project will be documented in this file.
 
 ## 0.8.9 - 2018-02-22
 ### Added
+- Option to use [PoshRSJob](https://github.com/proxb/PoshRSJob/releases) without installing it by extracting it into the script's folder (syntax is important, i.e. `.\Modules\<VERSION.NUMER>\`).
+
+### Changed
+- `Start-GUI` will now return `$false` if the necessary .NET Framework files cannot be found. The script will then change into `CLI`-mode instead of exiting completely.
+
+
+## 0.8.9 - 2018-02-22
+### Added
 - Function `Invoke-PreventSleep` to replace `mc_preventsleep.ps1`.
 
 ### Removed
