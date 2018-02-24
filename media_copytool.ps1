@@ -7,7 +7,7 @@
         Uses Windows' Robocopy and Xcopy for file-copy, then uses PowerShell's Get-FileHash (SHA1) for verifying that files were copied without errors.
         Now supports multithreading via Boe Prox's PoshRSJob-cmdlet (https://github.com/proxb/PoshRSJob)
     .NOTES
-        Version:        0.8.11 (Beta)
+        Version:        0.8.12 (Beta)
         Author:         flolilo
         Creation Date:  2018-02-24
         Legal stuff: This program is free software. It comes without any warranty, to the extent permitted by
@@ -256,7 +256,8 @@ param(
     }
 # DEFINITION: Hopefully avoiding errors by wrong encoding now:
     $OutputEncoding = New-Object -TypeName System.Text.UTF8Encoding
-
+# DEFINITION: Set current date and version number:
+$MCVersion = "v0.8.12 (Beta) - 2018-02-24"
 
 # ==================================================================================================
 # ==============================================================================
@@ -2506,7 +2507,7 @@ Function Start-GUI(){
     }
 
     [void][System.Reflection.Assembly]::LoadWithPartialName('presentationframework')
-    [xml]$xaml = $inputXML -replace 'mc:Ignorable="d"','' -replace "x:Name",'Name'  -replace '^<Win.*', '<Window'
+    [xml]$xaml = $inputXML -replace "<MCVersion>","$script:MCVersion" -replace 'mc:Ignorable="d"','' -replace "x:Name",'Name'  -replace '^<Win.*', '<Window'
     $reader = (New-Object System.Xml.XmlNodeReader $xaml)
     try{
         $script:Form = [Windows.Markup.XamlReader]::Load($reader)
@@ -2665,10 +2666,11 @@ Function Start-GUI(){
 
 # DEFINITION: Banner:
     Write-ColorOut "`r`n                            flolilo's Media-Copytool                            " -ForegroundColor DarkCyan -BackgroundColor Gray
-    Write-ColorOut "                           v0.8.11 (Beta) - 2018-02-24           " -ForegroundColor DarkMagenta -BackgroundColor DarkGray -NoNewLine
+    Write-ColorOut "                          $MCVersion           " -ForegroundColor DarkMagenta -BackgroundColor DarkGray -NoNewLine
     Write-ColorOut "(PID = $("{0:D8}" -f $pid))`r`n" -ForegroundColor Gray -BackgroundColor DarkGray
 
 # DEFINITION: Start-up:
+    $host.ui.rawui.WindowTitle = "CLI: Media-Copytool $MCVersion"
     while($true){
         if($GUI_CLI_Direct -eq "GUI"){
             Get-Parameters -JSONPath $JSONParamPath -Renew 0

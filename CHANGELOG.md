@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+
+## 0.8.11 - 2018-02-24
+### Changed
+- Added a variable to change the version without having to go through the GUI and half of the script.
+
+
 ## 0.8.11 - 2018-02-24
 ### Changed
 - Screwed up loading of local `PoshRSJob`-Module.
