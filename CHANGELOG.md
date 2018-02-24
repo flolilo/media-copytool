@@ -1,10 +1,13 @@
 ﻿# Changelog
+
 All notable changes to this project will be documented in this file.
 
-(The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).)
+## 0.8.11 - 2018-02-24
+### Changed
+- Screwed up loading of local `PoshRSJob`-Module.
 
 
-## 0.8.9 - 2018-02-22
+## 0.8.10 - 2018-02-24
 ### Added
 - Option to use [PoshRSJob](https://github.com/proxb/PoshRSJob/releases) without installing it by extracting it into the script's folder (syntax is important, i.e. `.\Modules\<VERSION.NUMER>\`).
 

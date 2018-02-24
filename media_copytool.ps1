@@ -7,7 +7,7 @@
         Uses Windows' Robocopy and Xcopy for file-copy, then uses PowerShell's Get-FileHash (SHA1) for verifying that files were copied without errors.
         Now supports multithreading via Boe Prox's PoshRSJob-cmdlet (https://github.com/proxb/PoshRSJob)
     .NOTES
-        Version:        0.8.10 (Beta)
+        Version:        0.8.11 (Beta)
         Author:         flolilo
         Creation Date:  2018-02-24
         Legal stuff: This program is free software. It comes without any warranty, to the extent permitted by
@@ -238,7 +238,7 @@ param(
         Import-Module -Name "PoshRSJob" -NoClobber -Global -ErrorAction Stop
     }catch{
         try{
-            [string]$PoshRSJobPath = Get-ChildItem -LiteralPath $PSScriptRoot -Recurse -Filter PoshRSJob.psm1 | Select-Object -ExpandProperty FullName
+            [string]$PoshRSJobPath = Get-ChildItem -LiteralPath $PSScriptRoot\Modules\PoshRSJob -Recurse -Filter PoshRSJob.psm1 -ErrorAction Stop | Select-Object -ExpandProperty FullName
             Import-Module $PoshRSJobPath -NoClobber -Global -ErrorAction Stop
         }catch{
             Write-Host "Could not load Module `"PoshRSJob`" - Please install it in an " -ForegroundColor Red -NoNewline
@@ -248,7 +248,7 @@ param(
             Write-Host ", download it from " -ForegroundColor Red -NoNewline
             Write-Host "github.com/proxb/PoshRSJob/releases " -NoNewline
             Write-Host "and install it to " -ForegroundColor Red -NoNewline
-            Write-Host "<SCRIPT_PATH>\Modules\<VERSION.NUMBER>" -NoNewline -ForegroundColor Gray
+            Write-Host "<SCRIPT_PATH>\Modules\PoshRSJob\<VERSION.NUMBER>" -NoNewline -ForegroundColor Gray
             Write-Host "." -ForegroundColor Red
             Pause
             Exit
@@ -2665,7 +2665,7 @@ Function Start-GUI(){
 
 # DEFINITION: Banner:
     Write-ColorOut "`r`n                            flolilo's Media-Copytool                            " -ForegroundColor DarkCyan -BackgroundColor Gray
-    Write-ColorOut "                           v0.8.10 (Beta) - 2018-02-24           " -ForegroundColor DarkMagenta -BackgroundColor DarkGray -NoNewLine
+    Write-ColorOut "                           v0.8.11 (Beta) - 2018-02-24           " -ForegroundColor DarkMagenta -BackgroundColor DarkGray -NoNewLine
     Write-ColorOut "(PID = $("{0:D8}" -f $pid))`r`n" -ForegroundColor Gray -BackgroundColor DarkGray
 
 # DEFINITION: Start-up:
