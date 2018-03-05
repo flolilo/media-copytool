@@ -4,6 +4,7 @@ Wiki/*
 Stats/*
 Modules/*
 *.zip
+media_copytool_TESTFILES/*
 # DEFINITION: ignore file that's in the repo:
 # CREDIT: https://www.git-scm.com/docs/git-update-index
 # CREDIT: https://stackoverflow.com/a/7232354/8013879
