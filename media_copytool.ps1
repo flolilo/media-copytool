@@ -2656,11 +2656,11 @@ Function Start-GUI(){
 
             if($browse.ShowDialog() -eq "OK"){
                 if($ToInfluence -eq "input"){
-                    $GUIParams.WPFtextBoxInput.Text = $browse.SelectedPath
+                    $GUIParams.textBoxInput.Text = $browse.SelectedPath
                 }elseif($ToInfluence -eq "output"){
-                    $GUIParams.WPFtextBoxOutput.Text = $browse.SelectedPath
+                    $GUIParams.textBoxOutput.Text = $browse.SelectedPath
                 }elseif($ToInfluence -eq "mirror"){
-                    $GUIParams.WPFtextBoxMirror.Text = $browse.SelectedPath
+                    $GUIParams.textBoxMirror.Text = $browse.SelectedPath
                 }
             }
         }else{
@@ -2671,7 +2671,7 @@ Function Start-GUI(){
 
             if($browse.ShowDialog() -eq "OK"){
                 if($browse.FileName -like "*.json"){
-                    $GUIParams.WPFtextBoxHistFile.Text = $browse.FileName
+                    $GUIParams.textBoxHistFile.Text = $browse.FileName
                 }
             }
         }
