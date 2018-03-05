@@ -1,4 +1,4 @@
-#requires -version 3
+﻿#requires -version 3
 
 <#
     .SYNOPSIS
@@ -325,7 +325,7 @@ Function Write-ColorOut(){
         .EXAMPLE
             Just use it like Write-Host.
     #>
-    param(
+    <#param(
         [Parameter(Mandatory=$true)]
         [string]$Object,
 
@@ -364,7 +364,7 @@ Function Write-ColorOut(){
     }
     if($BackgroundColor.Length -ge 3){
         [Console]::BackgroundColor = $old_bg_color
-    }
+    }#>
 }
 
 # DEFINITION: Pause the programme if debug-var is active. Also, enable measuring times per command with -debug 3.
@@ -483,22 +483,21 @@ Function Get-CurrentDate(){
 # DEFINITION: Get parameters from JSON file:
 Function Get-Parameters(){
     param(
-        [Parameter(Mandatory=$true)]
-        [hashtable]$UserParams,
-        [Parameter(Mandatory=$true)]
-        [int]$Renew
+        [ValidateNotNullOrEmpty()]
+        [hashtable]$UserParams = $(throw 'UserParams is required'),
+        [int]$Renew = $(throw 'Renew is required')
     )
     Write-ColorOut "$(Get-CurrentDate)  --  Getting parameter-values..." -ForegroundColor Cyan
 
     if($Renew -eq 1 -or
-        $UserParams.InputPath.Length -eq 0 -or
-        $UserParams.OutputPath.Length -eq 0 -or
+        $UserParams.InputPath.Length -lt 3 -or
+        $UserParams.OutputPath.Length -lt 3 -or
         $UserParams.MirrorEnable -eq -1 -or
-        ($UserParams.MirrorEnable -eq 1 -and $UserParams.MirrorPath.Length -eq 0) -or
+        ($UserParams.MirrorEnable -eq 1 -and $UserParams.MirrorPath.Length -lt 3) -or
         ($UserParams.PresetFormats.Length -eq 0 -and $UserParams.CustomFormatsEnable.Length -eq -1 -or ($UserParams.CustomFormatsEnable -eq 1 -and $UserParams.CustomFormats.Length -eq 0)) -or
         $UserParams.OutputSubfolderStyle.Length -eq 0 -or
         $UserParams.OutputFileStyle.Length -eq 0 -or
-        $UserParams.HistFilePath.Length -eq 0 -or
+        $UserParams.HistFilePath.Length -lt 6 -or
         $UserParams.UseHistFile -eq -1 -or
         $UserParams.WriteHistFile.Length -eq 0 -or
         $UserParams.HistCompareHashes -eq -1 -or
@@ -511,9 +510,13 @@ Function Get-Parameters(){
         $UserParams.UnmountInputDrive -eq -1 -or
         $script:PreventStandby -eq -1
     ){
-        if((Test-Path -LiteralPath $($UserParams.JSONParamPath) -PathType Leaf) -eq $true){
+        if((Test-Path -LiteralPath $UserParams.JSONParamPath -PathType Leaf -ErrorAction SilentlyContinue) -eq $true){
             try{
-                $jsonparams = Get-Content -Path $($UserParams.JSONParamPath) -Raw -Encoding UTF8 | ConvertFrom-Json
+                $jsonparams = Get-Content -LiteralPath $UserParams.JSONParamPath -Raw -Encoding UTF8 -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+                if($jsonparams.Length -eq 0){
+                    Write-ColorOut "$($UserParams.JSONParamPath.Replace("$($PSScriptRoot)",".")) is empty!" -ForegroundColor Magenta -Indentation 4
+                    return $false
+                }
 
                 if($UserParams.LoadParamPresetName -in $jsonparams.ParamPresetName){
                     $jsonparams = $jsonparams | Where-Object {$_.ParamPresetName -eq $UserParams.LoadParamPresetName}
@@ -521,9 +524,11 @@ Function Get-Parameters(){
                 }elseif("default" -in $jsonparams.ParamPresetName){
                     $jsonparams = $jsonparams | Where-Object {$_.ParamPresetName -eq "default"}
                     Write-ColorOut "Loaded preset `"$($jsonparams.ParamPresetName)`", as `"$($UserParams.LoadParamPresetName)`" is not specified in $($UserParams.JSONParamPath.Replace("$($PSScriptRoot)","."))." -ForegroundColor Magenta -Indentation 4
+                    $UserParams.LoadParamPresetName = $jsonparams.ParamPresetName
                 }else{
                     $jsonparams = $jsonparams | Select-Object -Index 0
-                    Write-ColorOut "Loaded first preset from mc_parameters.json (`"$($jsonparams.ParamPresetName.Replace("$($PSScriptRoot)","."))`"), as neither `"$($UserParams.LoadParamPresetName)`" nor `"default`" were found." -ForegroundColor Magenta -Indentation 4
+                    Write-ColorOut "Loaded first preset (`"$($jsonparams.ParamPresetName)`") from $($UserParams.JSONParamPath.Replace("$($PSScriptRoot)",".")) (`"$($jsonparams.ParamPresetName.Replace("$($PSScriptRoot)","."))`"), as neither `"$($UserParams.LoadParamPresetName)`" nor `"default`" were found." -ForegroundColor Magenta -Indentation 4
+                    $UserParams.LoadParamPresetName = $jsonparams.ParamPresetName
                 }
                 $jsonparams = $jsonparams.ParamPresetValues
 
@@ -595,12 +600,12 @@ Function Get-Parameters(){
                 }
             }catch{
                 if($UserParams.GUI_CLI_Direct -eq "direct"){
-                    Write-ColorOut "$($UserParams.JSONParamPath.Replace("$($PSScriptRoot)",".")) does not exist - aborting!" -ForegroundColor Red -Indentation 4
+                    Write-ColorOut "$($UserParams.JSONParamPath.Replace("$($PSScriptRoot)",".")) cannot be loaded - aborting!" -ForegroundColor Red -Indentation 4
                     Write-ColorOut "(You can specify the path with -JSONParamPath. Also, if you use `"-GUI_CLI_Direct direct`", you can circumvent this error by setting all parameters by yourself - or use `"-GUI_CLI_Direct CLI`" or `"-GUI_CLI_Direct GUI`".)" -ForegroundColor Magenta -Indentation 4
                     Start-Sleep -Seconds 5
                     return $false
                 }else{
-                    Write-ColorOut "$($UserParams.JSONParamPath.Replace("$($PSScriptRoot)",".")) does not exist - cannot load presets!" -ForegroundColor Magenta -Indentation 4
+                    Write-ColorOut "$($UserParams.JSONParamPath.Replace("$($PSScriptRoot)",".")) - cannot load presets!" -ForegroundColor Magenta -Indentation 4
                     Write-ColorOut "(It is recommended to use a JSON-file to save your parameters. You can save one when activating one of the `"Save`"-checkboxes in the GUI - or simply download the one from GitHub.)" -ForegroundColor Blue -Indentation 4
                     Start-Sleep -Seconds 5
                 }
@@ -2853,7 +2858,7 @@ Function Start-GUI(){
     Write-ColorOut "(PID = $("{0:D8}" -f $pid))`r`n" -ForegroundColor Gray -BackgroundColor DarkGray
     $Host.UI.RawUI.WindowTitle = "CLI: Media-Copytool $VersionNumber"
 
-# DEFINITION: Start-up:
+<# DEFINITION: Start-up:
     while($true){
         if($UserParams.GUI_CLI_Direct -eq "GUI"){
             [hashtable]$UserParams = Get-Parameters -UserParams $UserParams -Renew 0
@@ -2876,3 +2881,4 @@ Function Start-GUI(){
             Continue
         }
     }
+#>
