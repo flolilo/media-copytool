@@ -1469,8 +1469,8 @@ Function Get-UserValuesDirect(){
 # DEFINITION: Show parameters on the console, then exit:
 Function Show-Parameters(){
     param(
-        [Parameter(Mandatory=$true)]
-        [hashtable]$UserParams
+        [ValidateNotNullOrEmpty()]
+        [hashtable]$UserParams = $(throw 'UserParams is required by Show-Parameters')
     )
     Write-ColorOut "flolilo's Media-Copytool's parameters:`r`n" -ForegroundColor Green
     Write-ColorOut "-GUI_CLI_Direct`t`t=`t$($UserParams.GUI_CLI_Direct)" -ForegroundColor Cyan -Indentation 4
