@@ -9,7 +9,7 @@
 
 . $PSScriptRoot\media_copytool.ps1
 
-<#    Describe "Get-Parameters" {
+<# DONE:    Describe "Get-Parameters" {
         $BlaDrive = "TestDrive:\TEST"
         # DEFINITION: Combine all parameters into a hashtable:
         BeforeEach {
@@ -233,7 +233,7 @@
     }
 #>
 
-<# TODO: ufff...alles in GUI machen. vor allem: JSON-loading.
+<# TODO: hrmph. get everything right in GUI (in original file!): JSON-loading.
     Describe "Start-GUI" {
         $BlaDrive = "TestDrive:\TEST"
         # DEFINITION: Combine all parameters into a hashtable:
@@ -411,7 +411,7 @@
     }
 #>
 
-<#    Describe "Get-UserValuesDirect" {
+<# DONE:    Describe "Get-UserValuesDirect" {
         $BlaDrive = "TestDrive:\TEST"
         # DEFINITION: Combine all parameters into a hashtable:
         BeforeEach {
@@ -1098,8 +1098,7 @@
         }
     }
 #>
-
-<#    Describe "Show-Parameters" {
+<# DONE:    Describe "Show-Parameters" {
         BeforeEach {
             [hashtable]$UserParams = @{
                 ShowParams = 0
@@ -1205,7 +1204,7 @@
     }
 #>
 
-<# TODO: specchars, adding, creating, replacling only one, replacing different one. false if wrong filepath.
+# TODO: specchars, adding, creating, replacling only one, replacing different one. false if wrong filepath.
     Describe "Set-Parameters" {
         $BlaDrive = "TestDrive:\TEST"
         BeforeEach {
@@ -1250,7 +1249,7 @@
             {Set-Parameters -UserParams @{}} | Should Throw
             {Set-Parameters -UserParams 123} | Should Throw
         }
-        Context "Works correctly with good param" {
+        Context "Works correctly with valid param" {
             It "Returns `$true when param is correct" {
                 $test = Set-Parameters -UserParams $UserParams
                 $test | Should Be $true
@@ -1284,7 +1283,7 @@
             }
         }
     }
-#>
+
 
 <#
     Describe "Start-FileSearch"{
