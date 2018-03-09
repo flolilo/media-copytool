@@ -1509,8 +1509,8 @@ Function Show-Parameters(){
 # DEFINITION: If checked, remember values for future use:
 Function Set-Parameters(){
     param(
-        [Parameter(Mandatory=$true)]
-        [hashtable]$UserParams
+        [ValidateNotNullOrEmpty()]
+        [hashtable]$UserParams = $(throw 'UserParams is required by Show-Parameters')
     )
     Write-ColorOut "$(Get-CurrentDate)  --  Remembering parameters as preset `"$($UserParams.SaveParamPresetName)`"..." -ForegroundColor Cyan
 
@@ -1540,63 +1540,63 @@ Function Set-Parameters(){
             PreventStandby = $script:PreventStandby
         }
     })
-    if((Test-Path -LiteralPath $UserParams.JSONParamPath -PathType Leaf) -eq $true){
+
+    if((Test-Path -LiteralPath $UserParams.JSONParamPath -PathType Leaf -ErrorAction SilentlyContinue) -eq $true){
         try{
-            $jsonparams = Get-Content -Path $UserParams.JSONParamPath -Raw -Encoding UTF8 | ConvertFrom-Json
+            $jsonparams = Get-Content -LiteralPath $UserParams.JSONParamPath -Raw -Encoding UTF8 -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
             if($script:Debug -gt 1){
                 Write-ColorOut "From:" -ForegroundColor Yellow -Indentation 2
-                $jsonparams | ConvertTo-Json | Out-Host
+                $jsonparams | ConvertTo-Json -ErrorAction Stop | Out-Host
             }
         }catch{
             Write-ColorOut "Getting parameters from $($UserParams.JSONParamPath) failed - aborting!" -ForegroundColor Red
             Start-Sleep -Seconds 5
             return $false
         }
-        if($UserParams.SaveParamPresetName -in $jsonparams.ParamPresetName -or $UserParams.SaveParamPresetName -eq $jsonparams.ParamPresetName){
-            if($jsonparams.ParamPresetName -is [array]){
-                Write-ColorOut "Preset $($inter.ParamPresetName) will be updated." -ForegroundColor DarkGreen -Indentation 4
-                for($i=0; $i -lt $jsonparams.ParamPresetName.Length; $i++){
-                    if($jsonparams.ParamPresetName[$i] -eq $inter.ParamPresetName){
-                        if($UserParams.RememberInPath -eq 1){
-                            $jsonparams.ParamPresetValues[$i].InputPath = $inter.ParamPresetValues.InputPath
-                        }
-                        if($UserParams.RememberOutPath -eq 1){
-                            $jsonparams.ParamPresetValues[$i].OutputPath = $inter.ParamPresetValues.OutputPath
-                        }
-                        if($UserParams.RememberMirrorPath -eq 1){
-                            $jsonparams.ParamPresetValues[$i].MirrorPath = $inter.ParamPresetValues.MirrorPath
-                        }
-                        if($UserParams.RememberSettings -eq 1){
-                            $jsonparams.ParamPresetValues[$i].MirrorEnable = $inter.ParamPresetValues.MirrorEnable
-                            $jsonparams.ParamPresetValues[$i].PresetFormats = @($inter.ParamPresetValues.PresetFormats)
-                            $jsonparams.ParamPresetValues[$i].CustomFormatsEnable = $inter.ParamPresetValues.CustomFormatsEnable
-                            $jsonparams.ParamPresetValues[$i].CustomFormats = @($inter.ParamPresetValues.CustomFormats)
-                            $jsonparams.ParamPresetValues[$i].OutputSubfolderStyle = $inter.ParamPresetValues.OutputSubfolderStyle
-                            $jsonparams.ParamPresetValues[$i].OutputFileStyle = $inter.ParamPresetValues.OutputFileStyle
-                            $jsonparams.ParamPresetValues[$i].HistFilePath = $inter.ParamPresetValues.HistFilePath
-                            $jsonparams.ParamPresetValues[$i].UseHistFile = $inter.ParamPresetValues.UseHistFile
-                            $jsonparams.ParamPresetValues[$i].WriteHistFile = $inter.ParamPresetValues.WriteHistFile
-                            $jsonparams.ParamPresetValues[$i].HistCompareHashes = $inter.ParamPresetValues.HistCompareHashes
-                            $jsonparams.ParamPresetValues[$i].InputSubfolderSearch = $inter.ParamPresetValues.InputSubfolderSearch
-                            $jsonparams.ParamPresetValues[$i].CheckOutputDupli = $inter.ParamPresetValues.CheckOutputDupli
-                            $jsonparams.ParamPresetValues[$i].VerifyCopies = $inter.ParamPresetValues.VerifyCopies
-                            $jsonparams.ParamPresetValues[$i].OverwriteExistingFiles = $inter.ParamPresetValues.OverwriteExistingFiles
-                            $jsonparams.ParamPresetValues[$i].AvoidIdenticalFiles = $inter.ParamPresetValues.AvoidIdenticalFiles
-                            $jsonparams.ParamPresetValues[$i].ZipMirror = $inter.ParamPresetValues.ZipMirror
-                            $jsonparams.ParamPresetValues[$i].UnmountInputDrive = $inter.ParamPresetValues.UnmountInputDrive
-                            $jsonparams.ParamPresetValues[$i].PreventStandby = $inter.ParamPresetValues.PreventStandby
-                        }
+        if($jsonparams.ParamPresetName.GetType().Name -eq "Object[]" -and $inter.ParamPresetName -in $jsonparams.ParamPresetName){
+            Write-ColorOut "Preset $($inter.ParamPresetName) will be updated." -ForegroundColor DarkGreen -Indentation 4
+            for($i=0; $i -lt $jsonparams.ParamPresetName.Length; $i++){
+                if($jsonparams.ParamPresetName[$i] -eq $inter.ParamPresetName){
+                    if($UserParams.RememberInPath -eq 1){
+                        $jsonparams.ParamPresetValues[$i].InputPath = $inter.ParamPresetValues.InputPath
+                    }
+                    if($UserParams.RememberOutPath -eq 1){
+                        $jsonparams.ParamPresetValues[$i].OutputPath = $inter.ParamPresetValues.OutputPath
+                    }
+                    if($UserParams.RememberMirrorPath -eq 1){
+                        $jsonparams.ParamPresetValues[$i].MirrorPath = $inter.ParamPresetValues.MirrorPath
+                    }
+                    if($UserParams.RememberSettings -eq 1){
+                        $jsonparams.ParamPresetValues[$i].MirrorEnable = $inter.ParamPresetValues.MirrorEnable
+                        $jsonparams.ParamPresetValues[$i].PresetFormats = @($inter.ParamPresetValues.PresetFormats)
+                        $jsonparams.ParamPresetValues[$i].CustomFormatsEnable = $inter.ParamPresetValues.CustomFormatsEnable
+                        $jsonparams.ParamPresetValues[$i].CustomFormats = @($inter.ParamPresetValues.CustomFormats)
+                        $jsonparams.ParamPresetValues[$i].OutputSubfolderStyle = $inter.ParamPresetValues.OutputSubfolderStyle
+                        $jsonparams.ParamPresetValues[$i].OutputFileStyle = $inter.ParamPresetValues.OutputFileStyle
+                        $jsonparams.ParamPresetValues[$i].HistFilePath = $inter.ParamPresetValues.HistFilePath
+                        $jsonparams.ParamPresetValues[$i].UseHistFile = $inter.ParamPresetValues.UseHistFile
+                        $jsonparams.ParamPresetValues[$i].WriteHistFile = $inter.ParamPresetValues.WriteHistFile
+                        $jsonparams.ParamPresetValues[$i].HistCompareHashes = $inter.ParamPresetValues.HistCompareHashes
+                        $jsonparams.ParamPresetValues[$i].InputSubfolderSearch = $inter.ParamPresetValues.InputSubfolderSearch
+                        $jsonparams.ParamPresetValues[$i].CheckOutputDupli = $inter.ParamPresetValues.CheckOutputDupli
+                        $jsonparams.ParamPresetValues[$i].VerifyCopies = $inter.ParamPresetValues.VerifyCopies
+                        $jsonparams.ParamPresetValues[$i].OverwriteExistingFiles = $inter.ParamPresetValues.OverwriteExistingFiles
+                        $jsonparams.ParamPresetValues[$i].AvoidIdenticalFiles = $inter.ParamPresetValues.AvoidIdenticalFiles
+                        $jsonparams.ParamPresetValues[$i].ZipMirror = $inter.ParamPresetValues.ZipMirror
+                        $jsonparams.ParamPresetValues[$i].UnmountInputDrive = $inter.ParamPresetValues.UnmountInputDrive
+                        $jsonparams.ParamPresetValues[$i].PreventStandby = $inter.ParamPresetValues.PreventStandby
                     }
                 }
-            }else{
-                Write-ColorOut "Preset $($inter.ParamPresetName) will be the only preset." -ForegroundColor Yellow -Indentation 4
-                $jsonparams = $inter
             }
+        }elseif($jsonparams.ParamPresetName.GetType().Name -ne "Object[]" -and $UserParams.SaveParamPresetName -eq $jsonparams.ParamPresetName){
+            Write-ColorOut "Preset $($inter.ParamPresetName) will be the only preset." -ForegroundColor Yellow -Indentation 4
+            $jsonparams = $inter
         }else{
             Write-ColorOut "Preset $($inter.ParamPresetName) will be added." -ForegroundColor Green -Indentation 4
             $jsonparams += $inter
         }
     }else{
+        Write-ColorOut "No preset-file found." -ForegroundColor Magenta -Indentation 4
         $jsonparams = $inter
     }
     $jsonparams | Out-Null
@@ -1617,6 +1617,7 @@ Function Set-Parameters(){
             if($i -lt 5){
                 Write-ColorOut "Writing to parameter-file failed! Trying again..." -ForegroundColor Magenta -Indentation 4
                 Start-Sleep -Seconds 5
+                $i++
                 Continue
             }else{
                 Write-ColorOut "Writing to parameter-file failed!" -ForegroundColor Magenta -Indentation 4
