@@ -931,7 +931,7 @@
                 $test.OutputPath | Should Be $UserParams.OutputPath
                 $test.MirrorPath | Should Be $UserParams.MirrorPath
                 $test.HistFilePath | Should Be $UserParams.HistFilePath
-                (Compare-Object $bla $(Get-ChildItem -LiteralPath $BlaDrive -Recurse) -ErrorAction SilentlyContinue).count | Should be 0
+                (Compare-Object $bla $(Get-ChildItem -LiteralPath $BlaDrive -Recurse) -ErrorAction SilentlyContinue).count | Should Be 0
             }
             It "12345" {
                 $UserParams.JSONParamPath = "$BlaDrive\In_Test\123456789 ordner\123456789 parameters.json"
@@ -946,7 +946,7 @@
                 $test.OutputPath | Should Be $UserParams.OutputPath
                 $test.MirrorPath | Should Be $UserParams.MirrorPath
                 $test.HistFilePath | Should Be $UserParams.HistFilePath
-                (Compare-Object $bla $(Get-ChildItem -LiteralPath $BlaDrive -Recurse) -ErrorAction SilentlyContinue).count | Should be 0
+                (Compare-Object $bla $(Get-ChildItem -LiteralPath $BlaDrive -Recurse) -ErrorAction SilentlyContinue).count | Should Be 0
             }
             It "Æ" {
                 $UserParams.JSONParamPath = "$BlaDrive\In_Test\ÆOrdner\ÆParameters.json"
@@ -961,7 +961,7 @@
                 $test.OutputPath | Should Be $UserParams.OutputPath
                 $test.MirrorPath | Should Be $UserParams.MirrorPath
                 $test.HistFilePath | Should Be $UserParams.HistFilePath
-                (Compare-Object $bla $(Get-ChildItem -LiteralPath $BlaDrive -Recurse) -ErrorAction SilentlyContinue).count | Should be 0
+                (Compare-Object $bla $(Get-ChildItem -LiteralPath $BlaDrive -Recurse) -ErrorAction SilentlyContinue).count | Should Be 0
             }
             It "backtick" {
                 $UserParams.JSONParamPath = "$BlaDrive\In_Test\backtick ````ordner ``\backtick ````params``.json"
@@ -976,7 +976,7 @@
                 $test.OutputPath | Should Be $UserParams.OutputPath
                 $test.MirrorPath | Should Be $UserParams.MirrorPath
                 $test.HistFilePath | Should Be $UserParams.HistFilePath
-                (Compare-Object $bla $(Get-ChildItem -LiteralPath $BlaDrive -Recurse) -ErrorAction SilentlyContinue).count | Should be 0
+                (Compare-Object $bla $(Get-ChildItem -LiteralPath $BlaDrive -Recurse) -ErrorAction SilentlyContinue).count | Should Be 0
             }
             It "bracket 2" {
                 $UserParams.JSONParamPath = "$BlaDrive\In_Test\bracket [ ] ordner\bracket [ ] Parameter.json"
@@ -991,7 +991,7 @@
                 $test.OutputPath | Should Be $UserParams.OutputPath
                 $test.MirrorPath | Should Be $UserParams.MirrorPath
                 $test.HistFilePath | Should Be $UserParams.HistFilePath
-                (Compare-Object $bla $(Get-ChildItem -LiteralPath $BlaDrive -Recurse) -ErrorAction SilentlyContinue).count | Should be 0
+                (Compare-Object $bla $(Get-ChildItem -LiteralPath $BlaDrive -Recurse) -ErrorAction SilentlyContinue).count | Should Be 0
             }
             It "dots" {
                 $UserParams.JSONParamPath = "$BlaDrive\In_Test\ordner.mit.punkten\mc.parameters.json"
@@ -1006,7 +1006,7 @@
                 $test.OutputPath | Should Be $UserParams.OutputPath
                 $test.MirrorPath | Should Be $UserParams.MirrorPath
                 $test.HistFilePath | Should Be $UserParams.HistFilePath
-                (Compare-Object $bla $(Get-ChildItem -LiteralPath $BlaDrive -Recurse) -ErrorAction SilentlyContinue).count | Should be 0
+                (Compare-Object $bla $(Get-ChildItem -LiteralPath $BlaDrive -Recurse) -ErrorAction SilentlyContinue).count | Should Be 0
             }
             It "specials" {
                 $UserParams.JSONParamPath = "$BlaDrive\In_Test\special ' ! ,; . ordner\special ' ! ,; . parameter.json"
@@ -1021,7 +1021,7 @@
                 $test.OutputPath | Should Be $UserParams.OutputPath
                 $test.MirrorPath | Should Be $UserParams.MirrorPath
                 $test.HistFilePath | Should Be $UserParams.HistFilePath
-                (Compare-Object $bla $(Get-ChildItem -LiteralPath $BlaDrive -Recurse) -ErrorAction SilentlyContinue).count | Should be 0
+                (Compare-Object $bla $(Get-ChildItem -LiteralPath $BlaDrive -Recurse) -ErrorAction SilentlyContinue).count | Should Be 0
             }
         }
         Context "Test Special characters - non-existing" {
@@ -1093,7 +1093,7 @@
                 $test | Should BeOfType hashtable
             }
             It "Created all folders" {
-                (Compare-Object $bla $(Get-ChildItem -LiteralPath $BlaDrive -Recurse) -ErrorAction SilentlyContinue).count | Should be 0
+                (Compare-Object $bla $(Get-ChildItem -LiteralPath $BlaDrive -Recurse) -ErrorAction SilentlyContinue).count | Should Be 0
             }
         }
     }
@@ -1203,9 +1203,7 @@
         }
     }
 #>
-
-# TODO: specchars, adding, creating, replacling only one, replacing different one. false if wrong filepath.
-    Describe "Set-Parameters" {
+<# DONE:    Describe "Set-Parameters" {
         $BlaDrive = "TestDrive:\TEST"
         BeforeEach {
             [hashtable]$UserParams = @{
@@ -1249,41 +1247,398 @@
             {Set-Parameters -UserParams @{}} | Should Throw
             {Set-Parameters -UserParams 123} | Should Throw
         }
-        Context "Works correctly with valid param" {
-            It "Returns `$true when param is correct" {
+        It "Returns `$false if JSON cannot be made" {
+            $UserParams.JSONParamPath = "\\0.0.0.0\mc_parameters.json"
+            $test = Set-Parameters -UserParams $UserParams
+            $test | Should Be $false
+        }
+        Context "Work correctly with valid param" {
+            It "Return `$true when param is correct" {
                 $test = Set-Parameters -UserParams $UserParams
                 $test | Should Be $true
             }
-            It "replacing `"default`" gives a valid JSON-file" {
+            It "Replace `"default`"" {
                 $test = Get-Content -LiteralPath $UserParams.JSONParamPath -Encoding UTF8 -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
                 ,$test | Should BeOfType array
                 $bla = @("default","default2","privat","professionell","projekte")
-                (Compare-Object $test.ParamPresetName $bla -ErrorAction SilentlyContinue).count | Should be 0
-                $test.ParamPresetValues[0].InputPath | should be "$BlaDrive\In_Test"
-                $test.ParamPresetValues[0].OutputPath | should be "$BlaDrive\Out_Test"
-                $test.ParamPresetValues[0].MirrorEnable | should be 1
-                $test.ParamPresetValues[0].MirrorPath | should be "$BlaDrive\Mirr_Test"
-                $test.ParamPresetValues[0].PresetFormats | should be @("Can","Franz")
-                $test.ParamPresetValues[0].CustomFormatsEnable | should be 987
-                $test.ParamPresetValues[0].CustomFormats | should be @()
-                $test.ParamPresetValues[0].OutputSubfolderStyle | should be "yyyy-MM-ddlala"
-                $test.ParamPresetValues[0].OutputFileStyle | should be "unchangedlala"
-                $test.ParamPresetValues[0].HistFilePath | should be "$BlaDrive\In_Test\mc_hist.json"
-                $test.ParamPresetValues[0].UseHistFile | should be 987
-                $test.ParamPresetValues[0].WriteHistFile | should be "maybe"
-                $test.ParamPresetValues[0].HistCompareHashes | should be 987
-                $test.ParamPresetValues[0].InputSubfolderSearch | should be 987
-                $test.ParamPresetValues[0].CheckOutputDupli | should be 987
-                $test.ParamPresetValues[0].VerifyCopies | should be 987
-                $test.ParamPresetValues[0].OverwriteExistingFiles | should be 987
-                $test.ParamPresetValues[0].AvoidIdenticalFiles | should be 987
-                $test.ParamPresetValues[0].ZipMirror | should be 987
-                $test.ParamPresetValues[0].UnmountInputDrive | should be 987
-                $test.ParamPresetValues[0].Preventstandby | should be 987
+                (Compare-Object $test.ParamPresetName $bla -ErrorAction SilentlyContinue).count | Should Be 0
+                $test.ParamPresetValues[0].InputPath | Should Be $UserParams.InputPath
+                $test.ParamPresetValues[0].OutputPath | Should Be $UserParams.OutputPath
+                $test.ParamPresetValues[0].MirrorEnable | Should Be $UserParams.MirrorEnable
+                $test.ParamPresetValues[0].MirrorPath | Should Be $UserParams.MirrorPath
+                $test.ParamPresetValues[0].PresetFormats | Should Be $UserParams.PresetFormats
+                $test.ParamPresetValues[0].CustomFormatsEnable | Should Be $UserParams.CustomFormatsEnable
+                $test.ParamPresetValues[0].CustomFormats | Should Be $UserParams.CustomFormats
+                $test.ParamPresetValues[0].OutputSubfolderStyle | Should Be $UserParams.OutputSubfolderStyle
+                $test.ParamPresetValues[0].OutputFileStyle | Should Be $UserParams.OutputFileStyle
+                $test.ParamPresetValues[0].HistFilePath | Should Be $UserParams.HistFilePath
+                $test.ParamPresetValues[0].UseHistFile | Should Be $UserParams.UseHistFile
+                $test.ParamPresetValues[0].WriteHistFile | Should Be $UserParams.WriteHistFile
+                $test.ParamPresetValues[0].HistCompareHashes | Should Be $UserParams.HistCompareHashes
+                $test.ParamPresetValues[0].InputSubfolderSearch | Should Be $UserParams.InputSubfolderSearch
+                $test.ParamPresetValues[0].CheckOutputDupli | Should Be $UserParams.CheckOutputDupli
+                $test.ParamPresetValues[0].VerifyCopies | Should Be $UserParams.VerifyCopies
+                $test.ParamPresetValues[0].OverwriteExistingFiles | Should Be $UserParams.OverwriteExistingFiles
+                $test.ParamPresetValues[0].AvoidIdenticalFiles | Should Be $UserParams.AvoidIdenticalFiles
+                $test.ParamPresetValues[0].ZipMirror | Should Be $UserParams.ZipMirror
+                $test.ParamPresetValues[0].UnmountInputDrive | Should Be $UserParams.UnmountInputDrive
+                $test.ParamPresetValues[0].Preventstandby | Should Be $script:Preventstandby
+            }
+            It "Add `"BLA`"" {
+                $UserParams.SaveParamPresetName = "BLA"
+
+                $test = Set-Parameters -UserParams $UserParams
+                $test | Should Be $true
+
+                $test = Get-Content -LiteralPath $UserParams.JSONParamPath -Encoding UTF8 -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+                $bla = @("default","default2","privat","professionell","projekte","BLA")
+                (Compare-Object $test.ParamPresetName $bla -ErrorAction SilentlyContinue).count | Should Be 0
+
+                $test = $test | Where-Object {$_.ParamPresetName -eq $UserParams.SaveParamPresetName}
+                $test = $test.ParamPresetValues
+                $test.InputPath | Should Be $UserParams.InputPath
+                $test.OutputPath | Should Be $UserParams.OutputPath
+                $test.MirrorEnable | Should Be $UserParams.MirrorEnable
+                $test.MirrorPath | Should Be $UserParams.MirrorPath
+                $test.PresetFormats | Should Be $UserParams.PresetFormats
+                $test.CustomFormatsEnable | Should Be $UserParams.CustomFormatsEnable
+                $test.CustomFormats | Should Be $UserParams.CustomFormats
+                $test.OutputSubfolderStyle | Should Be $UserParams.OutputSubfolderStyle
+                $test.OutputFileStyle | Should Be $UserParams.OutputFileStyle
+                $test.HistFilePath | Should Be $UserParams.HistFilePath
+                $test.UseHistFile | Should Be $UserParams.UseHistFile
+                $test.WriteHistFile | Should Be $UserParams.WriteHistFile
+                $test.HistCompareHashes | Should Be $UserParams.HistCompareHashes
+                $test.InputSubfolderSearch | Should Be $UserParams.InputSubfolderSearch
+                $test.CheckOutputDupli | Should Be $UserParams.CheckOutputDupli
+                $test.VerifyCopies | Should Be $UserParams.VerifyCopies
+                $test.OverwriteExistingFiles | Should Be $UserParams.OverwriteExistingFiles
+                $test.AvoidIdenticalFiles | Should Be $UserParams.AvoidIdenticalFiles
+                $test.ZipMirror | Should Be $UserParams.ZipMirror
+                $test.UnmountInputDrive | Should Be $UserParams.UnmountInputDrive
+                $test.Preventstandby | Should Be $script:Preventstandby
+            }
+            It "Replace only preset" {
+                [array]$inter = @([PSCustomObject]@{
+                    ParamPresetName = $UserParams.SaveParamPresetName
+                    ParamPresetValues = [PSCustomObject]@{
+                        InputPath = $UserParams.InputPath
+                        OutputPath = $UserParams.OutputPath
+                        MirrorEnable = $UserParams.MirrorEnable
+                        MirrorPath = $UserParams.MirrorPath
+                        PresetFormats = $UserParams.PresetFormats
+                        CustomFormatsEnable = $UserParams.CustomFormatsEnable
+                        CustomFormats = $UserParams.CustomFormats
+                        OutputSubfolderStyle = $UserParams.OutputSubfolderStyle
+                        OutputFileStyle = $UserParams.OutputFileStyle
+                        HistFilePath = $UserParams.HistFilePath.Replace($PSScriptRoot,'$($PSScriptRoot)')
+                        UseHistFile = $UserParams.UseHistFile
+                        WriteHistFile = $UserParams.WriteHistFile
+                        HistCompareHashes = $UserParams.HistCompareHashes
+                        InputSubfolderSearch = $UserParams.InputSubfolderSearch
+                        CheckOutputDupli = $UserParams.CheckOutputDupli
+                        VerifyCopies = $UserParams.VerifyCopies
+                        OverwriteExistingFiles = $UserParams.OverwriteExistingFiles
+                        AvoidIdenticalFiles = $UserParams.AvoidIdenticalFiles
+                        ZipMirror = $UserParams.ZipMirror
+                        UnmountInputDrive = $UserParams.UnmountInputDrive
+                        PreventStandby = $script:PreventStandby
+                    }
+                })
+                $jsonparams = $inter | ConvertTo-Json
+                $jsonparams | Out-Null
+                [System.IO.File]::WriteAllText($UserParams.JSONParamPath, $jsonparams)
+                Start-Sleep -Milliseconds 25
+                $test = Set-Parameters -UserParams $UserParams
+                $test | Should Be $true
+            }
+            It "Create a new JSON" {
+                Remove-Item -LiteralPath $UserParams.JSONParamPath
+                $test = Set-Parameters -UserParams $UserParams
+                $test | Should Be $true
+                $test = @(Get-Content -LiteralPath $UserParams.JSONParamPath -Encoding UTF8 -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop)
+                ,$test | Should BeOfType array
+                $bla = @("default")
+                (Compare-Object $test.ParamPresetName $bla -ErrorAction SilentlyContinue).count | Should Be 0
+                $test.ParamPresetValues[0].InputPath | Should Be $UserParams.InputPath
+                $test.ParamPresetValues[0].OutputPath | Should Be $UserParams.OutputPath
+                $test.ParamPresetValues[0].MirrorEnable | Should Be $UserParams.MirrorEnable
+                $test.ParamPresetValues[0].MirrorPath | Should Be $UserParams.MirrorPath
+                $test.ParamPresetValues[0].PresetFormats | Should Be $UserParams.PresetFormats
+                $test.ParamPresetValues[0].CustomFormatsEnable | Should Be $UserParams.CustomFormatsEnable
+                $test.ParamPresetValues[0].CustomFormats | Should Be $UserParams.CustomFormats
+                $test.ParamPresetValues[0].OutputSubfolderStyle | Should Be $UserParams.OutputSubfolderStyle
+                $test.ParamPresetValues[0].OutputFileStyle | Should Be $UserParams.OutputFileStyle
+                $test.ParamPresetValues[0].HistFilePath | Should Be $UserParams.HistFilePath
+                $test.ParamPresetValues[0].UseHistFile | Should Be $UserParams.UseHistFile
+                $test.ParamPresetValues[0].WriteHistFile | Should Be $UserParams.WriteHistFile
+                $test.ParamPresetValues[0].HistCompareHashes | Should Be $UserParams.HistCompareHashes
+                $test.ParamPresetValues[0].InputSubfolderSearch | Should Be $UserParams.InputSubfolderSearch
+                $test.ParamPresetValues[0].CheckOutputDupli | Should Be $UserParams.CheckOutputDupli
+                $test.ParamPresetValues[0].VerifyCopies | Should Be $UserParams.VerifyCopies
+                $test.ParamPresetValues[0].OverwriteExistingFiles | Should Be $UserParams.OverwriteExistingFiles
+                $test.ParamPresetValues[0].AvoidIdenticalFiles | Should Be $UserParams.AvoidIdenticalFiles
+                $test.ParamPresetValues[0].ZipMirror | Should Be $UserParams.ZipMirror
+                $test.ParamPresetValues[0].UnmountInputDrive | Should Be $UserParams.UnmountInputDrive
+                $test.ParamPresetValues[0].Preventstandby | Should Be $script:Preventstandby
+            }
+        }
+        Context "No problems with SpecChars" {
+            It "Brackets" {
+                $UserParams.JSONParamPath = "$BlaDrive\In_Test\mc parameters[1].json"
+                $UserParams.SaveParamPresetName = "bla"
+
+                $test = Set-Parameters -UserParams $UserParams
+                $test | Should Be $true
+
+                $test = Get-Content -LiteralPath $UserParams.JSONParamPath -Encoding UTF8 -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+                ,$test | Should BeOfType array
+                $bla = @("default","default2","bla","professionell","projekte")
+                (Compare-Object $test.ParamPresetName $bla -ErrorAction SilentlyContinue).count | Should Be 0
+
+                $test = $test | Where-Object {$_.ParamPresetName -eq $UserParams.SaveParamPresetName}
+                $test = $test.ParamPresetValues
+                $test.InputPath | Should Be $UserParams.InputPath
+                $test.OutputPath | Should Be $UserParams.OutputPath
+                $test.MirrorEnable | Should Be $UserParams.MirrorEnable
+                $test.MirrorPath | Should Be $UserParams.MirrorPath
+                $test.PresetFormats | Should Be $UserParams.PresetFormats
+                $test.CustomFormatsEnable | Should Be $UserParams.CustomFormatsEnable
+                $test.CustomFormats | Should Be $UserParams.CustomFormats
+                $test.OutputSubfolderStyle | Should Be $UserParams.OutputSubfolderStyle
+                $test.OutputFileStyle | Should Be $UserParams.OutputFileStyle
+                $test.HistFilePath | Should Be $UserParams.HistFilePath
+                $test.UseHistFile | Should Be $UserParams.UseHistFile
+                $test.WriteHistFile | Should Be $UserParams.WriteHistFile
+                $test.HistCompareHashes | Should Be $UserParams.HistCompareHashes
+                $test.InputSubfolderSearch | Should Be $UserParams.InputSubfolderSearch
+                $test.CheckOutputDupli | Should Be $UserParams.CheckOutputDupli
+                $test.VerifyCopies | Should Be $UserParams.VerifyCopies
+                $test.OverwriteExistingFiles | Should Be $UserParams.OverwriteExistingFiles
+                $test.AvoidIdenticalFiles | Should Be $UserParams.AvoidIdenticalFiles
+                $test.ZipMirror | Should Be $UserParams.ZipMirror
+                $test.UnmountInputDrive | Should Be $UserParams.UnmountInputDrive
+                $test.Preventstandby | Should Be $script:Preventstandby
+            }
+            It "12345" {
+                $UserParams.JSONParamPath = "$BlaDrive\In_Test\123456789 ordner\123456789 parameters.json"
+                $UserParams.SaveParamPresetName = "12345"
+
+                $test = Set-Parameters -UserParams $UserParams
+                $test | Should Be $true
+
+                $test = Get-Content -LiteralPath $UserParams.JSONParamPath -Encoding UTF8 -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+                ,$test | Should BeOfType array
+                $bla = @("default","12345")
+                (Compare-Object $test.ParamPresetName $bla -ErrorAction SilentlyContinue).count | Should Be 0
+
+                $test = $test | Where-Object {$_.ParamPresetName -eq $UserParams.SaveParamPresetName}
+                $test = $test.ParamPresetValues
+                $test.InputPath | Should Be $UserParams.InputPath
+                $test.OutputPath | Should Be $UserParams.OutputPath
+                $test.MirrorEnable | Should Be $UserParams.MirrorEnable
+                $test.MirrorPath | Should Be $UserParams.MirrorPath
+                $test.PresetFormats | Should Be $UserParams.PresetFormats
+                $test.CustomFormatsEnable | Should Be $UserParams.CustomFormatsEnable
+                $test.CustomFormats | Should Be $UserParams.CustomFormats
+                $test.OutputSubfolderStyle | Should Be $UserParams.OutputSubfolderStyle
+                $test.OutputFileStyle | Should Be $UserParams.OutputFileStyle
+                $test.HistFilePath | Should Be $UserParams.HistFilePath
+                $test.UseHistFile | Should Be $UserParams.UseHistFile
+                $test.WriteHistFile | Should Be $UserParams.WriteHistFile
+                $test.HistCompareHashes | Should Be $UserParams.HistCompareHashes
+                $test.InputSubfolderSearch | Should Be $UserParams.InputSubfolderSearch
+                $test.CheckOutputDupli | Should Be $UserParams.CheckOutputDupli
+                $test.VerifyCopies | Should Be $UserParams.VerifyCopies
+                $test.OverwriteExistingFiles | Should Be $UserParams.OverwriteExistingFiles
+                $test.AvoidIdenticalFiles | Should Be $UserParams.AvoidIdenticalFiles
+                $test.ZipMirror | Should Be $UserParams.ZipMirror
+                $test.UnmountInputDrive | Should Be $UserParams.UnmountInputDrive
+                $test.Preventstandby | Should Be $script:Preventstandby
+            }
+            It "Æ" {
+                $UserParams.JSONParamPath = "$BlaDrive\In_Test\ÆOrdner\ÆParameters.json"
+                $UserParams.SaveParamPresetName = "default"
+
+                $test = Set-Parameters -UserParams $UserParams
+                $test | Should Be $true
+
+                $test = Get-Content -LiteralPath $UserParams.JSONParamPath -Encoding UTF8 -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+                ,$test | Should BeOfType array
+                $bla = @("default","ae")
+                (Compare-Object $test.ParamPresetName $bla -ErrorAction SilentlyContinue).count | Should Be 0
+
+                $test = $test | Where-Object {$_.ParamPresetName -eq $UserParams.SaveParamPresetName}
+                $test = $test.ParamPresetValues
+                $test.InputPath | Should Be $UserParams.InputPath
+                $test.OutputPath | Should Be $UserParams.OutputPath
+                $test.MirrorEnable | Should Be $UserParams.MirrorEnable
+                $test.MirrorPath | Should Be $UserParams.MirrorPath
+                $test.PresetFormats | Should Be $UserParams.PresetFormats
+                $test.CustomFormatsEnable | Should Be $UserParams.CustomFormatsEnable
+                $test.CustomFormats | Should Be $UserParams.CustomFormats
+                $test.OutputSubfolderStyle | Should Be $UserParams.OutputSubfolderStyle
+                $test.OutputFileStyle | Should Be $UserParams.OutputFileStyle
+                $test.HistFilePath | Should Be $UserParams.HistFilePath
+                $test.UseHistFile | Should Be $UserParams.UseHistFile
+                $test.WriteHistFile | Should Be $UserParams.WriteHistFile
+                $test.HistCompareHashes | Should Be $UserParams.HistCompareHashes
+                $test.InputSubfolderSearch | Should Be $UserParams.InputSubfolderSearch
+                $test.CheckOutputDupli | Should Be $UserParams.CheckOutputDupli
+                $test.VerifyCopies | Should Be $UserParams.VerifyCopies
+                $test.OverwriteExistingFiles | Should Be $UserParams.OverwriteExistingFiles
+                $test.AvoidIdenticalFiles | Should Be $UserParams.AvoidIdenticalFiles
+                $test.ZipMirror | Should Be $UserParams.ZipMirror
+                $test.UnmountInputDrive | Should Be $UserParams.UnmountInputDrive
+                $test.Preventstandby | Should Be $script:Preventstandby
+            }
+            It "backtick" {
+                $UserParams.JSONParamPath = "$BlaDrive\In_Test\backtick ````ordner ``\backtick ````params``.json"
+                $UserParams.SaveParamPresetName = "backtick"
+
+                $test = Set-Parameters -UserParams $UserParams
+                $test | Should Be $true
+
+                $test = Get-Content -LiteralPath $UserParams.JSONParamPath -Encoding UTF8 -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+                ,$test | Should BeOfType array
+                $bla = @("backtick","blaaa")
+                (Compare-Object $test.ParamPresetName $bla -ErrorAction SilentlyContinue).count | Should Be 0
+
+                $test = $test | Where-Object {$_.ParamPresetName -eq $UserParams.SaveParamPresetName}
+                $test = $test.ParamPresetValues
+                $test.InputPath | Should Be $UserParams.InputPath
+                $test.OutputPath | Should Be $UserParams.OutputPath
+                $test.MirrorEnable | Should Be $UserParams.MirrorEnable
+                $test.MirrorPath | Should Be $UserParams.MirrorPath
+                $test.PresetFormats | Should Be $UserParams.PresetFormats
+                $test.CustomFormatsEnable | Should Be $UserParams.CustomFormatsEnable
+                $test.CustomFormats | Should Be $UserParams.CustomFormats
+                $test.OutputSubfolderStyle | Should Be $UserParams.OutputSubfolderStyle
+                $test.OutputFileStyle | Should Be $UserParams.OutputFileStyle
+                $test.HistFilePath | Should Be $UserParams.HistFilePath
+                $test.UseHistFile | Should Be $UserParams.UseHistFile
+                $test.WriteHistFile | Should Be $UserParams.WriteHistFile
+                $test.HistCompareHashes | Should Be $UserParams.HistCompareHashes
+                $test.InputSubfolderSearch | Should Be $UserParams.InputSubfolderSearch
+                $test.CheckOutputDupli | Should Be $UserParams.CheckOutputDupli
+                $test.VerifyCopies | Should Be $UserParams.VerifyCopies
+                $test.OverwriteExistingFiles | Should Be $UserParams.OverwriteExistingFiles
+                $test.AvoidIdenticalFiles | Should Be $UserParams.AvoidIdenticalFiles
+                $test.ZipMirror | Should Be $UserParams.ZipMirror
+                $test.UnmountInputDrive | Should Be $UserParams.UnmountInputDrive
+                $test.Preventstandby | Should Be $script:Preventstandby
+            }
+            It "bracket 2" {
+                $UserParams.JSONParamPath = "$BlaDrive\In_Test\bracket [ ] ordner\bracket [ ] Parameter.json"
+                $UserParams.SaveParamPresetName = "defaultbracket"
+
+                $test = Set-Parameters -UserParams $UserParams
+                $test | Should Be $true
+
+                $test = @(Get-Content -LiteralPath $UserParams.JSONParamPath -Encoding UTF8 -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop)
+                ,$test | Should BeOfType array
+                $bla = @("defaultbracket")
+                (Compare-Object $test.ParamPresetName $bla -ErrorAction SilentlyContinue).count | Should Be 0
+
+                $test = $test | Where-Object {$_.ParamPresetName -eq $UserParams.SaveParamPresetName}
+                $test = $test.ParamPresetValues
+                $test.InputPath | Should Be $UserParams.InputPath
+                $test.OutputPath | Should Be $UserParams.OutputPath
+                $test.MirrorEnable | Should Be $UserParams.MirrorEnable
+                $test.MirrorPath | Should Be $UserParams.MirrorPath
+                $test.PresetFormats | Should Be $UserParams.PresetFormats
+                $test.CustomFormatsEnable | Should Be $UserParams.CustomFormatsEnable
+                $test.CustomFormats | Should Be $UserParams.CustomFormats
+                $test.OutputSubfolderStyle | Should Be $UserParams.OutputSubfolderStyle
+                $test.OutputFileStyle | Should Be $UserParams.OutputFileStyle
+                $test.HistFilePath | Should Be $UserParams.HistFilePath
+                $test.UseHistFile | Should Be $UserParams.UseHistFile
+                $test.WriteHistFile | Should Be $UserParams.WriteHistFile
+                $test.HistCompareHashes | Should Be $UserParams.HistCompareHashes
+                $test.InputSubfolderSearch | Should Be $UserParams.InputSubfolderSearch
+                $test.CheckOutputDupli | Should Be $UserParams.CheckOutputDupli
+                $test.VerifyCopies | Should Be $UserParams.VerifyCopies
+                $test.OverwriteExistingFiles | Should Be $UserParams.OverwriteExistingFiles
+                $test.AvoidIdenticalFiles | Should Be $UserParams.AvoidIdenticalFiles
+                $test.ZipMirror | Should Be $UserParams.ZipMirror
+                $test.UnmountInputDrive | Should Be $UserParams.UnmountInputDrive
+                $test.Preventstandby | Should Be $script:Preventstandby
+            }
+            It "dots" {
+                $UserParams.JSONParamPath = "$BlaDrive\In_Test\ordner.mit.punkten\mc.parameters.json"
+                $UserParams.SaveParamPresetName = "default"
+
+                $test = Set-Parameters -UserParams $UserParams
+                $test | Should Be $true
+
+                $test = Get-Content -LiteralPath $UserParams.JSONParamPath -Encoding UTF8 -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+                ,$test | Should BeOfType array
+                $bla = @("default","dots")
+                (Compare-Object $test.ParamPresetName $bla -ErrorAction SilentlyContinue).count | Should Be 0
+
+                $test = $test | Where-Object {$_.ParamPresetName -eq $UserParams.SaveParamPresetName}
+                $test = $test.ParamPresetValues
+                $test.InputPath | Should Be $UserParams.InputPath
+                $test.OutputPath | Should Be $UserParams.OutputPath
+                $test.MirrorEnable | Should Be $UserParams.MirrorEnable
+                $test.MirrorPath | Should Be $UserParams.MirrorPath
+                $test.PresetFormats | Should Be $UserParams.PresetFormats
+                $test.CustomFormatsEnable | Should Be $UserParams.CustomFormatsEnable
+                $test.CustomFormats | Should Be $UserParams.CustomFormats
+                $test.OutputSubfolderStyle | Should Be $UserParams.OutputSubfolderStyle
+                $test.OutputFileStyle | Should Be $UserParams.OutputFileStyle
+                $test.HistFilePath | Should Be $UserParams.HistFilePath
+                $test.UseHistFile | Should Be $UserParams.UseHistFile
+                $test.WriteHistFile | Should Be $UserParams.WriteHistFile
+                $test.HistCompareHashes | Should Be $UserParams.HistCompareHashes
+                $test.InputSubfolderSearch | Should Be $UserParams.InputSubfolderSearch
+                $test.CheckOutputDupli | Should Be $UserParams.CheckOutputDupli
+                $test.VerifyCopies | Should Be $UserParams.VerifyCopies
+                $test.OverwriteExistingFiles | Should Be $UserParams.OverwriteExistingFiles
+                $test.AvoidIdenticalFiles | Should Be $UserParams.AvoidIdenticalFiles
+                $test.ZipMirror | Should Be $UserParams.ZipMirror
+                $test.UnmountInputDrive | Should Be $UserParams.UnmountInputDrive
+                $test.Preventstandby | Should Be $script:Preventstandby
+            }
+            It "specials" {
+                $UserParams.JSONParamPath = "$BlaDrive\In_Test\special ' ! ,; . ordner\special ' ! ,; . parameter.json"
+                $UserParams.SaveParamPresetName = "special"
+
+                $test = Set-Parameters -UserParams $UserParams
+                $test | Should Be $true
+
+                $test = Get-Content -LiteralPath $UserParams.JSONParamPath -Encoding UTF8 -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+                ,$test | Should BeOfType array
+                $bla = @("special","default2","professionell","projekte")
+                (Compare-Object $test.ParamPresetName $bla -ErrorAction SilentlyContinue).count | Should Be 0
+
+                $test = $test | Where-Object {$_.ParamPresetName -eq $UserParams.SaveParamPresetName}
+                $test = $test.ParamPresetValues
+                $test.InputPath | Should Be $UserParams.InputPath
+                $test.OutputPath | Should Be $UserParams.OutputPath
+                $test.MirrorEnable | Should Be $UserParams.MirrorEnable
+                $test.MirrorPath | Should Be $UserParams.MirrorPath
+                $test.PresetFormats | Should Be $UserParams.PresetFormats
+                $test.CustomFormatsEnable | Should Be $UserParams.CustomFormatsEnable
+                $test.CustomFormats | Should Be $UserParams.CustomFormats
+                $test.OutputSubfolderStyle | Should Be $UserParams.OutputSubfolderStyle
+                $test.OutputFileStyle | Should Be $UserParams.OutputFileStyle
+                $test.HistFilePath | Should Be $UserParams.HistFilePath
+                $test.UseHistFile | Should Be $UserParams.UseHistFile
+                $test.WriteHistFile | Should Be $UserParams.WriteHistFile
+                $test.HistCompareHashes | Should Be $UserParams.HistCompareHashes
+                $test.InputSubfolderSearch | Should Be $UserParams.InputSubfolderSearch
+                $test.CheckOutputDupli | Should Be $UserParams.CheckOutputDupli
+                $test.VerifyCopies | Should Be $UserParams.VerifyCopies
+                $test.OverwriteExistingFiles | Should Be $UserParams.OverwriteExistingFiles
+                $test.AvoidIdenticalFiles | Should Be $UserParams.AvoidIdenticalFiles
+                $test.ZipMirror | Should Be $UserParams.ZipMirror
+                $test.UnmountInputDrive | Should Be $UserParams.UnmountInputDrive
+                $test.Preventstandby | Should Be $script:Preventstandby
             }
         }
     }
-
+#>
 
 <#
     Describe "Start-FileSearch"{

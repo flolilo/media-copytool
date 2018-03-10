@@ -1611,7 +1611,7 @@ Function Set-Parameters(){
     [int]$i = 0
     while($true){
         try{
-            [System.IO.File]::WriteAllText($UserParams.JSONParamPath, $jsonparams)
+            Out-File -LiteralPath $UserParams.JSONParamPath -InputObject $jsonparams -Encoding utf8 -ErrorAction Stop
             break
         }catch{
             if($i -lt 5){
