@@ -1632,8 +1632,8 @@ Function Set-Parameters(){
 # DEFINITION: Searching for selected formats in Input-Path, getting Path, Name, Time, and calculating Hash:
 Function Start-FileSearch(){
     param(
-        [Parameter(Mandatory=$true)]
-        [hashtable]$UserParams
+        [ValidateNotNullOrEmpty()]
+        [hashtable]$UserParams = $(throw 'UserParams is required by Show-Parameters')
     )
     $sw = [diagnostics.stopwatch]::StartNew()
     Write-ColorOut "$(Get-CurrentDate)  --  Finding files." -ForegroundColor Cyan
@@ -1666,7 +1666,7 @@ Function Start-FileSearch(){
                 Extension = $_.Extension
                 Size = $_.Length
                 Date = $_.LastWriteTime.ToString("yyyy-MM-dd_HH-mm-ss")
-                Sub_Date = $(if($UserParams.OutputSubfolderStyle -eq "none"){""}elseif($UserParams.OutputSubfolderStyle -eq "unchanged"){$($(Split-Path -Parent -Path $_.FullName).Replace($UserParams.InputPath,""))}else{"\$($_.LastWriteTime.ToString("$($UserParams.OutputSubfolderStyle)"))"})
+                Sub_Date = $(if($UserParams.OutputSubfolderStyle -eq "none"){""}elseif($UserParams.OutputSubfolderStyle -eq "unchanged"){$($(Split-Path -Parent -Path $_.FullName).Replace($UserParams.InputPath,""))}else{"\$($_.LastWriteTime.ToString("$($UserParams.OutputSubfolderStyle)"))"}) # TODO: should there really be a backslash?
                 OutPath = "ZYX"
                 OutName = $_.Name
                 OutBaseName = $(if($UserParams.OutputFileStyle -eq "unchanged"){$_.BaseName}else{$_.LastWriteTime.ToString("$($UserParams.OutputSubfolderStyle)")})
@@ -2481,7 +2481,7 @@ Function Start-Everything(){
         }
 
         # DEFINITION: Search for files:
-        [array]$inputfiles = (Start-FileSearch -UserParams $UserParams)
+        [array]$inputfiles = @(Start-FileSearch -UserParams $UserParams)
         if($inputfiles.Length -lt 1){
             Write-ColorOut "$($inputfiles.Length) files left to copy - aborting rest of the script." -ForegroundColor Magenta
             Start-Sound(1)

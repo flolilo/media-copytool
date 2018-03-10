@@ -49,7 +49,7 @@
         }
         New-Item -ItemType Directory -Path $BlaDrive
         Push-Location $BlaDrive
-        Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x -aoa -bb0 -pdefault -sccUTF-8 -spf2 `"$($PSScriptRoot)\media_copytool_TESTFILES.zip`" `"-o.\`" " -WindowStyle Minimized -Wait
+        Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x -aoa -bb0 -pdefault -sccUTF-8 -spf2 `"$($PSScriptRoot)\media_copytool_TESTFILES.7z`" `"-o.\`" " -WindowStyle Minimized -Wait
         Pop-Location
 
         It "First basic test" {
@@ -275,7 +275,7 @@
         }
         New-Item -ItemType Directory -Path $BlaDrive
         Push-Location $BlaDrive
-        Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x -aoa -bb0 -pdefault -sccUTF-8 -spf2 `"$($PSScriptRoot)\media_copytool_TESTFILES.zip`" `"-o.\`" " -WindowStyle Minimized -Wait
+        Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x -aoa -bb0 -pdefault -sccUTF-8 -spf2 `"$($PSScriptRoot)\media_copytool_TESTFILES.7z`" `"-o.\`" " -WindowStyle Minimized -Wait
         Pop-Location
 
         # TODO: check how to auto-close form
@@ -347,9 +347,9 @@
             }
         }
         New-Item -ItemType Directory -Path $BlaDrive
-        # Expand-Archive $PSScriptRoot\media_copytool_TESTFILES.zip $BlaDrive
+        # Expand-Archive $PSScriptRoot\media_copytool_TESTFILES.7z $BlaDrive
         Push-Location $BlaDrive
-        Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x -aoa -bb0 -pdefault -sccUTF-8 -spf2 `"$($PSScriptRoot)\media_copytool_TESTFILES.zip`" `"-o.\`" " -WindowStyle Minimized -Wait
+        Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x -aoa -bb0 -pdefault -sccUTF-8 -spf2 `"$($PSScriptRoot)\media_copytool_TESTFILES.7z`" `"-o.\`" " -WindowStyle Minimized -Wait
         Pop-Location
 
         It ""{
@@ -400,9 +400,9 @@
 
         }
         New-Item -ItemType Directory -Path $BlaDrive
-        # Expand-Archive $PSScriptRoot\media_copytool_TESTFILES.zip $BlaDrive
+        # Expand-Archive $PSScriptRoot\media_copytool_TESTFILES.7z $BlaDrive
         Push-Location $BlaDrive
-        Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x -aoa -bb0 -pdefault -sccUTF-8 -spf2 `"$($PSScriptRoot)\media_copytool_TESTFILES.zip`" `"-o.\`" " -WindowStyle Minimized -Wait
+        Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x -aoa -bb0 -pdefault -sccUTF-8 -spf2 `"$($PSScriptRoot)\media_copytool_TESTFILES.7z`" `"-o.\`" " -WindowStyle Minimized -Wait
         Pop-Location
 
         It "Get values from CLI, then check the main input- and outputfolder"{
@@ -452,7 +452,7 @@
         }
         New-Item -ItemType Directory -Path $BlaDrive
         Push-Location $BlaDrive
-        Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x -aoa -bb0 -pdefault -sccUTF-8 -spf2 `"$($PSScriptRoot)\media_copytool_TESTFILES.zip`" `"-o.\`" " -WindowStyle Minimized -Wait
+        Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x -aoa -bb0 -pdefault -sccUTF-8 -spf2 `"$($PSScriptRoot)\media_copytool_TESTFILES.7z`" `"-o.\`" " -WindowStyle Minimized -Wait
         Pop-Location
         $bla = Get-ChildItem -LiteralPath $BlaDrive -Recurse
 
@@ -1239,7 +1239,7 @@
         }
         New-Item -ItemType Directory -Path $BlaDrive
         Push-Location $BlaDrive
-        Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x -aoa -bb0 -pdefault -sccUTF-8 -spf2 `"$($PSScriptRoot)\media_copytool_TESTFILES.zip`" `"-o.\`" " -WindowStyle Minimized -Wait
+        Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x -aoa -bb0 -pdefault -sccUTF-8 -spf2 `"$($PSScriptRoot)\media_copytool_TESTFILES.7z`" `"-o.\`" " -WindowStyle Minimized -Wait
         Pop-Location
 
         It "Throws when no/wrong param" {
@@ -1639,14 +1639,118 @@
         }
     }
 #>
+<# DONE:    Describe "Start-FileSearch" {
+        $BlaDrive = "TestDrive:\TEST"
+        BeforeEach {
+            [hashtable]$UserParams = @{
+                InputPath = "$BlaDrive\In_Test"
+                UseHistFile = 1
+                HistCompareHashes = 1
+                CheckOutputDupli = 1
+                allChosenFormats = @("*.JPG")
+                OutputFileStyle = "unchanged"
+                OutputSubfolderStyle = "yyyy-MM-dd"
+            }
+            $script:input_recurse = $true
+        }
+        New-Item -ItemType Directory -Path $BlaDrive
+        Push-Location $BlaDrive
+        Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x -aoa -bb0 -pdefault -sccUTF-8 -spf2 `"$($PSScriptRoot)\media_copytool_TESTFILES.7z`" `"-o.\`" " -WindowStyle Minimized -Wait
+        Pop-Location
 
-<#
-    Describe "Start-FileSearch"{
-        It "Searching for selected formats in Input-Path, getting Path, Name, Time, and calculating Hash"{
-
+        It "Return array if successful" {
+            $test = @(Start-FileSearch -UserParams $UserParams)
+            ,$test | Should BeOfType array
+            $test.length | Should Be 26
+        }
+        It "Return array even if only one file is found" {
+            $UserParams.allChosenFormats = @("*.pptx")
+            $test = @(Start-FileSearch -UserParams $UserParams)
+            ,$test | Should BeOfType array
+            $test.length        | Should Be 1
+            $test.InPath        | Should Be "$TestDrive\TEST\In_Test"
+            $test.InName        | Should Be "singleFile.pptx"
+            $test.BaseName      | Should Be "singleFile"
+            $test.Extension     | Should Be $UserParams.allChosenFormats.Replace("*","")
+            $test.Size          | Should Be 32652
+            $test.Date          | Should Be "2018-03-10_19-51-21"
+            $test.Sub_Date      | Should Be "\2018-03-10" # TODO: should there really be a backslash?
+            $test.OutPath       | Should Be "ZYX"
+            $test.OutName       | Should Be "singleFile.pptx"
+            $test.OutBaseName   | Should Be "singleFile"
+            $test.Hash          | Should Be "A8FD5A691EC2C81B0BD597A4B78616ED01BFE6F9"
+            $test.ToCopy        | Should Be 1
+        }
+        It "Throw if no/wrong param" {
+            {Start-FileSearch} | Should Throw
+            {Start-FileSearch -UserParams 123} | Should Throw
+            {Start-FileSearch -UserParams @{}} | Should Throw
+        }
+        Context "No problems with SpecChars" {
+            BeforeEach {
+                $script:input_recurse = $false
+                $UserParams.allChosenFormats = @("*")
+            }
+            It "All" {
+                $script:input_recurse = $true
+                $UserParams.InputPath = "$BlaDrive\In_Test"
+                $test = @(Start-FileSearch -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test.length | Should Be 175
+            }
+            It "12345" {
+                $UserParams.InputPath = "$BlaDrive\In_Test\123456789 ordner"
+                $test = @(Start-FileSearch -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test.length | Should Be 14
+                $test = $test | Where-Object {$_.BaseName -like "123412356789 file"}
+                $test.Hash | Should Be "84BFA364C661714A5BC94153E0F61BDFEB9F22B5"
+            }
+            It "Æ" {
+                $UserParams.InputPath = "$BlaDrive\In_Test\ÆOrdner"
+                $test = @(Start-FileSearch -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test.length | Should Be 14
+                $test = $test | Where-Object {$_.BaseName -like "Æfile"}
+                $test.Hash | Should Be "84BFA364C661714A5BC94153E0F61BDFEB9F22B5"
+            }
+            It "backtick" {
+                $UserParams.InputPath = "$BlaDrive\In_Test\backtick ````ordner ``"
+                $test = @(Start-FileSearch -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test.length | Should Be 14
+                $test = $test | Where-Object {$_.BaseName -match 'backtick\ \`\ file\ \`\`$'}
+                $test.Hash | Should Be "84BFA364C661714A5BC94153E0F61BDFEB9F22B5"
+            }
+            It "bracket" {
+                $UserParams.InputPath = "$BlaDrive\In_Test\bracket [ ] ordner"
+                $test = @(Start-FileSearch -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test.length | Should Be 14
+                $test = $test | Where-Object {$_.BaseName -match 'bracket\ \[\ \]\ file$'}
+                $test.Hash | Should Be "84BFA364C661714A5BC94153E0F61BDFEB9F22B5"
+            }
+            It "dots" {
+                $UserParams.InputPath = "$BlaDrive\In_Test\ordner.mit.punkten"
+                $test = @(Start-FileSearch -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test.length | Should Be 14
+                $test = $test | Where-Object {$_.BaseName -like "file.with.dots"}
+                $test.Hash | Should Be "84BFA364C661714A5BC94153E0F61BDFEB9F22B5"
+            }
+            It "specials" {
+                $UserParams.InputPath = "$BlaDrive\In_Test\special ' ! ,; . ordner"
+                $test = @(Start-FileSearch -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test.length | Should Be 14
+                $test = $test | Where-Object {$_.BaseName -like "special '!, ;. file"}
+                $test.Hash | Should Be "84BFA364C661714A5BC94153E0F61BDFEB9F22B5"
+            }
         }
     }
+#>
 
+<#
     Describe "Get-HistFile"{
         It "Get History-File"{
 
