@@ -311,7 +311,7 @@ Function Write-ColorOut(){
         .DESCRIPTION
             Using the [Console]-commands to make everything faster.
         .NOTES
-            Date: 2017-10-25
+            Date: 2018-03-11
         
         .PARAMETER Object
             String to write out
@@ -325,9 +325,8 @@ Function Write-ColorOut(){
         .EXAMPLE
             Just use it like Write-Host.
     #>
-    <#param(
-        [ValidateNotNullOrEmpty()]
-        [string]$Object,
+    param(
+        [string]$Object = "Something called Write-ColorOut, but no string was passed.",
 
         [ValidateSet("DarkBlue","DarkGreen","DarkCyan","DarkRed","Blue","Green","Cyan","Red","Magenta","Yellow","Black","DarkGray","Gray","DarkYellow","White","DarkMagenta")]
         [string]$ForegroundColor,
@@ -1633,7 +1632,7 @@ Function Set-Parameters(){
 Function Start-FileSearch(){
     param(
         [ValidateNotNullOrEmpty()]
-        [hashtable]$UserParams = $(throw 'UserParams is required by Show-Parameters')
+        [hashtable]$UserParams = $(throw 'UserParams is required by Start-FileSearch')
     )
     $sw = [diagnostics.stopwatch]::StartNew()
     Write-ColorOut "$(Get-CurrentDate)  --  Finding files." -ForegroundColor Cyan
@@ -1716,15 +1715,15 @@ Function Start-FileSearch(){
 # DEFINITION: Get History-File:
 Function Get-HistFile(){
     param(
-        [Parameter(Mandatory=$true)]
-        [hashtable]$UserParams
+        [ValidateNotNullOrEmpty()]
+        [hashtable]$UserParams = $(throw 'UserParams is required by Get-HistFile')
     )
     Write-ColorOut "$(Get-CurrentDate)  --  Checking for history-file, importing values..." -ForegroundColor Cyan
 
     [array]$files_history = @()
-    if(Test-Path -LiteralPath $UserParams.HistFilePath -PathType Leaf){
+    if((Test-Path -LiteralPath $UserParams.HistFilePath -PathType Leaf) -eq $true){
         try{
-            $JSONFile = Get-Content -LiteralPath $UserParams.HistFilePath -Raw -Encoding UTF8 | ConvertFrom-Json
+            $JSONFile = Get-Content -LiteralPath $UserParams.HistFilePath -Raw -Encoding UTF8 -ErrorAction Stop | ConvertFrom-JSON -ErrorAction Stop
         }catch{
             Write-ColorOut "Could not load $($UserParams.HistFilePath)." -ForegroundColor Red -Indentation 4
             Start-Sleep -Seconds 5
@@ -1739,7 +1738,8 @@ Function Get-HistFile(){
                 Hash = $_.Hash
             }
         }
-        $files_history
+        $files_history | Out-Null
+
         if($script:Debug -gt 1){
             if((Read-Host "    Show found history-values? `"1`" means `"yes`"") -eq 1){
                 Write-ColorOut "Found values: $($files_history.Length)" -ForegroundColor Yellow -Indentation 4
@@ -1749,15 +1749,18 @@ Function Get-HistFile(){
                 }
             }
         }
-        if("null" -in $files_history -or $files_history.InName.Length -lt 1 -or ($files_history.Length -gt 1 -and (($files_history.InName.Length -ne $files_history.Date.Length) -or ($files_history.InName.Length -ne $files_history.Size.Length) -or ($files_history.InName.Length -ne $files_history.Hash.Length)))){
+
+        # TODO: can Hashes be $null? if so, delete from this if-clause:
+        if("null" -in $files_history -or $files_history.InName.Length -lt 1 -or ($files_history.Length -gt 1 -and (($files_history.InName.Length -ne $files_history.Date.Length) -or ($files_history.InName.Length -ne $files_history.Size.Length) -or ($files_history.InName.Length -ne $files_history.Hash.Length) -or ($files_history.InName -contains $null) -or ($files_history.Date -contains $null) -or ($files_history.Size -contains $null) -or ($files_history.Hash -contains $null)))){
             Write-ColorOut "Some values in the history-file $($UserParams.HistFilePath) seem wrong - it's safest to delete the whole file." -ForegroundColor Magenta -Indentation 4
             Write-ColorOut "InNames: $($files_history.InName.Length) Dates: $($files_history.Date.Length) Sizes: $($files_history.Size.Length) Hashes: $($files_history.Hash.Length)" -Indentation 4
             if((Read-Host "    Is that okay? Type '1' (without quotes) to confirm or any other number to abort. Confirm by pressing Enter") -eq 1){
                 $UserParams.UseHistFile = 0
                 $UserParams.WriteHistFile = "Overwrite"
+                return @()
             }else{
                 Write-ColorOut "`r`n`tAborting.`r`n" -ForegroundColor Magenta
-                Invoke-Close
+                return $false
             }
         }
         if("ZYX" -in $files_history.Hash -and $UserParams.HistCompareHashes -eq 1){
@@ -1769,9 +1772,10 @@ Function Get-HistFile(){
         if((Read-Host "    Is that okay? Type '1' (without quotes) to confirm or any other number to abort. Confirm by pressing Enter") -eq 1){
             $UserParams.UseHistFile = 0
             $UserParams.WriteHistFile = "Overwrite"
+            return @()
         }else{
             Write-ColorOut "`r`n`tAborting.`r`n" -ForegroundColor Magenta
-            Invoke-Close
+            return $false
         }
     }
 

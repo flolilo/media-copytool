@@ -1971,13 +1971,152 @@
         }
     }
 #>
-<#
-    Describe "Get-HistFile"{
-        It "Get History-File"{
+<# DONE:    Describe "Get-HistFile"{
+        $BlaDrive = "$TestDrive\TEST"
+        # DEFINITION: Combine all parameters into a hashtable:
+        BeforeEach {
+            [hashtable]$UserParams = @{
+                InputPath = "$BlaDrive\In_Test"
+                OutputPath = "$BlaDrive\Out_Test"
+                allChosenFormats = @("*")
+                OutputSubfolderStyle = "yyyy-MM-dd"
+                OutputFileStyle = "unchanged"
+                HistFilePath = "$BlaDrive\In_Test\mc_hist.json"
+                UseHistFile = 0
+                WriteHistFile = "no"
+                HistCompareHashes = 0
+            }
+        }
+        New-Item -ItemType Directory -Path $BlaDrive
+        Push-Location $BlaDrive
+        Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x -aoa -bb0 -pdefault -sccUTF-8 -spf2 `"$($PSScriptRoot)\media_copytool_TESTFILES.7z`" `"-o.\`" " -WindowStyle Minimized -Wait
+        Pop-Location
 
+        Context "Work properly" {
+            It "Get array from regular histfile"{
+                $test = @(Get-HistFile -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test[2].InName | Should Be "123456789 hist.json"
+                $test[2].Date   | Should Be "2018-03-05_22-37-50"
+                $test[2].size   | Should Be 3710
+                $test[2].hash   | Should Be "DA0FD69AEF6A704430CC94C589953B3BA6E5FE01"
+            }
+            It "Get array even if just one file is found" {
+                $UserParams.HistFilePath = "$BlaDrive\In_Test\mc_hist single.json"
+                $test = @(Get-HistFile -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test.InName | Should Be "123412356789 file - Copy.rtf"
+                $test.Date | Should Be "2018-02-25_13-52-15"
+                $test.size | Should Be 5994
+                $test.hash | Should Be "84BFA364C661714A5BC94153E0F61BDFEB9F22B5"
+            }
+            It "Return empty array for empty histfile" {
+                Mock Read-Host {return 1}
+                $UserParams.HistFilePath = "$BlaDrive\In_Test\mc_parameters - empty.json"
+                $test = @(Get-HistFile -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test | Should Be @()
+            }
+            It "Return `$false if user does not want to work with empty histfile" {
+                Mock Read-Host {return 0}
+                $UserParams.HistFilePath = "$BlaDrive\In_Test\mc_parameters - empty.json"
+                $test = @(Get-HistFile -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test | Should Be $false
+            }
+            It "Return array for broken histfile" {
+                $UserParams.HistFilePath = "$BlaDrive\In_Test\mc_hist broken.json"
+                Mock Read-Host {return 1}
+                $test = @(Get-HistFile -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test | Should Be @()
+            }
+            It "Return `$false if user does not want to work with broken histfile" {
+                Mock Read-Host {return 0}
+                $UserParams.HistFilePath = "$BlaDrive\In_Test\mc_hist broken.json"
+                $test = @(Get-HistFile -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test | Should Be $false
+            }
+            It "Return empty array for no histfile" {
+                Mock Read-Host {return 1}
+                $UserParams.HistFilePath = "$BlaDrive\In_Test\nofile.json"
+                $test = @(Get-HistFile -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test | Should Be @()
+            }
+            It "Return `$false if user does not want to work with no histfile" {
+                Mock Read-Host {return 0}
+                $UserParams.HistFilePath = "$BlaDrive\In_Test\nofile.json"
+                $test = @(Get-HistFile -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test | Should Be $false
+            }
+            It "Throw if params are wrong/missing" {
+                {Get-HistFile} | Should Throw
+                {Get-HistFile -UserParams 123} | Should Throw
+                {Get-HistFile -UserParams @{}} | Should Throw
+            }
+        }
+        Context "No problems with SpecChars" {
+            It "12345" {
+                $UserParams.HistFilePath = "$BlaDrive\In_Test\123456789 ordner\123456789 hist.json"
+                $test = @(Get-HistFile -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test[2].InName | Should Be "123456789 hist.json"
+                $test[2].Date   | Should Be "2018-03-05_22-37-50"
+                $test[2].size   | Should Be 3710
+                $test[2].hash   | Should Be "DA0FD69AEF6A704430CC94C589953B3BA6E5FE01"
+            }
+            It "Æ" {
+                $UserParams.HistFilePath = "$BlaDrive\In_Test\ÆOrdner\Æhist.json"
+                $test = @(Get-HistFile -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test[2].InName | Should Be "123456789 hist.json"
+                $test[2].Date   | Should Be "2018-03-05_22-37-50"
+                $test[2].size   | Should Be 3710
+                $test[2].hash   | Should Be "DA0FD69AEF6A704430CC94C589953B3BA6E5FE01"
+            }
+            It "backtick" {
+                $UserParams.HistFilePath = "$BlaDrive\In_Test\backtick ````ordner ``\backtick ````hist``.json"
+                $test = @(Get-HistFile -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test[2].InName | Should Be "123456789 hist.json"
+                $test[2].Date   | Should Be "2018-03-05_22-37-50"
+                $test[2].size   | Should Be 3710
+                $test[2].hash   | Should Be "DA0FD69AEF6A704430CC94C589953B3BA6E5FE01"
+            }
+            It "bracket" {
+                $UserParams.HistFilePath = "$BlaDrive\In_Test\bracket [ ] ordner\bracket [ ] history.json"
+                $test = @(Get-HistFile -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test[2].InName | Should Be "123456789 hist.json"
+                $test[2].Date   | Should Be "2018-03-05_22-37-50"
+                $test[2].size   | Should Be 3710
+                $test[2].hash   | Should Be "DA0FD69AEF6A704430CC94C589953B3BA6E5FE01"
+            }
+            It "dots" {
+                $UserParams.HistFilePath = "$BlaDrive\In_Test\ordner.mit.punkten\mc.hist.json"
+                $test = @(Get-HistFile -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test[2].InName | Should Be "123456789 hist.json"
+                $test[2].Date   | Should Be "2018-03-05_22-37-50"
+                $test[2].size   | Should Be 3710
+                $test[2].hash   | Should Be "DA0FD69AEF6A704430CC94C589953B3BA6E5FE01"
+            }
+            It "specials" {
+                $UserParams.HistFilePath = "$BlaDrive\In_Test\special ' ! ,; . ordner\special ' ! ,; . hist.json"
+                $test = @(Get-HistFile -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test[2].InName | Should Be "123456789 hist.json"
+                $test[2].Date   | Should Be "2018-03-05_22-37-50"
+                $test[2].size   | Should Be 3710
+                $test[2].hash   | Should Be "DA0FD69AEF6A704430CC94C589953B3BA6E5FE01"
+            }
         }
     }
 #>
+
 <#
     Describe "Start-DupliCheckHist"{
         It "dupli-check via history-file"{
