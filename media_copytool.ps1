@@ -325,7 +325,7 @@ Function Write-ColorOut(){
         .EXAMPLE
             Just use it like Write-Host.
     #>
-    param(
+    <#param(
         [ValidateNotNullOrEmpty()]
         [string]$Object,
 
@@ -364,7 +364,7 @@ Function Write-ColorOut(){
     }
     if($BackgroundColor.Length -ge 3){
         [Console]::BackgroundColor = $old_bg_color
-    }
+    }#>
 }
 
 # DEFINITION: Pause the programme if debug-var is active. Also, enable measuring times per command with -debug 3.
@@ -1659,17 +1659,17 @@ Function Start-FileSearch(){
             }
             $counter++
             [PSCustomObject]@{
-                FullName = $_.FullName
+                InFullName = $_.FullName
                 InPath = (Split-Path -Path $_.FullName -Parent)
                 InName = $_.Name
-                BaseName = $(if($UserParams.OutputFileStyle -eq "unchanged"){$_.BaseName}else{$_.LastWriteTime.ToString("$($UserParams.OutputFileStyle)")})
+                InBaseName = $(if($UserParams.OutputFileStyle -eq "unchanged"){$_.BaseName}else{$_.LastWriteTime.ToString("$($UserParams.OutputFileStyle)")})
                 Extension = $_.Extension
                 Size = $_.Length
                 Date = $_.LastWriteTime.ToString("yyyy-MM-dd_HH-mm-ss")
-                Sub_Date = $(if($UserParams.OutputSubfolderStyle -eq "none"){""}elseif($UserParams.OutputSubfolderStyle -eq "unchanged"){$($(Split-Path -Parent -Path $_.FullName).Replace($UserParams.InputPath,""))}else{"\$($_.LastWriteTime.ToString("$($UserParams.OutputSubfolderStyle)"))"}) # TODO: should there really be a backslash?
+                OutSubfolder = $(if($UserParams.OutputSubfolderStyle -eq "none"){""}elseif($UserParams.OutputSubfolderStyle -eq "unchanged"){$($(Split-Path -Parent -Path $_.FullName).Replace($UserParams.InputPath,""))}else{"\$($_.LastWriteTime.ToString("$($UserParams.OutputSubfolderStyle)"))"}) # TODO: should there really be a backslash? # TODO: should it really be empty for unchanged in root folder?
                 OutPath = "ZYX"
-                OutName = $_.Name
-                OutBaseName = $(if($UserParams.OutputFileStyle -eq "unchanged"){$_.BaseName}else{$_.LastWriteTime.ToString("$($UserParams.OutputSubfolderStyle)")})
+                OutName = "ZYX"
+                OutBaseName = "ZYX"
                 Hash = "ZYX"
                 ToCopy = 1
             }
@@ -1697,9 +1697,9 @@ Function Start-FileSearch(){
         Write-ColorOut "Running RS-Job for getting hashes (see progress-bar)..." -ForegroundColor DarkGray -Indentation 4
         $InFiles | Start-RSJob -Name "GetHashAll" -FunctionsToLoad Write-ColorOut -ScriptBlock {
             try{
-                $_.Hash = Get-FileHash -LiteralPath $_.FullName -Algorithm SHA1 -ErrorAction Stop | Select-Object -ExpandProperty Hash
+                $_.Hash = Get-FileHash -LiteralPath $_.InFullName -Algorithm SHA1 -ErrorAction Stop | Select-Object -ExpandProperty Hash
             }catch{
-                Write-ColorOut "Could not get hash of $($_.FullName)" -ForegroundColor Red -Indentation 4
+                Write-ColorOut "Could not get hash of $($_.InFullName)" -ForegroundColor Red -Indentation 4
                 $_.Hash = "GetHashAllWRONG"
             }
         } | Wait-RSJob -ShowProgress | Receive-RSJob
@@ -2056,7 +2056,7 @@ Function Start-OverwriteProtection(){
 
         # create outpath:
         $InFiles[$i].outpath = $("$($UserParams.OutputPath)$($InFiles[$i].sub_date)").Replace("\\","\").Replace("\\","\")
-        $InFiles[$i].outbasename = $InFiles[$i].basename
+        $InFiles[$i].OutBaseName = $InFiles[$i].basename
         $InFiles[$i].outname = "$($InFiles[$i].basename)$($InFiles[$i].extension)"
         # check for files with same name from input:
         [int]$j = 1
@@ -2069,24 +2069,24 @@ Function Start-OverwriteProtection(){
                     break
                 }else{
                     if($k -eq 1){
-                        $InFiles[$i].outbasename = "$($InFiles[$i].outbasename)_OutCopy$k"
+                        $InFiles[$i].OutBaseName = "$($InFiles[$i].OutBaseName)_OutCopy$k"
                     }else{
-                        $InFiles[$i].outbasename = $InFiles[$i].outbasename -replace "_OutCopy$($k - 1)","_OutCopy$k"
+                        $InFiles[$i].OutBaseName = $InFiles[$i].OutBaseName -replace "_OutCopy$($k - 1)","_OutCopy$k"
                     }
-                    $InFiles[$i].outname = "$($InFiles[$i].outbasename)$($InFiles[$i].extension)"
+                    $InFiles[$i].outname = "$($InFiles[$i].OutBaseName)$($InFiles[$i].extension)"
                     $k++
-                    # if($script:Debug -ne 0){Write-ColorOut $InFiles[$i].outbasename}
+                    # if($script:Debug -ne 0){Write-ColorOut $InFiles[$i].OutBaseName}
                     continue
                 }
             }else{
                 if($j -eq 1){
-                    $InFiles[$i].outbasename = "$($InFiles[$i].outbasename)_InCopy$j"
+                    $InFiles[$i].OutBaseName = "$($InFiles[$i].OutBaseName)_InCopy$j"
                 }else{
-                    $InFiles[$i].outbasename = $InFiles[$i].outbasename -replace "_InCopy$($j - 1)","_InCopy$j"
+                    $InFiles[$i].OutBaseName = $InFiles[$i].OutBaseName -replace "_InCopy$($j - 1)","_InCopy$j"
                 }
-                $InFiles[$i].outname = "$($InFiles[$i].outbasename)$($InFiles[$i].extension)"
+                $InFiles[$i].outname = "$($InFiles[$i].OutBaseName)$($InFiles[$i].extension)"
                 $j++
-                # if($script:Debug -ne 0){Write-ColorOut $InFiles[$i].outbasename}
+                # if($script:Debug -ne 0){Write-ColorOut $InFiles[$i].OutBaseName}
                 continue
             }
         }

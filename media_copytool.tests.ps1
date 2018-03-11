@@ -1639,9 +1639,8 @@
         }
     }
 #>
-
-    Describe "Start-FileSearch" {
-        $BlaDrive = "TestDrive:\TEST"
+<# DONE:    Describe "Start-FileSearch" {
+        $BlaDrive = "$TestDrive\TEST"
         BeforeEach {
             [hashtable]$UserParams = @{
                 InputPath = "$BlaDrive\In_Test"
@@ -1659,33 +1658,233 @@
         Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x -aoa -bb0 -pdefault -sccUTF-8 -spf2 `"$($PSScriptRoot)\media_copytool_TESTFILES.7z`" `"-o.\`" " -WindowStyle Minimized -Wait
         Pop-Location
 
-        It "Return array if successful" {
-            $test = @(Start-FileSearch -UserParams $UserParams)
-            ,$test | Should BeOfType array
-            $test.length | Should Be 26
+        Context "Normal functions" {
+            It "Return array if successful" {
+                $test = @(Start-FileSearch -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test.length | Should Be 26
+            }
+            It "Return array even if only one file is found" {
+                $UserParams.allChosenFormats = @("*.pptx")
+                $test = @(Start-FileSearch -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test.length        | Should Be 1
+                $test.InPath        | Should Be $UserParams.InputPath
+                $test.InName        | Should Be "singleFile.pptx"
+                $test.InFullName    | Should Be "$($UserParams.InputPath)\singleFile.pptx"
+                $test.InBaseName    | Should Be "singleFile"
+                $test.Extension     | Should Be $UserParams.allChosenFormats.Replace("*","")
+                $test.Size          | Should Be 32652
+                $test.Date          | Should Be "2018-03-10_19-51-21"
+                $test.OutSubfolder  | Should Be "\2018-03-10"
+                $test.OutPath       | Should Be "ZYX"
+                $test.OutName       | Should Be "ZYX"
+                $test.OutBaseName   | Should Be "ZYX"
+                $test.Hash          | Should Be "A8FD5A691EC2C81B0BD597A4B78616ED01BFE6F9"
+                $test.ToCopy        | Should Be 1
+            }
+            It "Throw if no/wrong param" {
+                {Start-FileSearch} | Should Throw
+                {Start-FileSearch -UserParams 123} | Should Throw
+                {Start-FileSearch -UserParams @{}} | Should Throw
+            }
         }
-        It "Return array even if only one file is found" {
-            $UserParams.allChosenFormats = @("*.pptx")
-            $test = @(Start-FileSearch -UserParams $UserParams)
-            ,$test | Should BeOfType array
-            $test.length        | Should Be 1
-            $test.InPath        | Should Be "$TestDrive\TEST\In_Test"
-            $test.InName        | Should Be "singleFile.pptx"
-            $test.BaseName      | Should Be "singleFile"
-            $test.Extension     | Should Be $UserParams.allChosenFormats.Replace("*","")
-            $test.Size          | Should Be 32652
-            $test.Date          | Should Be "2018-03-10_19-51-21"
-            $test.Sub_Date      | Should Be "\2018-03-10" # TODO: should there really be a backslash?
-            $test.OutPath       | Should Be "ZYX"
-            $test.OutName       | Should Be "singleFile.pptx"
-            $test.OutBaseName   | Should Be "singleFile"
-            $test.Hash          | Should Be "A8FD5A691EC2C81B0BD597A4B78616ED01BFE6F9"
-            $test.ToCopy        | Should Be 1
+        Context "Proper implementations of OutputSubfolderStyle" {
+            BeforeEach {
+                $UserParams.allChosenFormats = @("*.pptx")
+                $UserParams.HistCompareHashes = 0
+                $UserParams.UseHistFile = 0
+                $UserParams.CheckOutputDupli = 0
+            }
+            It "none" {
+                $UserParams.OutputSubfolderStyle = "none"
+                $test = @(Start-FileSearch -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test.length        | Should Be 1
+                $test.InBaseName    | Should Be "singleFile"
+                $test.Date          | Should Be "2018-03-10_19-51-21"
+                $test.OutSubfolder  | Should Be ""
+                $test.OutPath       | Should Be "ZYX"
+            }
+            It "unchanged" {
+                $UserParams.allChosenFormats = @("*.docx")
+                $UserParams.OutputSubfolderStyle = "unchanged"
+                $test = @(Start-FileSearch -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test.length        | Should Be 1
+                $test.InBaseName    | Should Be "singleFile"
+                $test.Date          | Should Be "2018-03-10_19-51-21"
+                $test.OutSubfolder  | Should Be "\backtick ````ordner ``"
+                $test.OutPath       | Should Be "ZYX"
+            }
+            It "yyyy-MM-dd" {
+                $UserParams.OutputSubfolderStyle = "yyyy-MM-dd"
+                $test = @(Start-FileSearch -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test.length        | Should Be 1
+                $test.InBaseName    | Should Be "singleFile"
+                $test.Date          | Should Be "2018-03-10_19-51-21"
+                $test.OutSubfolder  | Should Be "\2018-03-10"
+                $test.OutPath       | Should Be "ZYX"
+            }
+            It "yyyy_MM_dd" {
+                $UserParams.OutputSubfolderStyle = "yyyy_MM_dd"
+                $test = @(Start-FileSearch -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test.length        | Should Be 1
+                $test.InBaseName    | Should Be "singleFile"
+                $test.Date          | Should Be "2018-03-10_19-51-21"
+                $test.OutSubfolder  | Should Be "\2018_03_10"
+                $test.OutPath       | Should Be "ZYX"
+            }
+            It "yyyy.MM.dd" {
+                $UserParams.OutputSubfolderStyle = "yyyy.MM.dd"
+                $test = @(Start-FileSearch -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test.length        | Should Be 1
+                $test.InBaseName    | Should Be "singleFile"
+                $test.Date          | Should Be "2018-03-10_19-51-21"
+                $test.OutSubfolder  | Should Be "\2018.03.10"
+                $test.OutPath       | Should Be "ZYX"
+            }
+            It "yyyyMMdd" {
+                $UserParams.OutputSubfolderStyle = "yyyyMMdd"
+                $test = @(Start-FileSearch -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test.length        | Should Be 1
+                $test.InBaseName    | Should Be "singleFile"
+                $test.Date          | Should Be "2018-03-10_19-51-21"
+                $test.OutSubfolder  | Should Be "\20180310"
+                $test.OutPath       | Should Be "ZYX"
+            }
+            It "yy-MM-dd" {
+                $UserParams.OutputSubfolderStyle = "yy-MM-dd"
+                $test = @(Start-FileSearch -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test.length        | Should Be 1
+                $test.InBaseName    | Should Be "singleFile"
+                $test.Date          | Should Be "2018-03-10_19-51-21"
+                $test.OutSubfolder  | Should Be "\18-03-10"
+                $test.OutPath       | Should Be "ZYX"
+            }
+            It "yy_MM_dd" {
+                $UserParams.OutputSubfolderStyle = "yy_MM_dd"
+                $test = @(Start-FileSearch -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test.length        | Should Be 1
+                $test.InBaseName    | Should Be "singleFile"
+                $test.Date          | Should Be "2018-03-10_19-51-21"
+                $test.OutSubfolder  | Should Be "\18_03_10"
+                $test.OutPath       | Should Be "ZYX"
+            }
+            It "yy.MM.dd" {
+                $UserParams.OutputSubfolderStyle = "yy.MM.dd"
+                $test = @(Start-FileSearch -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test.length        | Should Be 1
+                $test.InBaseName    | Should Be "singleFile"
+                $test.Date          | Should Be "2018-03-10_19-51-21"
+                $test.OutSubfolder  | Should Be "\18.03.10"
+                $test.OutPath       | Should Be "ZYX"
+            }
+            It "yyMMdd" {
+                $UserParams.OutputSubfolderStyle = "yyMMdd"
+                $test = @(Start-FileSearch -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test.length        | Should Be 1
+                $test.InBaseName    | Should Be "singleFile"
+                $test.Date          | Should Be "2018-03-10_19-51-21"
+                $test.OutSubfolder      | Should Be "\180310"
+                $test.OutPath       | Should Be "ZYX"
+            }
         }
-        It "Throw if no/wrong param" {
-            {Start-FileSearch} | Should Throw
-            {Start-FileSearch -UserParams 123} | Should Throw
-            {Start-FileSearch -UserParams @{}} | Should Throw
+        Context "Proper implementation of OutputFileStyle" {
+            BeforeEach {
+                $UserParams.allChosenFormats = @("*.pptx")
+                $UserParams.HistCompareHashes = 0
+                $UserParams.UseHistFile = 0
+                $UserParams.CheckOutputDupli = 0
+            }
+            It "unchanged" {
+                $UserParams.OutputFileStyle = "unchanged"
+                $test = @(Start-FileSearch -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test.length        | Should Be 1
+                $test.InBaseName    | Should Be "singleFile"
+                $test.Date          | Should Be "2018-03-10_19-51-21"
+            }
+            It "yyyy-MM-dd_HH-mm-ss" {
+                $UserParams.OutputFileStyle = "yyyy-MM-dd_HH-mm-ss"
+                $test = @(Start-FileSearch -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test.length        | Should Be 1
+                $test.InBaseName    | Should Be "2018-03-10_19-51-21"
+                $test.Date          | Should Be "2018-03-10_19-51-21"
+            }
+            It "yyyyMMdd_HHmmss" {
+                $UserParams.OutputFileStyle = "yyyyMMdd_HHmmss"
+                $test = @(Start-FileSearch -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test.length        | Should Be 1
+                $test.InBaseName    | Should Be "20180310_195121"
+                $test.Date          | Should Be "2018-03-10_19-51-21"
+            }
+            It "yyyyMMddHHmmss" {
+                $UserParams.OutputFileStyle = "yyyyMMddHHmmss"
+                $test = @(Start-FileSearch -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test.length        | Should Be 1
+                $test.InBaseName    | Should Be "20180310195121"
+                $test.Date          | Should Be "2018-03-10_19-51-21"
+            }
+            It "yy-MM-dd_HH-mm-ss" {
+                $UserParams.OutputFileStyle = "yy-MM-dd_HH-mm-ss"
+                $test = @(Start-FileSearch -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test.length        | Should Be 1
+                $test.InBaseName    | Should Be "18-03-10_19-51-21"
+                $test.Date          | Should Be "2018-03-10_19-51-21"
+            }
+            It "yyMMdd_HHmmss" {
+                $UserParams.OutputFileStyle = "yyMMdd_HHmmss"
+                $test = @(Start-FileSearch -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test.length        | Should Be 1
+                $test.InBaseName    | Should Be "180310_195121"
+                $test.Date          | Should Be "2018-03-10_19-51-21"
+            }
+            It "yyMMddHHmmss" {
+                $UserParams.OutputFileStyle = "yyMMddHHmmss"
+                $test = @(Start-FileSearch -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test.length        | Should Be 1
+                $test.InBaseName    | Should Be "180310195121"
+                $test.Date          | Should Be "2018-03-10_19-51-21"
+            }
+            It "HH-mm-ss" {
+                $UserParams.OutputFileStyle = "HH-mm-ss"
+                $test = @(Start-FileSearch -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test.length        | Should Be 1
+                $test.InBaseName    | Should Be "19-51-21"
+                $test.Date          | Should Be "2018-03-10_19-51-21"
+            }
+            It "HH_mm_ss" {
+                $UserParams.OutputFileStyle = "HH_mm_ss"
+                $test = @(Start-FileSearch -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test.length        | Should Be 1
+                $test.InBaseName    | Should Be "19_51_21"
+                $test.Date          | Should Be "2018-03-10_19-51-21"
+            }
+            It "HHmmss" {
+                $UserParams.OutputFileStyle = "HHmmss"
+                $test = @(Start-FileSearch -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test.length        | Should Be 1
+                $test.InBaseName    | Should Be "195121"
+                $test.Date          | Should Be "2018-03-10_19-51-21"
+            }
         }
         Context "No problems with SpecChars" {
             BeforeEach {
@@ -1696,74 +1895,78 @@
                 $script:input_recurse = $true
                 $UserParams.InputPath = "$BlaDrive\In_Test"
                 $test = @(Start-FileSearch -UserParams $UserParams)
-                ,$test | Should BeOfType array
-                $test.length | Should Be 175
+                ,$test          | Should BeOfType array
+                $test.length    | Should Be 176
             }
             It "12345" {
                 $UserParams.InputPath = "$BlaDrive\In_Test\123456789 ordner"
                 $test = @(Start-FileSearch -UserParams $UserParams)
-                ,$test | Should BeOfType array
-                $test.length | Should Be 14
-                $test = $test | Where-Object {$_.BaseName -like "123412356789 file"}
-                $test.Hash | Should Be "84BFA364C661714A5BC94153E0F61BDFEB9F22B5"
-                $test.OutName | Should Be ""
-                $test.OutBaseName | Should Be ""
-                $test.OutPath | Should Be ""
+                ,$test          | Should BeOfType array
+                $test.length    | Should Be 14
+                $test = $test | Where-Object {$_.InBaseName -like "123412356789 file"}
+                $test.InPath        | Should Be $UserParams.InputPath
+                $test.InName        | Should Be "123412356789 file.rtf"
+                $test.InBaseName    | Should Be "123412356789 file"
+                $test.Hash          | Should Be "84BFA364C661714A5BC94153E0F61BDFEB9F22B5"
             }
             It "Æ" {
                 $UserParams.InputPath = "$BlaDrive\In_Test\ÆOrdner"
                 $test = @(Start-FileSearch -UserParams $UserParams)
-                ,$test | Should BeOfType array
-                $test.length | Should Be 14
-                $test = $test | Where-Object {$_.BaseName -like "Æfile"}
+                ,$test          | Should BeOfType array
+                $test.length    | Should Be 14
+                $test = $test | Where-Object {$_.InBaseName -like "Æfile"}
+                $test.InPath | Should Be $UserParams.InputPath
+                $test.InName | Should Be "Æfile.dng"
+                $test.InBaseName | Should Be "Æfile"
                 $test.Hash | Should Be "BCB74FB637763B80F40912378DEA4FBC86BF24D5"
-                $test.OutName | Should Be ""
-                $test.OutBaseName | Should Be ""
-                $test.OutPath | Should Be ""
+
             }
             It "backtick" {
                 $UserParams.InputPath = "$BlaDrive\In_Test\backtick ````ordner ``"
                 $test = @(Start-FileSearch -UserParams $UserParams)
-                ,$test | Should BeOfType array
-                $test.length | Should Be 14
-                $test = $test | Where-Object {$_.BaseName -match 'backtick\ \`\ file\ \`\`$'}
-                $test.Hash | Should Be "33363A338DAC63D151C74958A4EC0E09E38E1464"
-                $test.OutName | Should Be ""
-                $test.OutBaseName | Should Be ""
-                $test.OutPath | Should Be ""
+                ,$test          | Should BeOfType array
+                $test.length    | Should Be 15
+                $test = $test | Where-Object {$_.InBaseName -match 'backtick\ \`\ file\ \`\`$'}
+                $test.InPath        | Should Be $UserParams.InputPath
+                $test.InName        | Should Be "backtick `` file ````.arw"
+                $test.InBaseName    | Should Be "backtick `` file ````"
+                $test.Hash          | Should Be "33363A338DAC63D151C74958A4EC0E09E38E1464"
+
             }
             It "bracket" {
                 $UserParams.InputPath = "$BlaDrive\In_Test\bracket [ ] ordner"
                 $test = @(Start-FileSearch -UserParams $UserParams)
-                ,$test | Should BeOfType array
-                $test.length | Should Be 14
-                $test = $test | Where-Object {$_.BaseName -match 'bracket\ \[\ \]\ file$'}
-                $test.Hash | Should Be "FDB53458F2EDCE324FA5444A807CF615C41ECDB4"
-                $test.OutName | Should Be ""
-                $test.OutBaseName | Should Be ""
-                $test.OutPath | Should Be ""
+                ,$test          | Should BeOfType array
+                $test.length    | Should Be 14
+                $test = $test | Where-Object {$_.InBaseName -match 'bracket\ \[\ \]\ file$'}
+                $test.InPath        | Should Be $UserParams.InputPath
+                $test.InName        | Should Be "bracket [ ] file.jpg"
+                $test.InBaseName    | Should Be "bracket [ ] file"
+                $test.Hash          | Should Be "FDB53458F2EDCE324FA5444A807CF615C41ECDB4"
+
             }
             It "dots" {
                 $UserParams.InputPath = "$BlaDrive\In_Test\ordner.mit.punkten"
                 $test = @(Start-FileSearch -UserParams $UserParams)
-                ,$test | Should BeOfType array
-                $test.length | Should Be 14
-                $test = $test | Where-Object {$_.BaseName -like "file.with.dots"}
-                $test.Hash | Should Be "DB94F404ADF02E0D704D62801CB0F1EBD6D8B278"
-                $test.OutName | Should Be ""
-                $test.OutBaseName | Should Be ""
-                $test.OutPath | Should Be ""
+                ,$test          | Should BeOfType array
+                $test.length    | Should Be 14
+                $test = $test | Where-Object {$_.InBaseName -like "file.with.dots"}
+                $test.InPath        | Should Be $UserParams.InputPath
+                $test.InName        | Should Be "file.with.dots.JPEG"
+                $test.InBaseName    | Should Be "file.with.dots"
+                $test.Hash          | Should Be "DB94F404ADF02E0D704D62801CB0F1EBD6D8B278"
+
             }
             It "specials" {
                 $UserParams.InputPath = "$BlaDrive\In_Test\special ' ! ,; . ordner"
                 $test = @(Start-FileSearch -UserParams $UserParams)
-                ,$test | Should BeOfType array
-                $test.length | Should Be 14
-                $test = $test | Where-Object {$_.BaseName -like "special '!, ;. file"}
-                $test.Hash | Should Be "19829E8250E0B98F1F71EE3507C9BB3AC1739F33"
-                $test.OutName | Should Be ""
-                $test.OutBaseName | Should Be ""
-                $test.OutPath | Should Be ""
+                ,$test          | Should BeOfType array
+                $test.length    | Should Be 14
+                $test = $test | Where-Object {$_.InBaseName -like "special '!, ;. file"}
+                $test.InPath        | Should Be $UserParams.InputPath
+                $test.InName        | Should Be "special '!, ;. file.cr2"
+                $test.InBaseName    | Should Be "special '!, ;. file"
+                $test.Hash          | Should Be "19829E8250E0B98F1F71EE3507C9BB3AC1739F33"
             }
         }
     }
