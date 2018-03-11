@@ -1976,15 +1976,9 @@
         # DEFINITION: Combine all parameters into a hashtable:
         BeforeEach {
             [hashtable]$UserParams = @{
-                InputPath = "$BlaDrive\In_Test"
-                OutputPath = "$BlaDrive\Out_Test"
-                allChosenFormats = @("*")
-                OutputSubfolderStyle = "yyyy-MM-dd"
-                OutputFileStyle = "unchanged"
                 HistFilePath = "$BlaDrive\In_Test\mc_hist.json"
-                UseHistFile = 0
-                WriteHistFile = "no"
-                HistCompareHashes = 0
+                UseHistFile = 1
+                WriteHistFile = "yes"
             }
         }
         New-Item -ItemType Directory -Path $BlaDrive
@@ -2117,13 +2111,41 @@
     }
 #>
 
-<#
     Describe "Start-DupliCheckHist"{
-        It "dupli-check via history-file"{
+        $BlaDrive = "$TestDrive\TEST"
+        # DEFINITION: Combine all parameters into a hashtable:
+        BeforeEach {
+            [hashtable]$UserParams = @{
+                InputPath = "$BlaDrive\In_Test"
+                OutputPath = "$BlaDrive\Out_Test"
+                allChosenFormats = @("*")
+                OutputSubfolderStyle = "yyyy-MM-dd"
+                OutputFileStyle = "unchanged"
+                HistFilePath = "$BlaDrive\In_Test\mc_hist.json"
+                UseHistFile = 1
+                WriteHistFile = "yes"
+                HistCompareHashes = 1
+            }
+        }
+        New-Item -ItemType Directory -Path $BlaDrive
+        Push-Location $BlaDrive
+        Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x -aoa -bb0 -pdefault -sccUTF-8 -spf2 `"$($PSScriptRoot)\media_copytool_TESTFILES.7z`" `"-o.\`" " -WindowStyle Minimized -Wait
+        Pop-Location
 
+        Context "Working normal" {
+            BeforeEach {
+                $HistFiles = @(Get-HistFile -UserParams $UserParams)
+                $InFiles = @(Start-FileSearch -UserParams $UserParams)
+            }
+            It "Return array with correct params" {
+                $test = @(Start-DupliCheckHist -InFiles $InFiles -HistFiles $HistFiles -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test | Format-Table -AutoSize | Out-Host
+            }
         }
     }
 
+<#
     Describe "Start-DupliCheckOut"{
         It "dupli-check via output-folder"{
 

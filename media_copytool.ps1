@@ -1755,8 +1755,6 @@ Function Get-HistFile(){
             Write-ColorOut "Some values in the history-file $($UserParams.HistFilePath) seem wrong - it's safest to delete the whole file." -ForegroundColor Magenta -Indentation 4
             Write-ColorOut "InNames: $($files_history.InName.Length) Dates: $($files_history.Date.Length) Sizes: $($files_history.Size.Length) Hashes: $($files_history.Hash.Length)" -Indentation 4
             if((Read-Host "    Is that okay? Type '1' (without quotes) to confirm or any other number to abort. Confirm by pressing Enter") -eq 1){
-                $UserParams.UseHistFile = 0
-                $UserParams.WriteHistFile = "Overwrite"
                 return @()
             }else{
                 Write-ColorOut "`r`n`tAborting.`r`n" -ForegroundColor Magenta
@@ -1770,8 +1768,6 @@ Function Get-HistFile(){
     }else{
         Write-ColorOut "History-File $($UserParams.HistFilePath) could not be found. This means it's possible that duplicates get copied." -ForegroundColor Magenta -Indentation 4
         if((Read-Host "    Is that okay? Type '1' (without quotes) to confirm or any other number to abort. Confirm by pressing Enter") -eq 1){
-            $UserParams.UseHistFile = 0
-            $UserParams.WriteHistFile = "Overwrite"
             return @()
         }else{
             Write-ColorOut "`r`n`tAborting.`r`n" -ForegroundColor Magenta
@@ -1785,12 +1781,12 @@ Function Get-HistFile(){
 # DEFINITION: dupli-check via history-file:
 Function Start-DupliCheckHist(){
     param(
-        [Parameter(Mandatory=$true)]
-        [array]$InFiles,
-        [Parameter(Mandatory=$true)]
-        [array]$HistFiles,
-        [Parameter(Mandatory=$true)]
-        [hashtable]$UserParams
+        [ValidateNotNullOrEmpty()]
+        [array]$InFiles = $(throw 'InFiles is required by Start-DupliCheckHist'),
+        [ValidateNotNullOrEmpty()]
+        [array]$HistFiles = $(throw 'HistFiles is required by Start-DupliCheckHist'),
+        [ValidateNotNullOrEmpty()]
+        [hashtable]$UserParams = $(throw 'UserParams is required by Start-DupliCheckHist')
     )
     $sw = [diagnostics.stopwatch]::StartNew()
     Write-ColorOut "$(Get-CurrentDate)  --  Checking for duplicates via history-file." -ForegroundColor Cyan
@@ -2502,7 +2498,15 @@ Function Start-Everything(){
         if($UserParams.UseHistFile -eq 1){
             [array]$histfiles = @(Get-HistFile -UserParams $UserParams)
             Invoke-Pause
-            if($histfiles.Length -gt 0){
+            if($histfiles.Length -eq $false){
+                break
+            }elseif($histfiles.Length -le 0){
+                Write-ColorOut "No History-files found." -ForegroundColor Gray -Indentation 4
+                $UserParams.UseHistFile = 0
+                if($UserParams.WriteHistFile -eq "yes"){
+                    $UserParams.WriteHistFile = "Overwrite"
+                }
+            }else{
                 # DEFINITION: If enabled: Check for duplicates against history-files:
                 [array]$inputfiles = @(Start-DupliCheckHist -InFile $inputfiles -HistFiles $histfiles -UserParams $UserParams)
                 if($inputfiles.Length -lt 1){
@@ -2515,8 +2519,6 @@ Function Start-Everything(){
                     break
                 }
                 Invoke-Pause
-            }else{
-                Write-ColorOut "No History-files found." -ForegroundColor Gray -Indentation 4
             }
         }
 
