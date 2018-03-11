@@ -5,6 +5,7 @@ Stats/*
 Modules/*
 *.zip
 *.7z
+!media_copytool_TESTFILES.7z
 media_copytool_TESTFILES/*
 # DEFINITION: ignore file that's in the repo:
 # CREDIT: https://www.git-scm.com/docs/git-update-index
