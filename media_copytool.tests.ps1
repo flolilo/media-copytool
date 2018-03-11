@@ -1639,7 +1639,8 @@
         }
     }
 #>
-<# DONE:    Describe "Start-FileSearch" {
+
+    Describe "Start-FileSearch" {
         $BlaDrive = "TestDrive:\TEST"
         BeforeEach {
             [hashtable]$UserParams = @{
@@ -1705,6 +1706,9 @@
                 $test.length | Should Be 14
                 $test = $test | Where-Object {$_.BaseName -like "123412356789 file"}
                 $test.Hash | Should Be "84BFA364C661714A5BC94153E0F61BDFEB9F22B5"
+                $test.OutName | Should Be ""
+                $test.OutBaseName | Should Be ""
+                $test.OutPath | Should Be ""
             }
             It "Æ" {
                 $UserParams.InputPath = "$BlaDrive\In_Test\ÆOrdner"
@@ -1712,7 +1716,10 @@
                 ,$test | Should BeOfType array
                 $test.length | Should Be 14
                 $test = $test | Where-Object {$_.BaseName -like "Æfile"}
-                $test.Hash | Should Be "84BFA364C661714A5BC94153E0F61BDFEB9F22B5"
+                $test.Hash | Should Be "BCB74FB637763B80F40912378DEA4FBC86BF24D5"
+                $test.OutName | Should Be ""
+                $test.OutBaseName | Should Be ""
+                $test.OutPath | Should Be ""
             }
             It "backtick" {
                 $UserParams.InputPath = "$BlaDrive\In_Test\backtick ````ordner ``"
@@ -1720,7 +1727,10 @@
                 ,$test | Should BeOfType array
                 $test.length | Should Be 14
                 $test = $test | Where-Object {$_.BaseName -match 'backtick\ \`\ file\ \`\`$'}
-                $test.Hash | Should Be "84BFA364C661714A5BC94153E0F61BDFEB9F22B5"
+                $test.Hash | Should Be "33363A338DAC63D151C74958A4EC0E09E38E1464"
+                $test.OutName | Should Be ""
+                $test.OutBaseName | Should Be ""
+                $test.OutPath | Should Be ""
             }
             It "bracket" {
                 $UserParams.InputPath = "$BlaDrive\In_Test\bracket [ ] ordner"
@@ -1728,7 +1738,10 @@
                 ,$test | Should BeOfType array
                 $test.length | Should Be 14
                 $test = $test | Where-Object {$_.BaseName -match 'bracket\ \[\ \]\ file$'}
-                $test.Hash | Should Be "84BFA364C661714A5BC94153E0F61BDFEB9F22B5"
+                $test.Hash | Should Be "FDB53458F2EDCE324FA5444A807CF615C41ECDB4"
+                $test.OutName | Should Be ""
+                $test.OutBaseName | Should Be ""
+                $test.OutPath | Should Be ""
             }
             It "dots" {
                 $UserParams.InputPath = "$BlaDrive\In_Test\ordner.mit.punkten"
@@ -1736,7 +1749,10 @@
                 ,$test | Should BeOfType array
                 $test.length | Should Be 14
                 $test = $test | Where-Object {$_.BaseName -like "file.with.dots"}
-                $test.Hash | Should Be "84BFA364C661714A5BC94153E0F61BDFEB9F22B5"
+                $test.Hash | Should Be "DB94F404ADF02E0D704D62801CB0F1EBD6D8B278"
+                $test.OutName | Should Be ""
+                $test.OutBaseName | Should Be ""
+                $test.OutPath | Should Be ""
             }
             It "specials" {
                 $UserParams.InputPath = "$BlaDrive\In_Test\special ' ! ,; . ordner"
@@ -1744,19 +1760,22 @@
                 ,$test | Should BeOfType array
                 $test.length | Should Be 14
                 $test = $test | Where-Object {$_.BaseName -like "special '!, ;. file"}
-                $test.Hash | Should Be "84BFA364C661714A5BC94153E0F61BDFEB9F22B5"
+                $test.Hash | Should Be "19829E8250E0B98F1F71EE3507C9BB3AC1739F33"
+                $test.OutName | Should Be ""
+                $test.OutBaseName | Should Be ""
+                $test.OutPath | Should Be ""
             }
         }
     }
 #>
-
 <#
     Describe "Get-HistFile"{
         It "Get History-File"{
 
         }
     }
-
+#>
+<#
     Describe "Start-DupliCheckHist"{
         It "dupli-check via history-file"{
 
