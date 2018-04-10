@@ -326,7 +326,7 @@ Function Write-ColorOut(){
             Just use it like Write-Host.
     #>
     param(
-        [string]$Object = "Something called Write-ColorOut, but no string was passed.",
+        [string]$Object = "Write-ColorOut was called, but no string was transfered.",
 
         [ValidateSet("DarkBlue","DarkGreen","DarkCyan","DarkRed","Blue","Green","Cyan","Red","Magenta","Yellow","Black","DarkGray","Gray","DarkYellow","White","DarkMagenta")]
         [string]$ForegroundColor,
@@ -366,6 +366,41 @@ Function Write-ColorOut(){
     }#>
 }
 
+# DEFINITION: For the auditory experience:
+Function Start-Sound(){
+    <#
+        .SYNOPSIS
+            Gives auditive feedback for fails and successes
+        .DESCRIPTION
+            Uses SoundPlayer and Windows's own WAVs to play sounds.
+        .NOTES
+            Date: 2018-02-25
+
+        .PARAMETER Success
+            1 plays Windows's "tada"-sound, 0 plays Windows's "chimes"-sound.
+        
+        .EXAMPLE
+            For success: Start-Sound(1)
+        .EXAMPLE
+            For fail: Start-Sound(0)
+    #>
+    param(
+        [int]$Success = $(return $false)
+    )
+
+    try{
+        $sound = New-Object System.Media.SoundPlayer -ErrorAction stop
+        if($Success -eq 1){
+            $sound.SoundLocation = "C:\Windows\Media\tada.wav"
+        }else{
+            $sound.SoundLocation = "C:\Windows\Media\chimes.wav"
+        }
+        $sound.Play()
+    }catch{
+        Write-Output "`a"
+    }
+}
+
 # DEFINITION: Pause the programme if debug-var is active. Also, enable measuring times per command with -debug 3.
 Function Invoke-Pause(){
     if($script:Debug -gt 0){
@@ -397,37 +432,6 @@ Function Invoke-Close(){
     Exit
 }
 
-# DEFINITION: For the auditory experience:
-Function Start-Sound([int]$Success){
-    <#
-        .SYNOPSIS
-            Gives auditive feedback for fails and successes
-        .DESCRIPTION
-            Uses SoundPlayer and Windows's own WAVs to play sounds.
-        .NOTES
-            Date: 2018-02-25
-
-        .PARAMETER Success
-            1 plays Windows's "tada"-sound, 0 plays Windows's "chimes"-sound.
-        
-        .EXAMPLE
-            For success: Start-Sound(1)
-        .EXAMPLE
-            For fail: Start-Sound(0)
-    #>
-    try{
-        $sound = New-Object System.Media.SoundPlayer -ErrorAction stop
-        if($Success -eq 1){
-            $sound.SoundLocation = "C:\Windows\Media\tada.wav"
-        }else{
-            $sound.SoundLocation = "C:\Windows\Media\chimes.wav"
-        }
-        $sound.Play()
-    }catch{
-        Write-Output "`a"
-    }
-}
-
 # DEFINITION: Start equivalent to PreventSleep.ps1:
 Function Invoke-PreventSleep(){
     <#
@@ -436,12 +440,12 @@ Function Invoke-PreventSleep(){
     #>
     Write-ColorOut "$(Get-CurrentDate)  --  Starting preventsleep-script..." -ForegroundColor Cyan
 
+# DEFINITION: For button-emulation:
+# CREDIT: https://superuser.com/a/1023836/703240
 $standby = @'
-    # DEFINITION: For button-emulation:
     Write-Host "(PID = $("{0:D8}" -f $pid))" -ForegroundColor Gray
     $MyShell = New-Object -ComObject "Wscript.Shell"
     while($true){
-        # DEFINITION:/CREDIT: https://superuser.com/a/1023836/703240
         $MyShell.sendkeys("{F15}")
         Start-Sleep -Seconds 90
     }
