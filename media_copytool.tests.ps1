@@ -1972,8 +1972,7 @@
     }
 #>
 
-# DONE:
-    Describe "Get-HistFile"{
+<# DONE:    Describe "Get-HistFile"{
         $BlaDrive = "$TestDrive\TEST"
         # DEFINITION: Combine all parameters into a hashtable:
         BeforeEach {
@@ -2111,8 +2110,8 @@
             }
         }
     }
+#>
 
-<#
     Describe "Start-DupliCheckHist"{
         $BlaDrive = "$TestDrive\TEST"
         # DEFINITION: Combine all parameters into a hashtable:
@@ -2142,7 +2141,7 @@
             It "Return array with correct params" {
                 $test = @(Start-DupliCheckHist -InFiles $InFiles -HistFiles $HistFiles -UserParams $UserParams)
                 ,$test | Should BeOfType array
-                $test | Format-Table -AutoSize | Out-Host
+                (Compare-Object $test $HistFiles -ExcludeDifferent -IncludeEqual -Property InName,Date,Size,Hash).count | Should Be 0
             }
         }
     }
