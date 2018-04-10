@@ -380,9 +380,9 @@ Function Start-Sound(){
             1 plays Windows's "tada"-sound, 0 plays Windows's "chimes"-sound.
         
         .EXAMPLE
-            For success: Start-Sound(1)
+            For success: Start-Sound -Success 1
         .EXAMPLE
-            For fail: Start-Sound(0)
+            For fail: Start-Sound -Success 0
     #>
     param(
         [int]$Success = $(return $false)
@@ -2455,7 +2455,7 @@ Function Start-Everything(){
             elseif($UserParams.GUI_CLI_Direct -eq "Direct"){Get-UserValuesDirect -UserParams $UserParams}
         )
         if($UserParams -eq $false){
-            Start-Sound(0)
+            Start-Sound -Success 0
             Start-Sleep -Seconds 2
             if($inter -eq "GUI"){
                 Start-GUI -GUIPath "$($PSScriptRoot)\mc_GUI.xaml" -UserParams $UserParams
@@ -2488,7 +2488,7 @@ Function Start-Everything(){
         [array]$inputfiles = @(Start-FileSearch -UserParams $UserParams)
         if($inputfiles.Length -lt 1){
             Write-ColorOut "$($inputfiles.Length) files left to copy - aborting rest of the script." -ForegroundColor Magenta
-            Start-Sound(1)
+            Start-Sound -Success 1
             Start-Sleep -Seconds 2
             if($UserParams.GUI_CLI_Direct -eq "GUI"){
                 Start-GUI -GUIPath "$($PSScriptRoot)\mc_GUI.xaml" -UserParams $UserParams
@@ -2515,7 +2515,7 @@ Function Start-Everything(){
                 [array]$inputfiles = @(Start-DupliCheckHist -InFile $inputfiles -HistFiles $histfiles -UserParams $UserParams)
                 if($inputfiles.Length -lt 1){
                     Write-ColorOut "$($inputfiles.Length) files left to copy - aborting rest of the script." -ForegroundColor Magenta
-                    Start-Sound(1)
+                    Start-Sound -Success 1
                     Start-Sleep -Seconds 2
                     if($UserParams.GUI_CLI_Direct -eq "GUI"){
                         Start-GUI -GUIPath "$($PSScriptRoot)\mc_GUI.xaml" -UserParams $UserParams
@@ -2531,7 +2531,7 @@ Function Start-Everything(){
             [array]$inputfiles = (Start-DupliCheckOut -InFiles $inputfiles -UserParams $UserParams)
             if($inputfiles.Length -lt 1){
                 Write-ColorOut "$($inputfiles.Length) files left to copy - aborting rest of the script." -ForegroundColor Magenta
-                Start-Sound(1)
+                Start-Sound -Success 1
                 Start-Sleep -Seconds 2
                 if($UserParams.GUI_CLI_Direct -eq "GUI"){
                     Start-GUI -GUIPath "$($PSScriptRoot)\mc_GUI.xaml" -UserParams $UserParams
@@ -2553,7 +2553,7 @@ Function Start-Everything(){
 
         # DEFINITION: Get free space:
         if((Start-SpaceCheck -InFiles $inputfiles -OutPath $UserParams.OutputPath) -eq $false){
-            Start-Sound(0)
+            Start-Sound -Success 0
             Start-Sleep -Seconds 2
             if($UserParams.GUI_CLI_Direct -eq "GUI"){
                 Start-GUI -GUIPath "$($PSScriptRoot)\mc_GUI.xaml" -UserParams $UserParams
@@ -2613,7 +2613,7 @@ Function Start-Everything(){
         if($UserParams.MirrorEnable -eq 1){
             # DEFINITION: Get free space:
             if((Start-SpaceCheck -InFiles $inputfiles -OutPath $UserParams.MirrorPath) -eq $false){
-                Start-Sound(0)
+                Start-Sound -Success 0
                 Start-Sleep -Seconds 2
                 if($UserParams.GUI_CLI_Direct -eq "GUI"){
                     Start-GUI -GUIPath "$($PSScriptRoot)\mc_GUI.xaml" -UserParams $UserParams
@@ -2674,9 +2674,9 @@ Function Start-Everything(){
     Write-ColorOut "                                                                               A`r`n" -BackgroundColor Gray -ForegroundColor Gray
 
     if($script:resultvalues.unverified -eq 0){
-        Start-Sound(1)
+        Start-Sound -Success 1
     }else{
-        Start-Sound(0)
+        Start-Sound -Success 0
     }
     
     if($script:PreventStandby -gt 1){
