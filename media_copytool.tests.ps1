@@ -1,4 +1,4 @@
-﻿# Comment out the last block of media_copytool (i.e. "Start-up") before running this script!
+﻿    # Comment out the last block of media_copytool (i.e. "Start-up") before running this script!
 # Maybe also comment out write-colorout function.
 
 # DEFINITION: Get all error-outputs in English:
@@ -1971,7 +1971,9 @@
         }
     }
 #>
-<# DONE:    Describe "Get-HistFile"{
+
+# DONE:
+    Describe "Get-HistFile"{
         $BlaDrive = "$TestDrive\TEST"
         # DEFINITION: Combine all parameters into a hashtable:
         BeforeEach {
@@ -2066,51 +2068,51 @@
                 $UserParams.HistFilePath = "$BlaDrive\In_Test\ÆOrdner\Æhist.json"
                 $test = @(Get-HistFile -UserParams $UserParams)
                 ,$test | Should BeOfType array
-                $test[2].InName | Should Be "123456789 hist.json"
-                $test[2].Date   | Should Be "2018-03-05_22-37-50"
-                $test[2].size   | Should Be 3710
-                $test[2].hash   | Should Be "DA0FD69AEF6A704430CC94C589953B3BA6E5FE01"
+                $test[4].InName | Should Be "Æfile - Copy.dng"
+                $test[4].Date   | Should Be "2018-03-11_01-08-15"
+                $test[4].size   | Should Be 5996
+                $test[4].hash   | Should Be "BCB74FB637763B80F40912378DEA4FBC86BF24D5"
             }
             It "backtick" {
                 $UserParams.HistFilePath = "$BlaDrive\In_Test\backtick ````ordner ``\backtick ````hist``.json"
                 $test = @(Get-HistFile -UserParams $UserParams)
                 ,$test | Should BeOfType array
-                $test[2].InName | Should Be "123456789 hist.json"
-                $test[2].Date   | Should Be "2018-03-05_22-37-50"
-                $test[2].size   | Should Be 3710
-                $test[2].hash   | Should Be "DA0FD69AEF6A704430CC94C589953B3BA6E5FE01"
+                $test[8].InName | Should Be "backtick `` file ```` - Copy.arw"
+                $test[8].Date   | Should Be "2018-03-11_01-06-09"
+                $test[8].size   | Should Be 5995
+                $test[8].hash   | Should Be "33363A338DAC63D151C74958A4EC0E09E38E1464"
             }
             It "bracket" {
                 $UserParams.HistFilePath = "$BlaDrive\In_Test\bracket [ ] ordner\bracket [ ] history.json"
                 $test = @(Get-HistFile -UserParams $UserParams)
                 ,$test | Should BeOfType array
-                $test[2].InName | Should Be "123456789 hist.json"
-                $test[2].Date   | Should Be "2018-03-05_22-37-50"
-                $test[2].size   | Should Be 3710
-                $test[2].hash   | Should Be "DA0FD69AEF6A704430CC94C589953B3BA6E5FE01"
+                $test[12].InName | Should Be "bracket [ ] file - Copy.jpg"
+                $test[12].Date   | Should Be "2018-03-11_00-59-58"
+                $test[12].size   | Should Be 8236
+                $test[12].hash   | Should Be "FDB53458F2EDCE324FA5444A807CF615C41ECDB4"
             }
             It "dots" {
                 $UserParams.HistFilePath = "$BlaDrive\In_Test\ordner.mit.punkten\mc.hist.json"
                 $test = @(Get-HistFile -UserParams $UserParams)
                 ,$test | Should BeOfType array
-                $test[2].InName | Should Be "123456789 hist.json"
-                $test[2].Date   | Should Be "2018-03-05_22-37-50"
-                $test[2].size   | Should Be 3710
-                $test[2].hash   | Should Be "DA0FD69AEF6A704430CC94C589953B3BA6E5FE01"
+                $test[16].InName | Should Be "file.with.dots - Copy.JPEG"
+                $test[16].Date   | Should Be "2018-03-11_00-53-18"
+                $test[16].size   | Should Be 5648
+                $test[16].hash   | Should Be "DB94F404ADF02E0D704D62801CB0F1EBD6D8B278"
             }
             It "specials" {
                 $UserParams.HistFilePath = "$BlaDrive\In_Test\special ' ! ,; . ordner\special ' ! ,; . hist.json"
                 $test = @(Get-HistFile -UserParams $UserParams)
                 ,$test | Should BeOfType array
-                $test[2].InName | Should Be "123456789 hist.json"
-                $test[2].Date   | Should Be "2018-03-05_22-37-50"
-                $test[2].size   | Should Be 3710
-                $test[2].hash   | Should Be "DA0FD69AEF6A704430CC94C589953B3BA6E5FE01"
+                $test[30].InName | Should Be "special '!, ;. file - Copy.cr2"
+                $test[30].Date   | Should Be "2018-03-11_00-51-57"
+                $test[30].size   | Should Be 5992
+                $test[30].hash   | Should Be "19829E8250E0B98F1F71EE3507C9BB3AC1739F33"
             }
         }
     }
-#>
 
+<#
     Describe "Start-DupliCheckHist"{
         $BlaDrive = "$TestDrive\TEST"
         # DEFINITION: Combine all parameters into a hashtable:
