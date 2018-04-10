@@ -7,9 +7,9 @@
         Uses Windows' Robocopy and Xcopy for file-copy, then uses PowerShell's Get-FileHash (SHA1) for verifying that files were copied without errors.
         Now supports multithreading via Boe Prox's PoshRSJob-cmdlet (https://github.com/proxb/PoshRSJob)
     .NOTES
-        Version:        0.8.12 (Beta)
+        Version:        1.0.0 (ALPHA)
         Author:         flolilo
-        Creation Date:  2018-02-24
+        Creation Date:  XXXX-XX-XX
         Legal stuff: This program is free software. It comes without any warranty, to the extent permitted by
         applicable law. Most of the script was written by myself (or heavily modified by me when searching for solutions
         on the WWW). However, some parts are copies or modifications of very genuine code - see
@@ -295,7 +295,7 @@ param(
 # DEFINITION: Hopefully avoiding errors by wrong encoding now:
     $OutputEncoding = New-Object -TypeName System.Text.UTF8Encoding
 # DEFINITION: Set current date and version number:
-    $VersionNumber = "v0.8.12 (Beta) - 2018-02-24"
+    $VersionNumber = "v1.0.0 (ALPHA) - XXXX-XX-XX"
 
 # ==================================================================================================
 # ==============================================================================

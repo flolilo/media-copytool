@@ -2138,7 +2138,7 @@
                 $HistFiles = @(Get-HistFile -UserParams $UserParams)
                 $InFiles = @(Start-FileSearch -UserParams $UserParams)
             }
-            It "Return array with correct params" {
+            It "Return array with correct params, don't overlap w/ HistFiles" {
                 $test = @(Start-DupliCheckHist -InFiles $InFiles -HistFiles $HistFiles -UserParams $UserParams)
                 ,$test | Should BeOfType array
                 (Compare-Object $test $HistFiles -ExcludeDifferent -IncludeEqual -Property InName,Date,Size,Hash).count | Should Be 0
