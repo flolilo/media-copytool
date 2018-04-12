@@ -2143,6 +2143,9 @@
                 ,$test | Should BeOfType array
                 (Compare-Object $test $HistFiles -ExcludeDifferent -IncludeEqual -Property InName,Date,Size,Hash).count | Should Be 0
             }
+            It "Throws Error when parameters are wrong / missing" {
+                {Start-DupliCheckHist} | Should Throw
+            }
         }
     }
 
