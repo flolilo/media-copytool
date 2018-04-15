@@ -146,7 +146,7 @@
                         Width="200"
                     />
                     <TextBlock x:Name="textBlockCan"
-                        Text="- CR2" FontFamily="Consolas,Segoe UI,Arial"
+                        Text="- CR2 &amp; CR3" FontFamily="Consolas,Segoe UI,Arial"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,30,0,0"
                         Padding="0,1,0,0"
                     />

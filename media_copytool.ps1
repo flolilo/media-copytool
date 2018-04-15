@@ -69,7 +69,7 @@
     .PARAMETER PresetFormats
         Preset formats for some common file-types.
         Valid options:
-            "Can"   - *.CR2
+            "Can"   - *.CR2 + *.CR3
             "Nik"   - *.NRW + *.NEF
             "Son"   - *.ARW
             "Jpg"   - *.JPG + *.JPEG
@@ -839,6 +839,7 @@ Function Get-UserValuesGUI(){
         [array]$UserParams.allChosenFormats = @()
         if("Can" -in $UserParams.PresetFormats){
             $UserParams.allChosenFormats += "*.cr2"
+            $UserParams.allChosenFormats += "*.cr3"
         }
         if("Nik" -in $UserParams.PresetFormats){
             $UserParams.allChosenFormats += "*.nef"
@@ -1406,6 +1407,7 @@ Function Get-UserValuesDirect(){
         [array]$UserParams.allChosenFormats = @()
         if("Can" -in $UserParams.PresetFormats){
             $UserParams.allChosenFormats += "*.cr2"
+            $UserParams.allChosenFormats += "*.cr3"
         }
         if("Nik" -in $UserParams.PresetFormats){
             $UserParams.allChosenFormats += "*.nef"
