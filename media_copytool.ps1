@@ -292,8 +292,10 @@ param(
             Exit
         }
     }
+
 # DEFINITION: Hopefully avoiding errors by wrong encoding now:
     $OutputEncoding = New-Object -TypeName System.Text.UTF8Encoding
+    [Console]::InputEncoding = New-Object -TypeName System.Text.UTF8Encoding
 # DEFINITION: Set current date and version number:
     $VersionNumber = "v1.0.0 (ALPHA) - XXXX-XX-XX"
 
@@ -1519,36 +1521,39 @@ Function Set-Parameters(){
     )
     Write-ColorOut "$(Get-CurrentDate)  --  Remembering parameters as preset `"$($UserParams.SaveParamPresetName)`"..." -ForegroundColor Cyan
 
-    [array]$inter = @([PSCustomObject]@{
-        ParamPresetName = $UserParams.SaveParamPresetName
-        ParamPresetValues = [PSCustomObject]@{
-            InputPath = $UserParams.InputPath
-            OutputPath = $UserParams.OutputPath
-            MirrorEnable = $UserParams.MirrorEnable
-            MirrorPath = $UserParams.MirrorPath
-            PresetFormats = $UserParams.PresetFormats
-            CustomFormatsEnable = $UserParams.CustomFormatsEnable
-            CustomFormats = $UserParams.CustomFormats
-            OutputSubfolderStyle = $UserParams.OutputSubfolderStyle
-            OutputFileStyle = $UserParams.OutputFileStyle
-            HistFilePath = $UserParams.HistFilePath.Replace($PSScriptRoot,'$($PSScriptRoot)')
-            UseHistFile = $UserParams.UseHistFile
-            WriteHistFile = $UserParams.WriteHistFile
-            HistCompareHashes = $UserParams.HistCompareHashes
-            InputSubfolderSearch = $UserParams.InputSubfolderSearch
-            CheckOutputDupli = $UserParams.CheckOutputDupli
-            VerifyCopies = $UserParams.VerifyCopies
-            OverwriteExistingFiles = $UserParams.OverwriteExistingFiles
-            AvoidIdenticalFiles = $UserParams.AvoidIdenticalFiles
-            ZipMirror = $UserParams.ZipMirror
-            UnmountInputDrive = $UserParams.UnmountInputDrive
-            PreventStandby = $script:PreventStandby
+    [array]$inter = @(
+        [PSCustomObject]@{
+            ParamPresetName     = $UserParams.SaveParamPresetName
+            ParamPresetValues   = [PSCustomObject]@{
+                InputPath               = $UserParams.InputPath
+                OutputPath              = $UserParams.OutputPath
+                MirrorEnable            = $UserParams.MirrorEnable
+                MirrorPath              = $UserParams.MirrorPath
+                PresetFormats           = $UserParams.PresetFormats
+                CustomFormatsEnable     = $UserParams.CustomFormatsEnable
+                CustomFormats           = $UserParams.CustomFormats
+                OutputSubfolderStyle    = $UserParams.OutputSubfolderStyle
+                OutputFileStyle         = $UserParams.OutputFileStyle
+                HistFilePath            = $UserParams.HistFilePath.Replace($PSScriptRoot,'$($PSScriptRoot)')
+                UseHistFile             = $UserParams.UseHistFile
+                WriteHistFile           = $UserParams.WriteHistFile
+                HistCompareHashes       = $UserParams.HistCompareHashes
+                InputSubfolderSearch    = $UserParams.InputSubfolderSearch
+                CheckOutputDupli        = $UserParams.CheckOutputDupli
+                VerifyCopies            = $UserParams.VerifyCopies
+                OverwriteExistingFiles  = $UserParams.OverwriteExistingFiles
+                AvoidIdenticalFiles     = $UserParams.AvoidIdenticalFiles
+                ZipMirror               = $UserParams.ZipMirror
+                UnmountInputDrive       = $UserParams.UnmountInputDrive
+                PreventStandby          = $script:PreventStandby
+            }
         }
-    })
+    )
 
     if((Test-Path -LiteralPath $UserParams.JSONParamPath -PathType Leaf -ErrorAction SilentlyContinue) -eq $true){
         try{
-            $jsonparams = Get-Content -LiteralPath $UserParams.JSONParamPath -Raw -Encoding UTF8 -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+            $jsonparams = @()
+            $jsonparams += Get-Content -LiteralPath $UserParams.JSONParamPath -Raw -Encoding UTF8 -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
             if($script:Debug -gt 1){
                 Write-ColorOut "From:" -ForegroundColor Yellow -Indentation 2
                 $jsonparams | ConvertTo-Json -ErrorAction Stop | Out-Host
@@ -1563,33 +1568,33 @@ Function Set-Parameters(){
             for($i=0; $i -lt $jsonparams.ParamPresetName.Length; $i++){
                 if($jsonparams.ParamPresetName[$i] -eq $inter.ParamPresetName){
                     if($UserParams.RememberInPath -eq 1){
-                        $jsonparams.ParamPresetValues[$i].InputPath = $inter.ParamPresetValues.InputPath
+                        $jsonparams.ParamPresetValues[$i].InputPath     = $inter.ParamPresetValues.InputPath
                     }
                     if($UserParams.RememberOutPath -eq 1){
-                        $jsonparams.ParamPresetValues[$i].OutputPath = $inter.ParamPresetValues.OutputPath
+                        $jsonparams.ParamPresetValues[$i].OutputPath    = $inter.ParamPresetValues.OutputPath
                     }
                     if($UserParams.RememberMirrorPath -eq 1){
-                        $jsonparams.ParamPresetValues[$i].MirrorPath = $inter.ParamPresetValues.MirrorPath
+                        $jsonparams.ParamPresetValues[$i].MirrorPath    = $inter.ParamPresetValues.MirrorPath
                     }
                     if($UserParams.RememberSettings -eq 1){
-                        $jsonparams.ParamPresetValues[$i].MirrorEnable = $inter.ParamPresetValues.MirrorEnable
-                        $jsonparams.ParamPresetValues[$i].PresetFormats = @($inter.ParamPresetValues.PresetFormats)
-                        $jsonparams.ParamPresetValues[$i].CustomFormatsEnable = $inter.ParamPresetValues.CustomFormatsEnable
-                        $jsonparams.ParamPresetValues[$i].CustomFormats = @($inter.ParamPresetValues.CustomFormats)
-                        $jsonparams.ParamPresetValues[$i].OutputSubfolderStyle = $inter.ParamPresetValues.OutputSubfolderStyle
-                        $jsonparams.ParamPresetValues[$i].OutputFileStyle = $inter.ParamPresetValues.OutputFileStyle
-                        $jsonparams.ParamPresetValues[$i].HistFilePath = $inter.ParamPresetValues.HistFilePath
-                        $jsonparams.ParamPresetValues[$i].UseHistFile = $inter.ParamPresetValues.UseHistFile
-                        $jsonparams.ParamPresetValues[$i].WriteHistFile = $inter.ParamPresetValues.WriteHistFile
-                        $jsonparams.ParamPresetValues[$i].HistCompareHashes = $inter.ParamPresetValues.HistCompareHashes
-                        $jsonparams.ParamPresetValues[$i].InputSubfolderSearch = $inter.ParamPresetValues.InputSubfolderSearch
-                        $jsonparams.ParamPresetValues[$i].CheckOutputDupli = $inter.ParamPresetValues.CheckOutputDupli
-                        $jsonparams.ParamPresetValues[$i].VerifyCopies = $inter.ParamPresetValues.VerifyCopies
-                        $jsonparams.ParamPresetValues[$i].OverwriteExistingFiles = $inter.ParamPresetValues.OverwriteExistingFiles
-                        $jsonparams.ParamPresetValues[$i].AvoidIdenticalFiles = $inter.ParamPresetValues.AvoidIdenticalFiles
-                        $jsonparams.ParamPresetValues[$i].ZipMirror = $inter.ParamPresetValues.ZipMirror
-                        $jsonparams.ParamPresetValues[$i].UnmountInputDrive = $inter.ParamPresetValues.UnmountInputDrive
-                        $jsonparams.ParamPresetValues[$i].PreventStandby = $inter.ParamPresetValues.PreventStandby
+                        $jsonparams.ParamPresetValues[$i].MirrorEnable              = $inter.ParamPresetValues.MirrorEnable
+                        $jsonparams.ParamPresetValues[$i].PresetFormats             = @($inter.ParamPresetValues.PresetFormats)
+                        $jsonparams.ParamPresetValues[$i].CustomFormatsEnable       = $inter.ParamPresetValues.CustomFormatsEnable
+                        $jsonparams.ParamPresetValues[$i].CustomFormats             = @($inter.ParamPresetValues.CustomFormats)
+                        $jsonparams.ParamPresetValues[$i].OutputSubfolderStyle      = $inter.ParamPresetValues.OutputSubfolderStyle
+                        $jsonparams.ParamPresetValues[$i].OutputFileStyle           = $inter.ParamPresetValues.OutputFileStyle
+                        $jsonparams.ParamPresetValues[$i].HistFilePath              = $inter.ParamPresetValues.HistFilePath
+                        $jsonparams.ParamPresetValues[$i].UseHistFile               = $inter.ParamPresetValues.UseHistFile
+                        $jsonparams.ParamPresetValues[$i].WriteHistFile             = $inter.ParamPresetValues.WriteHistFile
+                        $jsonparams.ParamPresetValues[$i].HistCompareHashes         = $inter.ParamPresetValues.HistCompareHashes
+                        $jsonparams.ParamPresetValues[$i].InputSubfolderSearch      = $inter.ParamPresetValues.InputSubfolderSearch
+                        $jsonparams.ParamPresetValues[$i].CheckOutputDupli          = $inter.ParamPresetValues.CheckOutputDupli
+                        $jsonparams.ParamPresetValues[$i].VerifyCopies              = $inter.ParamPresetValues.VerifyCopies
+                        $jsonparams.ParamPresetValues[$i].OverwriteExistingFiles    = $inter.ParamPresetValues.OverwriteExistingFiles
+                        $jsonparams.ParamPresetValues[$i].AvoidIdenticalFiles       = $inter.ParamPresetValues.AvoidIdenticalFiles
+                        $jsonparams.ParamPresetValues[$i].ZipMirror                 = $inter.ParamPresetValues.ZipMirror
+                        $jsonparams.ParamPresetValues[$i].UnmountInputDrive         = $inter.ParamPresetValues.UnmountInputDrive
+                        $jsonparams.ParamPresetValues[$i].PreventStandby            = $inter.ParamPresetValues.PreventStandby
                     }
                 }
             }
