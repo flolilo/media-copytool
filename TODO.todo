@@ -2,6 +2,7 @@ Todo:
     [ ] Allow y/n and yes/no as answers (instead/additional to 1/0). @low 
     [ ] making my own implementation of [`RSJob`](https://github.com/proxb/PoshRSJob) with [`Write-ProgressEx`](https://github.com/mazzy-ax/Write-ProgressEx) (if it isn't too heavy on performance) @low 
     [ ] test [`PSThreadJob`](https://github.com/PaulHigin/PSThreadJob) performance. @low
+    [ ] https://msdn.microsoft.com/en-us/library/windows/desktop/aa365247(v=vs.85).aspx @critical 
     [x] Option to verify everything after copying when not checking for duplis. @done (18.2.2018, 21:40:59)
     [ ] Create a prefix-/suffix-option for renaming both subfolders and files. @low 
     [ ] remove preset-formats and change system to all/only/except.
