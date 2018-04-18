@@ -1,16 +1,20 @@
 Todo:
-    [ ] Allow y/n and yes/no as answers (instead/additional to 1/0). @low 
-    [ ] making my own implementation of [`RSJob`](https://github.com/proxb/PoshRSJob) with [`Write-ProgressEx`](https://github.com/mazzy-ax/Write-ProgressEx) (if it isn't too heavy on performance) @low 
-    [ ] test [`PSThreadJob`](https://github.com/PaulHigin/PSThreadJob) performance. @low
-    [ ] https://msdn.microsoft.com/en-us/library/windows/desktop/aa365247(v=vs.85).aspx @critical 
-    [x] Option to verify everything after copying when not checking for duplis. @done (18.2.2018, 21:40:59)
-    [ ] Create a prefix-/suffix-option for renaming both subfolders and files. @low 
+    [ ] Create a all-round Pester-script @high 
+    [ ] https://msdn.microsoft.com/en-us/library/windows/desktop/aa365247(v=vs.85).aspx & https://cosmoskey.blogspot.co.at/2009/09/powershell-function-convert.html @critical
+    [ ] implement %foo% instead of yyyy-mm-dd stuff
+        [ ] Create a prefix-/suffix-option for renaming both subfolders and files.
     [ ] remove preset-formats and change system to all/only/except.
+    [ ] look for alternative to xcopy (Copy-Item and Write-FileSystemCache?). i.e. is file-buffering really that bad?
+    [ ] Allow y/n and yes/no as answers (instead/additional to 1/0).
+    [ ] trying a custom implementation of [`RSJob`](https://github.com/proxb/PoshRSJob) with [`Write-ProgressEx`](https://github.com/mazzy-ax/Write-ProgressEx) (if it isn't too heavy on performance) @low 
+    [ ] test [`PSThreadJob`](https://github.com/PaulHigin/PSThreadJob) performance. @low 
+    [ ] Deutsche Übersetzung (sinnvollerweise erst mit Message-Variablen, daher in weiter Ferne) @low 
+Done:
+    [x] Option to verify everything after copying when not checking for duplis. @done (18.2.2018, 21:40:59)
     [x] rename $($PSScriptRoot) in history-path. @high @done (4.2.2018, 17:48:11)
     [x] Evaluate if option for overwriting existing files would make sense @high @done (29.11.2017, 16:52:10)
     [x] Remove `$ThreadCount` from parameters, as it is no longer needed @low @done (29.11.2017, 15:32:49)
     [x] Check free space on drive before copying. (https://docs.microsoft.com/de-de/powershell/module/Microsoft.PowerShell.Diagnostics/Get-Counter?view=powershell-5.1) @high @done (29.11.2017, 16:52:08)
-    [ ] Creating a Pester-script
     [x] Making all `for`-loops multithreaded (where possible) @done (29.11.2017, 15:03:04)
     [x] Evaluating the usefulness of Posh-RSJob (Cuntributions are welcome!) @done (29.11.2017, 15:03:04)
     [x] GUI with tabs instead of dropdowns @done (29.11.2017, 15:03:02)
@@ -29,4 +33,3 @@ Todo:
     [-] Creating a second JSON-file @cancelled (29.11.2017, 15:02:19)
         [x] Include looked up files in output-path into history-file. @done (29.11.2017, 15:02:19)
     [x] Only one JSON-Parameter-file, but with preset-arrays @done (29.11.2017, 15:02:17)
-    [ ] Deutsche Übersetzung (sinnvollerweise erst mit Message-Variablen, daher in weiter Ferne)
