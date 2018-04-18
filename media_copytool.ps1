@@ -1696,26 +1696,10 @@ Function Start-FileSearch(){
     if($script:Debug -gt 1){
         if((Read-Host "    Show all found files? `"1`" for `"yes`"") -eq 1){
             for($i=0; $i -lt $InFiles.Length; $i++){
-                Write-ColorOut "$($InFiles[$i].FullName.Replace($UserParams.InputPath,"."))" -ForegroundColor Gray -Indentation 4
+                Write-ColorOut "$($InFiles[$i].InFullName.Replace($UserParams.InputPath,"."))" -ForegroundColor Gray -Indentation 4
             }
         }
     }
-
-    # TODO: (HASH SPEED) get hashes only if needed.
-    # DEFINITION: If dupli-checks are enabled: Get hashes for all input-files:
-    if(($UserParams.UseHistFile -eq 1 -and $UserParams.HistCompareHashes -eq 1) -or $UserParams.CheckOutputDupli -eq 1){
-        Write-ColorOut "Running RS-Job for getting hashes (see progress-bar)..." -ForegroundColor DarkGray -Indentation 4
-        $InFiles | Start-RSJob -Name "GetHashAll" -FunctionsToLoad Write-ColorOut -ScriptBlock {
-            try{
-                $_.Hash = Get-FileHash -LiteralPath $_.InFullName -Algorithm SHA1 -ErrorAction Stop | Select-Object -ExpandProperty Hash
-            }catch{
-                Write-ColorOut "Could not get hash of $($_.InFullName)" -ForegroundColor Red -Indentation 4
-                $_.Hash = "GetHashAllWRONG"
-            }
-        } | Wait-RSJob -ShowProgress | Receive-RSJob
-        Get-RSJob -Name "GetHashAll" | Remove-RSJob
-    }
-
 
     Write-ColorOut "Total in-files:`t$($InFiles.Length)" -ForegroundColor Yellow -Indentation 4
     $script:resultvalues.ingoing = $InFiles.Length
@@ -1803,9 +1787,9 @@ Function Start-DupliCheckHist(){
     Write-ColorOut "$(Get-CurrentDate)  --  Checking for duplicates via history-file." -ForegroundColor Cyan
 
     $properties = @("InName","Date","Size")
-    if($UserParams.HistCompareHashes -eq 1){
-        $properties += "Hash"
-    }
+    #if($UserParams.HistCompareHashes -eq 1){
+    #    $properties += "Hash"
+    #}
 
     for($i=0; $i -lt $InFiles.Length; $i++){
         if($sw.Elapsed.TotalMilliseconds -ge 750){
@@ -1814,9 +1798,16 @@ Function Start-DupliCheckHist(){
             $sw.Start()
         }
 
-        # TODO: (HASH SPEED) get hashes only if needed.
-        if(@(Compare-Object -ReferenceObject $InFiles[$i] -DifferenceObject $HistFiles -Property $properties -ExcludeDifferent -IncludeEqual -ErrorAction Stop).count -gt 0){
-            $InFiles[$i].ToCopy = 0
+        $inter = @(Compare-Object -ReferenceObject $InFiles[$i] -DifferenceObject $HistFiles -Property $properties -ExcludeDifferent -IncludeEqual -PassThru -ErrorAction Stop)
+        if($inter.Length -gt 0){
+            if($UserParams.HistCompareHashes -eq 1){
+                $InFiles[$i].Hash = Get-FileHash -LiteralPath $InFiles[$i].InFullName -Algorithm SHA1 | Select-Object -ExpandProperty Hash
+                if($InFiles[$i].Hash -in $inter.Hash){
+                    $InFiles[$i].ToCopy = 0
+                }
+            }else{
+                $InFiles[$i].ToCopy = 0
+            }
         }
     }
     Write-Progress -Activity "Comparing input-files to already copied files (history-file).." -Status "Done!" -Completed
@@ -1826,9 +1817,9 @@ Function Start-DupliCheckHist(){
             Write-ColorOut "`r`n`tFiles to skip / process:" -ForegroundColor Yellow
             for($i=0; $i -lt $InFiles.Length; $i++){
                 if($InFiles[$i].ToCopy -eq 1){
-                    Write-ColorOut "Copy $($InFiles[$i].FullName.Replace($UserParams.InputPath,"."))" -ForegroundColor Gray -Indentation 4
+                    Write-ColorOut "Copy $($InFiles[$i].InFullName.Replace($UserParams.InputPath,"."))" -ForegroundColor Gray -Indentation 4
                 }else{
-                    Write-ColorOut "Omit $($InFiles[$i].FullName.Replace($UserParams.InputPath,"."))" -ForegroundColor DarkGreen -Indentation 4
+                    Write-ColorOut "Omit $($InFiles[$i].InFullName.Replace($UserParams.InputPath,"."))" -ForegroundColor DarkGreen -Indentation 4
                 }
             }
         }

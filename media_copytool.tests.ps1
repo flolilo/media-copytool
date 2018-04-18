@@ -1615,110 +1615,79 @@ Describe "Get-HistFile"{
     }
 }
 
-    Describe "Start-DupliCheckHist"{
-        $BlaDrive = "$TestDrive\TEST"
-        # DEFINITION: Combine all parameters into a hashtable:
-        BeforeEach {
-            [hashtable]$UserParams = @{
-                InputPath = "$BlaDrive\In_Test"
-                OutputPath = "$BlaDrive\Out_Test"
-                allChosenFormats = @("*")
-                OutputSubfolderStyle = "yyyy-MM-dd"
-                OutputFileStyle = "unchanged"
-                HistFilePath = "$BlaDrive\In_Test\mc_hist.json" #TODO: renew file?
-                UseHistFile = 1
-                WriteHistFile = "yes"
-                HistCompareHashes = 1
-            }
-        }
-        New-Item -ItemType Directory -Path $BlaDrive
-        Push-Location $BlaDrive
-        Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x -aoa -bb0 -pdefault -sccUTF-8 -spf2 `"$($PSScriptRoot)\media_copytool_TESTFILES.7z`" `"-o.\`" " -WindowStyle Minimized -Wait
-        Pop-Location
-
-        Context "Working normal" {
-            $HistFiles = @(Get-HistFile -UserParams $UserParams)
-            $InFiles = @(Start-FileSearch -UserParams $UserParams)
-            
-            It "Return array with correct params, don't overlap w/ HistFiles" {
-                $test = @(Start-DupliCheckHist -InFiles $InFiles -HistFiles $HistFiles -UserParams $UserParams)
-                ,$test | Should BeOfType array
-                (Compare-Object $test $HistFiles -ExcludeDifferent -IncludeEqual -Property InName,Date,Size,Hash).count | Should Be 0
-            }
-            It "Throws Error when parameters are wrong / missing" {
-                {Start-DupliCheckHist} | Should Throw
-                {Start-DupliCheckHist -InFiles @() -HistFiles @() -UserParams @()} | Should Throw
-            }
-        }
-        Context "No problems with SpecChars" {
-            It "12345" {
-                $UserParams.InputPath = "$BlaDrive\In_Test\123456789 ordner"
-                $UserParams.OutputPath = "$BlaDrive\Out_Test\123456789 ordner"
-                $UserParams.HistFilePath = "$BlaDrive\In_Test\123456789 ordner\123456789 hist.json"
-                $HistFiles = @(Get-HistFile -UserParams $UserParams)
-                $InFiles = @(Start-FileSearch -UserParams $UserParams)
-
-                $test = @(Start-DupliCheckHist -InFiles $InFiles -HistFiles $HistFiles -UserParams $UserParams)
-                ,$test | Should BeOfType array
-                (Compare-Object $test $HistFiles -ExcludeDifferent -IncludeEqual -Property InName,Date,Size,Hash).count | Should Be 0
-            }
-            It "Æ ©" {
-                $UserParams.InputPath = "$BlaDrive\In_Test\ÆOrdner ©"
-                $UserParams.OutputPath = "$BlaDrive\Out_Test\ÆOrdner ©"
-                $UserParams.HistFilePath = "$BlaDrive\In_Test\ÆOrdner ©\Æ hist ©.json"
-                $HistFiles = @(Get-HistFile -UserParams $UserParams)
-                $InFiles = @(Start-FileSearch -UserParams $UserParams)
-
-                $test = @(Start-DupliCheckHist -InFiles $InFiles -HistFiles $HistFiles -UserParams $UserParams)
-                ,$test | Should BeOfType array
-                (Compare-Object $test $HistFiles -ExcludeDifferent -IncludeEqual -Property InName,Date,Size,Hash).count | Should Be 0
-            }
-            It "backtick" {
-                $UserParams.InputPath = "$BlaDrive\In_Test\backtick ````ordner ``"
-                $UserParams.OutputPath = "$BlaDrive\Out_Test\backtick ````ordner ``"
-                $UserParams.HistFilePath = "$BlaDrive\In_Test\backtick ````ordner ``\backtick ````hist ``.json"
-                $HistFiles = @(Get-HistFile -UserParams $UserParams)
-                $InFiles = @(Start-FileSearch -UserParams $UserParams)
-
-                $test = @(Start-DupliCheckHist -InFiles $InFiles -HistFiles $HistFiles -UserParams $UserParams)
-                ,$test | Should BeOfType array
-                (Compare-Object $test $HistFiles -ExcludeDifferent -IncludeEqual -Property InName,Date,Size,Hash).count | Should Be 0
-            }
-            It "bracket" {
-                $UserParams.InputPath = "$BlaDrive\In_Test\bracket [ ] ordner"
-                $UserParams.OutputPath = "$BlaDrive\Out_Test\bracket [ ] ordner"
-                $UserParams.HistFilePath = "$BlaDrive\In_Test\bracket [ ] ordner\bracket [ ] hist.json"
-                $HistFiles = @(Get-HistFile -UserParams $UserParams)
-                $InFiles = @(Start-FileSearch -UserParams $UserParams)
-
-                $test = @(Start-DupliCheckHist -InFiles $InFiles -HistFiles $HistFiles -UserParams $UserParams)
-                ,$test | Should BeOfType array
-                (Compare-Object $test $HistFiles -ExcludeDifferent -IncludeEqual -Property InName,Date,Size,Hash).count | Should Be 0
-            }
-            It "dots" {
-                $UserParams.InputPath = "$BlaDrive\In_Test\ordner.mit.punkten"
-                $UserParams.OutputPath = "$BlaDrive\Out_Test\ordner.mit.punkten"
-                $UserParams.HistFilePath = "$BlaDrive\In_Test\ordner.mit.punkten\123456789 hist.json"
-                $HistFiles = @(Get-HistFile -UserParams $UserParams)
-                $InFiles = @(Start-FileSearch -UserParams $UserParams)
-
-                $test = @(Start-DupliCheckHist -InFiles $InFiles -HistFiles $HistFiles -UserParams $UserParams)
-                ,$test | Should BeOfType array
-                (Compare-Object $test $HistFiles -ExcludeDifferent -IncludeEqual -Property InName,Date,Size,Hash).count | Should Be 0
-            }
-            It "specials" {
-                $UserParams.InputPath = "$BlaDrive\In_Test\123456789 ordner"
-                $UserParams.OutputPath = "$BlaDrive\Out_Test\123456789 ordner"
-                $UserParams.HistFilePath = "$BlaDrive\In_Test\123456789 ordner\123456789 hist.json"
-                $HistFiles = @(Get-HistFile -UserParams $UserParams)
-                $InFiles = @(Start-FileSearch -UserParams $UserParams)
-
-                $test = @(Start-DupliCheckHist -InFiles $InFiles -HistFiles $HistFiles -UserParams $UserParams)
-                ,$test | Should BeOfType array
-                (Compare-Object $test $HistFiles -ExcludeDifferent -IncludeEqual -Property InName,Date,Size,Hash).count | Should Be 0
-            }
+Describe "Start-DupliCheckHist"{
+    $BlaDrive = "$TestDrive\TEST"
+    # DEFINITION: Combine all parameters into a hashtable:
+    BeforeEach {
+        [hashtable]$UserParams = @{
+            InputPath = "$BlaDrive\In_Test"
+            OutputPath = "$BlaDrive\Out_Test"
+            allChosenFormats = @("*.cr2","*.jpg")
+            OutputSubfolderStyle = "yyyy-MM-dd"
+            OutputFileStyle = "unchanged"
+            HistFilePath = "$BlaDrive\In_Test\hist_uncomplicated.json"
+            UseHistFile = 1
+            WriteHistFile = "yes"
+            HistCompareHashes = 1
+            InputSubfolderSearch = 1
         }
     }
+    New-Item -ItemType Directory -Path $BlaDrive
+    Push-Location $BlaDrive
+    Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x -aoa -bb0 -pdefault -sccUTF-8 -spf2 `"$($PSScriptRoot)\media_copytool_TESTFILES.7z`" `"-o.\`" " -WindowStyle Minimized -Wait
+    Pop-Location
+
+    Context "Working normal" {
+        It "Return array with correct params, don't overlap w/ HistFiles" {
+            $InFiles = @(Start-FileSearch -UserParams $UserParams)
+            $HistFiles = @(Get-HistFile -UserParams $UserParams)
+            $test = @(Start-DupliCheckHist -InFiles $InFiles -HistFiles $HistFiles -UserParams $UserParams)
+            ,$test | Should BeOfType array
+            $test.Length | Should Be 0
+        }
+        It "Throws Error when parameters are wrong / missing" {
+            {Start-DupliCheckHist} | Should Throw
+            {Start-DupliCheckHist -InFiles @() -HistFiles @() -UserParams @()} | Should Throw
+        }
+        It "Does find a new file" {
+            $UserParams.WriteHistFile = "no"
+            "Blabla" | Out-File "$BlaDrive\In_Test\NEWFILE.jpg" -Encoding utf8
+
+            $InFiles = @(Start-FileSearch -UserParams $UserParams)
+            $HistFiles = @(Get-HistFile -UserParams $UserParams)
+            $test = @(Start-DupliCheckHist -InFiles $InFiles -HistFiles $HistFiles -UserParams $UserParams)
+            ,$test | Should BeOfType array
+            $test.Length | Should Be 1
+            $test.InFullName | Should Be "$BlaDrive\In_Test\NEWFILE.jpg"
+
+            Remove-Item "$BlaDrive\In_Test\NEWFILE.jpg"
+        }
+    }
+    It "No problems with SpecChars" {
+        $UserParams.InputPath = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
+        $UserParams.OutputPath = "$BlaDrive\Out_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
+        $UserParams.HistFilePath = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©\hist specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©.json"
+
+        $InFiles = @(Start-FileSearch -UserParams $UserParams)
+        $HistFiles = @(Get-HistFile -UserParams $UserParams)
+
+        $test = @(Start-DupliCheckHist -InFiles $InFiles -HistFiles $HistFiles -UserParams $UserParams)
+        ,$test | Should BeOfType array
+        $test.length | Should Be 0
+    }
+    It "No problems with long paths" {
+        $UserParams.InputPath = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
+        $UserParams.OutputPath = "$BlaDrive\Out_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
+        $UserParams.HistFilePath = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND\hist_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_tEND.json"
+
+        $InFiles = @(Start-FileSearch -UserParams $UserParams)
+        $HistFiles = @(Get-HistFile -UserParams $UserParams)
+
+        $test = @(Start-DupliCheckHist -InFiles $InFiles -HistFiles $HistFiles -UserParams $UserParams)
+        ,$test | Should BeOfType array
+        $test.length | Should Be 0
+    }
+}
 
 <#
     Describe "Start-DupliCheckOut"{
