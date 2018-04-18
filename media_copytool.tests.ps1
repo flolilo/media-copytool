@@ -101,19 +101,17 @@ Describe "Get-Parameters" {
         $test.MirrorPath            | Should Be "F:\Mirr_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
         $test.HistFilePath          | Should Be "F:\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©\hist specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©.json"
     }
-    <# TODO: Long filename DOES NOT WORK ATM
-        It "Long filename file&preset interaction" {
-            $UserParams.JSONParamPath = "$BlaDrive\In_Test\folder_with_ultimately_long_filename_that_exceeds_256_characters_easily_because_it_is_extremely_long_and_will_absolutely_not_work_if_windows_does_not_support_long_filenames_which_would_be_a_p\param_with_ultimately_long_filename_that_exceeds_256_characters_easily_because_it_is_extremely_long_and_will_absolutely_not_work_if_windows_does_not_support_long_filenames_which_would_be.json"
-            $UserParams.LoadParamPresetName = "long"
-            $test = Get-Parameters -UserParams $UserParams -Renew 1
-            $test | Should BeOfType hashtable
-            $test.LoadParamPresetName | Should Be "long"
-            $test.InputPath             | Should Be "F:\In_Test\folder_with_ultimately_long_filename_that_exceeds_256_characters_easily_because_it_is_extremely_long_and_will_absolutely_not_work_if_windows_does_not_support_long_filenames_which_would_be_a_p"
-            $test.OutputPath            | Should Be "F:\Out_Test\folder_with_ultimately_long_filename_that_exceeds_256_characters_easily_because_it_is_extremely_long_and_will_absolutely_not_work_if_windows_does_not_support_long_filenames_which_would_be_a_p"
-            $test.MirrorPath            | Should Be "F:\Mirr_Test\folder_with_ultimately_long_filename_that_exceeds_256_characters_easily_because_it_is_extremely_long_and_will_absolutely_not_work_if_windows_does_not_support_long_filenames_which_would_be_a_p"
-            $test.HistFilePath          | Should Be "F:\In_Test\folder_with_ultimately_long_filename_that_exceeds_256_characters_easily_because_it_is_extremely_long_and_will_absolutely_not_work_if_windows_does_not_support_long_filenames_which_would_be_a_p\hist_with_ultimately_long_filename_that_exceeds_256_characters_easily_because_it_is_extremely_long_and_will_absolutely_not_work_if_windows_does_not_support_long_filenames_which_would_be.json"
-        }
-    #>
+    It "Long filename file&preset interaction" {
+        $UserParams.JSONParamPath = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND\param_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_END.json"
+        $UserParams.LoadParamPresetName = "long"
+        $test = Get-Parameters -UserParams $UserParams -Renew 1
+        $test | Should BeOfType hashtable
+        $test.LoadParamPresetName | Should Be "long"
+        $test.InputPath             | Should Be "F:\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
+        $test.OutputPath            | Should Be "F:\Out_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
+        $test.MirrorPath            | Should Be "F:\Mirr_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
+        $test.HistFilePath          | Should Be "F:\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND\hist_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_tEND.json"
+    }
     Context "Test the returned values" {
         $UserParams.LoadParamPresetName = "bla"
         $test = (Get-Parameters -UserParams $UserParams -Renew 1)
