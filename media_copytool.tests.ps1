@@ -90,15 +90,15 @@ Describe "Get-Parameters" {
         }
     }
     It "Special characters file&preset interaction" {
-        $UserParams.JSONParamPath = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß#+,;-Æ©\param specChar.(]){[}à°^âaà`````$öäüß#+,;-Æ©.json"
+        $UserParams.JSONParamPath = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#+,;-Æ©\param specChar.(]){[}à°^âaà`````$öäüß'#+,;-Æ©.json"
         $UserParams.LoadParamPresetName = "specchar"
         $test = Get-Parameters -UserParams $UserParams -Renew 1
         $test | Should BeOfType hashtable
         $test.LoadParamPresetName | Should Be "specchar"
-        $test.InputPath             | Should Be "F:\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß#+,;-Æ©"
-        $test.OutputPath            | Should Be "F:\Out_Test\folder specChar.(]){[}à°^âaà`````$öäüß#+,;-Æ©"
-        $test.MirrorPath            | Should Be "F:\Mirr_Test\folder specChar.(]){[}à°^âaà`````$öäüß#+,;-Æ©"
-        $test.HistFilePath          | Should Be "F:\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß#+,;-Æ©\hist specChar.(]){[}à°^âaà`````$öäüß#+,;-Æ©.json"
+        $test.InputPath             | Should Be "F:\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#+,;-Æ©"
+        $test.OutputPath            | Should Be "F:\Out_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#+,;-Æ©"
+        $test.MirrorPath            | Should Be "F:\Mirr_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#+,;-Æ©"
+        $test.HistFilePath          | Should Be "F:\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#+,;-Æ©\hist specChar.(]){[}à°^âaà`````$öäüß'#+,;-Æ©.json"
     }
     <# TODO: Long filename DOES NOT WORK ATM
         It "Long filename file&preset interaction" {
@@ -892,11 +892,11 @@ Describe "Get-UserValuesDirect" {
     }
     Context "Special characters" {
         It "Find existing folders" {
-            $UserParams.JSONParamPath   = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß#+,;-Æ©\param specChar.(]){[}à°^âaà`````$öäüß#+,;-Æ©.json"
-            $UserParams.InputPath       = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß#+,;-Æ©"
-            $UserParams.OutputPath      = "$BlaDrive\Out_Test\folder specChar.(]){[}à°^âaà`````$öäüß#+,;-Æ©"
-            $UserParams.MirrorPath      = "$BlaDrive\Mirr_Test\folder specChar.(]){[}à°^âaà`````$öäüß#+,;-Æ©"
-            $UserParams.HistFilePath    = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß#+,;-Æ©\hist specChar.(]){[}à°^âaà``$öäüß#+,;-Æ©.json"
+            $UserParams.JSONParamPath   = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#+,;-Æ©\param specChar.(]){[}à°^âaà`````$öäüß'#+,;-Æ©.json"
+            $UserParams.InputPath       = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#+,;-Æ©"
+            $UserParams.OutputPath      = "$BlaDrive\Out_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#+,;-Æ©"
+            $UserParams.MirrorPath      = "$BlaDrive\Mirr_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#+,;-Æ©"
+            $UserParams.HistFilePath    = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#+,;-Æ©\hist specChar.(]){[}à°^âaà``$öäüß'#+,;-Æ©.json"
             $test = Get-UserValuesDirect -UserParams $UserParams
             $test | Should BeOfType hashtable
             $test.JSONParamPath | Should Be $UserParams.JSONParamPath
@@ -911,15 +911,15 @@ Describe "Get-UserValuesDirect" {
             (Get-ChildItem "$BlaDrive\Out_Test" -Recurse -ErrorAction SilentlyContinue).Count   | Out-Host
             (Get-ChildItem "$BlaDrive\Mirr_Test" -Recurse -ErrorAction SilentlyContinue).Count  | Out-Host
 
-            $UserParams.JSONParamPath   = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß#+,;-Æ©\param specChar.(]){[}à°^âaà`````$öäüß#+,;-Æ©.json"
-            $UserParams.InputPath       = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß#+,;-Æ©"
-            $UserParams.OutputPath      = "$BlaDrive\Out_Test\folder specChar.(]){[}à°^âaà`````$öäüß#+,;-Æ©"
-            $UserParams.MirrorPath      = "$BlaDrive\Mirr_Test\folder specChar.(]){[}à°^âaà`````$öäüß#+,;-Æ©"
-            $UserParams.HistFilePath    = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß#+,;-Æ©\hist specChar.(]){[}à°^âaà``$öäüß#+,;-Æ©.json"
+            $UserParams.JSONParamPath   = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#+,;-Æ©\param specChar.(]){[}à°^âaà`````$öäüß'#+,;-Æ©.json"
+            $UserParams.InputPath       = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#+,;-Æ©"
+            $UserParams.OutputPath      = "$BlaDrive\Out_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#+,;-Æ©"
+            $UserParams.MirrorPath      = "$BlaDrive\Mirr_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#+,;-Æ©"
+            $UserParams.HistFilePath    = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#+,;-Æ©\hist specChar.(]){[}à°^âaà``$öäüß'#+,;-Æ©.json"
             $test = Get-UserValuesDirect -UserParams $UserParams
             $test | Should BeOfType hashtable
-            Test-Path -LiteralPath "$BlaDrive\Out_Test\folder specChar.(]){[}à°^âaà`````$öäüß#+,;-Æ©" -PathType Container | Should Be $true
-            Test-Path -LiteralPath "$BlaDrive\Mirr_Test\folder specChar.(]){[}à°^âaà`````$öäüß#+,;-Æ©" -PathType Container | Should Be $true
+            Test-Path -LiteralPath "$BlaDrive\Out_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#+,;-Æ©" -PathType Container | Should Be $true
+            Test-Path -LiteralPath "$BlaDrive\Mirr_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#+,;-Æ©" -PathType Container | Should Be $true
         }
     }
     Context "Long paths" {
@@ -1002,11 +1002,11 @@ Describe "Show-Parameters" {
         {Show-Parameters -UserParams $UserParams} | Should not Throw
     }
     It "No problems with SpecChars" {
-        $UserParams.JSONParamPath = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß#+,;-Æ©\param specChar.(]){[}à°^âaà`````$öäüß#+,;-Æ©.json"
-        $UserParams.InputPath = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß#+,;-Æ©"
-        $UserParams.OutputPath = "$BlaDrive\Out_Test\folder specChar.(]){[}à°^âaà`````$öäüß#+,;-Æ©"
-        $UserParams.MirrorPath = "$BlaDrive\Mirr_Test\folder specChar.(]){[}à°^âaà`````$öäüß#+,;-Æ©"
-        $UserParams.HistFilePath = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß#+,;-Æ©\hist specChar.(]){[}à°^âaà`````$öäüß#+,;-Æ©.json"
+        $UserParams.JSONParamPath = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#+,;-Æ©\param specChar.(]){[}à°^âaà`````$öäüß'#+,;-Æ©.json"
+        $UserParams.InputPath = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#+,;-Æ©"
+        $UserParams.OutputPath = "$BlaDrive\Out_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#+,;-Æ©"
+        $UserParams.MirrorPath = "$BlaDrive\Mirr_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#+,;-Æ©"
+        $UserParams.HistFilePath = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#+,;-Æ©\hist specChar.(]){[}à°^âaà`````$öäüß'#+,;-Æ©.json"
         {Show-Parameters -UserParams $UserParams} | Should not Throw
     }
 }
