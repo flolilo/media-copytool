@@ -1787,10 +1787,6 @@ Function Start-DupliCheckHist(){
     Write-ColorOut "$(Get-CurrentDate)  --  Checking for duplicates via history-file." -ForegroundColor Cyan
 
     $properties = @("InName","Date","Size")
-    #if($UserParams.HistCompareHashes -eq 1){
-    #    $properties += "Hash"
-    #}
-
     for($i=0; $i -lt $InFiles.Length; $i++){
         if($sw.Elapsed.TotalMilliseconds -ge 750){
             Write-Progress -Activity "Comparing input-files to already copied files (history-file).." -PercentComplete $($i * 100 / $InFiles.Length) -Status "File # $($i + 1) / $($InFiles.Length) - $($InFiles[$i].name)"
@@ -1865,8 +1861,7 @@ Function Start-DupliCheckOut(){
             }
 
             [PSCustomObject]@{
-                FullName = $_.FullName
-                InName = $null
+                InFullName = $_.FullName
                 Size = $_.Length
                 Date = $_.LastWriteTime.ToString("yyyy-MM-dd_HH-mm-ss")
                 Hash = $null
@@ -1888,26 +1883,35 @@ Function Start-DupliCheckOut(){
                 $sw.Reset()
                 $sw.Start()
             }
-            # TODO: (HASH SPEED) get hashes only if needed.
-            if(@(Compare-Object -ReferenceObject $files_duplicheck[$i] -DifferenceObject $InFiles -Property $properties -ExcludeDifferent -IncludeEqual -ErrorAction Stop).count -gt 0){
+            $inter = @(Compare-Object -ReferenceObject $files_duplicheck[$i] -DifferenceObject $InFiles -Property $properties -ExcludeDifferent -IncludeEqual -PassThru -ErrorAction Stop)
+            if($inter.Length -gt 0){
                 $files_duplicheck[$i].Hash = (Get-FileHash -LiteralPath $files_duplicheck[$i].FullName -Algorithm SHA1 -ErrorAction Stop | Select-Object -ExpandProperty Hash)
             }
         }
-        $files_duplicheck = $files_duplicheck | Where-Object {$_.Hash -ne $null}
+        $files_duplicheck = @($files_duplicheck | Where-Object {$_.Hash.Length -gt 0})
+
         Write-Progress -Id 1 -Activity "Determine files in output that need to be checked..." -Status "Done!" -PercentComplete 100
 
         if($files_duplicheck.Count -gt 0){
-            $properties += "Hash"
             for($i = 0; $i -lt $InFiles.Length; $i++){
                 if($sw.Elapsed.TotalMilliseconds -ge 750 -or $i -eq 0){
                     Write-Progress -Id 2 -Activity "Comparing input-files with files in output..." -PercentComplete $($i * 100 / $($InFiles.Length)) -Status "File # $($i + 1) / $($InFiles.Length)"
                     $sw.Reset()
                     $sw.Start()
                 }
-                if(@(Compare-Object -ReferenceObject $InFiles[$i] -DifferenceObject $files_duplicheck -Property $properties -ExcludeDifferent -IncludeEqual -ErrorAction Stop).count -gt 0){
-                    $InFiles[$i].ToCopy = 0
-                    $dupliindex_out++
-                    # $files_duplicheck[$j].InName = $InFiles[$i].InName
+
+                $inter = @(Compare-Object -ReferenceObject $InFiles[$i] -DifferenceObject $files_duplicheck -Property $properties -ExcludeDifferent -IncludeEqual -PassThru -ErrorAction Stop)
+                if($inter.Length -gt 0){
+                    if($UserParams.HistCompareHashes -eq 1){
+                        if($InFiles[$i].Hash.Length -le 1){
+                            $InFiles[$i].Hash = Get-FileHash -LiteralPath $InFiles[$i].InFullName -Algorithm SHA1 | Select-Object -ExpandProperty Hash
+                        }
+                        if($InFiles[$i].Hash -in $inter.Hash){
+                            $InFiles[$i].ToCopy = 0
+                        }
+                    }else{
+                        $InFiles[$i].ToCopy = 0
+                    }
                 }
             }
             Write-Progress -Id 2 -Activity "Comparing input-files with files in output..." -Status "Done!" -Completed
