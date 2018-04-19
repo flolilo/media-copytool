@@ -1689,13 +1689,34 @@ Describe "Start-DupliCheckHist"{
     }
 }
 
-<#
-    Describe "Start-DupliCheckOut"{
-        It "dupli-check via output-folder"{
-
+Describe "Start-DupliCheckOut"{
+    $BlaDrive = "$TestDrive\TEST"
+    # DEFINITION: Combine all parameters into a hashtable:
+    BeforeEach {
+        [hashtable]$UserParams = @{
+            InputPath = "$BlaDrive\In_Test"
+            OutputPath = "$BlaDrive\Out_Test"
+            allChosenFormats = @("*.cr2","*.jpg")
+            OutputSubfolderStyle = "yyyy-MM-dd"
+            OutputFileStyle = "unchanged"
+            HistFilePath = "$BlaDrive\In_Test\hist_uncomplicated.json"
+            UseHistFile = 1
+            WriteHistFile = "yes"
+            HistCompareHashes = 1
+            InputSubfolderSearch = 1
         }
     }
+    New-Item -ItemType Directory -Path $BlaDrive
+    Push-Location $BlaDrive
+    Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x -aoa -bb0 -pdefault -sccUTF-8 -spf2 `"$($PSScriptRoot)\media_copytool_TESTFILES.7z`" `"-o.\`" " -WindowStyle Minimized -Wait
+    Pop-Location
 
+    It "dupli-check via output-folder"{
+
+    }
+}
+
+<#
     Describe "Start-InputGetHash"{
         It "Calculate hash (if not yet done)"{
 
