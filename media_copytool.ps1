@@ -1833,10 +1833,10 @@ Function Start-DupliCheckHist(){
 # DEFINITION: dupli-check via output-folder:
 Function Start-DupliCheckOut(){
     param(
-        [Parameter(Mandatory=$true)]
-        [array]$InFiles,
-        [Parameter(Mandatory=$true)]
-        [hashtable]$UserParams
+        [ValidateNotNullOrEmpty()]
+        [array]$InFiles =           $(throw 'InFiles is required by Start-DupliCheckOut'),
+        [ValidateNotNullOrEmpty()]
+        [hashtable]$UserParams =    $(throw 'UserParams is required by Start-DupliCheckOut')
     )
     $sw = [diagnostics.stopwatch]::StartNew()
     Write-ColorOut "$(Get-CurrentDate)  --  Checking for duplicates in OutPath." -ForegroundColor Cyan
@@ -1853,7 +1853,7 @@ Function Start-DupliCheckOut(){
             $sw.Start()
         }
 
-        $files_duplicheck += Get-ChildItem -LiteralPath $UserParams.OutputPath -Filter $UserParams.allChosenFormats[$i] -Recurse -File | ForEach-Object -Process {
+        $files_duplicheck += @(Get-ChildItem -LiteralPath $UserParams.OutputPath -Filter $UserParams.allChosenFormats[$i] -Recurse -File | ForEach-Object -Process {
             if($sw.Elapsed.TotalMilliseconds -ge 750 -or $counter -eq 1){
                 Write-Progress -Id 2 -Activity "Looking for files..." -PercentComplete -1 -Status "File #$counter - $($_.FullName.Replace("$($UserParams.OutputPath)",'.'))"
                 $sw.Reset()
@@ -1869,7 +1869,7 @@ Function Start-DupliCheckOut(){
             $counter++
         } -End {
             Write-Progress -Id 2 -Activity "Looking for files..." -Status "Done!" -Completed
-        }
+        })
     }
     Write-Progress -Id 1 -Activity "Find files in $($UserParams.OutputPath)..." -Status "Done!" -Completed
     $sw.Reset()
@@ -1885,7 +1885,7 @@ Function Start-DupliCheckOut(){
             }
             $inter = @(Compare-Object -ReferenceObject $files_duplicheck[$i] -DifferenceObject $InFiles -Property $properties -ExcludeDifferent -IncludeEqual -PassThru -ErrorAction Stop)
             if($inter.Length -gt 0){
-                $files_duplicheck[$i].Hash = (Get-FileHash -LiteralPath $files_duplicheck[$i].FullName -Algorithm SHA1 -ErrorAction Stop | Select-Object -ExpandProperty Hash)
+                $files_duplicheck[$i].Hash = (Get-FileHash -LiteralPath $files_duplicheck[$i].InFullName -Algorithm SHA1 -ErrorAction Stop | Select-Object -ExpandProperty Hash)
             }
         }
         $files_duplicheck = @($files_duplicheck | Where-Object {$_.Hash.Length -gt 0})
@@ -1902,36 +1902,18 @@ Function Start-DupliCheckOut(){
 
                 $inter = @(Compare-Object -ReferenceObject $InFiles[$i] -DifferenceObject $files_duplicheck -Property $properties -ExcludeDifferent -IncludeEqual -PassThru -ErrorAction Stop)
                 if($inter.Length -gt 0){
-                    if($UserParams.HistCompareHashes -eq 1){
-                        if($InFiles[$i].Hash.Length -le 1){
-                            $InFiles[$i].Hash = Get-FileHash -LiteralPath $InFiles[$i].InFullName -Algorithm SHA1 | Select-Object -ExpandProperty Hash
-                        }
-                        if($InFiles[$i].Hash -in $inter.Hash){
-                            $InFiles[$i].ToCopy = 0
-                        }
-                    }else{
+                    if($InFiles[$i].Hash.Length -lt 1){
+                        $InFiles[$i].Hash = Get-FileHash -LiteralPath $InFiles[$i].InFullName -Algorithm SHA1 | Select-Object -ExpandProperty Hash
+                    }
+                    if($InFiles[$i].Hash -in $inter.Hash){
                         $InFiles[$i].ToCopy = 0
+                        $dupliindex_out++
                     }
                 }
             }
             Write-Progress -Id 2 -Activity "Comparing input-files with files in output..." -Status "Done!" -Completed
 
-            [array]$inter = @($InFiles | Where-Object {$_.ToCopy -eq 0})
-            for($i=0; $i -lt $inter.Length; $i++){
-                [int]$j = $files_duplicheck.Length
-                while($true){
-                    # calculate hash only if date and size are the same:
-                    if($inter[$i].date -eq $files_duplicheck[$j].date -and $inter[$i].size -eq $files_duplicheck[$j].size -and $inter[$i].Hash -eq $files_duplicheck[$j].Hash){
-                            $files_duplicheck[$j].InName = $inter[$i].InName
-                            break
-                    }else{
-                        if($j -le 0){
-                            break
-                        }
-                        $j--
-                    }
-                }
-            }
+            
 
             if($script:Debug -gt 1){
                 if((Read-Host "    Show all files? `"1`" for `"yes`"") -eq 1){
@@ -1947,12 +1929,13 @@ Function Start-DupliCheckOut(){
             }
             Write-ColorOut "Files to skip (outpath):`t$dupliindex_out" -ForegroundColor DarkGreen -Indentation 4
 
+            # To add the already found files to the hist-file:
+            [array]$script:dupliout = @($InFiles | Where-Object {$_.ToCopy -eq 0})
             [array]$InFiles = @($InFiles | Where-Object {$_.ToCopy -eq 1})
         }else{
             Write-ColorOut "No potential dupli-files in $($UserParams.OutputPath) - skipping additional verification." -ForegroundColor Gray -Indentation 4
         }
 
-        [array]$script:dupliout = $files_duplicheck
         $script:resultvalues.dupliout = $dupliindex_out
     }else{
         Write-ColorOut "No files in $($UserParams.OutputPath) - skipping additional verification." -ForegroundColor Magenta -Indentation 4

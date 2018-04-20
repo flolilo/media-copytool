@@ -1711,8 +1711,50 @@ Describe "Start-DupliCheckOut"{
     Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x -aoa -bb0 -pdefault -sccUTF-8 -spf2 `"$($PSScriptRoot)\media_copytool_TESTFILES.7z`" `"-o.\`" " -WindowStyle Minimized -Wait
     Pop-Location
 
-    It "dupli-check via output-folder"{
+    Context "Works as planned" {
+        It "Throw if wron/no parameter" {
+            {Start-DupliCheckOut} | Should Throw
+            {Start-DupliCheckOut -InFiles @("Bla")} | Should Throw
+            {Start-DupliCheckOut -InFiles @() -UserParams @{}} | Should Throw
+        }
+        It "Mark no file if no file is double" {
+            $InFiles = @(Start-FileSearch -UserParams $UserParams)
+            $test = @(Start-DupliCheckOut -InFiles $InFiles -UserParams $UserParams)
+            ,$test | Should BeOfType array
+            $test.Length | Should Be 24
+        }
+        It "Mark all CR2s as already copied" {
+            Get-ChildItem -LiteralPath "$BlaDrive\Out_Test" -Recurse | Remove-Item
+            Get-ChildItem -LiteralPath "$BlaDrive\In_Test" -Recurse | Copy-Item -Destination "$BlaDrive\Out_Test" -Recurse
+            Get-ChildItem -Path "$BlaDrive\Out_Test" -Exclude *.cr2 -File -Recurse | Remove-Item
 
+            $InFiles = @(Start-FileSearch -UserParams $UserParams)
+            $test = @(Start-DupliCheckOut -InFiles $InFiles -UserParams $UserParams)
+            ,$test | Should BeOfType array
+            $test.Length | Should Be 12
+
+            Get-ChildItem -LiteralPath "$BlaDrive\Out_Test" -Recurse -File | Remove-Item
+        }
+    }
+    It "No problems with SpecChars" {
+        Get-ChildItem -LiteralPath "$BlaDrive\In_Test" -Recurse -Directory | Copy-Item -Destination "$BlaDrive\Out_Test"
+
+        $UserParams.InputPath = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
+        $UserParams.OutputPath = "$BlaDrive\Out_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
+
+        $InFiles = @(Start-FileSearch -UserParams $UserParams)
+        $test = @(Start-DupliCheckOut -InFiles $InFiles -UserParams $UserParams)
+        ,$test | Should BeOfType array
+        $test.length | Should Be 6
+    }
+    It "No problems with long paths" {
+        $UserParams.InputPath = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
+        $UserParams.OutputPath = "$BlaDrive\Out_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
+
+        $InFiles = @(Start-FileSearch -UserParams $UserParams)
+        $test = @(Start-DupliCheckOut -InFiles $InFiles -UserParams $UserParams)
+        ,$test | Should BeOfType array
+        $test.length | Should Be 6
     }
 }
 
