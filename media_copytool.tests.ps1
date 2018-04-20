@@ -1512,7 +1512,7 @@ Describe "Start-FileSearch" {
     }
 }
 
-Describe "Get-HistFile"{
+Describe "Get-HistFile" {
     $BlaDrive = "$TestDrive\TEST"
     # DEFINITION: Combine all parameters into a hashtable:
     BeforeEach {
@@ -1615,7 +1615,7 @@ Describe "Get-HistFile"{
     }
 }
 
-Describe "Start-DupliCheckHist"{
+Describe "Start-DupliCheckHist" {
     $BlaDrive = "$TestDrive\TEST"
     # DEFINITION: Combine all parameters into a hashtable:
     BeforeEach {
@@ -1689,7 +1689,7 @@ Describe "Start-DupliCheckHist"{
     }
 }
 
-Describe "Start-DupliCheckOut"{
+Describe "Start-DupliCheckOut" {
     $BlaDrive = "$TestDrive\TEST"
     # DEFINITION: Combine all parameters into a hashtable:
     BeforeEach {
@@ -1758,13 +1758,74 @@ Describe "Start-DupliCheckOut"{
     }
 }
 
-<#
-    Describe "Start-InputGetHash"{
-        It "Calculate hash (if not yet done)"{
-
+Describe "Start-InputGetHash" {
+    $BlaDrive = "$TestDrive\TEST"
+    # DEFINITION: Combine all parameters into a hashtable:
+    BeforeEach {
+        [hashtable]$UserParams = @{
+            InputPath = "$BlaDrive\In_Test"
+            OutputPath = "$BlaDrive\Out_Test"
+            allChosenFormats = @("*.cr2","*.jpg")
+            OutputSubfolderStyle = "yyyy-MM-dd"
+            OutputFileStyle = "unchanged"
+            HistFilePath = "$BlaDrive\In_Test\hist_uncomplicated.json"
+            UseHistFile = 1
+            WriteHistFile = "yes"
+            HistCompareHashes = 1
+            InputSubfolderSearch = 1
         }
     }
+    New-Item -ItemType Directory -Path $BlaDrive
+    Push-Location $BlaDrive
+    Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x -aoa -bb0 -pdefault -sccUTF-8 -spf2 `"$($PSScriptRoot)\media_copytool_TESTFILES.7z`" `"-o.\`" " -WindowStyle Minimized -Wait
+    Pop-Location
 
+    Context "Works as planned" {
+        It "Throw if no/wrong parameter" {
+            {Start-InputGetHash} | Should Throw
+            {Start-InputGetHash -InFiles @()} | Should Throw
+        }
+        It "Works as planned" {
+            $InFiles = @(Start-FileSearch -UserParams $UserParams)
+            $test = @(Start-InputGetHash -InFiles $InFiles)
+            ,$test | Should BeOfType array
+            foreach($i in $test.Hash){
+                $i | Should Not Be ("ZYX")
+            }
+        }
+        It "Work even if one file already has a hash" {
+            $InFiles = @(Start-FileSearch -UserParams $UserParams)
+            $InFiles[2].Hash = "TEST"
+            $test = @(Start-InputGetHash -InFiles $InFiles)
+            ,$test | Should BeOfType array
+            $Test[2].Hash | Should Be "TEST"
+            $test = $test | Where-Object {$_.Hash -eq "ZYX"}
+            $test.Length | Should Be 0
+        }
+    }
+    It "No problems with SpecChars" {
+        $UserParams.InputPath = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
+
+        $InFiles = @(Start-FileSearch -UserParams $UserParams)
+        $test = @(Start-InputGetHash -InFiles $InFiles)
+        ,$test | Should BeOfType array
+        foreach($i in $test.Hash){
+            $i | Should Not Be ("ZYX")
+        }
+    }
+    It "No problems with long paths" {
+        $UserParams.InputPath = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
+
+        $InFiles = @(Start-FileSearch -UserParams $UserParams)
+        $test = @(Start-InputGetHash -InFiles $InFiles)
+        ,$test | Should BeOfType array
+        foreach($i in $test.Hash){
+            $i | Should Not Be ("ZYX")
+        }
+    }
+}
+
+<#
     Describe "Start-PreventingDoubleCopies"{
         It "Avoid copying identical files from the input-path"{
 

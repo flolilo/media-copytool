@@ -1948,17 +1948,17 @@ Function Start-DupliCheckOut(){
 # DEFINITION: Calculate hashes (if not yet done):
 Function Start-InputGetHash(){
     param(
-        [Parameter(Mandatory=$true)]
-        [array]$InFiles
+        [ValidateNotNullOrEmpty()]
+        [array]$InFiles = $(throw 'InFiles is required by Start-InputGetHash')
     )
     Write-ColorOut "$(Get-CurrentDate)  --  Calculate remaining hashes..." -ForegroundColor Cyan
 
     if("ZYX" -in $InFiles.Hash){
         $InFiles | Where-Object {$_.Hash -eq "ZYX"} | Start-RSJob -Name "GetHashRest" -FunctionsToLoad Write-ColorOut -ScriptBlock {
             try{
-                $_.Hash = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA1 -ErrorAction Stop | Select-Object -ExpandProperty Hash)
+                $_.Hash = (Get-FileHash -LiteralPath $_.InFullName -Algorithm SHA1 -ErrorAction Stop | Select-Object -ExpandProperty Hash)
             }catch{
-                Write-ColorOut "Failed to get hash of `"$($_.FullName)`"" -ForegroundColor Red -Indentation 4
+                Write-ColorOut "Failed to get hash of `"$($_.InFullName)`"" -ForegroundColor Red -Indentation 4
                 $_.Hash = "GetHashRestWRONG"
             }
         } | Wait-RSJob -ShowProgress | Receive-RSJob
