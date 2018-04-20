@@ -1861,13 +1861,54 @@ Describe "Start-PreventingDoubleCopies" {
     }
 }
 
-<#
-    Describe "Start-SpaceCheck"{
-        It "Check for free space on the destination volume"{
-            
+Describe "Start-SpaceCheck"{
+    $BlaDrive = "$TestDrive\TEST"
+    # DEFINITION: Combine all parameters into a hashtable:
+    BeforeEach {
+        [hashtable]$UserParams = @{
+            InputPath = "$BlaDrive\In_Test"
+            OutputPath = "$BlaDrive\Out_Test"
+            allChosenFormats = @("*.cr2","*.jpg","*.cr3")
+            OutputSubfolderStyle = "yyyy-MM-dd"
+            OutputFileStyle = "unchanged"
+            HistFilePath = "$BlaDrive\In_Test\hist_uncomplicated.json"
+            UseHistFile = 1
+            WriteHistFile = "yes"
+            HistCompareHashes = 1
+            InputSubfolderSearch = 1
         }
     }
+    New-Item -ItemType Directory -Path $BlaDrive
+    Push-Location $BlaDrive
+    Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x -aoa -bb0 -pdefault -sccUTF-8 -spf2 `"$($PSScriptRoot)\media_copytool_TESTFILES.7z`" `"-o.\`" " -WindowStyle Minimized -Wait
+    Pop-Location
 
+    Context "Works as planned" {
+        It "Throw if no/wrong parameter" {
+            {Start-SpaceCheck} | Should Throw
+            {Start-SpaceCheck -InFiles @()} | Should Throw
+        }
+        It "Works as it should" {
+            $InFiles = @(Start-FileSearch -UserParams $UserParams)
+            $test = Start-SpaceCheck -InFiles $InFiles -UserParams $UserParams
+            $test | Should BeOfType boolean
+        }
+    }
+    It "No problems with SpecChars" {
+        $UserParams.InputPath = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
+        $InFiles = @(Start-FileSearch -UserParams $UserParams)
+        $test = Start-SpaceCheck -InFiles $InFiles -UserParams $UserParams
+        $test | Should BeOfType boolean
+    }
+    It "No problems with long paths" {
+        $UserParams.InputPath = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
+        $InFiles = @(Start-FileSearch -UserParams $UserParams)
+        $test = Start-SpaceCheck -InFiles $InFiles -UserParams $UserParams
+        $test | Should BeOfType boolean
+    }
+}
+
+<#
     Describe "Start-OverwriteProtection"{
         It "Check if filename already exists and if so, then choose new name for copying"{
             

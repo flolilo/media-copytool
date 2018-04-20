@@ -1993,22 +1993,22 @@ Function Start-PreventingDoubleCopies(){
 # DEFINITION: Check for free space on the destination volume:
 Function Start-SpaceCheck(){
     param(
-        [Parameter(Mandatory=$true)]
-        [string]$OutPath,
-        [Parameter(Mandatory=$true)]
-        [array]$InFiles
+        [ValidateNotNullOrEmpty()]
+        [array]$InFiles =           $(throw 'InFiles is required by Start-DupliCheckOut'),
+        [ValidateNotNullOrEmpty()]
+        [hashtable]$UserParams =    $(throw 'UserParams is required by Start-DupliCheckOut')
     )
     Write-ColorOut "$(Get-CurrentDate)  --  Checking if free space is sufficient..." -ForegroundColor Cyan
 
-    [string]$OutPath = Split-Path -Path $OutPath -Qualifier
-    [int]$free = ((Get-PSDrive -PSProvider 'FileSystem' | Where-Object {$_.root -match $OutPath} | Select-Object -ExpandProperty Free) / 1MB)
+    [string]$OutPath = Split-Path -Path $UserParams.OutputPath -Qualifier
+    [int]$free = ((Get-PSDrive -PSProvider 'FileSystem' | Where-Object {$_.root -match $OutPath} | Select-Object -ExpandProperty Free)[0] / 1MB)
     [int]$needed = $(($InFiles | Measure-Object -Sum -Property Size | Select-Object -ExpandProperty Sum) / 1MB)
     
     if($needed -lt $free){
-        Write-ColorOut "Free: $free MB; Needed: $needed MB - Okay!" -ForegroundColor Green -Indentation 4
+        Write-ColorOut "Free: $free MB`tNeeded: $needed MB  --  Okay!" -ForegroundColor Green -Indentation 4
         return $true
     }else{
-        Write-ColorOut "Free: $free MB; Needed: $needed MB - Too big!" -ForegroundColor Red -Indentation 4
+        Write-ColorOut "Free: $free MB`tNeeded: $needed MB  --  Too big!" -ForegroundColor Red -Indentation 4
         return $false
     }
 }
