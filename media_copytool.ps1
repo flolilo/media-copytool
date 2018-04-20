@@ -1994,9 +1994,9 @@ Function Start-PreventingDoubleCopies(){
 Function Start-SpaceCheck(){
     param(
         [ValidateNotNullOrEmpty()]
-        [array]$InFiles =           $(throw 'InFiles is required by Start-DupliCheckOut'),
+        [array]$InFiles =           $(throw 'InFiles is required by Start-SpaceCheck'),
         [ValidateNotNullOrEmpty()]
-        [hashtable]$UserParams =    $(throw 'UserParams is required by Start-DupliCheckOut')
+        [hashtable]$UserParams =    $(throw 'UserParams is required by Start-SpaceCheck')
     )
     Write-ColorOut "$(Get-CurrentDate)  --  Checking if free space is sufficient..." -ForegroundColor Cyan
 
@@ -2016,12 +2016,11 @@ Function Start-SpaceCheck(){
 # DEFINITION: Check if filename already exists and if so, then choose new name for copying:
 Function Start-OverwriteProtection(){
     param(
-        [Parameter(Mandatory=$true)]
-        [array]$InFiles,
-        [Parameter(Mandatory=$true)]
-        [hashtable]$UserParams,
-        [Parameter(Mandatory=$true)]
-        [int]$Mirror
+        [ValidateNotNullOrEmpty()]
+        [array]$InFiles =           $(throw 'InFiles is required by Start-OverwriteProtection'),
+        [ValidateNotNullOrEmpty()]
+        [hashtable]$UserParams =    $(throw 'UserParams is required by Start-OverwriteProtection'),
+        [int]$Mirror =              $(throw 'Mirror is required by Start-OverwriteProtection')
     )
     if($Mirror -eq 1){
         $UserParams.OutputPath = $UserParams.MirrorPath
@@ -2035,6 +2034,8 @@ Function Start-OverwriteProtection(){
 
     [array]$allpaths = @()
 
+
+    # TODO: Extensive rewrite w/ (compare-object).count TODO:
     $sw = [diagnostics.stopwatch]::StartNew()
     for($i=0; $i -lt $InFiles.Length; $i++){
         if($sw.Elapsed.TotalMilliseconds -ge 750 -or $i -eq 0){
@@ -2044,14 +2045,14 @@ Function Start-OverwriteProtection(){
         }
 
         # create outpath:
-        $InFiles[$i].outpath = $("$($UserParams.OutputPath)$($InFiles[$i].sub_date)").Replace("\\","\").Replace("\\","\")
-        $InFiles[$i].OutBaseName = $InFiles[$i].basename
-        $InFiles[$i].outname = "$($InFiles[$i].basename)$($InFiles[$i].extension)"
+        $InFiles[$i].OutPath = $("$($UserParams.OutputPath)$($InFiles[$i].OutSubfolder)").Replace("\\","\").Replace("\\","\")
+        $InFiles[$i].OutBaseName = $InFiles[$i].InBaseName
+        $InFiles[$i].OutName = "$($InFiles[$i].InBaseName)$($InFiles[$i].Extension)"
         # check for files with same name from input:
         [int]$j = 1
         [int]$k = 1
         while($true){
-            [string]$check = "$($InFiles[$i].outpath)\$($InFiles[$i].outname)"
+            [string]$check = "$($InFiles[$i].OutPath)\$($InFiles[$i].OutName)"
             if($check -notin $allpaths){
                 if((Test-Path -LiteralPath $check -PathType Leaf) -eq $false -or $UserParams.OverwriteExistingFiles -eq 1){
                     $allpaths += $check
@@ -2062,7 +2063,7 @@ Function Start-OverwriteProtection(){
                     }else{
                         $InFiles[$i].OutBaseName = $InFiles[$i].OutBaseName -replace "_OutCopy$($k - 1)","_OutCopy$k"
                     }
-                    $InFiles[$i].outname = "$($InFiles[$i].OutBaseName)$($InFiles[$i].extension)"
+                    $InFiles[$i].OutName = "$($InFiles[$i].OutBaseName)$($InFiles[$i].Extension)"
                     $k++
                     # if($script:Debug -ne 0){Write-ColorOut $InFiles[$i].OutBaseName}
                     continue
@@ -2073,7 +2074,7 @@ Function Start-OverwriteProtection(){
                 }else{
                     $InFiles[$i].OutBaseName = $InFiles[$i].OutBaseName -replace "_InCopy$($j - 1)","_InCopy$j"
                 }
-                $InFiles[$i].outname = "$($InFiles[$i].OutBaseName)$($InFiles[$i].extension)"
+                $InFiles[$i].OutName = "$($InFiles[$i].OutBaseName)$($InFiles[$i].Extension)"
                 $j++
                 # if($script:Debug -ne 0){Write-ColorOut $InFiles[$i].OutBaseName}
                 continue
@@ -2086,7 +2087,7 @@ Function Start-OverwriteProtection(){
         if((Read-Host "    Show all names? `"1`" for `"yes`"") -eq 1){
             [int]$indent = 0
             for($i=0; $i -lt $InFiles.Length; $i++){
-                Write-ColorOut "    $($InFiles[$i].outpath.Replace($UserParams.OutputPath,"."))\$($InFiles[$i].outname)`t`t" -NoNewLine -ForegroundColor Gray
+                Write-ColorOut "    $($InFiles[$i].OutPath.Replace($UserParams.OutputPath,"."))\$($InFiles[$i].OutName)`t`t" -NoNewLine -ForegroundColor Gray
                 if($indent -lt 2){
                     $indent++
                 }else{

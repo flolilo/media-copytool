@@ -1908,13 +1908,41 @@ Describe "Start-SpaceCheck"{
     }
 }
 
-<#
-    Describe "Start-OverwriteProtection"{
-        It "Check if filename already exists and if so, then choose new name for copying"{
-            
+Describe "Start-OverwriteProtection" {
+    $BlaDrive = "$TestDrive\TEST"
+    # DEFINITION: Combine all parameters into a hashtable:
+    BeforeEach {
+        [hashtable]$UserParams = @{
+            InputPath = "$BlaDrive\In_Test"
+            OutputPath = "$BlaDrive\Out_Test"
+            allChosenFormats = @("*.cr2","*.jpg","*.cr3")
+            OutputSubfolderStyle = "yyyy-MM-dd"
+            OutputFileStyle = "unchanged"
+            InputSubfolderSearch = 1
+            OverwriteExistingFiles = 0
         }
     }
+    New-Item -ItemType Directory -Path $BlaDrive
+    Push-Location $BlaDrive
+    Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x -aoa -bb0 -pdefault -sccUTF-8 -spf2 `"$($PSScriptRoot)\media_copytool_TESTFILES.7z`" `"-o.\`" " -WindowStyle Minimized -Wait
+    Pop-Location
 
+    Context "Works as planned" {
+        It "Throw if no/wrong parameter" {
+            {Start-OverwriteProtection} | Should Throw
+            {Start-OverwriteProtection -InFiles @()} | Should Throw
+            {Start-OverwriteProtection -Mirror 1} | Should Throw
+        }
+        It "Works as it should" {
+            $InFiles = @(Start-FileSearch -UserParams $UserParams)
+            $test = @(Start-OverwriteProtection -InFiles $InFiles -UserParams $UserParams -Mirror 0)
+            ,$test | Should BeOfType array
+            (Compare-Object $InFiles $test).count | Should Be 0
+        }
+    }
+}
+
+<#
     Describe "Start-FileCopy"{
         It "Copy Files"{
 
