@@ -1973,16 +1973,16 @@ Function Start-InputGetHash(){
 # DEFINITION: Avoid copying identical files from the input-path:
 Function Start-PreventingDoubleCopies(){
     param(
-        [Parameter(Mandatory=$true)]
-        [array]$InFiles
+        [ValidateNotNullOrEmpty()]
+        [array]$InFiles = $(throw 'InFiles is required by Start-PreventingDoubleCopies')
     )
-    Write-ColorOut "$(Get-CurrentDate)  --  Avoid identical input-files..." -ForegroundColor Cyan -NoNewLine
+    Write-ColorOut "$(Get-CurrentDate)  --  Avoid identical input-files..." -ForegroundColor Cyan
 
     [array]$inter = ($InFiles | Sort-Object -Property InName,Date,Size,Hash -Unique)
     if($inter.Length -ne $InFiles.Length){
+        [array]$InFiles = ($inter)
         Write-ColorOut "$($InFiles.Length - $inter.Length) identical files were found in the input-path - only copying one of each." -ForegroundColor Magenta -Indentation 4
         Start-Sleep -Seconds 3
-        [array]$InFiles = ($inter)
     }
     $script:resultvalues.identicalFiles = $($InFiles.Length - $inter.Length)
     $script:resultvalues.copyfiles = $InFiles.Length

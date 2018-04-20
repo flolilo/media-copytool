@@ -1825,13 +1825,43 @@ Describe "Start-InputGetHash" {
     }
 }
 
-<#
-    Describe "Start-PreventingDoubleCopies"{
-        It "Avoid copying identical files from the input-path"{
-
+Describe "Start-PreventingDoubleCopies" {
+    $BlaDrive = "$TestDrive\TEST"
+    # DEFINITION: Combine all parameters into a hashtable:
+    BeforeEach {
+        [hashtable]$UserParams = @{
+            InputPath = "$BlaDrive\In_Test"
+            OutputPath = "$BlaDrive\Out_Test"
+            allChosenFormats = @("*.cr2","*.jpg","*.cr3")
+            OutputSubfolderStyle = "yyyy-MM-dd"
+            OutputFileStyle = "unchanged"
+            HistFilePath = "$BlaDrive\In_Test\hist_uncomplicated.json"
+            UseHistFile = 1
+            WriteHistFile = "yes"
+            HistCompareHashes = 1
+            InputSubfolderSearch = 1
         }
     }
+    New-Item -ItemType Directory -Path $BlaDrive
+    Push-Location $BlaDrive
+    Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x -aoa -bb0 -pdefault -sccUTF-8 -spf2 `"$($PSScriptRoot)\media_copytool_TESTFILES.7z`" `"-o.\`" " -WindowStyle Minimized -Wait
+    Pop-Location
 
+    Context "Works as planned" {
+        It "Throw if no/wrong parameter" {
+            {Start-PreventingDoubleCopies} | Should Throw
+            {Start-PreventingDoubleCopies -InFiles @()} | Should Throw
+        }
+        It "Works as it should" {
+            $InFiles = @(Start-FileSearch -UserParams $UserParams)
+            $test = @(Start-PreventingDoubleCopies -InFiles $InFiles)
+            ,$test | Should BeOfType array
+            $test.Length | Should Be 7
+        }
+    }
+}
+
+<#
     Describe "Start-SpaceCheck"{
         It "Check for free space on the destination volume"{
             
