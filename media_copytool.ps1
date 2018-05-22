@@ -227,13 +227,16 @@ param(
 
 # DEFINITION: Get all error-outputs in English:
     [Threading.Thread]::CurrentThread.CurrentUICulture = 'en-US'
+# DEFINITION: Hopefully avoiding errors by wrong encoding now:
+    $OutputEncoding = New-Object -TypeName System.Text.UTF8Encoding
+    [Console]::InputEncoding = New-Object -TypeName System.Text.UTF8Encoding
 # DEFINITION: Set default ErrorAction to Stop: CREDIT: https://stackoverflow.com/a/21260623/8013879
     if($Debug -eq 0){
         $PSDefaultParameterValues = @{}
         $PSDefaultParameterValues += @{'*:ErrorAction' = 'Stop'}
         $ErrorActionPreference = 'Stop'
     }
-    # DEFINITION: Load PoshRSJob:
+# DEFINITION: Load PoshRSJob:
     try{
         Import-Module -Name "PoshRSJob" -NoClobber -Global -ErrorAction Stop
     }catch{
@@ -254,10 +257,8 @@ param(
             Exit
         }
     }
-# DEFINITION: Hopefully avoiding errors by wrong encoding now:
-    $OutputEncoding = New-Object -TypeName System.Text.UTF8Encoding
 # DEFINITION: Set current date and version number:
-$VersionNumber = "v0.8.12 (Beta) - 2018-02-24"
+    $VersionNumber = "v0.8.12 (Beta) - 2018-02-24"
 
 # ==================================================================================================
 # ==============================================================================
@@ -273,7 +274,7 @@ Function Write-ColorOut(){
         .DESCRIPTION
             Using the [Console]-commands to make everything faster.
         .NOTES
-            Date: 2017-10-25
+            Date: 2018-05-22
         
         .PARAMETER Object
             String to write out
@@ -288,8 +289,7 @@ Function Write-ColorOut(){
             Just use it like Write-Host.
     #>
     param(
-        [Parameter(Mandatory=$true)]
-        [string]$Object,
+        [string]$Object = "Write-ColorOut was called, but no string was transfered.",
 
         [ValidateSet("DarkBlue","DarkGreen","DarkCyan","DarkRed","Blue","Green","Cyan","Red","Magenta","Yellow","Black","DarkGray","Gray","DarkYellow","White","DarkMagenta")]
         [string]$ForegroundColor,
@@ -368,7 +368,7 @@ Function Start-Sound(){
         .DESCRIPTION
             Uses SoundPlayer and Windows's own WAVs to play sounds.
         .NOTES
-            Date: 2018-10-25
+            Date: 2018-03-12
 
         .PARAMETER Success
             1 plays Windows's "tada"-sound, 0 plays Windows's "chimes"-sound.
@@ -379,9 +379,9 @@ Function Start-Sound(){
             For fail: Start-Sound 0
     #>
     param(
-        [Parameter(Mandatory=$true)]
-        [int]$Success
+        [int]$Success = $(return $false)
     )
+
     try{
         $sound = New-Object System.Media.SoundPlayer -ErrorAction stop
         if($Success -eq 1){
