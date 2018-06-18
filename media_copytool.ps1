@@ -18,13 +18,11 @@
     .PARAMETER ShowParams
         Cannot be specified in mc_parameters.json.
         Valid range: 0 (deactivate), 1 (activate)
-        If enabled, it shows the pre-set parameters, so you can see what would happen if you e.g. try 'media_copytool.ps1 -GUI_CLI_Direct "direct"'
-    .PARAMETER GUI_CLI_Direct
-        Sets the mode in which the script will guide the user.
-        Valid options:
-            "GUI" - Graphical User Interface (default)
-            "CLI" - interactive console
-            "direct" - instant execution with given parameters.
+        If enabled, it shows the pre-set parameters, so you can see what would happen if you e.g. try 'media_copytool.ps1 -EnableGUI "direct"'
+    .PARAMETER EnableGUI
+        Cannot be specified in mc_parameters.json.
+        Valid range: 0 (deactivate), 1 (activate)
+        If enabled, GUI will be shown. Otherwise, the script will need to get its values through parameter-flags (e.g. "-InputPath C:\InputPath")
     .PARAMETER JSONParamPath
         Path to your json-file for parameters.
     .PARAMETER LoadParamPresetName
@@ -155,7 +153,7 @@
     .INPUTS
         mc_parameters.json,
         any valid UTF8- *.json if -UseHistFile is 1 (file specified by -HistFilePath),
-        mc_GUI.xaml if -GUI_CLI_direct is "GUI",
+        mc_GUI.xaml if -EnableGUI is "GUI",
         File(s) must be located in the script's directory and must not be renamed.
     .OUTPUTS
         any valid UTF8- *.json if -WriteHistFile is "Yes" or "Overwrite" (file specified by -HistFilePath),
@@ -167,14 +165,14 @@
         media_copytool.ps1 -ShowParams 1
     .EXAMPLE
         Start Media-Copytool with the Graphical user interface:
-        media_copytool.ps1 -GUI_CLI_Direct "GUI"
+        media_copytool.ps1 -EnableGUI 1
     .EXAMPLE
         Copy Canon's Raw-Files, Movies, JPEGs from G:\ to D:\Backup and prevent the computer from ging to standby:
         media_copytool.ps1 -PresetFormats "Can","Mov","Jpg" .InputPath "G:\" -OutputPath "D:\Backup" -PreventStandby 1 
 #>
 param(
     [int]$ShowParams =              0,
-    [string]$GUI_CLI_Direct =       "GUI",
+    [int]$EnableGUI =               1,
     [string]$JSONParamPath =        "$($PSScriptRoot)\mc_parameters.json",
     [string]$LoadParamPresetName =  "default",
     [string]$SaveParamPresetName =  "",
@@ -188,6 +186,7 @@ param(
     [string]$OutputPath =           "",
     [int]$MirrorEnable =            -1,
     [string]$MirrorPath =           "",
+    # TODO: new system with include/exclude/all
     [array]$PresetFormats =         @(),
     [int]$CustomFormatsEnable =     -1,
     [array]$CustomFormats =         @(),
@@ -209,7 +208,7 @@ param(
 # DEFINITION: Combine all parameters into a hashtable, then delete the parameter variables:
     [hashtable]$UserParams = @{
         ShowParams = $ShowParams
-        GUI_CLI_Direct = $GUI_CLI_Direct
+        EnableGUI = $EnableGUI
         JSONParamPath = $JSONParamPath
         LoadParamPresetName = $LoadParamPresetName
         SaveParamPresetName = $SaveParamPresetName
@@ -240,13 +239,17 @@ param(
         UnmountInputDrive = $UnmountInputDrive
         allChosenFormats = @()
     }
-    Remove-Variable -Name ShowParams,GUI_CLI_Direct,JSONParamPath,LoadParamPresetName,SaveParamPresetName,RememberInPath,RememberOutPath,RememberMirrorPath,RememberSettings,InputPath,OutputPath,MirrorEnable,MirrorPath,PresetFormats,CustomFormatsEnable,CustomFormats,OutputSubfolderStyle,OutputFileStyle,HistFilePath,UseHistFile,WriteHistFile,HistCompareHashes,InputSubfolderSearch,CheckOutputDupli,VerifyCopies,OverwriteExistingFiles,AvoidIdenticalFiles,ZipMirror,UnmountInputDrive
+    Remove-Variable -Name ShowParams,EnableGUI,JSONParamPath,LoadParamPresetName,SaveParamPresetName,RememberInPath,RememberOutPath,RememberMirrorPath,RememberSettings,InputPath,OutputPath,MirrorEnable,MirrorPath,PresetFormats,CustomFormatsEnable,CustomFormats,OutputSubfolderStyle,OutputFileStyle,HistFilePath,UseHistFile,WriteHistFile,HistCompareHashes,InputSubfolderSearch,CheckOutputDupli,VerifyCopies,OverwriteExistingFiles,AvoidIdenticalFiles,ZipMirror,UnmountInputDrive
 
-# DEFINITION: Vars for getting GUI variables, ThreadCount
+# DEFINITION: Various vars: getting GUI variables, ThreadCount,...
+    # GUI path:
+        [string]$GUIPath = "$($PSScriptRoot)\mc_GUI.xaml"
     # If you want to see the variables (buttons, checkboxes, ...) the GUI has to offer, set this to 1:
-        $GetWPF = 0
+        [int]$GetWPF = 0
     # ThreadCount for xCopy / RoboCopy:
-        $ThreadCount = 4
+        [int]$ThreadCount = 4
+    # Positive answers for users:
+        [array]$PositiveAnswers = @("y","yes",1,"j","ja")
 # DEFINITION: Setting up load and save names for parameter presets:
     $UserParams.LoadParamPresetName = $UserParams.LoadParamPresetName.ToLower() -Replace '[^A-Za-z0-9_+-]',''
     if($UserParams.LoadParamPresetName.Length -lt 1){
@@ -605,9 +608,9 @@ Function Get-Parameters(){
                     [int]$script:PreventStandby = $jsonparams.PreventStandby
                 }
             }catch{
-                if($UserParams.GUI_CLI_Direct -eq "direct"){
+                if($UserParams.EnableGUI -eq 0){
                     Write-ColorOut "$($UserParams.JSONParamPath.Replace("$($PSScriptRoot)",".")) cannot be loaded - aborting!" -ForegroundColor Red -Indentation 4
-                    Write-ColorOut "(You can specify the path with -JSONParamPath. Also, if you use `"-GUI_CLI_Direct direct`", you can circumvent this error by setting all parameters by yourself - or use `"-GUI_CLI_Direct CLI`" or `"-GUI_CLI_Direct GUI`".)" -ForegroundColor Magenta -Indentation 4
+                    Write-ColorOut "(You can specify the path with -JSONParamPath. Also, if you use `"-EnableGUI 0`", you can circumvent this error by setting all parameters by yourself - or use `"-EnableGUI 1`".)" -ForegroundColor Magenta -Indentation 4
                     Start-Sleep -Seconds 5
                     return $false
                 }else{
@@ -617,9 +620,9 @@ Function Get-Parameters(){
                 }
             }
         }else{
-            if($UserParams.GUI_CLI_Direct -eq "direct"){
+            if($UserParams.EnableGUI -eq 0){
                 Write-ColorOut "$($UserParams.JSONParamPath.Replace("$($PSScriptRoot)",".")) does not exist - aborting!" -ForegroundColor Red -Indentation 4
-                Write-ColorOut "(You can specify the path with -JSONParamPath. Also, if you use `"-GUI_CLI_Direct direct`", you can circumvent this error by setting all parameters by yourself - or use `"-GUI_CLI_Direct CLI`" or `"-GUI_CLI_Direct GUI`".)" -ForegroundColor Magenta -Indentation 4
+                Write-ColorOut "(You can specify the path with -JSONParamPath. Also, if you use `"-EnableGUI 0`", you can circumvent this error by setting all parameters by yourself - or use `"-EnableGUI 1`".)" -ForegroundColor Magenta -Indentation 4
                 Start-Sleep -Seconds 5
                 return $false
             }else{
@@ -702,13 +705,14 @@ Function Get-UserValuesGUI(){
         }
         # $PresetFormats
         [array]$UserParams.PresetFormats = @()
-        if($GUIParams.checkBoxCan.IsChecked -eq $true){$UserParams.PresetFormats += "Can"}
-        if($GUIParams.checkBoxNik.IsChecked -eq $true){$UserParams.PresetFormats += "Nik"}
-        if($GUIParams.checkBoxSon.IsChecked -eq $true){$UserParams.PresetFormats += "Son"}
-        if($GUIParams.checkBoxJpg.IsChecked -eq $true){$UserParams.PresetFormats += "Jpg"}
-        if($GUIParams.checkBoxInter.IsChecked -eq $true){$UserParams.PresetFormats += "Inter"}
-        if($GUIParams.checkBoxMov.IsChecked -eq $true){$UserParams.PresetFormats += "Mov"}
-        if($GUIParams.checkBoxAud.IsChecked -eq $true){$UserParams.PresetFormats += "Aud"}
+        # TODO: new system with include/exclude/all
+        #if($GUIParams.checkBoxCan.IsChecked -eq $true){$UserParams.PresetFormats += "Can"}
+        #if($GUIParams.checkBoxNik.IsChecked -eq $true){$UserParams.PresetFormats += "Nik"}
+        #if($GUIParams.checkBoxSon.IsChecked -eq $true){$UserParams.PresetFormats += "Son"}
+        #if($GUIParams.checkBoxJpg.IsChecked -eq $true){$UserParams.PresetFormats += "Jpg"}
+        #if($GUIParams.checkBoxInter.IsChecked -eq $true){$UserParams.PresetFormats += "Inter"}
+        #if($GUIParams.checkBoxMov.IsChecked -eq $true){$UserParams.PresetFormats += "Mov"}
+        #if($GUIParams.checkBoxAud.IsChecked -eq $true){$UserParams.PresetFormats += "Aud"}
         # $CustomFormatsEnable
         $UserParams.CustomFormatsEnable = $(
             if($GUIParams.checkBoxCustom.IsChecked -eq $true){1}
@@ -838,6 +842,7 @@ Function Get-UserValuesGUI(){
         )
 
     # DEFINITION: Sum up formats:
+        # TODO: new system with include/exclude/all
         [array]$UserParams.allChosenFormats = @()
         if("Can" -in $UserParams.PresetFormats){
             $UserParams.allChosenFormats += "*.cr2"
@@ -873,7 +878,7 @@ Function Get-UserValuesGUI(){
             }
         }
         if($UserParams.allChosenFormats.Length -eq 0){
-            if((Read-Host "    No file-format selected. Copy all files? 1 = yes, 0 = no.") -eq 1){
+            if((Read-Host "    No file-format selected. Copy all files? Positive answers: $PositiveAnswers") -in $PositiveAnswers){
                 [array]$UserParams.allChosenFormats = "*"
             }else{
                 Write-ColorOut "No file-format specified." -ForegroundColor Red -Indentation 4
@@ -900,331 +905,6 @@ Function Get-UserValuesGUI(){
 
     # If everything was sucessful, return UserParams:
     return $UserParams
-}
-
-# DEFINITION: Get values from CLI, then check the main input- and outputfolder:
-Function Get-UserValuesCLI(){
-    param(
-        [ValidateNotNullOrEmpty()]
-        [hashtable]$UserParams = $(throw 'UserParams is required by Get-UserValuesCLI')
-    )
-    Write-ColorOut "$(Get-CurrentDate)  --  Getting user-values..." -ForegroundColor Cyan
-
-    # DEFINITION: Get values, test paths:
-        # $InputPath
-        while($true){
-            try{
-                [string]$UserParams.InputPath = Read-Host "    Please specify input-path"
-                if($UserParams.InputPath.Length -gt 1 -and (Test-Path -LiteralPath $UserParams.InputPath -PathType Container -ErrorAction SilentlyContinue) -eq $true){
-                    break
-                }else{
-                    Write-ColorOut "Invalid selection!" -ForegroundColor Magenta -Indentation 4
-                    continue
-                }
-            }catch{
-                continue
-            }
-        }
-        # $OutputPath
-        while($true){
-            [string]$UserParams.OutputPath = Read-Host "    Please specify output-path"
-            if($UserParams.OutputPath -eq $UserParams.InputPath){
-                Write-ColorOut "Input-path is the same as output-path.`r`n" -ForegroundColor Magenta -Indentation 4
-                continue
-            }else{
-                if($UserParams.OutputPath.Length -gt 1 -and (Test-Path -LiteralPath $UserParams.OutputPath -PathType Container) -eq $true){
-                    break
-                }elseif((Split-Path -Parent -Path $UserParams.OutputPath).Length -gt 1 -and (Test-Path -LiteralPath $(Split-Path -Qualifier -Path $UserParams.OutputPath) -PathType Container) -eq $true){
-                    try{
-                        New-Item -ItemType Directory -Path $UserParams.OutputPath -ErrorAction Stop | Out-Null
-                        Write-ColorOut "Directory $UserParams.OutputPath created." -ForegroundColor Yellow -Indentation 4
-                        break
-                    }catch{
-                        Write-ColorOut "Could not reate directory $UserParams.OutputPath - aborting!" -ForegroundColor Magenta -Indentation 4
-                        return $false
-                    }
-                }else{
-                    Write-ColorOut "Invalid selection!" -ForegroundColor Magenta -Indentation 4
-                    continue
-                }
-            }
-        }
-        # $MirrorEnable
-        while($true){
-            [int]$UserParams.MirrorEnable = Read-Host "    Copy files to an additional folder? 1 = yes, 0 = no."
-            if($UserParams.MirrorEnable -eq 1 -or $UserParams.MirrorEnable -eq 0){
-                break
-            }else{
-                Write-ColorOut "Invalid selection!" -ForegroundColor Magenta -Indentation 4
-                continue
-            }
-        }
-        # $MirrorPath
-        if($UserParams.MirrorEnable -eq 1){
-            while($true){
-                [string]$UserParams.MirrorPath = Read-Host "    Please specify additional output-path"
-                if($UserParams.MirrorPath -eq $UserParams.OutputPath -or $UserParams.MirrorPath -eq $UserParams.InputPath){
-                    Write-ColorOut "`r`nAdditional output-path is the same as input- or output-path.`r`n" -ForegroundColor Red -Indentation 4
-                    continue
-                }
-                if($UserParams.MirrorPath -gt 1 -and (Test-Path -LiteralPath $UserParams.MirrorPath -PathType Container) -eq $true){
-                    break
-                }elseif((Split-Path -Parent -Path $UserParams.MirrorPath).Length -gt 1 -and (Test-Path -LiteralPath $(Split-Path -Qualifier -Path $UserParams.MirrorPath) -PathType Container) -eq $true){
-                    try{
-                        New-Item -ItemType Directory -Path $UserParams.MirrorPath -ErrorAction Stop | Out-Null
-                        Write-ColorOut "Directory $($UserParams.OutputPath) created." -ForegroundColor Yellow -Indentation 4
-                        break
-                    }catch{
-                        Write-ColorOut "Could not reate directory $($UserParams.OutputPath) - aborting!" -ForegroundColor Magenta -Indentation 4
-                        return $false
-                    }
-                }else{
-                    Write-ColorOut "Invalid selection!" -ForegroundColor Magenta -Indentation 4
-                    continue
-                }
-            }
-        }
-        # $PresetFormats
-        while($true){
-            [array]$inter=@("Can","Nik","Son","Jpeg","Jpg","Inter","Mov","Aud")
-            $separator = ","
-            $option = [System.StringSplitOptions]::RemoveEmptyEntries
-            [array]$UserParams.PresetFormats = (Read-Host "    Which preset file-formats would you like to copy? Options: `"Can`",`"Nik`",`"Son`",`"Jpg`",`"Inter`",`"Mov`",`"Aud`", or leave empty for none. For multiple selection, separate with commata.").Split($separator,$option)
-            if($UserParams.PresetFormats.Length -eq 0 -or $UserParams.PresetFormats -in $inter){
-                break
-            }else{
-                Write-ColorOut "Invalid selection!" -ForegroundColor Magenta -Indentation 4
-                continue
-            }
-        }
-        # $CustomFormatsEnable - Number
-        while($true){
-            [int]$UserParams.CustomFormatsEnable = Read-Host "    How many custom file-formats? Range: From 0 for `"none`" to as many as you like."
-            if($UserParams.CustomFormatsEnable -in (0..999)){
-                break
-            }else{
-                Write-ColorOut "Please choose a positive number!" -ForegroundColor Magenta -Indentation 4
-                continue
-            }
-        }
-        # $CustomFormats
-        [array]$UserParams.CustomFormats = @()
-        if($UserParams.CustomFormatsEnable -ne 0){
-            for($i = 1; $i -le $UserParams.CustomFormatsEnable; $i++){
-                while($true){
-                    [string]$inter = Read-Host "    Select custom format no. $i. `"*`" (w/o quotes) = all files, `"*.ext`" = all files with extension .ext, `"file.*`" = all files named file."
-                    if($inter.Length -ne 0){
-                        $UserParams.CustomFormats += $inter
-                        break
-                    }else{
-                        Write-ColorOut "Invalid input!" -ForegroundColor Magenta -Indentation 4
-                        continue
-                    }
-                }
-            }
-        }
-        # $OutputSubfolderStyle
-        while($true){
-            [array]$inter = @("none","unchanged","yyyy-MM-dd","yyyy_MM_dd","yyyy.MM.dd","yyyyMMdd","yy-MM-dd","yy_MM_dd","yy.MM.dd","yyMMdd")
-            [string]$UserParams.OutputSubfolderStyle = Read-Host "    Which subfolder-style should be used in the output-path? Options: none, unchanged, yyyy-MM-dd, yyyy_MM_dd, yyyy.MM.dd, yyyyMMdd, yy-MM-dd, yy_MM_dd, yy.MM.dd, yyMMdd."
-            if($UserParams.OutputSubfolderStyle -in $inter){
-                break
-            }else{
-                Write-ColorOut "Invalid choice!" -ForegroundColor Magenta -Indentation 4
-                continue
-            }
-        }
-        # $OutputFileStyle
-        while($true){
-            [array]$inter = @("unchanged","yyyy-MM-dd_HH-mm-ss","yyyyMMdd_HHmmss","yyyyMMddHHmmss","yy-MM-dd_HH-mm-ss","yyMMdd_HHmmss","yyMMddHHmmss","HH-mm-ss","HH_mm_ss","HHmmss")
-            [string]$UserParams.OutputFileStyle = Read-Host "    Which subfolder-style should be used in the output-path? Options: unchanged, yyyy-MM-dd_HH-mm-ss, yyyyMMdd_HHmmss, yyyyMMddHHmmss, yy-MM-dd_HH-mm-ss, yyMMdd_HHmmss, yyMMddHHmmss, HH-mm-ss, HH_mm_ss, HHmmss."
-            if($UserParams.OutputFileStyle -cin $inter){
-                break
-            }else{
-                Write-ColorOut "Invalid choice!" -ForegroundColor Magenta -Indentation 4
-                continue
-            }
-        }
-        # $UseHistFile
-        while($true){
-            [int]$UserParams.UseHistFile = Read-Host "    Compare input-files with the history-file to prevent duplicates? 1 = yes, 0 = no"
-            if($UserParams.UseHistFile -in (0..1)){
-                break
-            }else{
-                Write-ColorOut "Invalid choice!" -ForegroundColor Magenta -Indentation 4
-                continue
-            }
-        }
-        # $WriteHistFile
-        while($true){
-            [array]$inter = @("yes","no","overwrite")
-            [string]$UserParams.WriteHistFile = Read-Host "    Write newly copied files to history-file? Options: yes, no, overwrite."
-            if($UserParams.WriteHistFile -in $inter){
-                break
-            }else{
-                Write-ColorOut "Invalid choice!" -ForegroundColor Magenta -Indentation 4
-                continue
-            }
-        }
-        # $HistFilePath
-        if($UserParams.UseHistFile -eq 1 -or $UserParams.WriteHistFile -ne "no"){
-            while($true){
-                [string]$UserParams.HistFilePath = Read-Host "    Please specify path for the history-file"
-                if($UserParams.HistFilePath.Length -gt 1 -and (Test-Path -LiteralPath $UserParams.HistFilePath -PathType Leaf) -eq $true){
-                    break
-                }else{
-                    Write-ColorOut "Invalid selection!" -ForegroundColor Magenta -Indentation 4
-                    continue
-                }
-            }
-        }
-        # $HistCompareHashes
-        while($true){
-            [int]$UserParams.HistCompareHashes = Read-Host "    Additionally compare all input-files via hashes? 1 = yes, 0 = no."
-            if($UserParams.HistCompareHashes -in (0..1)){
-                break
-            }else{
-                Write-ColorOut "Invalid choice!" -ForegroundColor Magenta -Indentation 4
-                continue
-            }
-        }
-        # $InputSubfolderSearch
-        while($true){
-            [int]$UserParams.InputSubfolderSearch = Read-Host "    Check input-path's subfolders? 1 = yes, 0 = no."
-            if($UserParams.InputSubfolderSearch -in (0..1)){
-                break
-            }else{
-                Write-ColorOut "Invalid choice!" -ForegroundColor Magenta -Indentation 4
-                continue
-            }
-        }
-        # $CheckOutputDupli
-        while($true){
-            [int]$UserParams.CheckOutputDupli = Read-Host "    Additionally check output-path for already copied files? 1 = yes, 0 = no."
-            if($UserParams.CheckOutputDupli -in (0..1)){
-                break
-            }else{
-                Write-ColorOut "Invalid choice!" -ForegroundColor Magenta -Indentation 4
-                continue
-            }
-        }
-        # $VerifyCopies
-        while($true){
-            [int]$UserParams.VerifyCopies = Read-Host "    Enable verifying copied files afterwards for guaranteed successfully copied files? 1 = yes, 0 = no."
-            if($UserParams.VerifyCopies -in (0..1)){
-                break
-            }else{
-                Write-ColorOut "Invalid choice!" -ForegroundColor Magenta -Indentation 4
-                continue
-            }
-        }
-        # $OverwriteExistingFiles
-        while($true){
-            [int]$UserParams.OverwriteExistingFiles = Read-Host "    Overwrite existing files? 1 = yes, 0 = no."
-            if($UserParams.OverwriteExistingFiles -in (0..1)){
-                break
-            }else{
-                Write-ColorOut "Invalid choice!" -ForegroundColor Magenta -Indentation 4
-                continue
-            }
-        }
-        # $AvoidIdenticalFiles
-        while($true){
-            [int]$UserParams.AvoidIdenticalFiles = Read-Host "    Avoid copying identical input-files? 1 = yes, 0 = no."
-            if($UserParams.AvoidIdenticalFiles -in (0..1)){
-                break
-            }else{
-                Write-ColorOut "Invalid choice!" -ForegroundColor Magenta -Indentation 4
-                continue
-            }
-        }
-        # $ZipMirror
-        if($UserParams.MirrorEnable -eq 1){
-            while($true){
-                [int]$UserParams.ZipMirror = Read-Host "    Copying files to additional output-path as 7zip-archive? 1 = yes, 0 = no."
-                if($UserParams.ZipMirror -in (0..1)){
-                    break
-                }else{
-                    Write-ColorOut "Invalid choice!" -ForegroundColor Magenta -Indentation 4
-                    continue
-                }
-            }
-        }
-        # $UnmountInputDrive
-        while($true){
-            [int]$UserParams.UnmountInputDrive = Read-Host "    Removing input-drive after copying & verifying (before mirroring)? Only use it for external drives. 1 = yes, 0 = no."
-            if($UserParams.UnmountInputDrive -in (0..1)){
-                break
-            }else{
-                Write-ColorOut "Invalid choice!" -ForegroundColor Magenta -Indentation 4
-                continue
-            }
-        }
-        # $PreventStandby (SCRIPT VAR)
-        while($true){
-            [int]$script:PreventStandby = Read-Host "    Auto-prevent standby of computer while script is running? 1 = yes, 0 = no."
-            if($script:PreventStandby -in (0..1)){
-                break
-            }else{
-                Write-ColorOut "Invalid choice!" -ForegroundColor Magenta -Indentation 4
-                continue
-            }
-        }
-        # $RememberInPath
-        while($true){
-            [int]$UserParams.RememberInPath = Read-Host "    Remember the input-path for future uses? 1 = yes, 0 = no."
-            if($UserParams.RememberInPath -in (0..1)){
-                break
-            }else{
-                Write-ColorOut "Invalid choice!" -ForegroundColor Magenta -Indentation 4
-                continue
-            }
-        }
-        # $RememberOutPath
-        while($true){
-            [int]$UserParams.RememberOutPath = Read-Host "    Remember the output-path for future uses? 1 = yes, 0 = no."
-            if($UserParams.RememberOutPath -in (0..1)){
-                break
-            }else{
-                Write-ColorOut "Invalid choice!" -ForegroundColor Magenta -Indentation 4
-                continue
-            }
-        }
-        # $RememberMirrorPath
-        while($true){
-            [int]$UserParams.RememberMirrorPath = Read-Host "    Remember the additional output-path for future uses? 1 = yes, 0 = no."
-            if($UserParams.RememberMirrorPath -in (0..1)){
-                break
-            }else{
-                Write-ColorOut "Invalid choice!" -ForegroundColor Magenta -Indentation 4
-                continue
-            }
-        }
-        # $RememberSettings
-        while($true){
-            [int]$UserParams.RememberSettings = Read-Host "    Remember settings for future uses? 1 = yes, 0 = no."
-            if($UserParams.RememberSettings -in (0..1)){
-                break
-            }else{
-                Write-ColorOut "Invalid choice!" -ForegroundColor Magenta -Indentation 4
-                continue
-            }
-        }
-        # $SaveParamPresetName
-        if($UserParams.RememberSettings -eq 1 -or $UserParams.RememberMirrorPath -eq 1 -or $UserParams.RememberOutPath -eq 1 -or $UserParams.RememberInPath -eq 1){
-            while($true){
-                [string]$UserParams.SaveParamPresetName = $((Read-Host "    Which preset do you want to save your settings to? (Valid cahracters: A-z, 0-9, +, -, _ ; Max. 64 cahracters)`t").ToLower() -Replace '[^A-Za-z0-9_+-]','')
-                [string]$UserParams.SaveParamPresetName = $UserParams.SaveParamPresetName.Substring(0, [math]::Min($UserParams.SaveParamPresetName.Length, 64))
-                if($UserParams.SaveParamPresetName.Length -gt 1){
-                    break
-                }else{
-                    Write-ColorOut "Invalid selection!" -ForegroundColor Magenta -Indentation 4
-                    continue
-                }
-            }
-        }
-
-        return $UserParams
 }
 
 # DEFINITION: Get values from Params, then check the main input- and outputfolder:
@@ -1441,7 +1121,7 @@ Function Get-UserValuesDirect(){
             }
         }
         if($UserParams.allChosenFormats.Length -eq 0){
-            if((Read-Host "    No file-format selected. Copy all files? 1 = yes, 0 = no.") -eq 1){
+            if((Read-Host "    No file-format selected. Copy all files? Positive answers: $PositiveAnswers") -in $PositiveAnswers){
                 [array]$UserParams.allChosenFormats = @("*")
             }else{
                 Write-ColorOut "No file-format specified." -ForegroundColor Red -Indentation 4
@@ -1480,7 +1160,7 @@ Function Show-Parameters(){
         [hashtable]$UserParams = $(throw 'UserParams is required by Show-Parameters')
     )
     Write-ColorOut "flolilo's Media-Copytool's parameters:`r`n" -ForegroundColor Green
-    Write-ColorOut "-GUI_CLI_Direct`t`t=`t$($UserParams.GUI_CLI_Direct)" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-EnableGUI`t`t=`t$($UserParams.EnableGUI)" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-JSONParamPath`t`t=`t$($UserParams.JSONParamPath)" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-LoadParamPresetName`t=`t$($UserParams.LoadParamPresetName)" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-SaveParamPresetName`t=`t$($UserParams.SaveParamPresetName)" -ForegroundColor Cyan -Indentation 4
@@ -1694,7 +1374,7 @@ Function Start-FileSearch(){
     $InFiles | Out-Null
 
     if($script:Debug -gt 1){
-        if((Read-Host "    Show all found files? `"1`" for `"yes`"") -eq 1){
+        if((Read-Host "    Show all found files? Positive answers: $PositiveAnswers") -in $PositiveAnswers){
             for($i=0; $i -lt $InFiles.Length; $i++){
                 Write-ColorOut "$($InFiles[$i].InFullName.Replace($UserParams.InputPath,"."))" -ForegroundColor Gray -Indentation 4
             }
@@ -1736,7 +1416,7 @@ Function Get-HistFile(){
         $files_history | Out-Null
 
         if($script:Debug -gt 1){
-            if((Read-Host "    Show found history-values? `"1`" means `"yes`"") -eq 1){
+            if((Read-Host "    Show found history-values? Positive answers: $PositiveAnswers") -in $PositiveAnswers){
                 Write-ColorOut "Found values: $($files_history.Length)" -ForegroundColor Yellow -Indentation 4
                 Write-ColorOut "Name`t`tDate`t`tSize`t`tHash" -Indentation 4
                 for($i = 0; $i -lt $files_history.Length; $i++){
@@ -1749,7 +1429,7 @@ Function Get-HistFile(){
         if("null" -in $files_history -or $files_history.InName.Length -lt 1 -or ($files_history.Length -gt 1 -and (($files_history.InName.Length -ne $files_history.Date.Length) -or ($files_history.InName.Length -ne $files_history.Size.Length) -or ($files_history.InName.Length -ne $files_history.Hash.Length) -or ($files_history.InName -contains $null) -or ($files_history.Date -contains $null) -or ($files_history.Size -contains $null) -or ($files_history.Hash -contains $null)))){
             Write-ColorOut "Some values in the history-file $($UserParams.HistFilePath) seem wrong - it's safest to delete the whole file." -ForegroundColor Magenta -Indentation 4
             Write-ColorOut "InNames: $($files_history.InName.Length) Dates: $($files_history.Date.Length) Sizes: $($files_history.Size.Length) Hashes: $($files_history.Hash.Length)" -Indentation 4
-            if((Read-Host "    Is that okay? Type '1' (without quotes) to confirm or any other number to abort. Confirm by pressing Enter") -eq 1){
+            if((Read-Host "    Is that okay? Positive answers: $PositiveAnswers") -in $PositiveAnswers){
                 return @()
             }else{
                 Write-ColorOut "`r`n`tAborting.`r`n" -ForegroundColor Magenta
@@ -1762,7 +1442,7 @@ Function Get-HistFile(){
         }
     }else{
         Write-ColorOut "History-File $($UserParams.HistFilePath) could not be found. This means it's possible that duplicates get copied." -ForegroundColor Magenta -Indentation 4
-        if((Read-Host "    Is that okay? Type '1' (without quotes) to confirm or any other number to abort. Confirm by pressing Enter") -eq 1){
+        if((Read-Host "    Is that okay? Positive answers: $PositiveAnswers") -in $PositiveAnswers){
             return @()
         }else{
             Write-ColorOut "`r`n`tAborting.`r`n" -ForegroundColor Magenta
@@ -1809,7 +1489,7 @@ Function Start-DupliCheckHist(){
     Write-Progress -Activity "Comparing input-files to already copied files (history-file).." -Status "Done!" -Completed
 
     if($script:Debug -gt 1){
-        if((Read-Host "    Show result? `"1`" for `"yes`"") -eq 1){
+        if((Read-Host "    Show result? Positive answers: $PositiveAnswers") -in $PositiveAnswers){
             Write-ColorOut "`r`n`tFiles to skip / process:" -ForegroundColor Yellow
             for($i=0; $i -lt $InFiles.Length; $i++){
                 if($InFiles[$i].ToCopy -eq 1){
@@ -1916,7 +1596,7 @@ Function Start-DupliCheckOut(){
             
 
             if($script:Debug -gt 1){
-                if((Read-Host "    Show all files? `"1`" for `"yes`"") -eq 1){
+                if((Read-Host "    Show all files? Positive answers: $PositiveAnswers") -in $PositiveAnswers){
                     Write-ColorOut "`r`n`tFiles to skip / process:" -ForegroundColor Yellow
                     for($i=0; $i -lt $InFiles.Length; $i++){
                         if($InFiles[$i].ToCopy -eq 1){
@@ -2084,7 +1764,7 @@ Function Start-OverwriteProtection(){
     Write-Progress -Activity "Prevent overwriting existing files..." -Status "Done!" -Completed
 
     if($script:Debug -gt 1){
-        if((Read-Host "    Show all names? `"1`" for `"yes`"") -eq 1){
+        if((Read-Host "    Show all names? Positive answers: $PositiveAnswers") -in $PositiveAnswers){
             [int]$indent = 0
             for($i=0; $i -lt $InFiles.Length; $i++){
                 Write-ColorOut "    $($InFiles[$i].OutPath.Replace($UserParams.OutputPath,"."))\$($InFiles[$i].OutName)`t`t" -NoNewLine -ForegroundColor Gray
@@ -2332,17 +2012,17 @@ Function Start-FileVerification(){
     [int]$unverified = 0
     [int]$inter=0
     if($script:Debug -gt 1){
-        [int]$inter = Read-Host "    Show files? `"1`" for `"yes`""
+        [int]$inter = Read-Host "    Show files? Positive answers: $PositiveAnswers"
     }
     for($i=0; $i -lt $InFiles.Length; $i++){
         if($InFiles[$i].tocopy -eq 1){
             $unverified++
-            if($inter -eq 1){
+            if($inter -in $PositiveAnswers){
                 Write-ColorOut $InFiles[$i].outname -ForegroundColor Red -Indentation 4
             }
         }else{
             $verified++
-            if($inter -eq 1){
+            if($inter -in $PositiveAnswers){
                 Write-ColorOut $InFiles[$i].outname -ForegroundColor Green -Indentation 4
             }
         }
@@ -2434,17 +2114,16 @@ Function Start-Everything(){
 
     while($true){
         # DEFINITION: Get User-Values:
-        $inter = $UserParams.GUI_CLI_Direct
+        $inter = $UserParams.EnableGUI
         $UserParams = $(
-            if($UserParams.GUI_CLI_Direct -eq "GUI"){Get-UserValuesGUI -UserParams $UserParams -GUIParams $GUIParams}
-            elseif($UserParams.GUI_CLI_Direct -eq "CLI"){Get-UserValuesCLI -UserParams $UserParams}
-            elseif($UserParams.GUI_CLI_Direct -eq "Direct"){Get-UserValuesDirect -UserParams $UserParams}
+            if($UserParams.EnableGUI -eq 1){Get-UserValuesGUI -UserParams $UserParams -GUIParams $GUIParams}
+            else{Get-UserValuesDirect -UserParams $UserParams}
         )
         if($UserParams -eq $false){
             Start-Sound -Success 0
             Start-Sleep -Seconds 2
-            if($inter -eq "GUI"){
-                Start-GUI -GUIPath "$($PSScriptRoot)\mc_GUI.xaml" -UserParams $UserParams
+            if($inter -eq 1){
+                Start-GUI -GUIPath $GUIPath -UserParams $UserParams -GetXAML 1
             }
             break
         }
@@ -2476,8 +2155,8 @@ Function Start-Everything(){
             Write-ColorOut "$($inputfiles.Length) files left to copy - aborting rest of the script." -ForegroundColor Magenta
             Start-Sound -Success 1
             Start-Sleep -Seconds 2
-            if($UserParams.GUI_CLI_Direct -eq "GUI"){
-                Start-GUI -GUIPath "$($PSScriptRoot)\mc_GUI.xaml" -UserParams $UserParams
+            if($UserParams.EnableGUI -eq 1){
+                Start-GUI -GUIPath $GUIPath -UserParams $UserParams
             }
             break
         }
@@ -2503,8 +2182,8 @@ Function Start-Everything(){
                     Write-ColorOut "$($inputfiles.Length) files left to copy - aborting rest of the script." -ForegroundColor Magenta
                     Start-Sound -Success 1
                     Start-Sleep -Seconds 2
-                    if($UserParams.GUI_CLI_Direct -eq "GUI"){
-                        Start-GUI -GUIPath "$($PSScriptRoot)\mc_GUI.xaml" -UserParams $UserParams
+                    if($UserParams.EnableGUI -eq 1){
+                        Start-GUI -GUIPath $GUIPath -UserParams $UserParams
                     }
                     break
                 }
@@ -2519,8 +2198,8 @@ Function Start-Everything(){
                 Write-ColorOut "$($inputfiles.Length) files left to copy - aborting rest of the script." -ForegroundColor Magenta
                 Start-Sound -Success 1
                 Start-Sleep -Seconds 2
-                if($UserParams.GUI_CLI_Direct -eq "GUI"){
-                    Start-GUI -GUIPath "$($PSScriptRoot)\mc_GUI.xaml" -UserParams $UserParams
+                if($UserParams.EnableGUI -eq 1){
+                    Start-GUI -GUIPath $GUIPath -UserParams $UserParams
                 }
                 break
             }
@@ -2541,8 +2220,8 @@ Function Start-Everything(){
         if((Start-SpaceCheck -InFiles $inputfiles -OutPath $UserParams.OutputPath) -eq $false){
             Start-Sound -Success 0
             Start-Sleep -Seconds 2
-            if($UserParams.GUI_CLI_Direct -eq "GUI"){
-                Start-GUI -GUIPath "$($PSScriptRoot)\mc_GUI.xaml" -UserParams $UserParams
+            if($UserParams.EnableGUI -eq 1){
+                Start-GUI -GUIPath $GUIPath -UserParams $UserParams
             }
             break
         }
@@ -2553,11 +2232,11 @@ Function Start-Everything(){
         while(1 -in $inputfiles.tocopy){
             if($j -gt 0){
                 Write-ColorOut "Some of the copied files are corrupt. Attempt re-copying them?" -ForegroundColor Magenta
-                if((Read-Host "`"1`" (w/o quotes) for `"yes`", other number for `"no`"") -ne 1){
+                if((Read-Host " Positive answers: $PositiveAnswers") -notin $PositiveAnswers){
                     Write-ColorOut "Aborting." -ForegroundColor Cyan
                     Start-Sleep -Seconds 2
-                    if($UserParams.GUI_CLI_Direct -eq "GUI"){
-                        Start-GUI -GUIPath "$($PSScriptRoot)/mc_GUI.xaml" -UserParams $UserParams
+                    if($UserParams.EnableGUI -eq 1){
+                        Start-GUI -GUIPath $GUIPath -UserParams $UserParams
                     }
                     break
                 }
@@ -2601,8 +2280,8 @@ Function Start-Everything(){
             if((Start-SpaceCheck -InFiles $inputfiles -OutPath $UserParams.MirrorPath) -eq $false){
                 Start-Sound -Success 0
                 Start-Sleep -Seconds 2
-                if($UserParams.GUI_CLI_Direct -eq "GUI"){
-                    Start-GUI -GUIPath "$($PSScriptRoot)\mc_GUI.xaml" -UserParams $UserParams
+                if($UserParams.EnableGUI -eq 1){
+                    Start-GUI -GUIPath $GUIPath -UserParams $UserParams
                 }
                 break
             }
@@ -2626,7 +2305,7 @@ Function Start-Everything(){
                 while(1 -in $inputfiles.tocopy){
                     if($j -gt 1){
                         Write-ColorOut "Some of the copied files are corrupt. Attempt re-copying them?" -ForegroundColor Magenta
-                        if((Read-Host "`"1`" (w/o quotes) for `"yes`", other number for `"no`"") -ne 1){
+                        if((Read-Host "Positive answers: $PositiveAnswers") -notin $PositiveAnswers){
                             break
                         }
                     }
@@ -2668,8 +2347,8 @@ Function Start-Everything(){
     if($script:PreventStandby -gt 1){
         Stop-Process -Id $script:PreventStandby
     }
-    if($UserParams.GUI_CLI_Direct -eq "GUI"){
-        Start-GUI -GUIPath "$($PSScriptRoot)\mc_GUI.xaml" -UserParams $UserParams
+    if($UserParams.EnableGUI -eq 1){
+        Start-GUI -GUIPath $GUIPath -UserParams $UserParams
     }
 }
 
@@ -2767,7 +2446,7 @@ Function Start-GUI(){
         catch{
             Write-ColorOut "Unable to load Windows.Markup.XamlReader. Usually this means that you haven't installed .NET Framework. Please download and install the latest .NET Framework Web-Installer for your OS: " -ForegroundColor Red
             Write-ColorOut "https://duckduckgo.com/?q=net+framework+web+installer&t=h_&ia=web"
-            Write-ColorOut "Alternatively, this script will now start in CLI-mode, asking you for variables inside the terminal." -ForegroundColor Yellow
+            Write-ColorOut "Alternatively, this script will now start in CLI-mode, which requires you to enter all variables via parameter flags (e.g. `"-Inputpath C:\InputPath`")." -ForegroundColor Yellow
             Pause
             return $false
         }
@@ -2816,15 +2495,16 @@ Function Start-GUI(){
     $GUIParams.checkBoxMirror.IsChecked =   $UserParams.MirrorEnable
     $GUIParams.textBoxMirror.Text =         $UserParams.MirrorPath
     $GUIParams.textBoxHistFile.Text =       $UserParams.HistFilePath
-    $GUIParams.checkBoxCan.IsChecked = $(if("Can" -in $UserParams.PresetFormats){$true}else{$false})
-    $GUIParams.checkBoxNik.IsChecked = $(if("Nik" -in $UserParams.PresetFormats){$true}else{$false})
-    $GUIParams.checkBoxSon.IsChecked = $(if("Son" -in $UserParams.PresetFormats){$true}else{$false})
-    $GUIParams.checkBoxJpg.IsChecked = $(if("Jpg" -in $UserParams.PresetFormats -or "Jpeg" -in $UserParams.PresetFormats){$true}else{$false})
-    $GUIParams.checkBoxInter.IsChecked =    $(if("Inter" -in $UserParams.PresetFormats){$true}else{$false})
-    $GUIParams.checkBoxMov.IsChecked =      $(if("Mov" -in $UserParams.PresetFormats){$true}else{$false})
-    $GUIParams.checkBoxAud.IsChecked =      $(if("Aud" -in $UserParams.PresetFormats){$true}else{$false})
-    $GUIParams.checkBoxCustom.IsChecked =   $UserParams.CustomFormatsEnable
-    $GUIParams.textBoxCustom.Text =         $UserParams.CustomFormats -join ","
+    # TODO: new system with include/exclude/all
+    #$GUIParams.checkBoxCan.IsChecked = $(if("Can" -in $UserParams.PresetFormats){$true}else{$false})
+    #$GUIParams.checkBoxNik.IsChecked = $(if("Nik" -in $UserParams.PresetFormats){$true}else{$false})
+    #$GUIParams.checkBoxSon.IsChecked = $(if("Son" -in $UserParams.PresetFormats){$true}else{$false})
+    #$GUIParams.checkBoxJpg.IsChecked = $(if("Jpg" -in $UserParams.PresetFormats -or "Jpeg" -in $UserParams.PresetFormats){$true}else{$false})
+    #$GUIParams.checkBoxInter.IsChecked =    $(if("Inter" -in $UserParams.PresetFormats){$true}else{$false})
+    #$GUIParams.checkBoxMov.IsChecked =      $(if("Mov" -in $UserParams.PresetFormats){$true}else{$false})
+    #$GUIParams.checkBoxAud.IsChecked =      $(if("Aud" -in $UserParams.PresetFormats){$true}else{$false})
+    #$GUIParams.checkBoxCustom.IsChecked =   $UserParams.CustomFormatsEnable
+    #$GUIParams.textBoxCustom.Text =         $UserParams.CustomFormats -join ","
     $GUIParams.comboBoxOutSubStyle.SelectedIndex = $(
         if("none"           -eq $UserParams.OutputSubfolderStyle){0}
         elseif("unchanged"  -eq $UserParams.OutputSubfolderStyle){1}
@@ -2919,10 +2599,10 @@ Function Start-GUI(){
         Invoke-Close
     })
 
-    return $script:Form
-
     # DEFINITION: Start GUI
-    # $script:Form.ShowDialog() | Out-Null
+    $script:Form.ShowDialog() | Out-Null
+
+    return $script:Form
 }
 
 # DEFINITION: Banner:
@@ -2931,26 +2611,22 @@ Function Start-GUI(){
     Write-ColorOut "(PID = $("{0:D8}" -f $pid))`r`n" -ForegroundColor Gray -BackgroundColor DarkGray
     $Host.UI.RawUI.WindowTitle = "CLI: Media-Copytool $VersionNumber"
 
-<# DEFINITION: Start-up:
+# DEFINITION: Start-up:
     while($true){
-        if($UserParams.GUI_CLI_Direct -eq "GUI"){
+        if($UserParams.EnableGUI -eq 1){
             [hashtable]$UserParams = Get-Parameters -UserParams $UserParams -Renew 0
-            if((Start-GUI -GUIPath "$($PSScriptRoot)\mc_GUI.xaml" -UserParams $UserParams) -eq $false){
-                $UserParams.GUI_CLI_Direct = "CLI"
+            if((Start-GUI -GUIPath $GUIPath -UserParams $UserParams -GetXAML 1) -eq $false){
+                $UserParams.EnableGUI = 0
                 Continue
             }
             Break
-        }elseif($UserParams.GUI_CLI_Direct -eq "Direct"){
-            Get-Parameters -JSONParamPath $UserParams.JSONParamPath -Renew 0
-            Start-Everything -UserParams $UserParams
-            Break
-        }elseif($UserParams.GUI_CLI_Direct -eq "CLI"){
+        }elseif($UserParams.EnableGUI -eq 0){
             Start-Everything -UserParams $UserParams
             Break
         }else{
-            Write-ColorOut "Invalid choice of -GUI_CLI_Direct value (`"GUI`", `"CLI`", or `"Direct`"). Trying GUI..." -ForegroundColor Red
+            Write-ColorOut "Invalid choice of -EnableGUI value (0, 1). Trying GUI..." -ForegroundColor Red
             Start-Sleep -Seconds 2
-            $UserParams.GUI_CLI_Direct = "GUI"
+            $UserParams.EnableGUI = 1
             Continue
         }
     }
