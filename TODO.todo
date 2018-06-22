@@ -19,6 +19,7 @@ To test (for bugs/regresses):
         [ ] for this, sorting the files by name will be in order.
     [ ] remove preset-formats and change system to all/only/except.
     [ ] (mainly) use `throw` instead of `return $false` for errors inside the script.
+    [ ] Separate GUI from rest of the script: GUI starts script with parameters. (same script vs 2 scripts?) @high 
 Done:
     [x] Option to verify everything after copying when not checking for duplis. @done (18.2.2018, 21:40:59)
     [x] rename `$($PSScriptRoot)` in history-path. @high @done (4.2.2018, 17:48:11)
