@@ -1,6 +1,6 @@
 <!--
     Description:    This is the GUI for media_copytool.ps1
-    Date:           2018-02-24
+    Date:           2018-05-08
     Author:         flolilo
 -->
 <Window x:Class="MediaCopytool.MainWindow"
@@ -9,122 +9,124 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="GUI: Media-Copytool <MCVersion>" Height="340" Width="800" ResizeMode="CanMinimize"
+        Title="GUI: Media-Copytool ((MC_VERSION))" Height="340" Width="800" ResizeMode="CanMinimize"
         FontFamily="Segoe UI,Arial"
     >
     <Grid Background="#FFB3B6B5">
         <TabControl x:Name="tabControl" VerticalAlignment="Top" Margin="0,0,0,0" Height="260" Background="#FFB3B6B5" BorderBrush="#FF878787">
             <TabItem Header="Paths">
                 <Grid Background="#FFB3B6B5">
-                    <TextBlock x:Name="textBlockLoadPreset"
+                    <TextBlock x:Name="TextBlockLoadPreset"
                         Text="Load preset:" FontWeight="Bold" TextAlignment="Right"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,23,0,0"
                         Width="70"
                     />
-                    <ComboBox x:Name="comboBoxLoadPreset" FontFamily="Consolas,Segoe UI,Arial"
+                    <ComboBox x:Name="ComboBoxLoadPreset" FontFamily="Consolas,Segoe UI,Arial"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,20,0,0"
                         Height="22" Width="180"
                     />
-                    <Button x:Name="buttonLoadPreset"
+                    <Button x:Name="ButtonLoadPreset"
                         Content="Load"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="290,20,0,0"
                         Height="22" Width="60"
                     />
-                    <TextBlock x:Name="textBlockSavePreset"
+                    <TextBlock x:Name="TextBlockSavePreset"
                         Text="Save preset:" FontWeight="Bold" TextAlignment="Right"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="380,23,0,0"
                         Width="70"
                     />
-                    <TextBox x:Name="textBoxSavePreset"
+                    <TextBox x:Name="TextBoxSavePreset"
                         Text="default" FontFamily="Consolas,Segoe UI,Arial" MaxLength="64"
-                             VerticalScrollBarVisibility="Disabled" VerticalContentAlignment="Center"
-                        ToolTip="default: default. If you want to remember your settings, you can give them a unique name here. (A-z,0-9,+,-,_ are allowed)"
+                        VerticalScrollBarVisibility="Disabled" VerticalContentAlignment="Center"
+                        ToolTip="default: default. (max. 64 characters; A-z,0-9,+,-,_ are allowed)"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="460,20,0,0"
                         Height="22" Width="200"
                     />
-                    <TextBlock x:Name="textBlockInput"
+                    <TextBlock x:Name="TextBlockInput"
                         Text="Input-path:" TextAlignment="Right"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,63,0,0"
                         Width="70"
                     />
-                    <TextBox x:Name="textBoxInput"
-                        Text="textBoxInput" FontFamily="Consolas,Segoe UI,Arial"
+                    <TextBox x:Name="TextBoxInput"
+                        Text="TextBoxInput" FontFamily="Consolas,Segoe UI,Arial"
                         VerticalScrollBarVisibility="Disabled" VerticalContentAlignment="Center"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,60,0,0"
                         Height="22" Width="510"
                     />
-                    <Button x:Name="buttonSearchIn"
+                    <Button x:Name="ButtonSearchIn"
                         Content="Select Path..."
                         VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,60,80,0"
                         Height="22" Width="80"
                     />
-                    <CheckBox x:Name="checkBoxRememberIn"
+                    <CheckBox x:Name="CheckBoxRememberIn"
                         Content="Save" ToolTip="Remembers the Input-Path for future executions." VerticalContentAlignment="Center"
                         Foreground="#FFC90000" FontWeight="Bold"
                         VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,60,15,0" Padding="4,-2,0,0" 
                         Height="22" Width="60"
                     />
-                    <TextBlock x:Name="textBlockOutput"
+                    <TextBlock x:Name="TextBlockOutput"
                         Text="Output-path:" TextAlignment="Right"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,93,0,0"
                         Width="70"
                     />
-                    <TextBox x:Name="textBoxOutput"
-                        Text="textBoxOutput" FontFamily="Consolas,Segoe UI,Arial"
+                    <TextBox x:Name="TextBoxOutput"
+                        Text="TextBoxOutput" FontFamily="Consolas,Segoe UI,Arial"
                         VerticalScrollBarVisibility="Disabled" VerticalContentAlignment="Center"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,90,0,0" 
                         Height="22" Width="510"
                     />
-                    <Button x:Name="buttonSearchOut"
+                    <Button x:Name="ButtonSearchOut"
                         Content="Select Path..."
                         VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,90,80,0"
                         Height="22" Width="80"
                     />
-                    <CheckBox x:Name="checkBoxRememberOut"
+                    <CheckBox x:Name="CheckBoxRememberOut"
                         Content="Save" ToolTip="Remembers the Output-Path for future executions." VerticalContentAlignment="Center"
                         Foreground="#FFC90000" FontWeight="Bold"
                         VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,90,15,0" Padding="4,-2,0,0"
                         Height="22" Width="60"
                     />
-                    <CheckBox x:Name="checkBoxMirror"
+                    <CheckBox x:Name="CheckBoxMirror"
                         Content=":Mirror" ToolTip="Enable if you want to Mirror the copied files to a second path." FlowDirection="RightToLeft" VerticalContentAlignment="Center" UseLayoutRounding="False"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,120,0,0" Padding="4,-2,0,0" BorderThickness="1"
                         Height="22" Width="70"
                     />
-                    <TextBox x:Name="textBoxMirror"
-                        Text="textBoxMirror" FontFamily="Consolas,Segoe UI,Arial"
+                    <TextBox x:Name="TextBoxMirror"
+                        IsEnabled="{Binding IsChecked, ElementName=CheckBoxMirror, Mode=OneWay}"
+                        Text="TextBoxMirror" FontFamily="Consolas,Segoe UI,Arial"
                         VerticalScrollBarVisibility="Disabled" VerticalContentAlignment="Center"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,120,0,0"
                         Height="22" Width="510"
                     />
-                    <Button x:Name="buttonSearchMirror"
+                    <Button x:Name="ButtonSearchMirror"
                         Content="Select Path..."
                         VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,120,80,0"
                         Height="22" Width="80"
                     />
-                    <CheckBox x:Name="checkBoxRememberMirror"
+                    <CheckBox x:Name="CheckBoxRememberMirror"
+                        IsEnabled="{Binding IsChecked, ElementName=CheckBoxMirror, Mode=OneWay}"
                         Content="Save" ToolTip="Remembers the additional Output-Path for future executions." VerticalContentAlignment="Center"
                         Foreground="#FFC90000" FontWeight="Bold"
                         VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,120,15,0" Padding="4,-2,0,0"
                         Height="22" Width="60"
                     />
-                    <TextBlock x:Name="textBlockHistFilePath"
+                    <TextBlock x:Name="TextBlockHistFilePath"
                         Text="HistFile-path:" TextAlignment="Right"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,163,0,0"
                         Width="70"
                     />
-                    <TextBox x:Name="textBoxHistFile"
-                        Text="textBoxHistFile" FontFamily="Consolas,Segoe UI,Arial"
+                    <TextBox x:Name="TextBoxHistFile"
+                        Text="TextBoxHistFile" FontFamily="Consolas,Segoe UI,Arial"
                         VerticalScrollBarVisibility="Disabled" VerticalContentAlignment="Center"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,160,0,0" 
                         Height="22" Width="510"
                     />
-                    <Button x:Name="buttonSearchHistFile"
+                    <Button x:Name="ButtonSearchHistFile"
                         Content="Select File..."
                         VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,160,80,0"
                         Height="22" Width="80"
                     />
-                    <TextBlock x:Name="textBlockReminder"
+                    <TextBlock x:Name="TextBlockReminder"
                         Text="For all options and features, go to the Settings-tab!"
                         Foreground="#FF2C2C2C" FontSize="16" FontWeight="Bold"
                         VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,200,0,0"
@@ -133,227 +135,160 @@
             </TabItem>
             <TabItem Header="Settings">
                 <Grid Background="#FFB3B6B5">
-                    <TextBlock Name="textBlockPresetFormats"
+                    <TextBlock Name="TextBlockPresetFormats"
                         Text="Formats to copy:"
                         FontWeight="Bold"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,8,0,0"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="10,5,0,0"
                     />
-                    <CheckBox x:Name="checkBoxCan"
-                        Content="Canon" FontFamily="Segoe UI,Arial"
-                        VerticalContentAlignment="Center"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,30,0,0"
-                        Panel.ZIndex="1"
-                        Width="200"
+                    <RadioButton x:Name="RadioButtonAll" GroupName="CopyFormats"
+                        IsChecked="True"
+                        Content="All"
+                        ToolTip="Copy all files."
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,34,0,0"
                     />
-                    <TextBlock x:Name="textBlockCan"
-                        Text="- CR2 &amp; CR3" FontFamily="Consolas,Segoe UI,Arial"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,30,0,0"
-                        Padding="0,1,0,0"
+                    <RadioButton x:Name="RadioButtonInclude" GroupName="CopyFormats"
+                        Content="Include:"
+                        ToolTip="Will use Get-ChildItem's -Filter - fast option."
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,64,0,0"
                     />
-                    <CheckBox x:Name="checkBoxNik"
-                        Content="Nikon" FontFamily="Segoe UI,Arial"
-                        VerticalContentAlignment="Center"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,55,0,0"
-                        Panel.ZIndex="1"
-                        Width="200"
-                    />
-                    <TextBlock x:Name="textBlockNik"
-                        Text="- NEF &amp; NRW" FontFamily="Consolas,Segoe UI,Arial"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,55,0,0"
-                        Padding="0,1,0,0"
-                    />
-                    <CheckBox x:Name="checkBoxSon"
-                        Content="Sony" FontFamily="Segoe UI,Arial"
-                        VerticalContentAlignment="Center"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,80,0,0"
-                        Panel.ZIndex="1"
-                        Width="200"
-                    />
-                    <TextBlock x:Name="textBlockSon"
-                        Text="- ARW" FontFamily="Consolas,Segoe UI,Arial"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,80,0,0"
-                        Padding="0,1,0,0"
-                    />
-                    <CheckBox x:Name="checkBoxJpg"
-                        Content="JPEG" FontFamily="Segoe UI,Arial"
-                        VerticalContentAlignment="Center"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,105,0,0"
-                        Panel.ZIndex="1"
-                        Width="200"
-                    />
-                    <TextBlock x:Name="textBlockJpg"
-                        Text="- JPG &amp; JPEG" FontFamily="Consolas,Segoe UI,Arial"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,105,0,0"
-                        Padding="0,1,0,0"
-                    />
-                    <CheckBox x:Name="checkBoxInter"
-                        Content="Intermed." FontFamily="Segoe UI,Arial"
-                        VerticalContentAlignment="Center"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,130,0,0"
-                        Panel.ZIndex="1"
-                        Width="200"
-                    />
-                    <TextBlock x:Name="textBlockInter"
-                        Text="- DNG &amp; TIF" FontFamily="Consolas,Segoe UI,Arial"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,130,0,0"
-                        Padding="0,1,0,0"
-                    />
-                    <CheckBox x:Name="checkBoxMov"
-                        Content="Movies" FontFamily="Segoe UI,Arial"
-                        VerticalContentAlignment="Center"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,155,0,0"
-                        Panel.ZIndex="1"
-                        Width="200"
-                    />
-                    <TextBlock x:Name="textBlockMov"
-                        Text="- MOV &amp; MP4" FontFamily="Consolas,Segoe UI,Arial"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,155,0,0"
-                        Padding="0,1,0,0"
-                    />
-                    <CheckBox x:Name="checkBoxAud"
-                        Content="Audio" FontFamily="Segoe UI,Arial"
-                        VerticalContentAlignment="Center"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,180,0,0"
-                        Panel.ZIndex="1"
-                        Width="200"
-                    />
-                    <TextBlock x:Name="textBlockAud"
-                        Text="- WAV &amp; MP3 &amp; M4A" FontFamily="Consolas,Segoe UI,Arial"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,180,0,0"
-                        Padding="0,1,0,0"
-                    />
-                    <CheckBox x:Name="checkBoxCustom"
-                        Content="Custom:" ToolTip="Enable to copy customised file-formats."
-                        VerticalContentAlignment="Center"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,205,0,0" Padding="4,-2,0,0"
-                        Height="22" Width="78"
-                    />
-                    <TextBox x:Name="textBoxCustom"
-                        Text="textBoxCustoms" FontFamily="Consolas,Segoe UI,Arial" ToolTip="*.ext1,*.ext2,*.ext3"
+                    <TextBox x:Name="TextBoxInclude"
+                        Text="TextBoxInclude" FontFamily="Consolas,Segoe UI,Arial" ToolTip="*.ext1|*.ext2|*.ext3"
+                        IsEnabled="{Binding IsChecked, ElementName=RadioButtonInclude, Mode=OneWay}"
                         VerticalContentAlignment="Center" VerticalScrollBarVisibility="Disabled" TextWrapping="Wrap"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,205,0,0"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,60,0,0"
                         Panel.ZIndex="1"
                         Height="22" Width="140"
                     />
-                    <Rectangle Fill="#FFB3B6B5" Stroke="#FF878787" Panel.ZIndex="-1" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="250,0,0,0" Height="240" Width="2"/>
-
-                    <TextBlock x:Name="textBlockOutSubStyle"
-                        Text="Subfolder-style:"
-                        FontWeight="Bold"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="270,10,0,0"
+                    <RadioButton x:Name="RadioButtonExclude" GroupName="CopyFormats"
+                        Content="Exclude:"
+                        ToolTip="Will use Get-ChildItem's -Exclude - slow option."
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,94,0,0"
                     />
-                    <ComboBox x:Name="comboBoxOutSubStyle" SelectedIndex="1"
-                        ToolTip="Choose your favorite subfolder-style." VerticalContentAlignment="Center"
-                        FontFamily="Consolas,Segoe UI,Arial"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="270,30,0,0"
-                        Height="23" Width="215">
-                        <ComboBoxItem Content="No subfolders"/>
-                        <ComboBoxItem Content="Unchanged"/>
-                        <ComboBoxItem Content="yyyy-MM-dd - 2017-12-31"/>
-                        <ComboBoxItem Content="yyyy_MM_dd - 2017_12_31"/>
-                        <ComboBoxItem Content="yyyy.MM.dd - 2017.12.31"/>
-                        <ComboBoxItem Content="yyyyMMdd   - 20171231"/>
-                        <ComboBoxItem Content="yy-MM-dd - 17-12-31"/>
-                        <ComboBoxItem Content="yy_MM_dd - 17_12_31"/>
-                        <ComboBoxItem Content="yy.MM.dd - 17.12.31"/>
-                        <ComboBoxItem Content="yyMMdd   - 171231"/>
-                    </ComboBox>
-                    <Rectangle Fill="#FFB3B6B5" Stroke="#FF878787" Panel.ZIndex="-1" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="250,65,0,0" Height="2" Width="250"/>
-
-                    <TextBlock x:Name="textBlockOutFileStyle"
-                        Text="File-renaming-style:"
-                        FontWeight="Bold"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="270,75,0,0"
+                    <TextBox x:Name="TextBoxExclude"
+                        Text="TextBoxExclude" FontFamily="Consolas,Segoe UI,Arial" ToolTip="*.ext1|*.ext2|*.ext3"
+                        IsEnabled="{Binding IsChecked, ElementName=RadioButtonExclude, Mode=OneWay}"
+                        VerticalContentAlignment="Center" VerticalScrollBarVisibility="Disabled" TextWrapping="Wrap"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,90,0,0"
+                        Panel.ZIndex="1"
+                        Height="22" Width="140"
                     />
-                    <ComboBox x:Name="comboBoxOutFileStyle" SelectedIndex="0"
-                        ToolTip="Choose your favorite style for renaming the input-files." VerticalContentAlignment="Center"
-                        FontFamily="Consolas,Segoe UI,Arial"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="270,95,0,0"
-                        Height="23" Width="215">
-                        <ComboBoxItem Content="Unchanged"/>
-                        <ComboBoxItem Content="yyyy-MM-dd_HH-mm-ss - 2017-01-31_13-59-58.ext"/>
-                        <ComboBoxItem Content="yyyyMMdd_HHmmss     - 20170131_135958.ext"/>
-                        <ComboBoxItem Content="yyyyMMddHHmmss      - 20170131135958.ext"/>
-                        <ComboBoxItem Content="yy-MM-dd_HH-mmss - 17-01-31_13-59-58.ext"/>
-                        <ComboBoxItem Content="yyMMdd_HHmmss    - 170131_135958.ext"/>
-                        <ComboBoxItem Content="yyMMddHHmmss     - 170131135958.ext"/>
-                        <ComboBoxItem Content="HH-mm-ss - 13-59-58.ext"/>
-                        <ComboBoxItem Content="HH_mm_ss - 13_59_58.ext"/>
-                        <ComboBoxItem Content="HHmmss   - 135958.ext"/>
-                    </ComboBox>
-                    <Rectangle Fill="#FFB3B6B5" Stroke="#FF878787" Panel.ZIndex="-1" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="250,135,0,0" Height="2" Width="250"/>
+                    <Rectangle Fill="#FFB3B6B5" Stroke="#FF878787" Panel.ZIndex="-1" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="0,125,0,0" Height="2" Width="250"/>
 
-                    <TextBlock x:Name="textBlockHistFileUse"
+                    <TextBlock x:Name="TextBlockHistFileUse"
                         Text="History-file options:"
                         FontWeight="Bold"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="270,140,0,0"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="10,135,0,0"
                     />
-                    <CheckBox x:Name="checkBoxUseHistFile"
+                    <CheckBox x:Name="CheckBoxUseHistFile"
                         Content="Use history-file to prevent duplicates" ToolTip="Default. Fast way to prevent already copied files from being copied again." VerticalContentAlignment="Center"
                         Foreground="#FF00A22C"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="270,160,0,0"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,155,0,0"
                     />
-                    <ComboBox x:Name="comboBoxWriteHistFile" SelectedIndex="0"
+                    <ComboBox x:Name="ComboBoxWriteHistFile" SelectedIndex="0"
                         ToolTip="Choose how the script writes new files to the history-file." VerticalContentAlignment="Center"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="270,180,0,0"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,175,0,0"
                         Height="23" Width="215">
                         <ComboBoxItem Content="Write old &amp; new files to history-file"/>
                         <ComboBoxItem Content="Overwrite old files with new ones"/>
-                        <ComboBoxItem Content="Don't add new files to history-file"/>
+                        <ComboBoxItem Content="Do not add new files to history-file"/>
                     </ComboBox>
-                    <CheckBox x:Name="checkBoxCheckHashHist"
+                    <CheckBox x:Name="CheckBoxCheckHashHist"
                         Content="Include hashes in duplicate-check" ToolTip="If unchecked, duplicate-check is done via name, size, date. If checked, hash is added. Enabling duplicate-check in output-path disables this function." VerticalContentAlignment="Center"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="270,208,0,0"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,203,0,0"
                         Width="215"
+                    />
+                    <Rectangle Fill="#FFB3B6B5" Stroke="#FF878787" Panel.ZIndex="-1" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="250,0,0,0" Height="240" Width="2"/>
+
+                    <TextBlock x:Name="TextBlockOutSubStyle"
+                        Text="Subfolder-style:"
+                        FontWeight="Bold"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="260,5,0,0"
+                    />
+                    <TextBox x:Name="TextBoxOutSubStyle"
+                        Text="TextBoxOutSubStyle" FontFamily="Consolas,Segoe UI,Arial" ToolTip="Define your favorite subfolder-style."
+                        VerticalContentAlignment="Center" VerticalScrollBarVisibility="Disabled" TextWrapping="Wrap"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="270,30,0,0"
+                        Height="23" Width="215"
+                    />
+
+                    <Rectangle Fill="#FFB3B6B5" Stroke="#FF878787" Panel.ZIndex="-1" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="250,60,0,0" Height="2" Width="250"/>
+                    <TextBlock x:Name="TextBlockSpecChar"
+                        Text="Magic strings for styles:"
+                        FontWeight="Bold"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="260,65,0,0"
+                    />
+                    <TextBlock x:Name="TextBlockSpecCharExplanation"
+                        Text="%y4% = 2018&#x09;%y2% = 18&#10;%mo% = 01&#x09;%d% = 31&#10;%h% = 23    %mi% = 59    %s% = 59&#10;%n% = Unchanged name&#10;%c_% = Counter (%c1% - %c4%)"
+                        FontFamily="Consolas,Segoe UI,Arial"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="270,90,0,0"
+                    />
+                    <Rectangle Fill="#FFB3B6B5" Stroke="#FF878787" Panel.ZIndex="-1" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="250,170,0,0" Height="2" Width="250"/>
+
+                    <TextBlock x:Name="TextBlockOutFileStyle"
+                        Text="File-renaming-style:"
+                        FontWeight="Bold"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="260,175,0,0"
+                    />
+                    <TextBox x:Name="TextBoxOutFileStyle"
+                        Text="TextBoxOutFileStyle" FontFamily="Consolas,Segoe UI,Arial" ToolTip="Choose your favorite style for renaming the input-files."
+                        VerticalContentAlignment="Center" VerticalScrollBarVisibility="Disabled" TextWrapping="Wrap"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="270,200,0,0"
+                        Height="23" Width="215"
                     />
                     <Rectangle Fill="#FFB3B6B5" Stroke="#FF878787" Panel.ZIndex="-1" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="500,0,0,0" Height="240" Width="2"/>
 
-                    <TextBlock x:Name="textBlockOptions" Text="Other options:" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,0,0,0" FontWeight="Bold"/>
-                    <CheckBox x:Name="checkBoxInSubSearch"
+                    <TextBlock x:Name="TextBlockOptions"
+                        Text="Other options:"
+                        FontWeight="Bold"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="510,5,0,0"
+                    />
+                    <CheckBox x:Name="CheckBoxInSubSearch"
                         Content="Dive into subfolders in input-path" ToolTip="Default. E.g. not only searching files in E:\DCIM, but also in E:\DCIM\abc" VerticalContentAlignment="Center"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,20,0,0"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,25,0,0"
                         Width="220"
                     />
-                    <CheckBox x:Name="checkBoxOutputDupli"
+                    <CheckBox x:Name="CheckBoxOutputDupli"
                         Content="Check for duplicates in output-path" ToolTip="Searches for duplicates in the output-path (incl. subfolders). Ideal if you have used LR or other import-tools since the last card-formatting." VerticalContentAlignment="Center"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,40,0,0"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,45,0,0"
                         Width="220"
                     />
-                    <CheckBox x:Name="checkBoxVerifyCopies"
+                    <CheckBox x:Name="CheckBoxVerifyCopies"
                         Content="Verify copied files" ToolTip="Suggestted. After copying, script will check if files were copied successfully. Disabling will save time." VerticalContentAlignment="Center"
                         Foreground="#FF00A22C"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,60,0,0"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,65,0,0"
                         Width="220"
                     />
-                    <CheckBox x:Name="checkBoxOverwriteExistingFiles"
+                    <CheckBox x:Name="CheckBoxOverwriteExistingFiles"
                         Content="Overwrite existing files" ToolTip="If disabled, new files will get unique names. If enabled, existing files will be overwritten." VerticalContentAlignment="Center"
                         Foreground="#FFDE0000"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,80,0,0"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,85,0,0"
                         Width="220"
                     />
-                    <CheckBox x:Name="checkBoxAvoidIdenticalFiles"
+                    <CheckBox x:Name="CheckBoxAvoidIdenticalFiles"
                         Content="Avoid double-file-copies" ToolTip="IF the same file is found twice in the input, this will only copy one of them." VerticalContentAlignment="Center"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,100,0,0"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,105,0,0"
                         Width="220"
                     />
-                    <CheckBox x:Name="checkBoxZipMirror"
-                        Content="Mirroring files as 7z-archive" ToolTip="Creating an archive with the input-files in it - good as a backup." VerticalContentAlignment="Center"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,120,0,0"
+                    <CheckBox x:Name="CheckBoxZipMirror"
+                        Content="Mirroring files as 7z-archive" ToolTip="ATM, THIS IS NOT SUPPORTED! Creating an archive with the input-files in it - good as a backup." VerticalContentAlignment="Center"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,125,0,0"
                         Width="220"
                     />
-                    <CheckBox x:Name="checkBoxUnmountInputDrive"
+                    <Line Stretch="Fill" Stroke="Black" X1="1"
+                          VerticalAlignment="Top" HorizontalAlignment="Left" Margin="538,133,0,0" SnapsToDevicePixels="True" Height="18" Width="150" Grid.ZIndex="-99" />
+                    <CheckBox x:Name="CheckBoxUnmountInputDrive"
                         Content="Remove input-drive after copying" ToolTip="Safely removing the input-drive after successful verification (before mirroring). Note: It does not work with all drives - so double-check if your drive was removed!" VerticalContentAlignment="Center"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,140,0,0"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,145,0,0"
                         Width="220"
                     />
-                    <CheckBox x:Name="checkBoxPreventStandby"
+                    <CheckBox x:Name="CheckBoxPreventStandby"
                         Content="Prevent computer-standby" ToolTip="Prevents system from hibernating by simulating the keystroke of F13." VerticalContentAlignment="Center"
                         Foreground="#FF0080FF"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,160,0,0"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,165,0,0"
                         Width="220"
                     />
-                    <CheckBox x:Name="checkBoxRememberSettings"
-                        Content="Save settings" ToolTip="Save all parameters (excl. Save-Checkboxes)" VerticalContentAlignment="Center"
+                    <CheckBox x:Name="CheckBoxRememberSettings"
+                        Content="Save settings" ToolTip="Save all parameters (excl. Save-CheckBoxes)" VerticalContentAlignment="Center"
                         Foreground="#FFC90000" FontWeight="Bold"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,210,0,0" Padding="4,-2,0,0"
                         Height="20" Width="110"
@@ -361,21 +296,21 @@
                 </Grid>
             </TabItem>
         </TabControl>
-        <Button x:Name="buttonStart"
+        <Button x:Name="ButtonStart"
             Content="START"
             FontWeight="Bold"
             VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,15"
-            Width="100"
+            Width="100" Height="20"
         />
-        <Button x:Name="buttonClose"
+        <Button x:Name="ButtonClose"
             Content="EXIT"
             VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,40,15"
-            Width="100"
+            Width="100" Height="20"
         />
-        <Button x:Name="buttonAbout"
+        <Button x:Name="ButtonAbout"
             Content="About / Help"
             VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="40,0,0,15"
-            Width="100"
+            Width="100" Height="20"
         />
     </Grid>
 </Window>

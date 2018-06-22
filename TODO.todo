@@ -1,20 +1,24 @@
 Todo:
     [ ] Create a all-round Pester-script @high 
-    [ ] https://msdn.microsoft.com/en-us/library/windows/desktop/aa365247(v=vs.85).aspx & https://cosmoskey.blogspot.co.at/2009/09/powershell-function-convert.html @critical
-    [ ] implement `%foo%` instead of `yyyy-mm-dd`-stuff
-        [ ] Create a prefix-/suffix-option for renaming both subfolders and files.
-    [ ] remove preset-formats and change system to all/only/except.
+    [ ] Make sure that only allowed names are used for files & folders.
+        [ ] https://msdn.microsoft.com/en-us/library/windows/desktop/aa365247(v=vs.85).aspx & https://cosmoskey.blogspot.co.at/2009/09/powershell-function-convert.html @critical
     [ ] look for alternative to xcopy (`Copy-Item` and `Write-FileSystemCache`?). i.e. is file-buffering really that bad?
-    [ ] Allow `y`/`n` and `yes`/`no` as answers (instead/additional to `1`/`0`).
-    [ ] Delete interactive mode. @low 
-        [ ] Rename `-GUI_CLI_direct`
-    [ ] Remove zipping mirror option (too complicated to maintain) @low 
-    [ ] Maybe recall `$Debug` to something like $InfoPreference? @low 
-    [ ] Add files to history w/o copying. @low
-    [ ] Create GUI in C#, call CLI-only, param-only PoSh-script with it.
+    [ ] Maybe recall `$Debug` to something like `$InfoPreference`? @low 
+    [ ] Create GUI in C#, call CLI-only, param-only PoSh-script with it (i.e. `media-copytool.exe` opens GUI, then passes values to `media-copytool.ps1`)
     [ ] trying a custom implementation of [`RSJob`](https://github.com/proxb/PoshRSJob) with [`Write-ProgressEx`](https://github.com/mazzy-ax/Write-ProgressEx) (if it isn't too heavy on performance) @low 
     [ ] test [`PSThreadJob`](https://github.com/PaulHigin/PSThreadJob) performance. @low 
     [ ] Deutsche Übersetzung (sinnvollerweise erst mit Message-Variablen, daher in weiter Ferne) @low 
+To test (for bugs/regresses):
+    [ ] Delete interactive mode. @low
+        [ ] Rename `-GUI_CLI_direct`.
+    [ ] Allow `y`/`n` and `yes`/`no` as answers (instead/additional to `1`/`0`).
+    [-] Remove zipping mirror option (too complicated to maintain) @low @cancelled(18-05-07 16:45)
+        [ ] Cross it out, but leave it there, as it may be revived again later on.
+    [ ] implement `%foo%` instead of `yyyy-mm-dd`-stuff.
+        [ ] Create a prefix-/suffix-option for renaming both subfolders and files.
+        [ ] for this, sorting the files by name will be in order.
+    [ ] remove preset-formats and change system to all/only/except.
+    [ ] (mainly) use `throw` instead of `return $false` for errors inside the script.
 Done:
     [x] Option to verify everything after copying when not checking for duplis. @done (18.2.2018, 21:40:59)
     [x] rename `$($PSScriptRoot)` in history-path. @high @done (4.2.2018, 17:48:11)
