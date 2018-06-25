@@ -582,28 +582,16 @@ Function Get-ParametersFromJSON(){
                 [int]$script:PreventStandby = $jsonparams.PreventStandby
             }
         }catch{
-            if($UserParams.EnableGUI -eq 0){
-                Write-ColorOut "$($UserParams.JSONParamPath.Replace("$($PSScriptRoot)",".")) cannot be loaded - aborting!" -ForegroundColor Red -Indentation 4
-                Write-ColorOut "(You can specify the path with -JSONParamPath. Also, if you use `"-EnableGUI 0`", you can circumvent this error by setting all parameters by yourself - or use `"-EnableGUI 1`".)" -ForegroundColor Magenta -Indentation 4
-                Start-Sleep -Seconds 5
-                throw
-            }else{
-                Write-ColorOut "$($UserParams.JSONParamPath.Replace("$($PSScriptRoot)",".")) - cannot load presets!" -ForegroundColor Magenta -Indentation 4
-                Write-ColorOut "(It is recommended to use a JSON-file to save your parameters. You can save one when activating one of the `"Save`"-checkboxes in the GUI - or simply download the one from GitHub.)" -ForegroundColor Blue -Indentation 4
-                Start-Sleep -Seconds 5
-            }
-        }
-    }else{
-        if($UserParams.EnableGUI -eq 0){
-            Write-ColorOut "$($UserParams.JSONParamPath.Replace("$($PSScriptRoot)",".")) does not exist - aborting!" -ForegroundColor Red -Indentation 4
-            Write-ColorOut "(You can specify the path with -JSONParamPath. Also, if you use `"-EnableGUI 0`", you can circumvent this error by setting all parameters by yourself - or use `"-EnableGUI 1`".)" -ForegroundColor Magenta -Indentation 4
+            Write-ColorOut "$($UserParams.JSONParamPath.Replace("$($PSScriptRoot)",".")) cannot be loaded - aborting!" -ForegroundColor Red -Indentation 4
+            Write-ColorOut "(You can specify the path with -JSONParamPath (w/o GUI) - or use `"-EnableGUI 1`".)" -ForegroundColor Magenta -Indentation 4
             Start-Sleep -Seconds 5
             throw
-        }else{
-            Write-ColorOut "$($UserParams.JSONParamPath.Replace("$($PSScriptRoot)",".")) does not exist - cannot load presets!" -ForegroundColor Magenta -Indentation 4
-            Write-ColorOut "(It is recommended to use a JSON-file to save your parameters. You can save one when activating one of the `"Save`"-checkboxes in the GUI - or simply download the one from GitHub.)" -ForegroundColor Blue -Indentation 4
-            Start-Sleep -Seconds 5
         }
+    }else{
+        Write-ColorOut "$($UserParams.JSONParamPath.Replace("$($PSScriptRoot)",".")) does not exist - aborting!" -ForegroundColor Red -Indentation 4
+        Write-ColorOut "(You can specify the path with -JSONParamPath (w/o GUI) - or use `"-EnableGUI 1`".)" -ForegroundColor Magenta -Indentation 4
+        Start-Sleep -Seconds 5
+        throw
     }
 
     return $UserParams
@@ -973,11 +961,23 @@ Function Test-UserValues(){
 
     # DEFINITION: Get values, test paths:
         # DEFINITION: $InputPath
+            $invalidChars = "[{0}]" -f [RegEx]::Escape($([IO.Path]::GetInvalidFileNameChars() -join '' -replace '\\',''))
+            $separator = '\:\\'
+            $inter = $UserParams.InputPath -Split $separator
+            $inter[1] = $inter[1] -Replace $invalidChars
+            $UserParams.InputPath = $inter -join "$([regex]::Unescape($separator))"
+
             if($UserParams.InputPath.Length -lt 2 -or (Test-Path -LiteralPath $UserParams.InputPath -PathType Container -ErrorAction SilentlyContinue) -eq $false){
                 Write-ColorOut "Input-path $($UserParams.InputPath) could not be found." -ForegroundColor Red -Indentation 4
                 throw
             }
         # DEFINITION: $OutputPath
+            $invalidChars = "[{0}]" -f [RegEx]::Escape($([IO.Path]::GetInvalidFileNameChars() -join '' -replace '\\',''))
+            $separator = '\:\\'
+            $inter = $UserParams.OutputPath -Split $separator
+            $inter[1] = $inter[1] -Replace $invalidChars
+            $UserParams.OutputPath = $inter -join "$([regex]::Unescape($separator))"
+
             if($UserParams.OutputPath -eq $UserParams.InputPath){
                 Write-ColorOut "Output-path $($UserParams.OutputPath) is the same as input-path." -ForegroundColor Red -Indentation 4
                 throw
@@ -985,6 +985,8 @@ Function Test-UserValues(){
             if($UserParams.OutputPath.Length -lt 2 -or (Test-Path -LiteralPath $UserParams.OutputPath -PathType Container -ErrorAction SilentlyContinue) -eq $false){
                 if((Split-Path -Parent -Path $UserParams.OutputPath).Length -gt 1 -and (Test-Path -LiteralPath $(Split-Path -Qualifier -Path $UserParams.OutputPath) -PathType Container -ErrorAction SilentlyContinue) -eq $true){
                     try{
+                        # TODO: Implement length restriction:
+                        # $UserParams.OutputPath = $UserParams.OutputPath.Substring(0, [math]::Min($UserParams.OutputPath.Length, 250))
                         New-Item -ItemType Directory -Path $UserParams.OutputPath -ErrorAction Stop | Out-Null
                         Write-ColorOut "Output-path $($UserParams.OutputPath) created." -ForegroundColor Yellow -Indentation 4
                     }catch{
@@ -1002,6 +1004,12 @@ Function Test-UserValues(){
                 throw
             }
         # DEFINITION: $MirrorPath
+            $invalidChars = "[{0}]" -f [RegEx]::Escape($([IO.Path]::GetInvalidFileNameChars() -join '' -replace '\\',''))
+            $separator = '\:\\'
+            $inter = $UserParams.MirrorPath -Split $separator
+            $inter[1] = $inter[1] -Replace $invalidChars
+            $UserParams.MirrorPath = $inter -join "$([regex]::Unescape($separator))"
+
             if($UserParams.MirrorEnable -eq 1){
                 if($UserParams.MirrorPath -eq $UserParams.InputPath -or $UserParams.MirrorPath -eq $UserParams.OutputPath){
                     Write-ColorOut "Additional output-path $($UserParams.MirrorPath) is the same as input- or output-path." -ForegroundColor Red -Indentation 4
@@ -1010,6 +1018,8 @@ Function Test-UserValues(){
                 if($UserParams.MirrorPath.Length -lt 2 -or (Test-Path -LiteralPath $UserParams.MirrorPath -PathType Container -ErrorAction SilentlyContinue) -eq $false){
                     if((Split-Path -Parent -Path $UserParams.MirrorPath).Length -gt 1 -and (Test-Path -LiteralPath $(Split-Path -Qualifier -Path $UserParams.MirrorPath) -PathType Container -ErrorAction SilentlyContinue) -eq $true){
                         try{
+                            # TODO: Implement length restriction:
+                            # $UserParams.MirrorPath = $UserParams.MirrorPath.Substring(0, [math]::Min($UserParams.MirrorPath.Length, 250))
                             New-Item -ItemType Directory -Path $UserParams.MirrorPath -ErrorAction Stop | Out-Null
                             Write-ColorOut "Mirror-path $($UserParams.MirrorPath) created." -ForegroundColor Yellow -Indentation 4
                         }catch{
@@ -1034,20 +1044,17 @@ Function Test-UserValues(){
                 throw
             }
         # DEFINITION: $OutputSubfolderStyle
-            $invalidChars = [IO.Path]::GetInvalidFileNameChars() -join ''
-            $re = "[{0}]" -f [RegEx]::Escape($invalidChars)
-            $UserParams.OutputSubfolderStyle = $UserParams.OutputSubfolderStyle.ToLower() -Replace $re -replace '^\ +$',"" -replace '\ +$',""
-            $UserParams.OutputSubfolderStyle = $UserParams.OutputSubfolderStyle.Substring(0, [math]::Min($UserParams.OutputSubfolderStyle.Length, 250))
-            if($UserParams.OutputSubfolderStyle.Length -lt 2){
-                Write-ColorOut "Invalid choice of -OutputSubfolderStyle." -ForegroundColor Red -Indentation 4
-                throw
-            }
+            $invalidChars = "[{0}]" -f [RegEx]::Escape($([IO.Path]::GetInvalidFileNameChars() -join ''))
+            $UserParams.OutputSubfolderStyle = $UserParams.OutputSubfolderStyle -Replace $invalidChars
+            $UserParams.OutputSubfolderStyle = $UserParams.OutputSubfolderStyle.ToLower() -Replace $invalidChars -Replace '^\ +$',"" -Replace '\ +$',""
+            # TODO: Implement length restriction:
+            # $UserParams.OutputSubfolderStyle = $UserParams.OutputSubfolderStyle.Substring(0, [math]::Min($UserParams.OutputSubfolderStyle.Length, 250))
         # DEFINITION: $OutputFileStyle
-            $invalidChars = [IO.Path]::GetInvalidFileNameChars() -join ''
-            $re = "[{0}]" -f [RegEx]::Escape($invalidChars)
-            $UserParams.OutputFileStyle = $UserParams.OutputFileStyle.ToLower() -Replace $re -replace '^\ +$',"" -replace '\ +$',""
-            $UserParams.OutputFileStyle = $UserParams.OutputFileStyle.Substring(0, [math]::Min($UserParams.OutputFileStyle.Length, 250))
-            if($UserParams.OutputFileStyle.Length -lt 2){
+            $invalidChars = "[{0}]" -f [RegEx]::Escape($([IO.Path]::GetInvalidFileNameChars() -join ''))
+            $UserParams.OutputFileStyle = $UserParams.OutputFileStyle.ToLower() -Replace $invalidChars -Replace '^\ +$',"" -Replace '\ +$',""
+            # TODO: Implement length restriction:
+            # $UserParams.OutputFileStyle = $UserParams.OutputFileStyle.Substring(0, [math]::Min($UserParams.OutputFileStyle.Length, 250))
+            if($UserParams.OutputFileStyle.Length -lt 2 -or $UserParams.OutputFileStyle -match '^\s*$'){
                 Write-ColorOut "Invalid choice of -OutputFileStyle." -ForegroundColor Red -Indentation 4
                 throw
             }
@@ -1063,6 +1070,12 @@ Function Test-UserValues(){
                 throw
             }
         # DEFINITION: $HistFilePath
+            $invalidChars = "[{0}]" -f [RegEx]::Escape($([IO.Path]::GetInvalidFileNameChars() -join '' -replace '\\',''))
+            $separator = '\:\\'
+            $inter = $UserParams.HistFilePath -Split $separator
+            $inter[1] = $inter[1] -Replace $invalidChars
+            $UserParams.HistFilePath = $inter -join "$([regex]::Unescape($separator))"
+
             if(($UserParams.UseHistFile -eq 1 -or $UserParams.WriteHistFile -ne "no") -and (Test-Path -LiteralPath $UserParams.HistFilePath -PathType Leaf -ErrorAction SilentlyContinue) -eq $false){
                 if((Split-Path -Parent -Path $UserParams.HistFilePath).Length -gt 1 -and (Test-Path -LiteralPath $(Split-Path -Qualifier -Path $UserParams.HistFilePath) -PathType Container -ErrorAction SilentlyContinue) -eq $true){
                     if($UserParams.UseHistFile -eq 1){
@@ -1341,7 +1354,7 @@ Function Start-FileSearch(){
     # Search files and get some information about them:
     [array]$allChosenFormats = $(
         if($UserParams.FormatPreference -eq "include"){@($UserParams.FormatInExclude)}
-        else{@("*")} #Excluded will be filtered after the search
+        else{@("*")}  # Excluded will be filtered after the search
     )
     [int]$counter = 1
     for($i=0;$i -lt $allChosenFormats.Length; $i++){
@@ -1366,7 +1379,7 @@ Function Start-FileSearch(){
                 Extension = $_.Extension
                 Size = $_.Length
                 Date = $_.LastWriteTime.ToString("yyyy-MM-dd_HH-mm-ss")
-                OutSubfolder = $($(Split-Path -Parent -Path $_.FullName).Replace($UserParams.InputPath,""))
+                OutSubfolder = $($(Split-Path -Parent -Path $_.FullName).Replace("$($UserParams.InputPath)","")) -Replace('^\\','')
                 OutPath = "ZYX"
                 OutName = "ZYX"
                 OutBaseName = "ZYX"
@@ -1389,48 +1402,33 @@ Function Start-FileSearch(){
     $InFiles = $InFiles | Sort-Object -Property InFullName
     $InFiles | Out-Null
 
-    # File renaming style:
-    if($UserParams.OutputFileStyle -notmatch '^%n%$' -and $OutputFileStyle -notmatch '^%c.%$'){
-        for($i=0; $i -lt $InFiles.Length; $i++){
-            $InFiles[$i].InBaseName = $UserParams.OutputFileStyle.Replace("%y4%","$($InFiles[$i].Date.Substring(0,4))").Replace("%y2%","$($InFiles[$i].Date.Substring(2,2))").Replace("%mo%","$($InFiles[$i].Date.Substring(5,2))").Replace("%d%","$($InFiles[$i].Date.Substring(8,2))").Replace("%h%","$($InFiles[$i].Date.Substring(11,2))").Replace("%mi%","$($InFiles[$i].Date.Substring(14,2))").Replace("%s%","$($InFiles[$i].Date.Substring(17,2))").Replace("%c1%","$("{0:D1}" -f ($i +1))").Replace("%c2%","$("{0:D2}" -f ($i +1))").Replace("%c3%","$("{0:D3}" -f ($i +1))").Replace("%c4%","$("{0:D4}" -f ($i +1))").Replace("%n%","$($InFiles[$i].InBaseName)")
-        }
-    }elseif($UserParams.OutputFileStyle -match '^%c1%$'){
-        for($i=0; $i -lt $InFiles.Length; $i++){
-            $InFiles[$i].InBaseName = "$("{0:D1}" -f ($i + 1))"
-        }
-    }elseif($UserParams.OutputFileStyle -match '^%c2%$'){
-        for($i=0; $i -lt $InFiles.Length; $i++){
-            $InFiles[$i].InBaseName = "$("{0:D2}" -f ($i + 1))"
-        }
-    }elseif($UserParams.OutputFileStyle -match '^%c3%$'){
-        for($i=0; $i -lt $InFiles.Length; $i++){
-            $InFiles[$i].InBaseName = "$("{0:D3}" -f ($i + 1))"
-        }
-    }elseif($UserParams.OutputFileStyle -match '^%c4%$'){
-        for($i=0; $i -lt $InFiles.Length; $i++){
-            $InFiles[$i].InBaseName = "$("{0:D4}" -f ($i + 1))"
-        }
-    }
-    <# Not needed, as it is status quo anyway:
-        elseif($UserParams.OutputFileStyle -match '^%n%$'){
-            for($i=0; $i -lt $InFiles.Length; $i++){
-                $InFiles[$i].InBaseName = $InFiles[$i].InBaseName
-            }
-        }
-    #>
-
     # Subfolder renaming style:
-    if($UserParams.OutputSubfolderStyle.Length -eq 0){
-        for($i=0; $i -lt $InFiles.Length; $i++){
-            $InFiles[$i].OutSubfolder = ""
+    if($UserParams.OutputSubfolderStyle.Length -eq 0 -or $UserParams.OutputSubfolderStyle -match '^\s*$'){
+        foreach($i in $InFiles){
+            $i.OutSubfolder = ""
         }
-    }elseif($UserParams.OutputSubfolderStyle -match '^%n%$'){
-        for($i=0; $i -lt $InFiles.Length; $i++){
-            $InFiles[$i].OutSubfolder = $($(Split-Path -Parent -Path $_.FullName).Replace($UserParams.InputPath,""))
+    }elseif($UserParams.OutputSubfolderStyle -notmatch '^%n%$'){
+        foreach($i in $InFiles){
+            $i.OutSubfolder = "\" + $($UserParams.OutputSubfolderStyle.Replace("%y4%","$($i.Date.Substring(0,4))").Replace("%y2%","$($i.Date.Substring(2,2))").Replace("%mo%","$($i.Date.Substring(5,2))").Replace("%d%","$($i.Date.Substring(8,2))").Replace("%h%","$($i.Date.Substring(11,2))").Replace("%mi%","$($i.Date.Substring(14,2))").Replace("%s%","$($i.Date.Substring(17,2))").Replace("%n%","$($i.OutSubFolder)")) -Replace '\ $',''
         }
     }else{
+        foreach($i in $InFiles){
+            $i.OutSubFolder = "\$($i.OutSubFolder)" -Replace '\ $',''
+        }
+    }
+    # File renaming style:
+    if($UserParams.OutputFileStyle -notmatch '^%n%$'){
+        $regexCounter = [regex]'%c.%'
         for($i=0; $i -lt $InFiles.Length; $i++){
-            $InFiles[$i].OutSubfolder = $UserParams.OutputSubfolderStyle.Replace("%y4%","$($InFiles[$i].Date.Substring(0,4))").Replace("%y2%","$($InFiles[$i].Date.Substring(2,2))").Replace("%mo%","$($InFiles[$i].Date.Substring(5,2))").Replace("%d%","$($InFiles[$i].Date.Substring(8,2))").Replace("%h%","$($InFiles[$i].Date.Substring(11,2))").Replace("%mi%","$($InFiles[$i].Date.Substring(14,2))").Replace("%s%","$($InFiles[$i].Date.Substring(17,2))").Replace("%n%","$($InFiles[$i].OutSubFolder)")
+            $InFiles[$i].InBaseName = $UserParams.OutputFileStyle.Replace("%y4%","$($InFiles[$i].Date.Substring(0,4))").Replace("%y2%","$($InFiles[$i].Date.Substring(2,2))").Replace("%mo%","$($InFiles[$i].Date.Substring(5,2))").Replace("%d%","$($InFiles[$i].Date.Substring(8,2))").Replace("%h%","$($InFiles[$i].Date.Substring(11,2))").Replace("%mi%","$($InFiles[$i].Date.Substring(14,2))").Replace("%s%","$($InFiles[$i].Date.Substring(17,2))").Replace("%n%","$($InFiles[$i].InBaseName)")
+
+            $inter = $InFiles[$i].InBaseName
+            for($k=0; $k -lt $regexCounter.matches($InFiles[$i].InBaseName).count; $k++){
+                $match = [regex]::Match($inter, '%c.%')
+                $match = $inter.Substring($match.Index+2,1)
+                $inter = $regexCounter.Replace($inter, "$("{0:D$match}" -f ($i+1))", 1)
+            }
+            $InFiles[$i].InBaseName = $inter
         }
     }
 
@@ -2427,7 +2425,7 @@ Function Start-Everything(){
 # ==============================================================================
 # ==================================================================================================
 
-# DEFINITION: Console banner:
+<# DEFINITION: Console banner:
     Write-ColorOut "                            flolilo's Media-Copytool                            " -ForegroundColor DarkCyan -BackgroundColor Gray
     Write-ColorOut "                          $VersionNumber           " -ForegroundColor DarkMagenta -BackgroundColor DarkGray -NoNewLine
     Write-ColorOut "(PID = $("{0:D8}" -f $pid))`r`n" -ForegroundColor Gray -BackgroundColor DarkGray

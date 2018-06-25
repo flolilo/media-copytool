@@ -4,47 +4,45 @@
 # DEFINITION: Get all error-outputs in English:
     [Threading.Thread]::CurrentThread.CurrentUICulture = 'en-US'
 # DEFINITION: Hopefully avoiding errors by wrong encoding now:
-    $OutputEncoding = New-Object -typename System.Text.UTF8Encoding
-    [Console]::OutputEncoding = New-Object -typename System.Text.UTF8Encoding
+    $OutputEncoding = New-Object -TypeName System.Text.UTF8Encoding
+    [Console]::InputEncoding = New-Object -TypeName System.Text.UTF8Encoding
 
 . $PSScriptRoot\media_copytool.ps1
 
-Describe "Get-Parameters" {
+Describe "Get-ParametersFromJSON" {
     $BlaDrive = "$TestDrive\TEST"
     # DEFINITION: Combine all parameters into a hashtable:
     BeforeEach {
         [hashtable]$UserParams = @{
-            ShowParams = 0
-            GUI_CLI_Direct = "direct"
-            JSONParamPath = "$BlaDrive\In_Test\param_uncomplicated.json"
-            LoadParamPresetName = ""
-            SaveParamPresetName = ""
-            RememberInPath = 0
-            RememberOutPath = 0
-            RememberMirrorPath = 0
-            RememberSettings = 0
+            ShowParams =            0
+            Enable_GUI =            0
+            JSONParamPath =         "$BlaDrive\In_Test\param_uncomplicated.json"
+            LoadParamPresetName =   ""
+            SaveParamPresetName =   ""
+            RememberInPath =        0
+            RememberOutPath =       0
+            RememberMirrorPath =    0
+            RememberSettings =      0
             # DEFINITION: From here on, parameters can be set both via parameters and via JSON file(s).
-            InputPath = ""
-            OutputPath = ""
-            MirrorEnable = -1
-            MirrorPath = ""
-            PresetFormats = @()
-            CustomFormatsEnable = -1
-            CustomFormats = @()
-            OutputSubfolderStyle = ""
-            OutputFileStyle = ""
-            HistFilePath = ""
-            UseHistFile = -1
-            WriteHistFile = ""
-            HistCompareHashes = -1
-            InputSubfolderSearch = -1
-            CheckOutputDupli = -1
-            VerifyCopies = -1
+            InputPath =             ""
+            OutputPath =            ""
+            MirrorEnable =          -1
+            MirrorPath =            ""
+            FormatPreference =      ""
+            FormatInExclude =       @()
+            OutputSubfolderStyle =  ""
+            OutputFileStyle =       ""
+            HistFilePath =          ""
+            UseHistFile =           -1
+            WriteHistFile =         ""
+            HistCompareHashes =     -1
+            InputSubfolderSearch =  -1
+            CheckOutputDupli =      -1
+            VerifyCopies =          -1
             OverwriteExistingFiles = -1
-            AvoidIdenticalFiles = -1
-            ZipMirror = -1
-            UnmountInputDrive = -1
-            allChosenFormats = @()
+            AvoidIdenticalFiles =   -1
+            ZipMirror =             -1
+            UnmountInputDrive =     -1
         }
     }
     New-Item -ItemType Directory -Path $BlaDrive
@@ -55,45 +53,45 @@ Describe "Get-Parameters" {
 
     Context "Uncomplicated file interaction" {
         It "Work fine with proper parameters" {
-            $test = Get-Parameters -UserParams $UserParams -Renew 1
+            $test = Get-ParametersFromJSON -UserParams $UserParams -Renew 1
             $test | Should BeOfType hashtable
             $test.LoadParamPresetName   | Should Be "default"
         }
         It "Nonexistent/Empty LoadParamPresetName leads to `"default`"" {
             $UserParams.LoadParamPresetName = "nonexistent"
-            $test = Get-Parameters -UserParams $UserParams -Renew 1
+            $test = Get-ParametersFromJSON -UserParams $UserParams -Renew 1
             $test | Should BeOfType hashtable
             $test.LoadParamPresetName   | Should Be "default"
 
             $UserParams.LoadParamPresetName = ""
-            $test = Get-Parameters -UserParams $UserParams -Renew 1
+            $test = Get-ParametersFromJSON -UserParams $UserParams -Renew 1
             $test | Should BeOfType hashtable
             $test.LoadParamPresetName   | Should Be "default"
         }
-        It "Return false when not finding anything" {
+        It "Throw when not finding anything" {
             $UserParams.JSONParamPath = "$BlaDrive\In_Test\notthere.json"
-            Get-Parameters -UserParams $UserParams -Renew 1 | Should Be $false
+            {Get-ParametersFromJSON -UserParams $UserParams -Renew 1} | Should Throw
         }
         It "Throw error when UserParams are of wrong type" {
-            {Get-Parameters -UserParams "hallo" -Renew 1} | Should Throw
-            {Get-Parameters -UserParams $UserParams -Renew "hallo"} | Should Throw
+            {Get-ParametersFromJSON -UserParams "hallo" -Renew 1} | Should Throw
+            {Get-ParametersFromJSON -UserParams $UserParams -Renew "hallo"} | Should Throw
         }
         It "Throw error with empty UserParams" {
-            {Get-Parameters} | Should Throw
-            {Get-Parameters -UserParams @{} -Renew 1} | Should Throw
-            {Get-Parameters -UserParams $UserParams} | Should Throw
-            {Get-Parameters -Renew 1} | Should Throw
+            {Get-ParametersFromJSON} | Should Throw
+            {Get-ParametersFromJSON -UserParams @{} -Renew 1} | Should Throw
+            {Get-ParametersFromJSON -UserParams $UserParams} | Should Throw
+            {Get-ParametersFromJSON -Renew 1} | Should Throw
         }
         It "Throw error when param.JSON is empty" {
             $UserParams.JSONParamPath = "$BlaDrive\In_Test\param_empty.json"
-            Get-Parameters  -UserParams $UserParams -Renew 1 | Should Be $false
+            {Get-ParametersFromJSON  -UserParams $UserParams -Renew 1} | Should Throw
         }
     }
     It "Special characters file&preset interaction" {
         $UserParams.JSONParamPath = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©\param specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©.json"
         "specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
         $UserParams.LoadParamPresetName = "specchar"
-        $test = Get-Parameters -UserParams $UserParams -Renew 1
+        $test = Get-ParametersFromJSON -UserParams $UserParams -Renew 1
         $test | Should BeOfType hashtable
         $test.LoadParamPresetName | Should Be "specchar"
         $test.InputPath             | Should Be "F:\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
@@ -104,7 +102,7 @@ Describe "Get-Parameters" {
     It "Long filename file&preset interaction" {
         $UserParams.JSONParamPath = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND\param_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_END.json"
         $UserParams.LoadParamPresetName = "long"
-        $test = Get-Parameters -UserParams $UserParams -Renew 1
+        $test = Get-ParametersFromJSON -UserParams $UserParams -Renew 1
         $test | Should BeOfType hashtable
         $test.LoadParamPresetName | Should Be "long"
         $test.InputPath             | Should Be "F:\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
@@ -113,8 +111,9 @@ Describe "Get-Parameters" {
         $test.HistFilePath          | Should Be "F:\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND\hist_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_tEND.json"
     }
     Context "Test the returned values" {
+        $UserParams.JSONParamPath = "$BlaDrive\In_Test\param_uncomplicated.json"
         $UserParams.LoadParamPresetName = "bla"
-        $test = (Get-Parameters -UserParams $UserParams -Renew 1)
+        $test = Get-ParametersFromJSON -UserParams $UserParams -Renew 1
         It "InputPath" {
             $test.InputPath     | Should BeOfType string
             $test.InputPath     | Should Be "F:\ooBar"
@@ -131,25 +130,21 @@ Describe "Get-Parameters" {
             $test.MirrorPath    | Should BeOfType string
             $test.MirrorPath    | Should Be "F:\BooBar"
         }
-        It "PresetFormats" {
-            ,$test.PresetFormats    | Should BeOfType array
-            $test.PresetFormats     | Should Be @("Foo","Bar")
+        It "FormatPreference" {
+            $test.FormatPreference  | Should BeOfType string
+            $test.FormatPreference  | Should Be "FooBar"
         }
-        It "CustomFormatsEnable" {
-            $test.CustomFormatsEnable   | Should BeOfType int
-            $test.CustomFormatsEnable   | Should Be 14
-        }
-        It "CustomFormats" {
-            ,$test.CustomFormats    | Should BeOfType array
-            $test.CustomFormats     | Should Be @("*Foobar")
+        It "FormatInExclude" {
+            ,$test.FormatInExclude  | Should BeOfType array
+            $test.FormatInExclude   | Should Be @("*Foobar")
         }
         It "OutputSubfolderStyle" {
             $test.OutputSubfolderStyle | Should BeOfType string
-            $test.OutputSubfolderStyle | Should Be "yyyy-MM-dd-FOO"
+            $test.OutputSubfolderStyle | Should Be "%y4%-%mo%-%d%-FOO"
         }
         It "OutputFileStyle" {
             $test.OutputFileStyle   | Should BeOfType string
-            $test.OutputFileStyle   | Should Be "unchanged-BAR"
+            $test.OutputFileStyle   | Should Be "%n-BAR%"
         }
         It "HistFilePath" {
             $test.HistFilePath      | Should BeOfType string
@@ -211,7 +206,7 @@ Describe "Get-Parameters" {
         BeforeEach {
             [hashtable]$UserParams = @{
                 ShowParams = 0
-                GUI_CLI_Direct = "GUI"
+                Enable_GUI = 1
                 JSONParamPath = "$BlaDrive\In_Test\mc_parameters.json"
                 LoadParamPresetName = ""
                 SaveParamPresetName = ""
@@ -279,145 +274,41 @@ Describe "Get-Parameters" {
         }
     }
 #>
-<#    Describe "Get-UserValuesGUI" {
-        $BlaDrive = "$TestDrive\TEST"
-        # DEFINITION: Combine all parameters into a hashtable:
-        BeforeEach {
-            [hashtable]$UserParams = @{
-                ShowParams = 0
-                GUI_CLI_Direct = "GUI"
-                JSONParamPath = "$BlaDrive\In_Test\mc_parameters.json"
-                LoadParamPresetName = ""
-                SaveParamPresetName = ""
-                RememberInPath = 0
-                RememberOutPath = 0
-                RememberMirrorPath = 0
-                RememberSettings = 0
-                # DEFINITION: From here on, parameters can be set both via parameters and via JSON file(s).
-                InputPath = ""
-                OutputPath = ""
-                MirrorEnable = -1
-                MirrorPath = ""
-                PresetFormats = @()
-                CustomFormatsEnable = -1
-                CustomFormats = @()
-                OutputSubfolderStyle = ""
-                OutputFileStyle = ""
-                HistFilePath = ""
-                UseHistFile = -1
-                WriteHistFile = ""
-                HistCompareHashes = -1
-                InputSubfolderSearch = -1
-                CheckOutputDupli = -1
-                VerifyCopies = -1
-                OverwriteExistingFiles = -1
-                AvoidIdenticalFiles = -1
-                ZipMirror = -1
-                UnmountInputDrive = -1
-                allChosenFormats = @()
-            }
-        }
-        New-Item -ItemType Directory -Path $BlaDrive
-        # Expand-Archive $PSScriptRoot\media_copytool_TESTFILES.7z $BlaDrive
-        Push-Location $BlaDrive
-        Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x -aoa -bb0 -pdefault -sccUTF-8 -spf2 `"$($PSScriptRoot)\media_copytool_TESTFILES.7z`" `"-o.\`" " -WindowStyle Minimized -Wait
-        Pop-Location
 
-        It ""{
-            $test = Get-UserValuesGUI -UserParams $UserParams -GUIParams 
-            $test | Should BeOfType hashtable
-        }
-
-    }
-#>
-<# TODO: get a way to test anything about CLI
-    Describe "Get-UserValuesCLI"{
-        $BlaDrive = "$TestDrive\TEST"
-        # DEFINITION: Combine all parameters into a hashtable:
-        BeforeEach {
-            [hashtable]$UserParams = @{
-                ShowParams = 0
-                GUI_CLI_Direct = "GUI"
-                JSONParamPath = "$BlaDrive\In_Test\mc_parameters.json"
-                LoadParamPresetName = ""
-                SaveParamPresetName = ""
-                RememberInPath = 0
-                RememberOutPath = 0
-                RememberMirrorPath = 0
-                RememberSettings = 0
-                # DEFINITION: From here on, parameters can be set both via parameters and via JSON file(s).
-                InputPath = ""
-                OutputPath = ""
-                MirrorEnable = -1
-                MirrorPath = ""
-                PresetFormats = @()
-                CustomFormatsEnable = -1
-                CustomFormats = @()
-                OutputSubfolderStyle = ""
-                OutputFileStyle = ""
-                HistFilePath = ""
-                UseHistFile = -1
-                WriteHistFile = ""
-                HistCompareHashes = -1
-                InputSubfolderSearch = -1
-                CheckOutputDupli = -1
-                VerifyCopies = -1
-                OverwriteExistingFiles = -1
-                AvoidIdenticalFiles = -1
-                ZipMirror = -1
-                UnmountInputDrive = -1
-                allChosenFormats = @()
-            }
-
-        }
-        New-Item -ItemType Directory -Path $BlaDrive
-        # Expand-Archive $PSScriptRoot\media_copytool_TESTFILES.7z $BlaDrive
-        Push-Location $BlaDrive
-        Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x -aoa -bb0 -pdefault -sccUTF-8 -spf2 `"$($PSScriptRoot)\media_copytool_TESTFILES.7z`" `"-o.\`" " -WindowStyle Minimized -Wait
-        Pop-Location
-
-        It "Get values from CLI, then check the main input- and outputfolder"{
-
-        }
-    }
-#>
-
-Describe "Get-UserValuesDirect" {
+Describe "Test-UserValues" {
     $BlaDrive = "$TestDrive\TEST"
     # DEFINITION: Combine all parameters into a hashtable:
     BeforeEach {
         [hashtable]$UserParams = @{
-            ShowParams = 0
-            GUI_CLI_Direct = "Direct"
-            JSONParamPath = "$BlaDrive\In_Test\mc_parameters.json"
-            LoadParamPresetName = "default"
-            SaveParamPresetName = "default"
-            RememberInPath = 0
-            RememberOutPath = 0
-            RememberMirrorPath = 0
-            RememberSettings = 0
+            ShowParams =            0
+            Enable_GUI =            0
+            JSONParamPath =         "$BlaDrive\In_Test\param_uncomplicated.json"
+            LoadParamPresetName =   "default"
+            SaveParamPresetName =   "default"
+            RememberInPath =        0
+            RememberOutPath =       0
+            RememberMirrorPath =    0
+            RememberSettings =      0
             # DEFINITION: From here on, parameters can be set both via parameters and via JSON file(s).
-            InputPath = "$BlaDrive\In_Test"
-            OutputPath = "$BlaDrive\Out_Test"
-            MirrorEnable = 1
-            MirrorPath = "$BlaDrive\Mirr_Test"
-            PresetFormats = @("Can")
-            CustomFormatsEnable = 0
-            CustomFormats = @()
-            OutputSubfolderStyle = "yyyy-MM-dd"
-            OutputFileStyle = "unchanged"
-            HistFilePath = "$BlaDrive\In_Test\mc_hist.json"
-            UseHistFile = 0
-            WriteHistFile = "no"
-            HistCompareHashes = 0
-            InputSubfolderSearch = 0
-            CheckOutputDupli = 0
-            VerifyCopies = 0
+            InputPath =             "$BlaDrive\In_Test"
+            OutputPath =            "$BlaDrive\Out_Test"
+            MirrorEnable =          1
+            MirrorPath =            "$BlaDrive\Mirr_Test"
+            FormatPreference =      "include"
+            FormatInExclude =       @("*.cr2")
+            OutputSubfolderStyle =  "%y4%-%mo%-%d%"
+            OutputFileStyle =       "%n%"
+            HistFilePath =          "$BlaDrive\In_Test\mc_hist.json"
+            UseHistFile =           0
+            WriteHistFile =         "no"
+            HistCompareHashes =     0
+            InputSubfolderSearch =  0
+            CheckOutputDupli =      0
+            VerifyCopies =          0
             OverwriteExistingFiles = 0
-            AvoidIdenticalFiles = 0
-            ZipMirror = 0
-            UnmountInputDrive = 0
-            allChosenFormats = @()
+            AvoidIdenticalFiles =   0
+            ZipMirror =             0
+            UnmountInputDrive =     0
         }
         $script:Preventstandby = 0
     }
@@ -425,469 +316,338 @@ Describe "Get-UserValuesDirect" {
     Push-Location $BlaDrive
     Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x -aoa -bb0 -pdefault -sccUTF-8 -spf2 `"$($PSScriptRoot)\media_copytool_TESTFILES.7z`" `"-o.\`" " -WindowStyle Minimized -Wait
     Pop-Location
-    $bla = Get-ChildItem -LiteralPath $BlaDrive -Recurse
+    # TODO: ??? Is this line needed? $bla = Get-ChildItem -LiteralPath $BlaDrive -Recurse
 
     Context "Test the returned values" {
         It "If everything is correct, return hashtable" {
-            $test = Get-UserValuesDirect -UserParams $UserParams
+            $test = Test-UserValues -UserParams $UserParams
             $test | Should BeOfType hashtable
         }
         It "InputPath" {
-            $test = (Get-UserValuesDirect -UserParams $UserParams).InputPath
+            $test = (Test-UserValues -UserParams $UserParams).InputPath
             $test | Should BeOfType string
             $test | Should Be "$BlaDrive\In_Test"
         }
         It "InputPath - trailing backslash" {
             $UserParams.InputPath = "$BlaDrive\In_Test\"
-            $test = (Get-UserValuesDirect -UserParams $UserParams).InputPath
+            $test = (Test-UserValues -UserParams $UserParams).InputPath
             $test | Should BeOfType string
             $test | Should Be "$BlaDrive\In_Test"
         }
         It "OutputPath" {
-            $test = (Get-UserValuesDirect -UserParams $UserParams).OutputPath
+            $test = (Test-UserValues -UserParams $UserParams).OutputPath
             $test | Should BeOfType string
             $test | Should Be "$BlaDrive\Out_Test"
         }
         It "OutputPath - trailing backslash" {
             $UserParams.OutputPath = "$BlaDrive\Out_Test\"
-            $test = (Get-UserValuesDirect -UserParams $UserParams).OutputPath
+            $test = (Test-UserValues -UserParams $UserParams).OutputPath
             $test | Should BeOfType string
             $test | Should Be "$BlaDrive\Out_Test"
         }
         It "MirrorEnable" {
-            $test = (Get-UserValuesDirect -UserParams $UserParams).MirrorEnable
+            $test = (Test-UserValues -UserParams $UserParams).MirrorEnable
             $test | Should BeOfType int
             $test | Should Be 1
         }
         It "MirrorPath" {
-            $test = (Get-UserValuesDirect -UserParams $UserParams).MirrorPath
+            $test = (Test-UserValues -UserParams $UserParams).MirrorPath
             $test | Should BeOfType string
             $test | Should Be "$BlaDrive\Mirr_Test"
         }
         It "MirrorPath - trailing backslash" {
             $UserParams.MirrorPath = "$BlaDrive\Mirr_Test\"
-            $test = (Get-UserValuesDirect -UserParams $UserParams).MirrorPath
+            $test = (Test-UserValues -UserParams $UserParams).MirrorPath
             $test | Should BeOfType string
             $test | Should Be "$BlaDrive\Mirr_Test"
         }
-        It "PresetFormats" {
-            $test = (Get-UserValuesDirect -UserParams $UserParams).PresetFormats
-            ,$test | Should BeOfType array
-            $test | Should Be @("Can")
+        It "FormatPreference" {
+            $test = (Test-UserValues -UserParams $UserParams).FormatPreference
+            $test | Should BeOfType string
+            $test | Should Be "include"
         }
-        It "CustomFormatsEnable" {
-            $test = (Get-UserValuesDirect -UserParams $UserParams).CustomFormatsEnable
-            $test | Should BeOfType int
-            $test | Should Be 0
-        }
-        It "CustomFormats" {
-            $test = (Get-UserValuesDirect -UserParams $UserParams).CustomFormats
+        It "FormatInExclude" {
+            $test = (Test-UserValues -UserParams $UserParams).FormatInExclude
             ,$test | Should BeOfType array
-            $test | Should Be @()
+            $test | Should Be @("*.cr2")
         }
         It "OutputSubfolderStyle" {
-            $test = (Get-UserValuesDirect -UserParams $UserParams).OutputSubfolderStyle
+            $test = (Test-UserValues -UserParams $UserParams).OutputSubfolderStyle
             $test | Should BeOfType string
-            $test | Should Be "yyyy-MM-dd"
+            $test | Should Be "%y4%-%mo%-%d%"
         }
         It "OutputFileStyle" {
-            $test = (Get-UserValuesDirect -UserParams $UserParams).OutputFileStyle
+            $test = (Test-UserValues -UserParams $UserParams).OutputFileStyle
             $test | Should BeOfType string
-            $test | Should Be "unchanged"
+            $test | Should Be "%n%"
         }
         It "HistFilePath" {
-            $test = (Get-UserValuesDirect -UserParams $UserParams).HistFilePath
+            $test = (Test-UserValues -UserParams $UserParams).HistFilePath
             $test | Should BeOfType string
             $test | Should Be "$BlaDrive\In_Test\mc_hist.json"
         }
         It "UseHistFile" {
-            $test = (Get-UserValuesDirect -UserParams $UserParams).UseHistFile
+            $test = (Test-UserValues -UserParams $UserParams).UseHistFile
             $test | Should BeOfType int
             $test | Should Be 0
         }
         It "WriteHistFile" {
-            $test = (Get-UserValuesDirect -UserParams $UserParams).WriteHistFile
+            $test = (Test-UserValues -UserParams $UserParams).WriteHistFile
             $test | Should BeOfType string
             $test | Should Be "no"
         }
         It "HistCompareHashes" {
-            $test = (Get-UserValuesDirect -UserParams $UserParams).HistCompareHashes
+            $test = (Test-UserValues -UserParams $UserParams).HistCompareHashes
             $test | Should BeOfType int
             $test | Should Be 0
         }
         It "InputSubfolderSearch" {
-            $test = (Get-UserValuesDirect -UserParams $UserParams).InputSubfolderSearch
+            $test = (Test-UserValues -UserParams $UserParams).InputSubfolderSearch
             $test | Should BeOfType int
             $test | Should Be 0
         }
         It "CheckOutputDupli" {
-            $test = (Get-UserValuesDirect -UserParams $UserParams).CheckOutputDupli
+            $test = (Test-UserValues -UserParams $UserParams).CheckOutputDupli
             $test | Should BeOfType int
             $test | Should Be 0
         }
         It "VerifyCopies" {
-            $test = (Get-UserValuesDirect -UserParams $UserParams).VerifyCopies
+            $test = (Test-UserValues -UserParams $UserParams).VerifyCopies
             $test | Should BeOfType int
             $test | Should Be 0
         }
         It "OverwriteExistingFiles" {
-            $test = (Get-UserValuesDirect -UserParams $UserParams).OverwriteExistingFiles
+            $test = (Test-UserValues -UserParams $UserParams).OverwriteExistingFiles
             $test | Should BeOfType int
             $test | Should Be 0
         }
         It "AvoidIdenticalFiles" {
-            $test = (Get-UserValuesDirect -UserParams $UserParams).AvoidIdenticalFiles
+            $test = (Test-UserValues -UserParams $UserParams).AvoidIdenticalFiles
             $test | Should BeOfType int
             $test | Should Be 0
         }
         It "ZipMirror" {
-            $test = (Get-UserValuesDirect -UserParams $UserParams).ZipMirror
+            $test = (Test-UserValues -UserParams $UserParams).ZipMirror
             $test | Should BeOfType int
             $test | Should Be 0
         }
         It "UnmountInputDrive" {
-            $test = (Get-UserValuesDirect -UserParams $UserParams).UnmountInputDrive
+            $test = (Test-UserValues -UserParams $UserParams).UnmountInputDrive
             $test | Should BeOfType int
             $test | Should Be 0
         }
         # TODO: It "Preventstandby" {
-            # $test = (Get-Parameters -UserParams $UserParams -Renew 1).Preventstandby
+            # $test = (Get-ParametersFromJSON -UserParams $UserParams -Renew 1).Preventstandby
             # $test | Should BeOfType int
             # $test | Should Be 112
         # }
-        It "allChosenFormats" {
-            $UserParams.PresetFormats = @("Can","Nik")
-            $test = (Get-UserValuesDirect -UserParams $UserParams).allChosenFormats
-            ,$test | Should BeOfType array
-            $bla = @("*.cr2","*.cr3","*.nef","*.nrw")
-            $test = (Compare-Object $bla $test -ErrorAction SilentlyContinue).Count
-            $test | Should Be 0
-
-            $UserParams.PresetFormats = @("Son")
-            $test = (Get-UserValuesDirect -UserParams $UserParams).allChosenFormats
-            ,$test | Should BeOfType array
-            $bla = @("*.arw")
-            (Compare-Object $bla $test -ErrorAction SilentlyContinue).Count | Should Be 0
-
-            $UserParams.PresetFormats = @()
-            $UserParams.CustomFormatsEnable = 0
-            Mock Read-Host {Return 1}
-            $test = (Get-UserValuesDirect -UserParams $UserParams).allChosenFormats
-            ,$test | Should BeOfType array
-            $bla = @("*")
-            (Compare-Object $bla $test -ErrorAction SilentlyContinue).Count | Should Be 0
-
-            $UserParams.PresetFormats = @()
-            $UserParams.CustomFormatsEnable = 1
-            Mock Read-Host {Return 1}
-            $test = (Get-UserValuesDirect -UserParams $UserParams).allChosenFormats
-            ,$test | Should BeOfType array
-            $bla = @("*")
-            (Compare-Object $bla $test -ErrorAction SilentlyContinue).Count | Should Be 0
-
-            $UserParams.PresetFormats = @()
-            $UserParams.CustomFormatsEnable = 1
-            $UserParams.CustomFormats = @("*.bla")
-            $test = (Get-UserValuesDirect -UserParams $UserParams).allChosenFormats
-            ,$test | Should BeOfType array
-            $bla = @("*.bla")
-            (Compare-Object $bla $test -ErrorAction SilentlyContinue).Count | Should Be 0
-        }
     }
-    Context "If anything is wrong, return `$false" {
+    Context "If anything is wrong, throw" {
         It "InputPath is non-existing" {
             $UserParams.InputPath = "$BlaDrive\NONE"
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
         }
         It "InputPath is too short" {
             $UserParams.InputPath = "A"
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
         }
         It "OutputPath same as InputPath" {
             $UserParams.InputPath = "$BlaDrive\In_Test"
             $UserParams.OutputPath = "$BlaDrive\In_Test"
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
         }
         It "OutputPath is non-existing" {
             $UserParams.OutputPath = "\\0.0.0.0"
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
         }
         It "OutputPath is too short" {
             $UserParams.OutputPath = "A"
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
         }
         It "MirrorEnable is wrong" {
             $UserParams.MirrorEnable = -1
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
             $UserParams.MirrorEnable = "hallo"
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
             $UserParams.MirrorEnable = 11
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
         }
         It "MirrorPath same as InputPath" {
             $UserParams.InputPath = "$BlaDrive\In_Test"
             $UserParams.MirrorPath = "$BlaDrive\In_Test"
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
         }
         It "MirrorPath same as OutputPath" {
             $UserParams.MirrorPath = "$BlaDrive\Out_Test"
             $UserParams.OutputPath = "$BlaDrive\Out_Test"
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
         }
         It "MirrorPath is non-existing" {
             $UserParams.MirrorEnable = 1
             $UserParams.MirrorPath = "\\0.0.0.0"
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
         }
         It "MirrorPath is too short" {
             $UserParams.MirrorEnable = 1
             $UserParams.MirrorPath = "A"
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
         }
-        It "PresetFormats is wrong" {
-            $UserParams.PresetFormats = 123
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
-            $UserParams.PresetFormats = @()
-            Mock Read-Host {return 0}
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
-            $UserParams.PresetFormats = @("Can","Nik","Soy")
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+        It "FormatPreference is wrong" {
+            $UserParams.FormatPreference = -1
+            {Test-UserValues -UserParams $UserParams} | Should Throw
+            $UserParams.FormatPreference = "hallo"
+            {Test-UserValues -UserParams $UserParams} | Should Throw
+            $UserParams.FormatPreference = ""
+            {Test-UserValues -UserParams $UserParams} | Should Throw
         }
-        It "CustomFormatsEnable is wrong" {
-            $UserParams.CustomFormatsEnable = -1
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
-            $UserParams.CustomFormatsEnable = "hallo"
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
-            $UserParams.CustomFormatsEnable = 11
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+        It "FormatInExclude is wrong" {
+            $UserParams.FormatInExclude = "hallo"
+            {Test-UserValues -UserParams $UserParams} | Should Throw
+            $UserParams.FormatInExclude = 123
+            {Test-UserValues -UserParams $UserParams} | Should Throw
         }
-        It "CustomFormats is wrong" {
-            $UserParams.CustomFormats = "hallo"
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
-            $UserParams.CustomFormats = 123
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
-        }
-        It "OutputSubfolderStyle is wrong" {
-            $UserParams.OutputSubfolderStyle = "bla"
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
-            $UserParams.OutputSubfolderStyle = "yyymdd"
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
-            $UserParams.OutputSubfolderStyle = 123
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
-            $UserParams.OutputSubfolderStyle = ""
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+        It "OutputSubfolderStyle is wrong (not possible)" {
+            <#
+                $UserParams.OutputSubfolderStyle = 123
+                {Test-UserValues -UserParams $UserParams} | Should Throw
+                $UserParams.OutputSubfolderStyle = ""
+                {Test-UserValues -UserParams $UserParams} | Should Throw
+            #>
         }
         It "OutputFileStyle is wrong" {
-            $UserParams.OutputFileStyle = "bla"
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
-            $UserParams.OutputFileStyle = "yyymdd"
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
             $UserParams.OutputFileStyle = 123
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
             $UserParams.OutputFileStyle = ""
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
         }
         It "UseHistFile is wrong" {
             $UserParams.UseHistFile = -1
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
             $UserParams.UseHistFile = "hallo"
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
             $UserParams.UseHistFile = 11
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
         }
         It "WriteHistFile is wrong" {
             $UserParams.WriteHistFile = ""
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
             $UserParams.WriteHistFile = "hallo"
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
             $UserParams.WriteHistFile = 11
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
         }
         It "HistFilePath is wrong" {
             $UserParams.UseHistFile = 1
             $UserParams.HistFilePath = "\\0.0.0.0"
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
         }
         It "HistCompareHashes is wrong" {
             $UserParams.HistCompareHashes = -1
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
             $UserParams.HistCompareHashes = "hallo"
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
             $UserParams.HistCompareHashes = 11
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
         }
         It "InputSubfolderSearch is wrong" {
             $UserParams.InputSubfolderSearch = -1
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
             $UserParams.InputSubfolderSearch = "hallo"
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
             $UserParams.InputSubfolderSearch = 11
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
         }
         It "CheckOutputDupli is wrong" {
             $UserParams.CheckOutputDupli = -1
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
             $UserParams.CheckOutputDupli = "hallo"
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
             $UserParams.CheckOutputDupli = 11
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
         }
         It "VerifyCopies is wrong" {
             $UserParams.VerifyCopies = -1
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
             $UserParams.VerifyCopies = "hallo"
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
             $UserParams.VerifyCopies = 11
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
         }
         It "OverwriteExistingFiles is wrong" {
             $UserParams.OverwriteExistingFiles = -1
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
             $UserParams.OverwriteExistingFiles = "hallo"
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
             $UserParams.OverwriteExistingFiles = 11
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
         }
         It "AvoidIdenticalFiles is wrong" {
             $UserParams.AvoidIdenticalFiles = -1
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
             $UserParams.AvoidIdenticalFiles = "hallo"
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
             $UserParams.AvoidIdenticalFiles = 11
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
         }
         It "ZipMirror is wrong" {
             $UserParams.ZipMirror = -1
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
             $UserParams.ZipMirror = "hallo"
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
             $UserParams.ZipMirror = 11
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
         }
         It "UnmountInputDrive is wrong" {
             $UserParams.UnmountInputDrive = -1
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
             $UserParams.UnmountInputDrive = "hallo"
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
             $UserParams.UnmountInputDrive = 11
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
         }
         It "script:PreventStandby is wrong" {
             $script:PreventStandby = -1
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
             $script:PreventStandby = 11
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
         }
         It "RememberInPath is wrong" {
             $UserParams.RememberInPath = -1
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
             $UserParams.RememberInPath = "hallo"
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
             $UserParams.RememberInPath = 11
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
         }
         It "RememberOutPath is wrong" {
             $UserParams.RememberOutPath = -1
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
             $UserParams.RememberOutPath = "hallo"
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
             $UserParams.RememberOutPath = 11
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
         }
         It "RememberMirrorPath is wrong" {
             $UserParams.RememberMirrorPath = -1
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
             $UserParams.RememberMirrorPath = "hallo"
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
             $UserParams.RememberMirrorPath = 11
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
         }
         It "RememberSettings is wrong" {
             $UserParams.RememberSettings = -1
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
             $UserParams.RememberSettings = "hallo"
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
             $UserParams.RememberSettings = 11
-            $test = Get-UserValuesDirect -UserParams $UserParams
-            $test | Should Be $false
+            {Test-UserValues -UserParams $UserParams} | Should Throw
         }
     }
     It "Throw if no/wrong param is specified" {
-        {Get-UserValuesDirect} | Should Throw
-        {Get-UserValuesDirect -UserParams "hallo"} | Should Throw
-        {Get-UserValuesDirect -UserParams @{}} | Should Throw
+        {Test-UserValues} | Should Throw
+        {Test-UserValues -UserParams "hallo"} | Should Throw
+        {Test-UserValues -UserParams @{}} | Should Throw
     }
     Context "Special characters" {
         It "Find existing folders" {
@@ -896,7 +656,7 @@ Describe "Get-UserValuesDirect" {
             $UserParams.OutputPath      = "$BlaDrive\Out_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
             $UserParams.MirrorPath      = "$BlaDrive\Mirr_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
             $UserParams.HistFilePath    = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©\hist specChar.(]){[}à°^âaà``$öäüß'#+,;-Æ©.json"
-            $test = Get-UserValuesDirect -UserParams $UserParams
+            $test = Test-UserValues -UserParams $UserParams
             $test | Should BeOfType hashtable
             $test.JSONParamPath | Should Be $UserParams.JSONParamPath
             $test.InputPath     | Should Be $UserParams.InputPath
@@ -915,7 +675,7 @@ Describe "Get-UserValuesDirect" {
             $UserParams.OutputPath      = "$BlaDrive\Out_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
             $UserParams.MirrorPath      = "$BlaDrive\Mirr_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
             $UserParams.HistFilePath    = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©\hist specChar.(]){[}à°^âaà``$öäüß'#+,;-Æ©.json"
-            $test = Get-UserValuesDirect -UserParams $UserParams
+            $test = Test-UserValues -UserParams $UserParams
             $test | Should BeOfType hashtable
             Test-Path -LiteralPath "$BlaDrive\Out_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©" -PathType Container | Should Be $true
             Test-Path -LiteralPath "$BlaDrive\Mirr_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©" -PathType Container | Should Be $true
@@ -928,7 +688,7 @@ Describe "Get-UserValuesDirect" {
             $UserParams.OutputPath      = "$BlaDrive\Out_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
             $UserParams.MirrorPath      = "$BlaDrive\Mirr_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
             $UserParams.HistFilePath    = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND\hist_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_tEND.json"
-            $test = Get-UserValuesDirect -UserParams $UserParams
+            $test = Test-UserValues -UserParams $UserParams
             $test | Should BeOfType hashtable
             $test.JSONParamPath | Should Be $UserParams.JSONParamPath
             $test.InputPath     | Should Be $UserParams.InputPath
@@ -947,7 +707,7 @@ Describe "Get-UserValuesDirect" {
             $UserParams.OutputPath      = "$BlaDrive\Out_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
             $UserParams.MirrorPath      = "$BlaDrive\Mirr_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
             $UserParams.HistFilePath    = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND\hist_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_tEND.json"
-            $test = Get-UserValuesDirect -UserParams $UserParams
+            $test = Test-UserValues -UserParams $UserParams
             $test | Should BeOfType hashtable
             Test-Path -LiteralPath "$BlaDrive\Out_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND" -PathType Container | Should Be $true
             Test-Path -LiteralPath "$BlaDrive\Mirr_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND" -PathType Container | Should Be $true
@@ -958,37 +718,35 @@ Describe "Get-UserValuesDirect" {
 Describe "Show-Parameters" {
     BeforeEach {
         [hashtable]$UserParams = @{
-            ShowParams = 0
-            GUI_CLI_Direct = "Direct"
-            JSONParamPath = "$BlaDrive\In_Test\param_uncomplicated.json"
-            LoadParamPresetName = "default"
-            SaveParamPresetName = "default"
-            RememberInPath = 0
-            RememberOutPath = 0
-            RememberMirrorPath = 0
-            RememberSettings = 0
+            ShowParams =            0
+            Enable_GUI =            0
+            JSONParamPath =         "$BlaDrive\In_Test\param_uncomplicated.json"
+            LoadParamPresetName =   "default"
+            SaveParamPresetName =   "default"
+            RememberInPath =        0
+            RememberOutPath =       0
+            RememberMirrorPath =    0
+            RememberSettings =      0
             # DEFINITION: From here on, parameters can be set both via parameters and via JSON file(s).
-            InputPath = "$BlaDrive\In_Test"
-            OutputPath = "$BlaDrive\Out_Test"
-            MirrorEnable = 1
-            MirrorPath = "$BlaDrive\Mirr_Test"
-            PresetFormats = @("Can")
-            CustomFormatsEnable = 0
-            CustomFormats = @()
-            OutputSubfolderStyle = "yyyy-MM-dd"
-            OutputFileStyle = "unchanged"
-            HistFilePath = "$BlaDrive\In_Test\hist_uncomplicated.json"
-            UseHistFile = 0
-            WriteHistFile = "no"
-            HistCompareHashes = 0
-            InputSubfolderSearch = 0
-            CheckOutputDupli = 0
-            VerifyCopies = 0
+            InputPath =             "$BlaDrive\In_Test"
+            OutputPath =            "$BlaDrive\Out_Test"
+            MirrorEnable =          1
+            MirrorPath =            "$BlaDrive\Mirr_Test"
+            FormatPreference =      "include"
+            FormatInExclude =       @("*.cr2")
+            OutputSubfolderStyle =  "%y4%-%mo%-%d%"
+            OutputFileStyle =       "%n%"
+            HistFilePath =          "$BlaDrive\In_Test\mc_hist.json"
+            UseHistFile =           0
+            WriteHistFile =         "no"
+            HistCompareHashes =     0
+            InputSubfolderSearch =  0
+            CheckOutputDupli =      0
+            VerifyCopies =          0
             OverwriteExistingFiles = 0
-            AvoidIdenticalFiles = 0
-            ZipMirror = 0
-            UnmountInputDrive = 0
-            allChosenFormats = @()
+            AvoidIdenticalFiles =   0
+            ZipMirror =             0
+            UnmountInputDrive =     0
         }
         $script:Preventstandby = 0
     }
@@ -1014,33 +772,35 @@ Describe "Set-Parameters" {
     $BlaDrive = "$TestDrive\TEST"
     BeforeEach {
         [hashtable]$UserParams = @{
-            JSONParamPath = "$TestDrive\TEST\In_Test\param_simpleset.json"
-            SaveParamPresetName = "default"
-            RememberInPath = 1
-            RememberOutPath = 1
-            RememberMirrorPath = 1
-            RememberSettings = 1
-            InputPath = "$BlaDrive\In_Test"
-            OutputPath = "$BlaDrive\Out_Test"
-            MirrorEnable = 1
-            MirrorPath = "$BlaDrive\Mirr_Test"
-            PresetFormats = @("Can","Franz")
-            CustomFormatsEnable = 987
-            CustomFormats = @()
-            OutputSubfolderStyle = "yyyy-MM-ddlala"
-            OutputFileStyle = "unchangedlala"
-            HistFilePath = "$BlaDrive\In_Test\hist_empty.json"
-            UseHistFile = 987
-            WriteHistFile = "maybe"
-            HistCompareHashes = 987
-            InputSubfolderSearch = 987
-            CheckOutputDupli = 987
-            VerifyCopies = 987
+            ShowParams =            0
+            Enable_GUI =            0
+            JSONParamPath =         "$BlaDrive\In_Test\param_simpleset.json"
+            LoadParamPresetName =   "default"
+            SaveParamPresetName =   "default"
+            RememberInPath =        1
+            RememberOutPath =       1
+            RememberMirrorPath =    1
+            RememberSettings =      1
+            # DEFINITION: From here on, parameters can be set both via parameters and via JSON file(s).
+            InputPath =             "$BlaDrive\In_Test"
+            OutputPath =            "$BlaDrive\Out_Test"
+            MirrorEnable =          1
+            MirrorPath =            "$BlaDrive\Mirr_Test"
+            FormatPreference =      "include"
+            FormatInExclude =       @("*.cr2")
+            OutputSubfolderStyle =  "%y4%-%mo%-%d%lala"
+            OutputFileStyle =       "%n%lala"
+            HistFilePath =          "$BlaDrive\In_Test\mc_hist.json"
+            UseHistFile =           987
+            WriteHistFile =         "maybe"
+            HistCompareHashes =     987
+            InputSubfolderSearch =  987
+            CheckOutputDupli =      987
+            VerifyCopies =          987
             OverwriteExistingFiles = 987
-            AvoidIdenticalFiles = 987
-            ZipMirror = 987
-            UnmountInputDrive = 987
-            allChosenFormats = @("*.franz")
+            AvoidIdenticalFiles =   987
+            ZipMirror =             987
+            UnmountInputDrive =     987
         }
         $script:Preventstandby = 987
     }
@@ -1072,9 +832,8 @@ Describe "Set-Parameters" {
                     OutputPath =                $UserParams.OutputPath
                     MirrorEnable =              $UserParams.MirrorEnable
                     MirrorPath =                $UserParams.MirrorPath
-                    PresetFormats =             $UserParams.PresetFormats
-                    CustomFormatsEnable =       $UserParams.CustomFormatsEnable
-                    CustomFormats =             $UserParams.CustomFormats
+                    FormatPreference =          $UserParams.FormatPreference
+                    FormatInExclude =           $UserParams.FormatInExclude
                     OutputSubfolderStyle =      $UserParams.OutputSubfolderStyle
                     OutputFileStyle =           $UserParams.OutputFileStyle
                     HistFilePath =              $UserParams.HistFilePath.Replace($PSScriptRoot,'$($PSScriptRoot)')
@@ -1114,9 +873,8 @@ Describe "Set-Parameters" {
             $test.OutputPath                | Should Be $UserParams.OutputPath
             $test.MirrorEnable              | Should Be $UserParams.MirrorEnable
             $test.MirrorPath                | Should Be $UserParams.MirrorPath
-            $test.PresetFormats             | Should Be $UserParams.PresetFormats
-            $test.CustomFormatsEnable       | Should Be $UserParams.CustomFormatsEnable
-            $test.CustomFormats             | Should Be $UserParams.CustomFormats
+            $test.FormatPreference          | Should Be $UserParams.FormatPreference
+            $test.FormatInExclude           | Should Be $UserParams.FormatInExclude
             $test.OutputSubfolderStyle      | Should Be $UserParams.OutputSubfolderStyle
             $test.OutputFileStyle           | Should Be $UserParams.OutputFileStyle
             $test.HistFilePath              | Should Be $UserParams.HistFilePath
@@ -1142,27 +900,26 @@ Describe "Set-Parameters" {
             $bla = @("default")
             (Compare-Object $test.ParamPresetName $bla -ErrorAction SilentlyContinue).count | Should Be 0
             $test = $test.ParamPresetValues
-            $test[0].InputPath                | Should Be $UserParams.InputPath
-            $test[0].OutputPath               | Should Be $UserParams.OutputPath
-            $test[0].MirrorEnable             | Should Be $UserParams.MirrorEnable
-            $test[0].MirrorPath               | Should Be $UserParams.MirrorPath
-            $test[0].PresetFormats            | Should Be $UserParams.PresetFormats
-            $test[0].CustomFormatsEnable      | Should Be $UserParams.CustomFormatsEnable
-            $test[0].CustomFormats            | Should Be $UserParams.CustomFormats
-            $test[0].OutputSubfolderStyle     | Should Be $UserParams.OutputSubfolderStyle
-            $test[0].OutputFileStyle          | Should Be $UserParams.OutputFileStyle
-            $test[0].HistFilePath             | Should Be $UserParams.HistFilePath
-            $test[0].UseHistFile              | Should Be $UserParams.UseHistFile
-            $test[0].WriteHistFile            | Should Be $UserParams.WriteHistFile
-            $test[0].HistCompareHashes        | Should Be $UserParams.HistCompareHashes
-            $test[0].InputSubfolderSearch     | Should Be $UserParams.InputSubfolderSearch
-            $test[0].CheckOutputDupli         | Should Be $UserParams.CheckOutputDupli
-            $test[0].VerifyCopies             | Should Be $UserParams.VerifyCopies
-            $test[0].OverwriteExistingFiles   | Should Be $UserParams.OverwriteExistingFiles
-            $test[0].AvoidIdenticalFiles      | Should Be $UserParams.AvoidIdenticalFiles
-            $test[0].ZipMirror                | Should Be $UserParams.ZipMirror
-            $test[0].UnmountInputDrive        | Should Be $UserParams.UnmountInputDrive
-            $test[0].Preventstandby           | Should Be $script:Preventstandby
+            $test[0].InputPath                  | Should Be $UserParams.InputPath
+            $test[0].OutputPath                 | Should Be $UserParams.OutputPath
+            $test[0].MirrorEnable               | Should Be $UserParams.MirrorEnable
+            $test[0].MirrorPath                 | Should Be $UserParams.MirrorPath
+            $test[0].FormatPreference           | Should Be $UserParams.FormatPreference
+            $test[0].FormatInExclude            | Should Be $UserParams.FormatInExclude
+            $test[0].OutputSubfolderStyle       | Should Be $UserParams.OutputSubfolderStyle
+            $test[0].OutputFileStyle            | Should Be $UserParams.OutputFileStyle
+            $test[0].HistFilePath               | Should Be $UserParams.HistFilePath
+            $test[0].UseHistFile                | Should Be $UserParams.UseHistFile
+            $test[0].WriteHistFile              | Should Be $UserParams.WriteHistFile
+            $test[0].HistCompareHashes          | Should Be $UserParams.HistCompareHashes
+            $test[0].InputSubfolderSearch       | Should Be $UserParams.InputSubfolderSearch
+            $test[0].CheckOutputDupli           | Should Be $UserParams.CheckOutputDupli
+            $test[0].VerifyCopies               | Should Be $UserParams.VerifyCopies
+            $test[0].OverwriteExistingFiles     | Should Be $UserParams.OverwriteExistingFiles
+            $test[0].AvoidIdenticalFiles        | Should Be $UserParams.AvoidIdenticalFiles
+            $test[0].ZipMirror                  | Should Be $UserParams.ZipMirror
+            $test[0].UnmountInputDrive          | Should Be $UserParams.UnmountInputDrive
+            $test[0].Preventstandby             | Should Be $script:Preventstandby
         }
         It "Replace `"default`"" {
             $test = @(Get-Content -LiteralPath $UserParams.JSONParamPath -Encoding UTF8 -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop)
@@ -1171,27 +928,26 @@ Describe "Set-Parameters" {
             $bla = (Compare-Object $test.ParamPresetName $bla -ErrorAction SilentlyContinue).count
             $test = $test.ParamPresetValues
             $bla | Should Be 0
-            $test[0].InputPath                | Should Be $UserParams.InputPath
-            $test[0].OutputPath               | Should Be $UserParams.OutputPath
-            $test[0].MirrorEnable             | Should Be $UserParams.MirrorEnable
-            $test[0].MirrorPath               | Should Be $UserParams.MirrorPath
-            $test[0].PresetFormats            | Should Be $UserParams.PresetFormats
-            $test[0].CustomFormatsEnable      | Should Be $UserParams.CustomFormatsEnable
-            $test[0].CustomFormats            | Should Be $UserParams.CustomFormats
-            $test[0].OutputSubfolderStyle     | Should Be $UserParams.OutputSubfolderStyle
-            $test[0].OutputFileStyle          | Should Be $UserParams.OutputFileStyle
-            $test[0].HistFilePath             | Should Be $UserParams.HistFilePath
-            $test[0].UseHistFile              | Should Be $UserParams.UseHistFile
-            $test[0].WriteHistFile            | Should Be $UserParams.WriteHistFile
-            $test[0].HistCompareHashes        | Should Be $UserParams.HistCompareHashes
-            $test[0].InputSubfolderSearch     | Should Be $UserParams.InputSubfolderSearch
-            $test[0].CheckOutputDupli         | Should Be $UserParams.CheckOutputDupli
-            $test[0].VerifyCopies             | Should Be $UserParams.VerifyCopies
-            $test[0].OverwriteExistingFiles   | Should Be $UserParams.OverwriteExistingFiles
-            $test[0].AvoidIdenticalFiles      | Should Be $UserParams.AvoidIdenticalFiles
-            $test[0].ZipMirror                | Should Be $UserParams.ZipMirror
-            $test[0].UnmountInputDrive        | Should Be $UserParams.UnmountInputDrive
-            $test[0].Preventstandby           | Should Be $script:Preventstandby
+            $test[0].InputPath                  | Should Be $UserParams.InputPath
+            $test[0].OutputPath                 | Should Be $UserParams.OutputPath
+            $test[0].MirrorEnable               | Should Be $UserParams.MirrorEnable
+            $test[0].MirrorPath                 | Should Be $UserParams.MirrorPath
+            $test[0].FormatPreference           | Should Be $UserParams.FormatPreference
+            $test[0].FormatInExclude            | Should Be $UserParams.FormatInExclude
+            $test[0].OutputSubfolderStyle       | Should Be $UserParams.OutputSubfolderStyle
+            $test[0].OutputFileStyle            | Should Be $UserParams.OutputFileStyle
+            $test[0].HistFilePath               | Should Be $UserParams.HistFilePath
+            $test[0].UseHistFile                | Should Be $UserParams.UseHistFile
+            $test[0].WriteHistFile              | Should Be $UserParams.WriteHistFile
+            $test[0].HistCompareHashes          | Should Be $UserParams.HistCompareHashes
+            $test[0].InputSubfolderSearch       | Should Be $UserParams.InputSubfolderSearch
+            $test[0].CheckOutputDupli           | Should Be $UserParams.CheckOutputDupli
+            $test[0].VerifyCopies               | Should Be $UserParams.VerifyCopies
+            $test[0].OverwriteExistingFiles     | Should Be $UserParams.OverwriteExistingFiles
+            $test[0].AvoidIdenticalFiles        | Should Be $UserParams.AvoidIdenticalFiles
+            $test[0].ZipMirror                  | Should Be $UserParams.ZipMirror
+            $test[0].UnmountInputDrive          | Should Be $UserParams.UnmountInputDrive
+            $test[0].Preventstandby             | Should Be $script:Preventstandby
         }
     }
     It "Special characters work properly" {
@@ -1212,9 +968,8 @@ Describe "Set-Parameters" {
         $test.OutputPath                | Should Be $UserParams.OutputPath
         $test.MirrorEnable              | Should Be $UserParams.MirrorEnable
         $test.MirrorPath                | Should Be $UserParams.MirrorPath
-        $test.PresetFormats             | Should Be $UserParams.PresetFormats
-        $test.CustomFormatsEnable       | Should Be $UserParams.CustomFormatsEnable
-        $test.CustomFormats             | Should Be $UserParams.CustomFormats
+        $test.FormatPreference          | Should Be $UserParams.FormatPreference
+        $test.FormatInExclude           | Should Be $UserParams.FormatInExclude
         $test.OutputSubfolderStyle      | Should Be $UserParams.OutputSubfolderStyle
         $test.OutputFileStyle           | Should Be $UserParams.OutputFileStyle
         $test.HistFilePath              | Should Be $UserParams.HistFilePath
@@ -1238,12 +993,10 @@ Describe "Start-FileSearch" {
         [hashtable]$UserParams = @{
             InputPath = "$BlaDrive\In_Test"
             InputSubfolderSearch = 1
-            UseHistFile = 1
-            HistCompareHashes = 1
-            CheckOutputDupli = 1
-            allChosenFormats = @("*.JPG")
-            OutputFileStyle = "unchanged"
-            OutputSubfolderStyle = "yyyy-MM-dd"
+            FormatPreference = "include"
+            FormatInExclude = @("*.JPG")
+            OutputFileStyle = "%n%"
+            OutputSubfolderStyle = "%y4%-%mo%-%d%"
         }
         $script:input_recurse = $true
     }
@@ -1252,263 +1005,148 @@ Describe "Start-FileSearch" {
     Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x -aoa -bb0 -pdefault -sccUTF-8 -spf2 `"$($PSScriptRoot)\media_copytool_TESTFILES.7z`" `"-o.\`" " -WindowStyle Minimized -Wait
     Pop-Location
 
-    Context "Normal functions" {
+    Context "Basic functions" {
         It "Return array if successful" {
             $test = @(Start-FileSearch -UserParams $UserParams)
-            ,$test | Should BeOfType array
-            $test.length | Should Be (Get-ChildItem -LiteralPath $UserParams.InputPath -Filter $UserParams.allChosenFormats[0] -Recurse).count
+            ,$test          | Should BeOfType array
+            $test.length    | Should Be (Get-ChildItem -LiteralPath $UserParams.InputPath -Filter $UserParams.FormatInExclude[0] -Recurse).count
         }
         It "Return array even if only one file is found" {
-            $UserParams.allChosenFormats = @("*.cr3")
+            $UserParams.FormatInExclude = @("*.cr3")
             $test = @(Start-FileSearch -UserParams $UserParams)
-            ,$test | Should BeOfType array
-            $bla = Get-ChildItem -LiteralPath "$($UserParams.InputPath)\file_single.cr3" | ForEach-Object {
-                [PSCustomObject]@{
-                    InFullName = $_.FullName
-                    InPath = (Split-Path -Path $_.FullName -Parent)
-                    InName = $_.Name
-                    InBaseName = $(if($UserParams.OutputFileStyle -eq "unchanged"){$_.BaseName}else{$_.LastWriteTime.ToString("$($UserParams.OutputFileStyle)")})
-                    Extension = $_.Extension
-                    Size = $_.Length
-                    Date = $_.LastWriteTime.ToString("yyyy-MM-dd_HH-mm-ss")
-                    OutSubfolder = $(if($UserParams.OutputSubfolderStyle -eq "none"){""}elseif($UserParams.OutputSubfolderStyle -eq "unchanged"){$($(Split-Path -Parent -Path $_.FullName).Replace($UserParams.InputPath,""))}else{"\$($_.LastWriteTime.ToString("$($UserParams.OutputSubfolderStyle)"))"}) # TODO: should there really be a backslash? # TODO: should it really be empty for unchanged in root folder?
-                    Hash = Get-FileHash -LiteralPath $_.FullName -Algorithm SHA1 | Select-Object -ExpandProperty Hash
-                }
-            }
-            $test.length        | Should Be 1
-            $test.InPath        | Should Be $UserParams.InputPath
-            $test.InName        | Should Be $bla.InName
-            $test.InFullName    | Should Be "$($UserParams.InputPath)\file_single.cr3"
-            $test.InBaseName    | Should Be $bla.InBaseName
-            $test.Extension     | Should Be $UserParams.allChosenFormats.Replace("*","")
-            $test.Size          | Should Be $bla.Size
-            $test.Date          | Should Be $bla.Date
-            $test.OutSubfolder  | Should Be $bla.OutSubfolder
-            $test.OutPath       | Should Be "ZYX"
-            $test.OutName       | Should Be "ZYX"
-            $test.OutBaseName   | Should Be "ZYX"
-            $test.Hash          | Should Be $bla.Hash
-            $test.ToCopy        | Should Be 1
+            ,$test          | Should BeOfType array
+            $test.length    | Should Be 1
         }
         It "Throw if no/wrong param" {
             {Start-FileSearch} | Should Throw
             {Start-FileSearch -UserParams 123} | Should Throw
             {Start-FileSearch -UserParams @{}} | Should Throw
         }
+        It "No problems with SpecChars" {
+            $script:input_recurse = $false
+            $UserParams.FormatInExclude = @("*")
+            $UserParams.InputPath = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
+            $test = @(Start-FileSearch -UserParams $UserParams)
+            ,$test          | Should BeOfType array
+            $test.length    | Should Be 8
+            $test = $test | Where-Object {$_.InBaseName -match 'file\ specChar\.\(]\)\{\[}à°\^âaà``\$öäüß''\#!%&=´@€\+,;-Æ©$' -and $_.Extension -eq ".cr2"}
+            $test.InPath            | Should Be $UserParams.InputPath
+            $test.InName            | Should Be "file specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©.cr2"
+            $test.InBaseName        | Should Be "file specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
+            $test.Date              | Should Be "2018-03-12_18-01-43"
+        }
+        It "No problems with Long paths" {
+            $script:input_recurse = $false
+            $UserParams.FormatInExclude = @("*")
+            $UserParams.InputPath = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
+            $test = @(Start-FileSearch -UserParams $UserParams)
+            ,$test          | Should BeOfType array
+            $test.length    | Should Be 8
+            $test = $test | Where-Object {$_.InBaseName -match 'file_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_thEND$' -and $_.Extension -eq ".cr2"}
+            $test.InPath            | Should Be $UserParams.InputPath
+            $test.InName            | Should Be "file_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_thEND.cr2"
+            $test.InBaseName        | Should Be "file_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_thEND"
+            $test.Date              | Should Be "2018-03-12_18-01-43"
+        }
     }
-    Context "Proper implementations of OutputSubfolderStyle" {
+    Context "Include, All, Exclude" {
+        It "All" {
+            $UserParams.InputPath = "$BlaDrive\In_Test"
+            $UserParams.FormatPreference = "all"
+            $UserParams.FormatInExclude = @("*.JPG")
+            $test = @(Start-FileSearch -UserParams $UserParams)
+            ,$test          | Should BeOfType array
+            $test.length    | Should Be (Get-ChildItem -LiteralPath $UserParams.InputPath -Filter "*" -Recurse -File).count
+        }
+        It "Include" {
+            $UserParams.FormatPreference = "include"
+            $UserParams.FormatInExclude = @("*.JPG","*.cr3")
+            $test = @(Start-FileSearch -UserParams $UserParams)
+            ,$test          | Should BeOfType array
+            $test.length    | Should Be (Get-ChildItem -Path $($UserParams.InputPath -Replace '\\$','\\\*') -Include $UserParams.FormatInExclude -File -Recurse).count
+        }
+        It "Exclude" {
+            $UserParams.FormatPreference = "exclude"
+            $UserParams.FormatInExclude = @("*.JPG")
+            $test = @(Start-FileSearch -UserParams $UserParams)
+            ,$test          | Should BeOfType array
+            $test.length    | Should Be (Get-ChildItem -Path $($UserParams.InputPath -Replace '\\$','\\\*') -Exclude $UserParams.FormatInExclude -File -Recurse).count
+        }
+    }
+    Context "OutputSubfolderStyle" {
         BeforeEach {
-            $UserParams.allChosenFormats = @("*.cr3")
-            $UserParams.HistCompareHashes = 0
-            $UserParams.UseHistFile = 0
-            $UserParams.CheckOutputDupli = 0
+            $UserParams.FormatInExclude = @("*.CR2")
         }
-        It "none" {
-            $UserParams.OutputSubfolderStyle = "none"
+        It "none (`"`")" {
+            $UserParams.OutputSubfolderStyle = ""
             $test = @(Start-FileSearch -UserParams $UserParams)
             ,$test | Should BeOfType array
-            $test.length        | Should Be 1
-            $test.InBaseName    | Should Be "file_single"
-            $test.Date          | Should Be "2018-03-12_18-01-43"
-            $test.OutSubfolder  | Should Be ""
-            $test.OutPath       | Should Be "ZYX"
-        }
-        It "unchanged" {
-            $UserParams.allChosenFormats = @("*.cr4")
-            $UserParams.OutputSubfolderStyle = "unchanged"
+            $test[0].OutSubfolder   | Should Be ""
+            $test[11].OutSubfolder  | Should Be ""
+
+            $UserParams.OutputSubfolderStyle = " "
             $test = @(Start-FileSearch -UserParams $UserParams)
             ,$test | Should BeOfType array
-            $test.length        | Should Be 1
-            $test.Date          | Should Be "2018-03-12_18-01-43"
-            $test.OutSubfolder  | Should Be "\folder_uncomplicated"
-            $test.OutPath       | Should Be "ZYX"
+            $test[0].OutSubfolder   | Should Be ""
+            $test[11].OutSubfolder  | Should Be ""
         }
-        It "yyyy-MM-dd" {
-            $UserParams.OutputSubfolderStyle = "yyyy-MM-dd"
+        It "unchanged (`"%n%`")" {
+            $UserParams.OutputSubfolderStyle = "%n%"
             $test = @(Start-FileSearch -UserParams $UserParams)
             ,$test | Should BeOfType array
-            $test.length        | Should Be 1
-            $test.Date          | Should Be "2018-03-12_18-01-43"
-            $test.OutSubfolder  | Should Be "\2018-03-12"
-            $test.OutPath       | Should Be "ZYX"
-        }
-        It "yyyy_MM_dd" {
-            $UserParams.OutputSubfolderStyle = "yyyy_MM_dd"
+            $test[0].OutSubfolder   | Should Be "\"
+            $test[8].OutSubfolder   | Should Be "\folder_uncomplicated"
+
+            $UserParams.OutputSubfolderStyle = "%n% "
             $test = @(Start-FileSearch -UserParams $UserParams)
             ,$test | Should BeOfType array
-            $test.length        | Should Be 1
-            $test.Date          | Should Be "2018-03-12_18-01-43"
-            $test.OutSubfolder  | Should Be "\2018_03_12"
-            $test.OutPath       | Should Be "ZYX"
+            $test[0].OutSubfolder   | Should Be "\"
+            $test[8].OutSubfolder   | Should Be "\folder_uncomplicated"
         }
-        It "yyyy.MM.dd" {
-            $UserParams.OutputSubfolderStyle = "yyyy.MM.dd"
+        It "%y4%-%mo%-%d%" {
+            $UserParams.OutputSubfolderStyle = "%y4%-%mo%-%d%"
             $test = @(Start-FileSearch -UserParams $UserParams)
             ,$test | Should BeOfType array
-            $test.length        | Should Be 1
-            $test.Date          | Should Be "2018-03-12_18-01-43"
-            $test.OutSubfolder  | Should Be "\2018.03.12"
-            $test.OutPath       | Should Be "ZYX"
+            $test[0].OutSubfolder   | Should Be "\2018-03-12"
+            $test[11].OutSubfolder  | Should Be "\2018-03-12"
         }
-        It "yyyyMMdd" {
-            $UserParams.OutputSubfolderStyle = "yyyyMMdd"
+        It "(%y4%_%mo%_%d%) BLA" {
+            $UserParams.OutputSubfolderStyle = "(%y4%_%mo%_%d%) BLA"
             $test = @(Start-FileSearch -UserParams $UserParams)
             ,$test | Should BeOfType array
-            $test.length        | Should Be 1
-            $test.Date          | Should Be "2018-03-12_18-01-43"
-            $test.OutSubfolder  | Should Be "\20180312"
-            $test.OutPath       | Should Be "ZYX"
+            $test[0].OutSubfolder   | Should Be "\(2018_03_12) BLA"
+            $test[11].OutSubfolder  | Should Be "\(2018_03_12) BLA"
         }
-        It "yy-MM-dd" {
-            $UserParams.OutputSubfolderStyle = "yy-MM-dd"
+        It "%y4%.%mo%.%d% %n%" {
+            $UserParams.OutputSubfolderStyle = "%y4%.%mo%.%d% %n%"
             $test = @(Start-FileSearch -UserParams $UserParams)
             ,$test | Should BeOfType array
-            $test.length        | Should Be 1
-            $test.Date          | Should Be "2018-03-12_18-01-43"
-            $test.OutSubfolder  | Should Be "\18-03-12"
-            $test.OutPath       | Should Be "ZYX"
+            $test[0].OutSubfolder   | Should Be "\2018.03.12"
+            $test[8].OutSubfolder   | Should Be "\2018.03.12 folder_uncomplicated"
         }
-        It "yy_MM_dd" {
-            $UserParams.OutputSubfolderStyle = "yy_MM_dd"
+        It "%y4%%mo%%d% %y2%BLA" {
+            $UserParams.OutputSubfolderStyle = "%y4%%mo%%d% %y2%BLA"
             $test = @(Start-FileSearch -UserParams $UserParams)
             ,$test | Should BeOfType array
-            $test.length        | Should Be 1
-            $test.Date          | Should Be "2018-03-12_18-01-43"
-            $test.OutSubfolder  | Should Be "\18_03_12"
-            $test.OutPath       | Should Be "ZYX"
+            $test[0].OutSubfolder   | Should Be "\20180312 18BLA"
+            $test[11].OutSubfolder  | Should Be "\20180312 18BLA"
         }
-        It "yy.MM.dd" {
-            $UserParams.OutputSubfolderStyle = "yy.MM.dd"
+        It "%y2%-%mo%-%d%" {
+            $UserParams.OutputSubfolderStyle = "%y2%-%mo%-%d%"
             $test = @(Start-FileSearch -UserParams $UserParams)
             ,$test | Should BeOfType array
-            $test.length        | Should Be 1
-            $test.Date          | Should Be "2018-03-12_18-01-43"
-            $test.OutSubfolder  | Should Be "\18.03.12"
-            $test.OutPath       | Should Be "ZYX"
-        }
-        It "yyMMdd" {
-            $UserParams.OutputSubfolderStyle = "yyMMdd"
-            $test = @(Start-FileSearch -UserParams $UserParams)
-            ,$test | Should BeOfType array
-            $test.length        | Should Be 1
-            $test.Date          | Should Be "2018-03-12_18-01-43"
-            $test.OutSubfolder      | Should Be "\180312"
-            $test.OutPath       | Should Be "ZYX"
+            $test[0].OutSubfolder   | Should Be "\18-03-12"
+            $test[11].OutSubfolder  | Should Be "\18-03-12"
         }
     }
-    Context "Proper implementation of OutputFileStyle" {
-        BeforeEach {
-            $UserParams.allChosenFormats = @("*.cr3")
-            $UserParams.HistCompareHashes = 0
-            $UserParams.UseHistFile = 0
-            $UserParams.CheckOutputDupli = 0
-        }
-        It "unchanged" {
-            $UserParams.OutputFileStyle = "unchanged"
-            $test = @(Start-FileSearch -UserParams $UserParams)
-            ,$test | Should BeOfType array
-            $test.length        | Should Be 1
-            $test.InBaseName    | Should Be "file_single"
-            $test.Date          | Should Be "2018-03-12_18-01-43"
-        }
-        It "yyyy-MM-dd_HH-mm-ss" {
-            $UserParams.OutputFileStyle = "yyyy-MM-dd_HH-mm-ss"
-            $test = @(Start-FileSearch -UserParams $UserParams)
-            ,$test | Should BeOfType array
-            $test.length        | Should Be 1
-            $test.InBaseName    | Should Be "2018-03-12_18-01-43"
-            $test.Date          | Should Be "2018-03-12_18-01-43"
-        }
-        It "yyyyMMdd_HHmmss" {
-            $UserParams.OutputFileStyle = "yyyyMMdd_HHmmss"
-            $test = @(Start-FileSearch -UserParams $UserParams)
-            ,$test | Should BeOfType array
-            $test.length        | Should Be 1
-            $test.InBaseName    | Should Be "20180312_180143"
-            $test.Date          | Should Be "2018-03-12_18-01-43"
-        }
-        It "yyyyMMddHHmmss" {
-            $UserParams.OutputFileStyle = "yyyyMMddHHmmss"
-            $test = @(Start-FileSearch -UserParams $UserParams)
-            ,$test | Should BeOfType array
-            $test.length        | Should Be 1
-            $test.InBaseName    | Should Be "20180312180143"
-            $test.Date          | Should Be "2018-03-12_18-01-43"
-        }
-        It "yy-MM-dd_HH-mm-ss" {
-            $UserParams.OutputFileStyle = "yy-MM-dd_HH-mm-ss"
-            $test = @(Start-FileSearch -UserParams $UserParams)
-            ,$test | Should BeOfType array
-            $test.length        | Should Be 1
-            $test.InBaseName    | Should Be "18-03-12_18-01-43"
-            $test.Date          | Should Be "2018-03-12_18-01-43"
-        }
-        It "yyMMdd_HHmmss" {
-            $UserParams.OutputFileStyle = "yyMMdd_HHmmss"
-            $test = @(Start-FileSearch -UserParams $UserParams)
-            ,$test | Should BeOfType array
-            $test.length        | Should Be 1
-            $test.InBaseName    | Should Be "180312_180143"
-            $test.Date          | Should Be "2018-03-12_18-01-43"
-        }
-        It "yyMMddHHmmss" {
-            $UserParams.OutputFileStyle = "yyMMddHHmmss"
-            $test = @(Start-FileSearch -UserParams $UserParams)
-            ,$test | Should BeOfType array
-            $test.length        | Should Be 1
-            $test.InBaseName    | Should Be "180312180143"
-            $test.Date          | Should Be "2018-03-12_18-01-43"
-        }
-        It "HH-mm-ss" {
-            $UserParams.OutputFileStyle = "HH-mm-ss"
-            $test = @(Start-FileSearch -UserParams $UserParams)
-            ,$test | Should BeOfType array
-            $test.length        | Should Be 1
-            $test.InBaseName    | Should Be "18-01-43"
-            $test.Date          | Should Be "2018-03-12_18-01-43"
-        }
-        It "HH_mm_ss" {
-            $UserParams.OutputFileStyle = "HH_mm_ss"
-            $test = @(Start-FileSearch -UserParams $UserParams)
-            ,$test | Should BeOfType array
-            $test.length        | Should Be 1
-            $test.InBaseName    | Should Be "18_01_43"
-            $test.Date          | Should Be "2018-03-12_18-01-43"
-        }
-        It "HHmmss" {
-            $UserParams.OutputFileStyle = "HHmmss"
-            $test = @(Start-FileSearch -UserParams $UserParams)
-            ,$test | Should BeOfType array
-            $test.length        | Should Be 1
-            $test.InBaseName    | Should Be "180143"
-            $test.Date          | Should Be "2018-03-12_18-01-43"
-        }
-    }
-    It "No problems with SpecChars" {
-        $script:input_recurse = $false
-        $UserParams.allChosenFormats = @("*")
-        $UserParams.InputPath = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
+    It "OutputFileStyle" {
+        $UserParams.FormatInExclude = @("*.cr2")
+        $UserParams.OutputFileStyle = "BLA_%c3% %n% %y4%-%mo%-%d%_%h%-%mi%-%s%_%y2% %n% %c1% %y4%-%mo%-%d%_%h%-%mi%-%s%"
         $test = @(Start-FileSearch -UserParams $UserParams)
-        ,$test          | Should BeOfType array
-        $test.length    | Should Be 8
-        $test = $test | Where-Object {$_.InBaseName -match 'file\ specChar\.\(]\)\{\[}à°\^âaà``\$öäüß''\#!%&=´@€\+,;-Æ©$' -and $_.Extension -eq ".cr2"}
-        $test.InPath            | Should Be $UserParams.InputPath
-        $test.InName            | Should Be "file specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©.cr2"
-        $test.InBaseName        | Should Be "file specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
-        $test.Hash              | Should Be "3A3514D39089FAF261CAF7EC50CB06D44021C424"
-    }
-    It "No problems with Long paths" {
-        $script:input_recurse = $false
-        $UserParams.allChosenFormats = @("*")
-        $UserParams.InputPath = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
-        $test = @(Start-FileSearch -UserParams $UserParams)
-        ,$test          | Should BeOfType array
-        $test.length    | Should Be 8
-        $test = $test | Where-Object {$_.InBaseName -match 'file_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_thEND$' -and $_.Extension -eq ".cr2"}
-        $test.InPath            | Should Be $UserParams.InputPath
-        $test.InName            | Should Be "file_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_thEND.cr2"
-        $test.InBaseName        | Should Be "file_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_thEND"
-        $test.Hash              | Should Be "3A3514D39089FAF261CAF7EC50CB06D44021C424"
+        ,$test | Should BeOfType array
+        $test[0].InBaseName | Should Be "BLA_001 file specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ© 2018-03-12_18-01-43_18 file specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ© 1 2018-03-12_18-01-43"
+        $test[1].InBaseName | Should Be "BLA_002 file_uncomplicated 2018-03-12_18-01-43_18 file_uncomplicated 2 2018-03-12_18-01-43"
+        $test[11].InBaseName | Should Be "BLA_012 file_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_thEND 2018-03-12_18-01-43_18 file_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_thEND 12 2018-03-12_18-01-43"
     }
 }
 
@@ -1531,10 +1169,10 @@ Describe "Get-HistFile" {
         It "Get array from regular histfile"{
             $test = @(Get-HistFile -UserParams $UserParams)
             ,$test | Should BeOfType array
-            $test[3].InName | Should Be "file_single.cr3"
-            $test[3].Date   | Should Be "2018-03-12_18-01-43"
-            $test[3].size   | Should Be 990
-            $test[3].hash   | Should Be "3A3514D39089FAF261CAF7EC50CB06D44021C424"
+            $test[3].InName | Should Be "file_uncomplicated.jpg"
+            $test[3].Date   | Should Be "2018-03-17_15-10-58"
+            $test[3].size   | Should Be 4408
+            $test[3].hash   | Should Be "BDF90B1006CEADA6355E5274CDCDD96788624D7C"
         }
         It "Get array even if just one file is found" {
             $UserParams.HistFilePath = "$BlaDrive\In_Test\hist_simpleset.json"
@@ -1552,12 +1190,10 @@ Describe "Get-HistFile" {
             ,$test | Should BeOfType array
             $test | Should Be @()
         }
-        It "Return `$false if user does not want to work with empty histfile" {
+        It "Throw if user does not want to work with empty histfile" {
             Mock Read-Host {return 0}
             $UserParams.HistFilePath = "$BlaDrive\In_Test\hist_empty.json"
-            $test = @(Get-HistFile -UserParams $UserParams)
-            ,$test | Should BeOfType array
-            $test | Should Be $false
+            {Get-HistFile -UserParams $UserParams} | Should Throw
         }
         It "Return array for broken histfile" {
             $UserParams.HistFilePath = "$BlaDrive\In_Test\hist_broken.json"
@@ -1566,12 +1202,10 @@ Describe "Get-HistFile" {
             ,$test | Should BeOfType array
             $test | Should Be @()
         }
-        It "Return `$false if user does not want to work with broken histfile" {
+        It "Throw if user does not want to work with broken histfile" {
             Mock Read-Host {return 0}
             $UserParams.HistFilePath = "$BlaDrive\In_Test\hist_broken.json"
-            $test = @(Get-HistFile -UserParams $UserParams)
-            ,$test | Should BeOfType array
-            $test | Should Be $false
+            {Get-HistFile -UserParams $UserParams} | Should Throw
         }
         It "Return empty array for no histfile" {
             Mock Read-Host {return 1}
@@ -1580,12 +1214,10 @@ Describe "Get-HistFile" {
             ,$test | Should BeOfType array
             $test | Should Be @()
         }
-        It "Return `$false if user does not want to work with no histfile" {
+        It "Throw if user does not want to work with no histfile" {
             Mock Read-Host {return 0}
             $UserParams.HistFilePath = "$BlaDrive\In_Test\nohistfile.json"
-            $test = @(Get-HistFile -UserParams $UserParams)
-            ,$test | Should BeOfType array
-            $test | Should Be $false
+            {Get-HistFile -UserParams $UserParams} | Should Throw
         }
         It "Throw if params are wrong/missing" {
             {Get-HistFile} | Should Throw
@@ -1620,16 +1252,17 @@ Describe "Start-DupliCheckHist" {
     # DEFINITION: Combine all parameters into a hashtable:
     BeforeEach {
         [hashtable]$UserParams = @{
-            InputPath = "$BlaDrive\In_Test"
-            OutputPath = "$BlaDrive\Out_Test"
-            allChosenFormats = @("*.cr2","*.jpg")
-            OutputSubfolderStyle = "yyyy-MM-dd"
-            OutputFileStyle = "unchanged"
-            HistFilePath = "$BlaDrive\In_Test\hist_uncomplicated.json"
-            UseHistFile = 1
-            WriteHistFile = "yes"
-            HistCompareHashes = 1
-            InputSubfolderSearch = 1
+            InputPath =             "$BlaDrive\In_Test"
+            OutputPath =            "$BlaDrive\Out_Test"
+            FormatPreference =      "include"
+            FormatInExclude =       @("*.cr2","*.jpg")
+            OutputFileStyle =       "%n%"
+            OutputSubfolderStyle =  "%y4%-%mo%-%d%"
+            HistFilePath =          "$BlaDrive\In_Test\hist_uncomplicated.json"
+            UseHistFile =           1
+            WriteHistFile =         "yes"
+            HistCompareHashes =     1
+            InputSubfolderSearch =  1
         }
     }
     New-Item -ItemType Directory -Path $BlaDrive
@@ -1694,16 +1327,13 @@ Describe "Start-DupliCheckOut" {
     # DEFINITION: Combine all parameters into a hashtable:
     BeforeEach {
         [hashtable]$UserParams = @{
-            InputPath = "$BlaDrive\In_Test"
-            OutputPath = "$BlaDrive\Out_Test"
-            allChosenFormats = @("*.cr2","*.jpg")
-            OutputSubfolderStyle = "yyyy-MM-dd"
-            OutputFileStyle = "unchanged"
-            HistFilePath = "$BlaDrive\In_Test\hist_uncomplicated.json"
-            UseHistFile = 1
-            WriteHistFile = "yes"
-            HistCompareHashes = 1
-            InputSubfolderSearch = 1
+            InputPath =             "$BlaDrive\In_Test"
+            OutputPath =            "$BlaDrive\Out_Test"
+            FormatPreference =      "include"
+            FormatInExclude =       @("*.cr2","*.jpg")
+            OutputFileStyle =       "%n%"
+            OutputSubfolderStyle =  "%y4%-%mo%-%d%"
+            InputSubfolderSearch =  1
         }
     }
     New-Item -ItemType Directory -Path $BlaDrive
@@ -1763,16 +1393,17 @@ Describe "Start-InputGetHash" {
     # DEFINITION: Combine all parameters into a hashtable:
     BeforeEach {
         [hashtable]$UserParams = @{
-            InputPath = "$BlaDrive\In_Test"
-            OutputPath = "$BlaDrive\Out_Test"
-            allChosenFormats = @("*.cr2","*.jpg")
-            OutputSubfolderStyle = "yyyy-MM-dd"
-            OutputFileStyle = "unchanged"
-            HistFilePath = "$BlaDrive\In_Test\hist_uncomplicated.json"
-            UseHistFile = 1
-            WriteHistFile = "yes"
-            HistCompareHashes = 1
-            InputSubfolderSearch = 1
+            InputPath =             "$BlaDrive\In_Test"
+            OutputPath =            "$BlaDrive\Out_Test"
+            FormatPreference =      "include"
+            FormatInExclude =       @("*.cr2","*.jpg")
+            OutputFileStyle =       "%n%"
+            OutputSubfolderStyle =  "%y4%-%mo%-%d%"
+            HistFilePath =          "$BlaDrive\In_Test\hist_uncomplicated.json"
+            UseHistFile =           1
+            WriteHistFile =         "yes"
+            HistCompareHashes =     1
+            InputSubfolderSearch =  1
         }
     }
     New-Item -ItemType Directory -Path $BlaDrive
@@ -1830,16 +1461,17 @@ Describe "Start-PreventingDoubleCopies" {
     # DEFINITION: Combine all parameters into a hashtable:
     BeforeEach {
         [hashtable]$UserParams = @{
-            InputPath = "$BlaDrive\In_Test"
-            OutputPath = "$BlaDrive\Out_Test"
-            allChosenFormats = @("*.cr2","*.jpg","*.cr3")
-            OutputSubfolderStyle = "yyyy-MM-dd"
-            OutputFileStyle = "unchanged"
-            HistFilePath = "$BlaDrive\In_Test\hist_uncomplicated.json"
-            UseHistFile = 1
-            WriteHistFile = "yes"
-            HistCompareHashes = 1
-            InputSubfolderSearch = 1
+            InputPath =             "$BlaDrive\In_Test"
+            OutputPath =            "$BlaDrive\Out_Test"
+            FormatPreference =      "include"
+            FormatInExclude =       @("*.cr2","*.jpg","*.cr3")
+            OutputFileStyle =       "%n%"
+            OutputSubfolderStyle =  "%y4%-%mo%-%d%"
+            HistFilePath =          "$BlaDrive\In_Test\hist_uncomplicated.json"
+            UseHistFile =           1
+            WriteHistFile =         "yes"
+            HistCompareHashes =     1
+            InputSubfolderSearch =  1
         }
     }
     New-Item -ItemType Directory -Path $BlaDrive
@@ -1866,16 +1498,18 @@ Describe "Start-SpaceCheck"{
     # DEFINITION: Combine all parameters into a hashtable:
     BeforeEach {
         [hashtable]$UserParams = @{
-            InputPath = "$BlaDrive\In_Test"
-            OutputPath = "$BlaDrive\Out_Test"
-            allChosenFormats = @("*.cr2","*.jpg","*.cr3")
-            OutputSubfolderStyle = "yyyy-MM-dd"
-            OutputFileStyle = "unchanged"
-            HistFilePath = "$BlaDrive\In_Test\hist_uncomplicated.json"
-            UseHistFile = 1
-            WriteHistFile = "yes"
-            HistCompareHashes = 1
-            InputSubfolderSearch = 1
+            InputPath =             "$BlaDrive\In_Test"
+            OutputPath =            "$BlaDrive\Out_Test"
+            # OutputPath =            "A:\Out_Test"  # TODO: Test with small volume, such as RAMdisk
+            FormatPreference =      "include"
+            FormatInExclude =       @("*.cr2","*.jpg","*.cr3")
+            OutputFileStyle =       "%n%"
+            OutputSubfolderStyle =  "%y4%-%mo%-%d%"
+            HistFilePath =          "$BlaDrive\In_Test\hist_uncomplicated.json"
+            UseHistFile =           1
+            WriteHistFile =         "yes"
+            HistCompareHashes =     1
+            InputSubfolderSearch =  1
         }
     }
     New-Item -ItemType Directory -Path $BlaDrive
@@ -1892,6 +1526,7 @@ Describe "Start-SpaceCheck"{
             $InFiles = @(Start-FileSearch -UserParams $UserParams)
             $test = Start-SpaceCheck -InFiles $InFiles -UserParams $UserParams
             $test | Should BeOfType boolean
+            Write-Host $test
         }
     }
     It "No problems with SpecChars" {
@@ -1908,17 +1543,19 @@ Describe "Start-SpaceCheck"{
     }
 }
 
+# TODO: From here:
 Describe "Start-OverwriteProtection" {
     $BlaDrive = "$TestDrive\TEST"
     # DEFINITION: Combine all parameters into a hashtable:
     BeforeEach {
         [hashtable]$UserParams = @{
-            InputPath = "$BlaDrive\In_Test"
-            OutputPath = "$BlaDrive\Out_Test"
-            allChosenFormats = @("*.cr2","*.jpg","*.cr3")
-            OutputSubfolderStyle = "yyyy-MM-dd"
-            OutputFileStyle = "unchanged"
-            InputSubfolderSearch = 1
+            InputPath =             "$BlaDrive\In_Test"
+            OutputPath =            "$BlaDrive\Out_Test"
+            FormatPreference =      "include"
+            FormatInExclude =       @("*.cr2","*.jpg","*.cr3")
+            OutputFileStyle =       "%n%"
+            OutputSubfolderStyle =  "%y4%-%mo%-%d%"
+            InputSubfolderSearch =  1
             OverwriteExistingFiles = 0
         }
     }

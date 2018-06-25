@@ -205,7 +205,7 @@
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="260,5,0,0"
                     />
                     <TextBox x:Name="TextBoxOutSubStyle"
-                        Text="TextBoxOutSubStyle" FontFamily="Consolas,Segoe UI,Arial" ToolTip="Define your favorite subfolder-style."
+                        Text="TextBoxOutSubStyle" FontFamily="Consolas,Segoe UI,Arial" ToolTip="Define your favorite subfolder-style. %n% keeps subfolder structure, an empty field means no subfolders."
                         VerticalContentAlignment="Center" VerticalScrollBarVisibility="Disabled" TextWrapping="Wrap"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="270,30,0,0"
                         Height="23" Width="215"
@@ -218,7 +218,7 @@
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="260,65,0,0"
                     />
                     <TextBlock x:Name="TextBlockSpecCharExplanation"
-                        Text="%y4% = 2018&#x09;%y2% = 18&#10;%mo% = 01&#x09;%d% = 31&#10;%h% = 23    %mi% = 59    %s% = 59&#10;%n% = Unchanged name&#10;%c_% = Counter (%c1% - %c4%)"
+                        Text="%y4% = 2018&#x09;%y2% = 18&#10;%mo% = 01&#x09;%d% = 31&#10;%h% = 23    %mi% = 59    %s% = 59&#10;%n% = Unchanged name&#10;%c_% = Counter (%c1% - %c9%)"
                         FontFamily="Consolas,Segoe UI,Arial"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="270,90,0,0"
                     />
