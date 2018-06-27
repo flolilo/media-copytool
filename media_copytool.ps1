@@ -1856,10 +1856,10 @@ Function Start-OverwriteProtection(){
 # DEFINITION: Copy Files:
 Function Start-FileCopy(){
     param(
-        [Parameter(Mandatory=$true)]
-        [array]$InFiles,
-        [Parameter(Mandatory=$true)]
-        [hashtable]$UserParams
+        [ValidateNotNullOrEmpty()]
+        [array]$InFiles =           $(throw 'InFiles is required by Start-FileCopy'),
+        [ValidateNotNullOrEmpty()]
+        [hashtable]$UserParams =    $(throw 'UserParams is required by Start-FileCopy')
     )
     Write-ColorOut "$(Get-Date -Format "dd.MM.yy HH:mm:ss")  --  Copy files from $($UserParams.InputPath) to " -NoNewLine -ForegroundColor Cyan
     if($UserParams.OutputSubfolderStyle -eq "none"){
@@ -1975,12 +1975,11 @@ Function Start-FileCopy(){
 # DEFINITION: Starting 7zip:
 Function Start-7zip(){
     param(
-        [Parameter(Mandatory=$false)]
         [string]$7zexe = "$($PSScriptRoot)\7z.exe",
-        [Parameter(Mandatory=$true)]
-        [array]$InFiles,
-        [Parameter(Mandatory=$true)]
-        [hashtable]$UserParams
+        [ValidateNotNullOrEmpty()]
+        [array]$InFiles =           $(throw 'InFiles is required by Start-7zip'),
+        [ValidateNotNullOrEmpty()]
+        [hashtable]$UserParams =    $(throw 'UserParams is required by Start-7zip')
     )
     Write-ColorOut "$(Get-CurrentDate)  --  Zipping files..." -ForegroundColor Cyan
 
@@ -2038,8 +2037,10 @@ Function Start-7zip(){
 # DEFINITION: Verify newly copied files
 Function Start-FileVerification(){
     param(
-        [Parameter(Mandatory=$true)]
-        [array]$InFiles
+        [ValidateNotNullOrEmpty()]
+        [array]$InFiles =           $(throw 'InFiles is required by Start-FileVerification')
+        # [ValidateNotNullOrEmpty()]
+        # [hashtable]$UserParams =    $(throw 'UserParams is required by Start-FileVerification')
     )
     Write-ColorOut "$(Get-CurrentDate)  --  Verify newly copied files..." -ForegroundColor Cyan
 
@@ -2108,10 +2109,10 @@ Function Start-FileVerification(){
 # DEFINITION: Write new file-attributes to history-file:
 Function Set-HistFile(){
     param(
-        [Parameter(Mandatory=$true)]
-        [array]$InFiles,
-        [Parameter(Mandatory=$true)]
-        [hashtable]$UserParams
+        [ValidateNotNullOrEmpty()]
+        [array]$InFiles =           $(throw 'InFiles is required by Set-HistFile'),
+        [ValidateNotNullOrEmpty()]
+        [hashtable]$UserParams =    $(throw 'UserParams is required by Set-HistFile')
     )
     Write-ColorOut "$(Get-CurrentDate)  --  Write attributes of successfully copied files to history-file..." -ForegroundColor Cyan
 
