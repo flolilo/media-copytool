@@ -263,7 +263,8 @@ param(
 
 # DEFINITION: Get all error-outputs in English:
     [Threading.Thread]::CurrentThread.CurrentUICulture = 'en-US'
-# DEFINITION: Set default ErrorAction to Stop: CREDIT: https://stackoverflow.com/a/21260623/8013879
+# DEFINITION: Set default ErrorAction to Stop:
+    # CREDIT: https://stackoverflow.com/a/21260623/8013879
     if($Debug -eq 0){
         $PSDefaultParameterValues = @{}
         $PSDefaultParameterValues += @{'*:ErrorAction' = 'Stop'}
