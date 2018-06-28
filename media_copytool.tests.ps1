@@ -1572,9 +1572,22 @@ Describe "Start-OverwriteProtection" {
         }
         It "Works as it should" {
             $InFiles = @(Start-FileSearch -UserParams $UserParams)
-            $test = @(Start-OverwriteProtection -InFiles $InFiles -UserParams $UserParams -Mirror 0)
+            $NewFiles = $InFiles | Select-Object *
+            $test = @(Start-OverwriteProtection -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
             ,$test | Should BeOfType array
-            (Compare-Object $InFiles $test).count | Should Be 0
+            (Compare-Object $InFiles $test -Property InFullName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property InPath -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property InBaseName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property InBaseName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property Extension -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property Size -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property Date -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property OutSubfolder -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property OutPath -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
+            (Compare-Object $InFiles $test -Property OutName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
+            (Compare-Object $InFiles $test -Property OutBaseName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
+            (Compare-Object $InFiles $test -Property Hash -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property ToCopy -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
         }
     }
 }
