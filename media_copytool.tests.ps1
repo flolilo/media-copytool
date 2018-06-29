@@ -998,7 +998,6 @@ Describe "Start-FileSearch" {
             OutputFileStyle = "%n%"
             OutputSubfolderStyle = "%y4%-%mo%-%d%"
         }
-        $script:input_recurse = $true
     }
     New-Item -ItemType Directory -Path $BlaDrive
     Push-Location $BlaDrive
@@ -1577,7 +1576,7 @@ Describe "Start-OverwriteProtection" {
             ,$test | Should BeOfType array
             (Compare-Object $InFiles $test -Property InFullName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
             (Compare-Object $InFiles $test -Property InPath -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
-            (Compare-Object $InFiles $test -Property InBaseName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property InName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
             (Compare-Object $InFiles $test -Property InBaseName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
             (Compare-Object $InFiles $test -Property Extension -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
             (Compare-Object $InFiles $test -Property Size -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
@@ -1588,6 +1587,141 @@ Describe "Start-OverwriteProtection" {
             (Compare-Object $InFiles $test -Property OutBaseName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
             (Compare-Object $InFiles $test -Property Hash -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
             (Compare-Object $InFiles $test -Property ToCopy -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+        }
+        # TODO: does not work with OutputSubfolderStyle like %n%
+        It "Add _InCopyXY if file is there multiple times" {
+            $InFiles = @(Start-FileSearch -UserParams $UserParams)
+            $NewFiles = $InFiles | Select-Object *
+            $test = @(Start-OverwriteProtection -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+            ,$test | Should BeOfType array
+            (Compare-Object $InFiles $test -Property InFullName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property InPath -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property InName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property InBaseName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property Extension -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property Size -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property Date -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property OutSubfolder -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property OutPath -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
+            (Compare-Object $InFiles $test -Property OutName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
+            (Compare-Object $InFiles $test -Property OutBaseName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
+            (Compare-Object $InFiles $test -Property Hash -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property ToCopy -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            $counter = 0
+            foreach($i in $test.OutPath){
+                if($i -match $([regex]::Escape("$($("$($UserParams.OutputPath)$($InFiles[$i].OutSubfolder)").Replace("\\","\").Replace("\\","\"))"))){$counter++}
+            }
+            $counter | Should be $InFiles.Length
+            $counter = 0
+            $wrong = 0
+            foreach($i in $test.OutName){
+                if($i -match '^.*_InCopy\d\....$'){$counter++}
+                if($i -match '^.*_OutCopy\d.*$'){$counter++}
+            }
+            $counter | Should be $([math]::Floor(($InFiles.Length * 3 / 4)))
+            $wrong  | Should be 0
+            $counter = 0
+            $wrong = 0
+            foreach($i in $test.OutBaseName){
+                if($i -match '^.*_InCopy\d$'){$counter++}
+                if($i -match '^.*_OutCopy\d.*'){$counter++}
+            }
+            $counter | Should be $([math]::Floor(($InFiles.Length * 3 / 4)))
+            $wrong  | Should be 0
+        }
+        It "Add _OutCopyXY if file is there mutliple times" {
+            $UserParams.InputSubfolderSearch = 0
+            $UserParams.OutputSubfolderStyle =  "%n%"
+            Get-ChildItem -LiteralPath "$BlaDrive\In_Test" -Recurse | Copy-Item -Destination "$BlaDrive\Out_Test" -Recurse
+
+            $InFiles = @(Start-FileSearch -UserParams $UserParams)
+            $NewFiles = $InFiles | Select-Object *
+            $test = @(Start-OverwriteProtection -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+            ,$test | Should BeOfType array
+            (Compare-Object $InFiles $test -Property InFullName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property InPath -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property InName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property InBaseName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property Extension -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property Size -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property Date -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property OutSubfolder -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property OutPath -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
+            (Compare-Object $InFiles $test -Property OutName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
+            (Compare-Object $InFiles $test -Property OutBaseName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
+            (Compare-Object $InFiles $test -Property Hash -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property ToCopy -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            $counter = 0
+            foreach($i in $test.OutPath){
+                if($i -match $([regex]::Escape("$($("$($UserParams.OutputPath)$($InFiles[$i].OutSubfolder)").Replace("\\","\").Replace("\\","\"))"))){$counter++}
+            }
+            $counter | Should be $InFiles.Length
+            $counter = 0
+            $wrong = 0
+            foreach($i in $test.OutName){
+                if($i -match '^.*_OutCopy\d\....$'){$counter++}
+                if($i -match '^.*_InCopy\d.*$'){$wrong++}
+            }
+            $counter | Should be $([math]::Floor(($InFiles.Length)))
+            $wrong  | Should be 0
+            $counter = 0
+            $wrong = 0
+            foreach($i in $test.OutBaseName){
+                if($i -match '^.*_OutCopy\d$'){$counter++}
+                if($i -match '^.*_InCopy\d.*'){$wrong++}
+            }
+            $counter | Should be $([math]::Floor(($InFiles.Length)))
+            $wrong  | Should be 0
+        }
+        # TODO: does not work
+        It "Add both _InCopyXY and _OutCopyXY when appropriate" {
+            $UserParams.InputSubfolderSearch = 1
+            # $UserParams.OutputSubfolderStyle =  "%y4%-%mo%-%d%"
+            Get-ChildItem -LiteralPath "$BlaDrive\In_Test" -Recurse | Copy-Item -Destination "$BlaDrive\Out_Test" -Recurse
+
+            $InFiles = @(Start-FileSearch -UserParams $UserParams)
+            $NewFiles = $InFiles | Select-Object *
+            $test = @(Start-OverwriteProtection -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+            ,$test | Should BeOfType array
+            (Compare-Object $InFiles $test -Property InFullName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property InPath -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property InName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property InBaseName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property Extension -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property Size -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property Date -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property OutSubfolder -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property OutPath -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
+            (Compare-Object $InFiles $test -Property OutName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
+            (Compare-Object $InFiles $test -Property OutBaseName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
+            (Compare-Object $InFiles $test -Property Hash -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property ToCopy -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            $counter = 0
+            foreach($i in $test.OutPath){
+                if($i -match $([regex]::Escape("$($("$($UserParams.OutputPath)$($InFiles[$i].OutSubfolder)").Replace("\\","\").Replace("\\","\"))"))){$counter++}
+            }
+            $counter | Should be $InFiles.Length
+            $counter = 0
+            foreach($i in $test.OutName){
+                if($i -match '^.*_OutCopy\d.*$'){$counter++}
+                if($i -match '^.*_InCopy\d.*$'){$counter++}
+            }
+            $counter | Should be $($InFiles.Length * 2)
+            $counter = 0
+            foreach($i in $test.OutBaseName){
+                if($i -match '^.*_OutCopy\d.*'){$counter++}
+                if($i -match '^.*_InCopy\d.*'){$counter++}
+            }
+            $counter | Should be $($InFiles.Length * 2)
+        }
+        It "Add none of the above if not needed" {
+
+        }
+        It "Special characters" {
+
+        }
+        It "Long file names" {
+
         }
     }
 }
