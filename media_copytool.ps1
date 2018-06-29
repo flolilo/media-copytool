@@ -234,7 +234,6 @@ param(
         AvoidIdenticalFiles =       $AvoidIdenticalFiles
         ZipMirror =                 $ZipMirror
         UnmountInputDrive =         $UnmountInputDrive
-        allChosenFormats =          @()
     }
     Remove-Variable -Name ShowParams,EnableGUI,JSONParamPath,LoadParamPresetName,SaveParamPresetName,RememberInPath,RememberOutPath,RememberMirrorPath,RememberSettings,InputPath,OutputPath,MirrorEnable,MirrorPath,FormatPreference,FormatInExclude,OutputSubfolderStyle,OutputFileStyle,HistFilePath,UseHistFile,WriteHistFile,HistCompareHashes,InputSubfolderSearch,CheckOutputDupli,VerifyCopies,OverwriteExistingFiles,AvoidIdenticalFiles,ZipMirror,UnmountInputDrive
 
@@ -967,6 +966,9 @@ Function Test-UserValues(){
             $inter = $UserParams.InputPath -Split $separator
             $inter[1] = $inter[1] -Replace $invalidChars
             $UserParams.InputPath = $inter -join "$([regex]::Unescape($separator))"
+            if($UserParams.InputPath -match '^.{3,}\\$'){
+                $UserParams.InputPath = $UserParams.InputPath -Replace '\\$',''
+            }
 
             if($UserParams.InputPath.Length -lt 2 -or (Test-Path -LiteralPath $UserParams.InputPath -PathType Container -ErrorAction SilentlyContinue) -eq $false){
                 Write-ColorOut "Input-path $($UserParams.InputPath) could not be found." -ForegroundColor Red -Indentation 4
@@ -978,6 +980,9 @@ Function Test-UserValues(){
             $inter = $UserParams.OutputPath -Split $separator
             $inter[1] = $inter[1] -Replace $invalidChars
             $UserParams.OutputPath = $inter -join "$([regex]::Unescape($separator))"
+            if($UserParams.OutputPath -match '^.{3,}\\$'){
+                $UserParams.OutputPath = $UserParams.OutputPath -Replace '\\$',''
+            }
 
             if($UserParams.OutputPath -eq $UserParams.InputPath){
                 Write-ColorOut "Output-path $($UserParams.OutputPath) is the same as input-path." -ForegroundColor Red -Indentation 4
@@ -1010,6 +1015,9 @@ Function Test-UserValues(){
             $inter = $UserParams.MirrorPath -Split $separator
             $inter[1] = $inter[1] -Replace $invalidChars
             $UserParams.MirrorPath = $inter -join "$([regex]::Unescape($separator))"
+            if($UserParams.MirrorPath -match '^.{3,}\\$'){
+                $UserParams.MirrorPath = $UserParams.MirrorPath -Replace '\\$',''
+            }
 
             if($UserParams.MirrorEnable -eq 1){
                 if($UserParams.MirrorPath -eq $UserParams.InputPath -or $UserParams.MirrorPath -eq $UserParams.OutputPath){
@@ -1098,7 +1106,12 @@ Function Test-UserValues(){
             if($UserParams.InputSubfolderSearch -notin (0..1)){
                 Write-ColorOut "Invalid choice of -InputSubfolderSearch." -ForegroundColor Red -Indentation 4
                 throw
+            }elseif($UserParams.InputSubfolderSearch -eq 1){
+                [switch]$inter = $true
+            }else{
+                [switch]$inter = $false
             }
+            $UserParams.InputSubfolderSearch = $inter
         # DEFINITION: $CheckOutputDupli
             if($UserParams.CheckOutputDupli -notin (0..1)){
                 Write-ColorOut "Invalid choice of -CheckOutputDupli." -ForegroundColor Red -Indentation 4
@@ -1154,23 +1167,6 @@ Function Test-UserValues(){
                 Write-ColorOut "Invalid choice of -RememberSettings." -ForegroundColor Red -Indentation 4
                 throw
             }
-
-    # DEFINITION: Build switches:
-        [switch]$script:input_recurse = $(
-            if($UserParams.InputSubfolderSearch -eq 1)  {$true}
-            else                                        {$false}
-        )
-
-    # DEFINITION: Check paths for trailing backslash:
-        if($UserParams.InputPath.replace($UserParams.InputPath.Substring(0,$UserParams.InputPath.Length-1),"") -eq "\" -and $UserParams.InputPath.Length -gt 3){
-            $UserParams.InputPath = $UserParams.InputPath.Substring(0,$UserParams.InputPath.Length-1)
-        }
-        if($UserParams.OutputPath.replace($UserParams.OutputPath.Substring(0,$UserParams.OutputPath.Length-1),"") -eq "\" -and $UserParams.OutputPath.Length -gt 3){
-            $UserParams.OutputPath = $UserParams.OutputPath.Substring(0,$UserParams.OutputPath.Length-1)
-        }
-        if($UserParams.MirrorPath.replace($UserParams.MirrorPath.Substring(0,$UserParams.MirrorPath.Length-1),"") -eq "\" -and $UserParams.MirrorPath.Length -gt 3){
-            $UserParams.MirrorPath = $UserParams.MirrorPath.Substring(0,$UserParams.MirrorPath.Length-1)
-        }
 
     # DEFINITION: If everything was sucessful, return UserParams:
     return $UserParams
@@ -1365,7 +1361,7 @@ Function Start-FileSearch(){
             $sw.Start()
         }
 
-        $InFiles += Get-ChildItem -LiteralPath $UserParams.InputPath -Filter $allChosenFormats[$i] -Recurse:$script:input_recurse -File | ForEach-Object -Process {
+        $InFiles += Get-ChildItem -LiteralPath $UserParams.InputPath -Filter $allChosenFormats[$i] -Recurse:$UserParams.InputSubfolderSearch -File | ForEach-Object -Process {
             if($sw.Elapsed.TotalMilliseconds -ge 750 -or $counter -eq 1){
                 Write-Progress -Id 2 -Activity "Looking for files..." -PercentComplete -1 -Status "File #$counter - $($_.FullName.Replace("$($UserParams.InputPath)",'.'))"
                 $sw.Reset()
