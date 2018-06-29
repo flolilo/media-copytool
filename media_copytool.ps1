@@ -1235,7 +1235,7 @@ Function Set-Parameters(){
                 UseHistFile             = $UserParams.UseHistFile
                 WriteHistFile           = $UserParams.WriteHistFile
                 HistCompareHashes       = $UserParams.HistCompareHashes
-                InputSubfolderSearch    = $UserParams.InputSubfolderSearch
+                InputSubfolderSearch    = $(if($UserParams.InputSubfolderSearch -eq $true){1}else{0})
                 CheckOutputDupli        = $UserParams.CheckOutputDupli
                 VerifyCopies            = $UserParams.VerifyCopies
                 OverwriteExistingFiles  = $UserParams.OverwriteExistingFiles
