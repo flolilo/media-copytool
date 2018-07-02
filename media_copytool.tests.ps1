@@ -1673,7 +1673,7 @@ Describe "Start-OverwriteProtection" {
             $counter | Should be $([math]::Floor(($InFiles.Length)))
             $wrong  | Should be 0
         }
-        # TODO: does not work
+        # TODO: does not work. outcopy will not work as long as incopy is not yet copied.
         It "Add both _InCopyXY and _OutCopyXY when appropriate" {
             $UserParams.InputSubfolderSearch = 1
             # $UserParams.OutputSubfolderStyle =  "%y4%-%mo%-%d%"
@@ -1698,11 +1698,14 @@ Describe "Start-OverwriteProtection" {
             (Compare-Object $InFiles $test -Property ToCopy -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
             $counter = 0
             foreach($i in $test.OutPath){
-                if($i -match $([regex]::Escape("$($("$($UserParams.OutputPath)$($InFiles[$i].OutSubfolder)").Replace("\\","\").Replace("\\","\"))"))){$counter++}
+                if($i -match $([regex]::Escape("$($("$($UserParams.OutputPath)$($InFiles[$i].OutSubfolder)").Replace("\\","\").Replace("\\","\"))"))){
+                    $counter++
+                }
             }
             $counter | Should be $InFiles.Length
             $counter = 0
             foreach($i in $test.OutName){
+                $i | Out-Host
                 if($i -match '^.*_OutCopy\d.*$'){$counter++}
                 if($i -match '^.*_InCopy\d.*$'){$counter++}
             }
