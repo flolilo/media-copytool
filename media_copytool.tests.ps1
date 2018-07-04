@@ -10,8 +10,7 @@
 . $PSScriptRoot\media_copytool.ps1
 
 Describe "Get-ParametersFromJSON" {
-    $BlaDrive = "$TestDrive\TEST"
-    # DEFINITION: Combine all parameters into a hashtable:
+    $BlaDrive = "$TestDrive\media-copytool_TEST"
     BeforeEach {
         [hashtable]$UserParams = @{
             ShowParams =            0
@@ -48,7 +47,7 @@ Describe "Get-ParametersFromJSON" {
     New-Item -ItemType Directory -Path $BlaDrive
     Push-Location $BlaDrive
     Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x -aoa -bb0 -pdefault -sccUTF-8 -spf2 `"$($PSScriptRoot)\media_copytool_TESTFILES.7z`" `"-o.\`" " -WindowStyle Minimized -Wait
-    tree /F /A | Out-Host
+    # tree /F /A | Out-Host
     Pop-Location
 
     Context "Uncomplicated file interaction" {
@@ -178,17 +177,21 @@ Describe "Get-ParametersFromJSON" {
             $test.OverwriteExistingFiles    | Should BeOfType int
             $test.OverwriteExistingFiles    | Should Be 20
         }
+        It "EnableLongPaths" {
+            $test.EnableLongPaths    | Should BeOfType int
+            $test.EnableLongPaths    | Should Be 21
+        }
         It "AvoidIdenticalFiles" {
             $test.AvoidIdenticalFiles   | Should BeOfType int
-            $test.AvoidIdenticalFiles   | Should Be 21
+            $test.AvoidIdenticalFiles   | Should Be 22
         }
         It "ZipMirror" {
             $test.ZipMirror | Should BeOfType int
-            $test.ZipMirror | Should Be 22
+            $test.ZipMirror | Should Be 23
         }
         It "UnmountInputDrive" {
             $test.UnmountInputDrive | Should BeOfType int
-            $test.UnmountInputDrive | Should Be 23
+            $test.UnmountInputDrive | Should Be 24
         }
         <# TODO: find a way to get Preventstandby working
             It "Preventstandby" {
@@ -199,85 +202,14 @@ Describe "Get-ParametersFromJSON" {
     }
 }
 
-<# TODO: hrmph. get everything right in GUI (in original file!): JSON-loading.
+<# TODO: hrmph. find a way to test the GUI.
     Describe "Start-GUI" {
-        $BlaDrive = "$TestDrive\TEST"
-        # DEFINITION: Combine all parameters into a hashtable:
-        BeforeEach {
-            [hashtable]$UserParams = @{
-                ShowParams = 0
-                Enable_GUI = 1
-                JSONParamPath = "$BlaDrive\In_Test\mc_parameters.json"
-                LoadParamPresetName = ""
-                SaveParamPresetName = ""
-                RememberInPath = 0
-                RememberOutPath = 0
-                RememberMirrorPath = 0
-                RememberSettings = 0
-                # DEFINITION: From here on, parameters can be set both via parameters and via JSON file(s).
-                InputPath = ""
-                OutputPath = ""
-                MirrorEnable = -1
-                MirrorPath = ""
-                PresetFormats = @()
-                CustomFormatsEnable = -1
-                CustomFormats = @()
-                OutputSubfolderStyle = ""
-                OutputFileStyle = ""
-                HistFilePath = ""
-                UseHistFile = -1
-                WriteHistFile = ""
-                HistCompareHashes = -1
-                InputSubfolderSearch = -1
-                CheckOutputDupli = -1
-                VerifyCopies = -1
-                OverwriteExistingFiles = -1
-                AvoidIdenticalFiles = -1
-                ZipMirror = -1
-                UnmountInputDrive = -1
-                allChosenFormats = @()
-            }
 
-        }
-        New-Item -ItemType Directory -Path $BlaDrive
-        Push-Location $BlaDrive
-        Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x -aoa -bb0 -pdefault -sccUTF-8 -spf2 `"$($PSScriptRoot)\media_copytool_TESTFILES.7z`" `"-o.\`" " -WindowStyle Minimized -Wait
-        Pop-Location
-
-        # TODO: check how to auto-close form
-        It "Check if returned filetype is correct" {
-            $test = Start-GUI -GUIPath "$($PSScriptRoot)\mc_GUI.xaml" -UserParams $UserParams -GetXAML 1
-            $test | Should BeOfType System.Windows.Window
-        }
-        It "Throws if parameters are empty" {
-            {Start-GUI -GUIPath "$($PSScriptRoot)\mc_GUI.xaml"} | Should Throw
-            {Start-GUI -UserParams $UserParams} | Should Throw
-            {Start-GUI -GetXAML 0} | Should Throw
-            {Start-GUI -GUIPath "$($PSScriptRoot)\mc_GUI.xaml" -UserParams $UserParams} | Should Throw
-            {Start-GUI -UserParams $UserParams -GetXAML 0} | Should Throw
-            {Start-GUI -GUIPath "$($PSScriptRoot)\mc_GUI.xaml" -GetXAML 0} | Should Throw
-            {Start-GUI} | Should Throw
-        }
-        It "Throws if parameters are wrong type" {
-            {Start-GUI -GUIPath $null -UserParams $UserParams -GetXAML 1} | Should Throw
-            {Start-GUI -GUIPath "" -UserParams $UserParams -GetXAML 1} | Should Throw
-            # TODO: {Start-GUI -GUIPath 123 -UserParams $UserParams} | Should Throw
-            {Start-GUI -GUIPath "$($PSScriptRoot)\mc_GUI.xaml" -UserParams 123 -GetXAML 1} | Should Throw
-            {Start-GUI -GUIPath "$($PSScriptRoot)\mc_GUI.xaml" -UserParams @{} -GetXAML 1} | Should Throw
-            # TODO: {Start-GUI -GUIPath "$($PSScriptRoot)\mc_GUI.xaml" -UserParams $UserParams -GetXAML $null} | Should Throw
-            {Start-GUI -GUIPath "$($PSScriptRoot)\mc_GUI.xaml" -UserParams $UserParams -GetXAML @()} | Should Throw
-            {Start-GUI -GUIPath "$($PSScriptRoot)\mc_GUI.xaml" -UserParams $UserParams -GetXAML "hallo"} | Should Throw
-        }
-        It "Returns false if GUI file is not found" {
-            $test = Start-GUI -GUIPath "$($PSScriptRoot)\NOFILE.xaml" -UserParams $UserParams -GetXAML 1
-            $test | Should Be $false
-        }
     }
 #>
 
 Describe "Test-UserValues" {
-    $BlaDrive = "$TestDrive\TEST"
-    # DEFINITION: Combine all parameters into a hashtable:
+    $BlaDrive = "$TestDrive\media-copytool_TEST"
     BeforeEach {
         [hashtable]$UserParams = @{
             ShowParams =            0
@@ -306,6 +238,7 @@ Describe "Test-UserValues" {
             CheckOutputDupli =      0
             VerifyCopies =          0
             OverwriteExistingFiles = 0
+            EnableLongPaths =       0
             AvoidIdenticalFiles =   0
             ZipMirror =             0
             UnmountInputDrive =     0
@@ -316,7 +249,6 @@ Describe "Test-UserValues" {
     Push-Location $BlaDrive
     Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x -aoa -bb0 -pdefault -sccUTF-8 -spf2 `"$($PSScriptRoot)\media_copytool_TESTFILES.7z`" `"-o.\`" " -WindowStyle Minimized -Wait
     Pop-Location
-    # TODO: ??? Is this line needed? $bla = Get-ChildItem -LiteralPath $BlaDrive -Recurse
 
     Context "Test the returned values" {
         It "If everything is correct, return hashtable" {
@@ -403,8 +335,8 @@ Describe "Test-UserValues" {
         }
         It "InputSubfolderSearch" {
             $test = (Test-UserValues -UserParams $UserParams).InputSubfolderSearch
-            $test | Should BeOfType int
-            $test | Should Be 0
+            $test | Should BeOfType switch
+            $test | Should Be $false
         }
         It "CheckOutputDupli" {
             $test = (Test-UserValues -UserParams $UserParams).CheckOutputDupli
@@ -418,6 +350,11 @@ Describe "Test-UserValues" {
         }
         It "OverwriteExistingFiles" {
             $test = (Test-UserValues -UserParams $UserParams).OverwriteExistingFiles
+            $test | Should BeOfType int
+            $test | Should Be 0
+        }
+        It "EnableLongPaths" {
+            $test = (Test-UserValues -UserParams $UserParams).EnableLongPaths
             $test | Should BeOfType int
             $test | Should Be 0
         }
@@ -581,6 +518,14 @@ Describe "Test-UserValues" {
             $UserParams.OverwriteExistingFiles = 11
             {Test-UserValues -UserParams $UserParams} | Should Throw
         }
+        It "EnableLongPaths is wrong" {
+            $UserParams.EnableLongPaths = -1
+            {Test-UserValues -UserParams $UserParams} | Should Throw
+            $UserParams.EnableLongPaths = "hallo"
+            {Test-UserValues -UserParams $UserParams} | Should Throw
+            $UserParams.EnableLongPaths = 11
+            {Test-UserValues -UserParams $UserParams} | Should Throw
+        }
         It "AvoidIdenticalFiles is wrong" {
             $UserParams.AvoidIdenticalFiles = -1
             {Test-UserValues -UserParams $UserParams} | Should Throw
@@ -667,8 +612,8 @@ Describe "Test-UserValues" {
         It "Create non-existing folders" {
             Get-ChildItem "$BlaDrive\Out_Test" -Recurse     | Remove-Item
             Get-ChildItem "$BlaDrive\Mirr_Test" -Recurse    | Remove-Item
-            (Get-ChildItem "$BlaDrive\Out_Test" -Recurse -ErrorAction SilentlyContinue).Count   | Out-Host
-            (Get-ChildItem "$BlaDrive\Mirr_Test" -Recurse -ErrorAction SilentlyContinue).Count  | Out-Host
+            # (Get-ChildItem "$BlaDrive\Out_Test" -Recurse -ErrorAction SilentlyContinue).Count   | Out-Host
+            # (Get-ChildItem "$BlaDrive\Mirr_Test" -Recurse -ErrorAction SilentlyContinue).Count  | Out-Host
 
             $UserParams.JSONParamPath   = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©\param specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©.json"
             $UserParams.InputPath       = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
@@ -697,11 +642,12 @@ Describe "Test-UserValues" {
             $test.HistFilePath  | Should Be $UserParams.HistFilePath
         }
         It "Create non-existing folders" {
+            # TODO: test with short paths!
             Get-ChildItem "$BlaDrive\Out_Test" -Recurse     | Remove-Item
             Get-ChildItem "$BlaDrive\Mirr_Test" -Recurse    | Remove-Item
-            (Get-ChildItem "$BlaDrive\Out_Test" -Recurse -ErrorAction SilentlyContinue).Count   | Out-Host
-            (Get-ChildItem "$BlaDrive\Mirr_Test" -Recurse -ErrorAction SilentlyContinue).Count  | Out-Host
-
+            # (Get-ChildItem "$BlaDrive\Out_Test" -Recurse -ErrorAction SilentlyContinue).Count   | Out-Host
+            # (Get-ChildItem "$BlaDrive\Mirr_Test" -Recurse -ErrorAction SilentlyContinue).Count  | Out-Host
+            $UserParams.EnableLongPaths = 1
             $UserParams.JSONParamPath   = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND\param_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_END.json"
             $UserParams.InputPath       = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
             $UserParams.OutputPath      = "$BlaDrive\Out_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
@@ -744,6 +690,7 @@ Describe "Show-Parameters" {
             CheckOutputDupli =      0
             VerifyCopies =          0
             OverwriteExistingFiles = 0
+            EnableLongPaths =       0
             AvoidIdenticalFiles =   0
             ZipMirror =             0
             UnmountInputDrive =     0
@@ -769,7 +716,7 @@ Describe "Show-Parameters" {
 }
 
 Describe "Set-Parameters" {
-    $BlaDrive = "$TestDrive\TEST"
+    $BlaDrive = "$TestDrive\media-copytool_TEST"
     BeforeEach {
         [hashtable]$UserParams = @{
             ShowParams =            0
@@ -781,7 +728,6 @@ Describe "Set-Parameters" {
             RememberOutPath =       1
             RememberMirrorPath =    1
             RememberSettings =      1
-            # DEFINITION: From here on, parameters can be set both via parameters and via JSON file(s).
             InputPath =             "$BlaDrive\In_Test"
             OutputPath =            "$BlaDrive\Out_Test"
             MirrorEnable =          1
@@ -794,10 +740,11 @@ Describe "Set-Parameters" {
             UseHistFile =           987
             WriteHistFile =         "maybe"
             HistCompareHashes =     987
-            InputSubfolderSearch =  987
+            InputSubfolderSearch =  $false
             CheckOutputDupli =      987
             VerifyCopies =          987
             OverwriteExistingFiles = 987
+            EnableLongPaths =       987
             AvoidIdenticalFiles =   987
             ZipMirror =             987
             UnmountInputDrive =     987
@@ -885,6 +832,7 @@ Describe "Set-Parameters" {
             $test.CheckOutputDupli          | Should Be $UserParams.CheckOutputDupli
             $test.VerifyCopies              | Should Be $UserParams.VerifyCopies
             $test.OverwriteExistingFiles    | Should Be $UserParams.OverwriteExistingFiles
+            $test.EnableLongPaths           | Should Be $UserParams.EnableLongPaths
             $test.AvoidIdenticalFiles       | Should Be $UserParams.AvoidIdenticalFiles
             $test.ZipMirror                 | Should Be $UserParams.ZipMirror
             $test.UnmountInputDrive         | Should Be $UserParams.UnmountInputDrive
@@ -988,7 +936,7 @@ Describe "Set-Parameters" {
 }
 
 Describe "Start-FileSearch" {
-    $BlaDrive = "$TestDrive\TEST"
+    $BlaDrive = "$TestDrive\media-copytool_TEST"
     BeforeEach {
         [hashtable]$UserParams = @{
             InputPath = "$BlaDrive\In_Test"
@@ -1150,8 +1098,7 @@ Describe "Start-FileSearch" {
 }
 
 Describe "Get-HistFile" {
-    $BlaDrive = "$TestDrive\TEST"
-    # DEFINITION: Combine all parameters into a hashtable:
+    $BlaDrive = "$TestDrive\media-copytool_TEST"
     BeforeEach {
         [hashtable]$UserParams = @{
             HistFilePath = "$BlaDrive\In_Test\hist_uncomplicated.json"
@@ -1247,8 +1194,7 @@ Describe "Get-HistFile" {
 }
 
 Describe "Start-DupliCheckHist" {
-    $BlaDrive = "$TestDrive\TEST"
-    # DEFINITION: Combine all parameters into a hashtable:
+    $BlaDrive = "$TestDrive\media-copytool_TEST"
     BeforeEach {
         [hashtable]$UserParams = @{
             InputPath =             "$BlaDrive\In_Test"
@@ -1322,8 +1268,7 @@ Describe "Start-DupliCheckHist" {
 }
 
 Describe "Start-DupliCheckOut" {
-    $BlaDrive = "$TestDrive\TEST"
-    # DEFINITION: Combine all parameters into a hashtable:
+    $BlaDrive = "$TestDrive\media-copytool_TEST"
     BeforeEach {
         [hashtable]$UserParams = @{
             InputPath =             "$BlaDrive\In_Test"
@@ -1388,8 +1333,7 @@ Describe "Start-DupliCheckOut" {
 }
 
 Describe "Start-InputGetHash" {
-    $BlaDrive = "$TestDrive\TEST"
-    # DEFINITION: Combine all parameters into a hashtable:
+    $BlaDrive = "$TestDrive\media-copytool_TEST"
     BeforeEach {
         [hashtable]$UserParams = @{
             InputPath =             "$BlaDrive\In_Test"
@@ -1456,8 +1400,7 @@ Describe "Start-InputGetHash" {
 }
 
 Describe "Start-PreventingDoubleCopies" {
-    $BlaDrive = "$TestDrive\TEST"
-    # DEFINITION: Combine all parameters into a hashtable:
+    $BlaDrive = "$TestDrive\media-copytool_TEST"
     BeforeEach {
         [hashtable]$UserParams = @{
             InputPath =             "$BlaDrive\In_Test"
@@ -1493,8 +1436,7 @@ Describe "Start-PreventingDoubleCopies" {
 }
 
 Describe "Start-SpaceCheck"{
-    $BlaDrive = "$TestDrive\TEST"
-    # DEFINITION: Combine all parameters into a hashtable:
+    $BlaDrive = "$TestDrive\media-copytool_TEST"
     BeforeEach {
         [hashtable]$UserParams = @{
             InputPath =             "$BlaDrive\In_Test"
@@ -1525,7 +1467,6 @@ Describe "Start-SpaceCheck"{
             $InFiles = @(Start-FileSearch -UserParams $UserParams)
             $test = Start-SpaceCheck -InFiles $InFiles -UserParams $UserParams
             $test | Should BeOfType boolean
-            Write-Host $test
         }
     }
     It "No problems with SpecChars" {
@@ -1544,8 +1485,7 @@ Describe "Start-SpaceCheck"{
 
 # TODO: From here:
 Describe "Start-OverwriteProtection" {
-    $BlaDrive = "$TestDrive\TEST"
-    # DEFINITION: Combine all parameters into a hashtable:
+    $BlaDrive = "$TestDrive\media-copytool_TEST"
     BeforeEach {
         [hashtable]$UserParams = @{
             InputPath =             "$BlaDrive\In_Test"
@@ -1569,7 +1509,8 @@ Describe "Start-OverwriteProtection" {
             {Start-OverwriteProtection -InFiles @()} | Should Throw
             {Start-OverwriteProtection -Mirror 1} | Should Throw
         }
-        It "Works as it should" {
+        It "Add nothing if not needed" {
+            $UserParams.InputSubfolderSearch = 0
             $InFiles = @(Start-FileSearch -UserParams $UserParams)
             $NewFiles = $InFiles | Select-Object *
             $test = @(Start-OverwriteProtection -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
@@ -1587,9 +1528,30 @@ Describe "Start-OverwriteProtection" {
             (Compare-Object $InFiles $test -Property OutBaseName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
             (Compare-Object $InFiles $test -Property Hash -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
             (Compare-Object $InFiles $test -Property ToCopy -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            $counter = 0
+            foreach($i in $test.OutPath){
+                if($i -match $([regex]::Escape("$($("$($UserParams.OutputPath)$($InFiles[$i].OutSubfolder)").Replace("\\","\").Replace("\\","\"))"))){
+                    $counter++
+                }
+            }
+            $counter | Should be $InFiles.Length
+            $counter = 0
+            foreach($i in $test.OutName){
+                # $i | Out-Host
+                if($i -match '^.*_OutCopy\d.*$'){$counter++}
+                if($i -match '^.*_InCopy\d.*$'){$counter++}
+            }
+            $counter | Should be 0
+            $counter = 0
+            foreach($i in $test.OutBaseName){
+                if($i -match '^.*_OutCopy\d.*'){$counter++}
+                if($i -match '^.*_InCopy\d.*'){$counter++}
+            }
+            $counter | Should be 0
         }
         # TODO: does not work with OutputSubfolderStyle like %n%
         It "Add _InCopyXY if file is there multiple times" {
+            $UserParams.InputSubfolderSearch = 1
             $InFiles = @(Start-FileSearch -UserParams $UserParams)
             $NewFiles = $InFiles | Select-Object *
             $test = @(Start-OverwriteProtection -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
@@ -1616,7 +1578,7 @@ Describe "Start-OverwriteProtection" {
             $wrong = 0
             foreach($i in $test.OutName){
                 if($i -match '^.*_InCopy\d\....$'){$counter++}
-                if($i -match '^.*_OutCopy\d.*$'){$counter++}
+                if($i -match '^.*_OutCopy\d.*$'){$wrong++}
             }
             $counter | Should be $([math]::Floor(($InFiles.Length * 3 / 4)))
             $wrong  | Should be 0
@@ -1624,15 +1586,15 @@ Describe "Start-OverwriteProtection" {
             $wrong = 0
             foreach($i in $test.OutBaseName){
                 if($i -match '^.*_InCopy\d$'){$counter++}
-                if($i -match '^.*_OutCopy\d.*'){$counter++}
+                if($i -match '^.*_OutCopy\d.*'){$wrong++}
             }
             $counter | Should be $([math]::Floor(($InFiles.Length * 3 / 4)))
             $wrong  | Should be 0
         }
         It "Add _OutCopyXY if file is there mutliple times" {
             $UserParams.InputSubfolderSearch = 0
-            $UserParams.OutputSubfolderStyle =  "%n%"
-            Get-ChildItem -LiteralPath "$BlaDrive\In_Test" -Recurse | Copy-Item -Destination "$BlaDrive\Out_Test" -Recurse
+            $UserParams.OutputSubfolderStyle = ""
+            Get-ChildItem -LiteralPath "$BlaDrive\In_Test" -Recurse | Copy-Item -Destination "$BlaDrive\Out_Test" -Recurse -ErrorAction SilentlyContinue
 
             $InFiles = @(Start-FileSearch -UserParams $UserParams)
             $NewFiles = $InFiles | Select-Object *
@@ -1676,8 +1638,10 @@ Describe "Start-OverwriteProtection" {
         # TODO: does not work. outcopy will not work as long as incopy is not yet copied.
         It "Add both _InCopyXY and _OutCopyXY when appropriate" {
             $UserParams.InputSubfolderSearch = 1
-            # $UserParams.OutputSubfolderStyle =  "%y4%-%mo%-%d%"
-            Get-ChildItem -LiteralPath "$BlaDrive\In_Test" -Recurse | Copy-Item -Destination "$BlaDrive\Out_Test" -Recurse
+            $UserParams.OutputSubfolderStyle = ""
+            Push-Location "$BlaDrive\Out_Test"
+            Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x -aoa -bb0 -pdefault -sccUTF-8 -spf2 `"$BlaDrive\Out_Test\InCopyTEST.7z`" `"-o.\`" " -WindowStyle Minimized -Wait
+            Pop-Location
 
             $InFiles = @(Start-FileSearch -UserParams $UserParams)
             $NewFiles = $InFiles | Select-Object *
@@ -1696,6 +1660,7 @@ Describe "Start-OverwriteProtection" {
             (Compare-Object $InFiles $test -Property OutBaseName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
             (Compare-Object $InFiles $test -Property Hash -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
             (Compare-Object $InFiles $test -Property ToCopy -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            $test | Format-List -Property OutName,OutPath | Out-Host
             $counter = 0
             foreach($i in $test.OutPath){
                 if($i -match $([regex]::Escape("$($("$($UserParams.OutputPath)$($InFiles[$i].OutSubfolder)").Replace("\\","\").Replace("\\","\"))"))){
@@ -1705,20 +1670,14 @@ Describe "Start-OverwriteProtection" {
             $counter | Should be $InFiles.Length
             $counter = 0
             foreach($i in $test.OutName){
-                $i | Out-Host
-                if($i -match '^.*_OutCopy\d.*$'){$counter++}
-                if($i -match '^.*_InCopy\d.*$'){$counter++}
+                if($i -match '^.*_OutCopy\d_InCopy\d.*$'){$counter++}
             }
-            $counter | Should be $($InFiles.Length * 2)
+            $counter | Should be $([math]::floor($($InFiles.Length - 1) / 4 * 3))
             $counter = 0
             foreach($i in $test.OutBaseName){
-                if($i -match '^.*_OutCopy\d.*'){$counter++}
-                if($i -match '^.*_InCopy\d.*'){$counter++}
+                if($i -match '^.*_OutCopy\d_InCopy\d.*'){$counter++}
             }
-            $counter | Should be $($InFiles.Length * 2)
-        }
-        It "Add none of the above if not needed" {
-
+            $counter | Should be $([math]::floor($($InFiles.Length - 1) / 4 * 3))
         }
         It "Special characters" {
 

@@ -134,6 +134,9 @@
     .PARAMETER OverwriteExistingFiles
         Valid range: 0 (deactivate), 1 (activate)
         If enabled, existing files will be overwritten. If disabled, new files will get a unique name.
+    .PARAMETER EnableLongPaths
+        Valid range: 0 (deactivate), 1 (activate)
+        If enabled, file names will not be restricted to Windows' usual 260 character limit. USE ONLY WITH WIN 10 WITH LONG PATHS ENABLED!
     .PARAMETER VerifyCopies
         Valid range: 0 (deactivate), 1 (activate)
         If enabled, copied files will be checked for their integrity via SHA1-hashes. Disabling will increase speed, but there is no absolute guarantee that your files are copied correctly.
@@ -198,6 +201,7 @@ param(
     [int]$CheckOutputDupli =        -1,
     [int]$VerifyCopies =            -1,
     [int]$OverwriteExistingFiles =  -1,
+    [int]$EnableLongPaths =         -1,
     [int]$AvoidIdenticalFiles =     -1,
     [int]$ZipMirror =               -1,
     [int]$UnmountInputDrive =       -1,
@@ -231,11 +235,12 @@ param(
         CheckOutputDupli =          $CheckOutputDupli
         VerifyCopies =              $VerifyCopies
         OverwriteExistingFiles =    $OverwriteExistingFiles
+        EnableLongPaths =           $EnableLongPaths
         AvoidIdenticalFiles =       $AvoidIdenticalFiles
         ZipMirror =                 $ZipMirror
         UnmountInputDrive =         $UnmountInputDrive
     }
-    Remove-Variable -Name ShowParams,EnableGUI,JSONParamPath,LoadParamPresetName,SaveParamPresetName,RememberInPath,RememberOutPath,RememberMirrorPath,RememberSettings,InputPath,OutputPath,MirrorEnable,MirrorPath,FormatPreference,FormatInExclude,OutputSubfolderStyle,OutputFileStyle,HistFilePath,UseHistFile,WriteHistFile,HistCompareHashes,InputSubfolderSearch,CheckOutputDupli,VerifyCopies,OverwriteExistingFiles,AvoidIdenticalFiles,ZipMirror,UnmountInputDrive
+    Remove-Variable -Name ShowParams,EnableGUI,JSONParamPath,LoadParamPresetName,SaveParamPresetName,RememberInPath,RememberOutPath,RememberMirrorPath,RememberSettings,InputPath,OutputPath,MirrorEnable,MirrorPath,FormatPreference,FormatInExclude,OutputSubfolderStyle,OutputFileStyle,HistFilePath,UseHistFile,WriteHistFile,HistCompareHashes,InputSubfolderSearch,CheckOutputDupli,VerifyCopies,OverwriteExistingFiles,EnableLongPaths,AvoidIdenticalFiles,ZipMirror,UnmountInputDrive
 
 # DEFINITION: Various vars: getting GUI variables, ThreadCount,...
     # GUI path:
@@ -341,31 +346,32 @@ Function Write-ColorOut(){
         [ValidateRange(0,48)]
         [int]$Indentation=0
     )
+    <#
+        if($ForegroundColor.Length -ge 3){
+            $old_fg_color = [Console]::ForegroundColor
+            [Console]::ForegroundColor = $ForegroundColor
+        }
+        if($BackgroundColor.Length -ge 3){
+            $old_bg_color = [Console]::BackgroundColor
+            [Console]::BackgroundColor = $BackgroundColor
+        }
+        if($Indentation -gt 0){
+            [Console]::CursorLeft = $Indentation
+        }
 
-    if($ForegroundColor.Length -ge 3){
-        $old_fg_color = [Console]::ForegroundColor
-        [Console]::ForegroundColor = $ForegroundColor
-    }
-    if($BackgroundColor.Length -ge 3){
-        $old_bg_color = [Console]::BackgroundColor
-        [Console]::BackgroundColor = $BackgroundColor
-    }
-    if($Indentation -gt 0){
-        [Console]::CursorLeft = $Indentation
-    }
-
-    if($NoNewLine -eq $false){
-        [Console]::WriteLine($Object)
-    }else{
-        [Console]::Write($Object)
-    }
-    
-    if($ForegroundColor.Length -ge 3){
-        [Console]::ForegroundColor = $old_fg_color
-    }
-    if($BackgroundColor.Length -ge 3){
-        [Console]::BackgroundColor = $old_bg_color
-    }#>
+        if($NoNewLine -eq $false){
+            [Console]::WriteLine($Object)
+        }else{
+            [Console]::Write($Object)
+        }
+        
+        if($ForegroundColor.Length -ge 3){
+            [Console]::ForegroundColor = $old_fg_color
+        }
+        if($BackgroundColor.Length -ge 3){
+            [Console]::BackgroundColor = $old_bg_color
+        }
+    #>
 }
 
 # DEFINITION: For the auditory experience:
@@ -568,6 +574,9 @@ Function Get-ParametersFromJSON(){
             }
             if($UserParams.OverwriteExistingFiles -eq -1 -or $Renew -eq 1){
                 [int]$UserParams.OverwriteExistingFiles = $jsonparams.OverwriteExistingFiles
+            }
+            if($UserParams.EnableLongPaths -eq -1 -or $Renew -eq 1){
+                [int]$UserParams.EnableLongPaths = $jsonparams.EnableLongPaths
             }
             if($UserParams.AvoidIdenticalFiles -eq -1 -or $Renew -eq 1){
                 [int]$UserParams.AvoidIdenticalFiles = $jsonparams.AvoidIdenticalFiles
@@ -774,6 +783,7 @@ Function Start-GUI(){
             $GUIParams.CheckBoxOutputDupli.IsChecked =      $UserParams.CheckOutputDupli
             $GUIParams.CheckBoxVerifyCopies.IsChecked =     $UserParams.VerifyCopies
             $GUIParams.CheckBoxOverwriteExistingFiles.IsChecked =   $UserParams.OverwriteExistingFiles
+            $GUIParams.CheckBoxEnableLongPaths.IsChecked =  $UserParams.EnableLongPaths
             $GUIParams.CheckBoxAvoidIdenticalFiles.IsChecked =      $UserParams.AvoidIdenticalFiles
             $GUIParams.CheckBoxZipMirror.IsChecked =                $UserParams.ZipMirror
             $GUIParams.CheckBoxUnmountInputDrive.IsChecked =        $UserParams.UnmountInputDrive
@@ -891,6 +901,11 @@ Function Start-GUI(){
                 if($GUIParams.checkBoxOverwriteExistingFiles.IsChecked -eq $true){1}
                 else{0}
             )
+            # $EnableLongPaths
+            $UserParams.EnableLongPaths = $(
+                if($GUIParams.checkBoxEnableLongPaths.IsChecked -eq $true){1}
+                else{0}
+            )
             # $AvoidIdenticalFiles
             $UserParams.AvoidIdenticalFiles = $(
                 if($GUIParams.checkBoxAvoidIdenticalFiles.IsChecked -eq $true){1}
@@ -992,7 +1007,13 @@ Function Test-UserValues(){
                 if((Split-Path -Parent -Path $UserParams.OutputPath).Length -gt 1 -and (Test-Path -LiteralPath $(Split-Path -Qualifier -Path $UserParams.OutputPath) -PathType Container -ErrorAction SilentlyContinue) -eq $true){
                     try{
                         # TODO: Implement length restriction:
-                        # $UserParams.OutputPath = $UserParams.OutputPath.Substring(0, [math]::Min($UserParams.OutputPath.Length, 250))
+                        if($UserParams.EnableLongPaths -eq 0){
+                            $inter = $UserParams.OutputPath.Substring(0, [math]::Min($UserParams.OutputPath.Length, 250))
+                            if($inter -ne $UserParams.OutputPath){
+                                Write-ColorOut "OutputPath was longer than 260 characters - shortened it to 250 to allow files to be named." -ForegroundColor Magenta -Indentation 4
+                                $UserParams.OutputPath = $inter
+                            }
+                        }
                         New-Item -ItemType Directory -Path $UserParams.OutputPath -ErrorAction Stop | Out-Null
                         Write-ColorOut "Output-path $($UserParams.OutputPath) created." -ForegroundColor Yellow -Indentation 4
                     }catch{
@@ -1028,7 +1049,13 @@ Function Test-UserValues(){
                     if((Split-Path -Parent -Path $UserParams.MirrorPath).Length -gt 1 -and (Test-Path -LiteralPath $(Split-Path -Qualifier -Path $UserParams.MirrorPath) -PathType Container -ErrorAction SilentlyContinue) -eq $true){
                         try{
                             # TODO: Implement length restriction:
-                            # $UserParams.MirrorPath = $UserParams.MirrorPath.Substring(0, [math]::Min($UserParams.MirrorPath.Length, 250))
+                            if($UserParams.EnableLongPaths -eq 0){
+                                $inter = $UserParams.MirrorPath.Substring(0, [math]::Min($UserParams.MirrorPath.Length, 250))
+                                if($inter -ne $UserParams.MirrorPath){
+                                    Write-ColorOut "MirrorPath was longer than 260 characters - shortened it to 250 to allow files to be named." -ForegroundColor Magenta -Indentation 4
+                                    $UserParams.MirrorPath = $inter
+                                }
+                            }
                             New-Item -ItemType Directory -Path $UserParams.MirrorPath -ErrorAction Stop | Out-Null
                             Write-ColorOut "Mirror-path $($UserParams.MirrorPath) created." -ForegroundColor Yellow -Indentation 4
                         }catch{
@@ -1056,12 +1083,12 @@ Function Test-UserValues(){
             $invalidChars = "[{0}]" -f [RegEx]::Escape($([IO.Path]::GetInvalidFileNameChars() -join ''))
             $UserParams.OutputSubfolderStyle = $UserParams.OutputSubfolderStyle -Replace $invalidChars
             $UserParams.OutputSubfolderStyle = $UserParams.OutputSubfolderStyle.ToLower() -Replace $invalidChars -Replace '^\ +$',"" -Replace '\ +$',""
-            # TODO: Implement length restriction:
+            # TODO: Implement length restriction: (do this in start-filesearch)
             # $UserParams.OutputSubfolderStyle = $UserParams.OutputSubfolderStyle.Substring(0, [math]::Min($UserParams.OutputSubfolderStyle.Length, 250))
         # DEFINITION: $OutputFileStyle
             $invalidChars = "[{0}]" -f [RegEx]::Escape($([IO.Path]::GetInvalidFileNameChars() -join ''))
             $UserParams.OutputFileStyle = $UserParams.OutputFileStyle.ToLower() -Replace $invalidChars -Replace '^\ +$',"" -Replace '\ +$',""
-            # TODO: Implement length restriction:
+            # TODO: Implement length restriction: (do this in start-filesearch)
             # $UserParams.OutputFileStyle = $UserParams.OutputFileStyle.Substring(0, [math]::Min($UserParams.OutputFileStyle.Length, 250))
             if($UserParams.OutputFileStyle.Length -lt 2 -or $UserParams.OutputFileStyle -match '^\s*$'){
                 Write-ColorOut "Invalid choice of -OutputFileStyle." -ForegroundColor Red -Indentation 4
@@ -1125,6 +1152,11 @@ Function Test-UserValues(){
         # DEFINITION: $OverwriteExistingFiles
             if($UserParams.OverwriteExistingFiles -notin (0..1)){
                 Write-ColorOut "Invalid choice of -OverwriteExistingFiles." -ForegroundColor Red -Indentation 4
+                throw
+            }
+        # DEFINITION: $EnableLongPaths
+            if($UserParams.EnableLongPaths -notin (0..1)){
+                Write-ColorOut "Invalid choice of -EnableLongPaths." -ForegroundColor Red -Indentation 4
                 throw
             }
         # DEFINITION: $AvoidIdenticalFiles
@@ -1205,6 +1237,7 @@ Function Show-Parameters(){
     Write-ColorOut "-CheckOutputDupli`t`t=`t$($UserParams.CheckOutputDupli)" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-VerifyCopies`t`t=`t$($UserParams.VerifyCopies)" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-OverwriteExistingFiles`t=`t$($UserParams.OverwriteExistingFiles)" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-EnableLongPaths`t`t=`t$($UserParams.EnableLongPaths)" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-AvoidIdenticalFiles`t=`t$($UserParams.AvoidIdenticalFiles)" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-ZipMirror`t`t`t=`t$($UserParams.ZipMirror)" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-UnmountInputDrive`t`t=`t$($UserParams.UnmountInputDrive)" -ForegroundColor Cyan -Indentation 4
@@ -1239,6 +1272,7 @@ Function Set-Parameters(){
                 CheckOutputDupli        = $UserParams.CheckOutputDupli
                 VerifyCopies            = $UserParams.VerifyCopies
                 OverwriteExistingFiles  = $UserParams.OverwriteExistingFiles
+                EnableLongPaths         = $UserParams.EnableLongPaths
                 AvoidIdenticalFiles     = $UserParams.AvoidIdenticalFiles
                 ZipMirror               = $UserParams.ZipMirror
                 UnmountInputDrive       = $UserParams.UnmountInputDrive
@@ -1287,6 +1321,7 @@ Function Set-Parameters(){
                         $jsonparams.ParamPresetValues[$i].CheckOutputDupli          = $inter.ParamPresetValues.CheckOutputDupli
                         $jsonparams.ParamPresetValues[$i].VerifyCopies              = $inter.ParamPresetValues.VerifyCopies
                         $jsonparams.ParamPresetValues[$i].OverwriteExistingFiles    = $inter.ParamPresetValues.OverwriteExistingFiles
+                        $jsonparams.ParamPresetValues[$i].EnableLongPaths           = $inter.ParamPresetValues.EnableLongPaths
                         $jsonparams.ParamPresetValues[$i].AvoidIdenticalFiles       = $inter.ParamPresetValues.AvoidIdenticalFiles
                         $jsonparams.ParamPresetValues[$i].ZipMirror                 = $inter.ParamPresetValues.ZipMirror
                         $jsonparams.ParamPresetValues[$i].UnmountInputDrive         = $inter.ParamPresetValues.UnmountInputDrive
@@ -1866,6 +1901,17 @@ Function Start-FileCopy(){
         Write-ColorOut "$($UserParams.OutputPath)\$($UserParams.OutputSubfolderStyle)..." -ForegroundColor Cyan
     }
 
+    # TODO: This is a crude implementation. It should be better than this in the future, e.g. change instead of throwing.
+    if($UserParams.EnableLongPaths -eq 0){
+        foreach($i in $InFiles){
+            if($("$($i.OutputPath)\$($i.OutName)").Length -gt 260){
+                Write-ColorOut "One (or more) of the output files would be over 260 characters long." -ForegroundColor Red -Indentation 4
+                Start-Sleep -Seconds 2
+                throw ' '
+            }
+        }
+    }
+
     $InFiles = $InFiles | Sort-Object -Property InPath,OutPath
 
     # setting up robocopy:
@@ -2307,6 +2353,7 @@ Function Start-Everything(){
             }
             [array]$inputfiles = (Start-OverwriteProtection -InFiles $inputfiles -UserParams $UserParams -Mirror 0)
             Invoke-Pause
+            # TODO: try-catch
             Start-FileCopy -InFiles $inputfiles -UserParams $UserParams
             Invoke-Pause
             if($UserParams.VerifyCopies -eq 1){
