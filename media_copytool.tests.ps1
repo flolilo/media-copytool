@@ -1636,7 +1636,7 @@ Describe "Start-OverwriteProtection" {
             $wrong  | Should be 0
         }
         # TODO: does not work. outcopy will not work as long as incopy is not yet copied.
-        It "Add both _InCopyXY and _OutCopyXY when appropriate" {
+        It "Add both _InCopyXY and _OutCopyXY if appropriate" {
             $UserParams.InputSubfolderSearch = 1
             $UserParams.OutputSubfolderStyle = ""
             Push-Location "$BlaDrive\Out_Test"
@@ -1660,7 +1660,7 @@ Describe "Start-OverwriteProtection" {
             (Compare-Object $InFiles $test -Property OutBaseName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
             (Compare-Object $InFiles $test -Property Hash -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
             (Compare-Object $InFiles $test -Property ToCopy -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
-            $test | Format-List -Property OutName,OutPath | Out-Host
+            # $test | Format-List -Property OutName,OutPath | Out-Host
             $counter = 0
             foreach($i in $test.OutPath){
                 if($i -match $([regex]::Escape("$($("$($UserParams.OutputPath)$($InFiles[$i].OutSubfolder)").Replace("\\","\").Replace("\\","\"))"))){
@@ -1678,12 +1678,13 @@ Describe "Start-OverwriteProtection" {
                 if($i -match '^.*_OutCopy\d_InCopy\d.*'){$counter++}
             }
             $counter | Should be $([math]::floor($($InFiles.Length - 1) / 4 * 3))
+            # TODO: write test for the rest of the files (i.e. thos without both appendices)
         }
         It "Special characters" {
-
+            # TODO: write for Out_Test\Specchar
         }
         It "Long file names" {
-
+            # TODO: write for Out_Test\logchar
         }
     }
 }
