@@ -1942,6 +1942,19 @@ Function Start-OverwriteProtection(){
     }
     Write-Progress -Activity "Prevent overwriting existing files..." -Status "Done!" -Completed
 
+    # Check OutPath for length:
+    # TODO: This is a crude implementation. It should be better than this in the future, e.g. change names instead of throwing.
+    if($UserParams.EnableLongPaths -eq 0){
+        foreach($i in $InFiles){
+            [string]$pathtest = "$($i.OutPath)\$($i.OutName)"
+            if($pathtest.Length -gt 260){
+                Write-ColorOut "$pathtest would be over 260 characters long." -ForegroundColor Red -Indentation 4
+                Start-Sleep -Seconds 2
+                $i.ToCopy = 0
+            }
+        }
+    }
+
     if($UserParams.InfoPreference -gt 1){
         if((Read-Host "    Show all names? Positive answers: $PositiveAnswers") -in $PositiveAnswers){
             [int]$indent = 0
@@ -1975,17 +1988,6 @@ Function Start-FileCopy(){
         Write-ColorOut "$($UserParams.OutputPath) with original subfolders:" -ForegroundColor Cyan
     }else{
         Write-ColorOut "$($UserParams.OutputPath)\$($UserParams.OutputSubfolderStyle)..." -ForegroundColor Cyan
-    }
-
-    # TODO: This is a crude implementation. It should be better than this in the future, e.g. change instead of throwing.
-    if($UserParams.EnableLongPaths -eq 0){
-        foreach($i in $InFiles){
-            if($("$($i.OutputPath)\$($i.OutName)").Length -gt 260){
-                Write-ColorOut "One (or more) of the output files would be over 260 characters long." -ForegroundColor Red -Indentation 4
-                Start-Sleep -Seconds 2
-                throw ' '
-            }
-        }
     }
 
     $InFiles = $InFiles | Sort-Object -Property InPath,OutPath

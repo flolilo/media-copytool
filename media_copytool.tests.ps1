@@ -1598,7 +1598,7 @@ Describe "Start-OverwriteProtection" {
             OutputSubfolderStyle =  "%y4%-%mo%-%d%"
             InputSubfolderSearch =  1
             OverwriteExistingFiles = 0
-            EnableLongPaths = 0
+            EnableLongPaths = 1
         }
     }
     New-Item -ItemType Directory -Path $BlaDrive
@@ -1712,12 +1712,15 @@ Describe "Start-OverwriteProtection" {
             (Compare-Object $InFiles $test -Property OutName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
             (Compare-Object $InFiles $test -Property OutBaseName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
             (Compare-Object $InFiles $test -Property Hash -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
-            (Compare-Object $InFiles $test -Property ToCopy -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property ToCopy -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
             foreach($i in $test.OutName){
                 $i.Length | Should BeLessOrEqual 255
             }
             foreach($i in $test.OutSubfolder){
                 $i.Length | Should BeLessOrEqual 255
+            }
+            foreach($i in $test.ToCopy){
+                $i | Should Be 0
             }
         }
         It "Test if length is not restricted with EnableLongPaths=1" {
@@ -1884,7 +1887,7 @@ Describe "Start-OverwriteProtection" {
             $counter | Should be 0
 
         }
-        It "Special characters" {
+        It "Long file names" {
             $UserParams.OutputPath = "$BlaDrive\Out_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
             New-Item -ItemType Directory -Path $UserParams.OutputPath
             Get-ChildItem -LiteralPath "$BlaDrive\In_Test" -File | Copy-Item -Destination $UserParams.OutputPath
@@ -1924,7 +1927,7 @@ Describe "Start-OverwriteProtection" {
             }
             $counter | Should be 0
         }
-        It "Long file names" {
+        It "Special characters" {
             $UserParams.OutputPath = "$BlaDrive\Out_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
             New-Item -ItemType Directory -Path $UserParams.OutputPath
             Get-ChildItem -LiteralPath "$BlaDrive\In_Test" -File | Copy-Item -Destination $UserParams.OutputPath
