@@ -1881,7 +1881,6 @@ Function Start-OverwriteProtection(){
 
     [array]$allpaths = @()
 
-    # TODO: Extensive rewrite w/ (compare-object).count TODO:
     $sw = [diagnostics.stopwatch]::StartNew()
     for($i=0; $i -lt $InFiles.Length; $i++){
         if($sw.Elapsed.TotalMilliseconds -ge 750 -or $i -eq 0){
@@ -1911,7 +1910,7 @@ Function Start-OverwriteProtection(){
                     }
                     $InFiles[$i].OutName = "$($InFiles[$i].OutBaseName)$($InFiles[$i].Extension)"
                     $k++
-                    # if($script:InfoPreference -ne 0){Write-ColorOut $InFiles[$i].OutBaseName}
+                    # if($script:InfoPreference -ne 0){Write-ColorOut $InFiles[$i].OutBaseName} #VERBOSE
                     continue
                 }
             }else{
@@ -1922,7 +1921,7 @@ Function Start-OverwriteProtection(){
                 }
                 $InFiles[$i].OutName = "$($InFiles[$i].OutBaseName)$($InFiles[$i].Extension)"
                 $j++
-                # if($script:InfoPreference -ne 0){Write-ColorOut $InFiles[$i].OutBaseName}
+                # if($script:InfoPreference -ne 0){Write-ColorOut $InFiles[$i].OutBaseName} #VERBOSE
                 continue
             }
         }
