@@ -198,20 +198,19 @@ Describe "Get-ParametersFromJSON" {
             $test.AcceptTimeDiff | Should BeOfType int
             $test.AcceptTimeDiff | Should Be 26
         }
-        <# TODO: find a way to get Preventstandby working
-            It "Preventstandby" {
-                $test.Preventstandby    | Should BeOfType int
-                $test.Preventstandby    | Should Be 24
-            }
-        #>
+        It "Preventstandby (TODO: find a way to get Preventstandby working)" {
+            # $test.Preventstandby    | Should BeOfType int
+            # $test.Preventstandby    | Should Be 24
+        }
     }
 }
 
-<# TODO: hrmph. find a way to test the GUI.
-    Describe "Start-GUI" {
+Describe "Start-GUI" {
+    It "TODO: find a way to get this working." {
 
     }
-#>
+}
+
 
 Describe "Test-UserValues" {
     $BlaDrive = "$TestDrive\media-copytool_TEST"
@@ -384,11 +383,11 @@ Describe "Test-UserValues" {
             $test | Should BeOfType int
             $test | Should Be 0
         }
-        # TODO: It "Preventstandby" {
+        It "Preventstandby (TODO: Make this work)" {
             # $test = (Get-ParametersFromJSON -UserParams $UserParams -Renew 1).Preventstandby
             # $test | Should BeOfType int
             # $test | Should Be 112
-        # }
+        }
     }
     Context "If anything is wrong, throw" {
         It "InputPath is non-existing" {
@@ -454,7 +453,7 @@ Describe "Test-UserValues" {
             $UserParams.FormatInExclude = 123
             {Test-UserValues -UserParams $UserParams} | Should Throw
         }
-        It "OutputSubfolderStyle is wrong (not possible)" {
+        It "OutputSubfolderStyle is wrong (TODO: not possible?)" {
             <#
                 $UserParams.OutputSubfolderStyle = 123
                 {Test-UserValues -UserParams $UserParams} | Should Throw
@@ -660,8 +659,7 @@ Describe "Test-UserValues" {
             $test.MirrorPath    | Should Be $UserParams.MirrorPath
             $test.HistFilePath  | Should Be $UserParams.HistFilePath
         }
-        It "Create non-existing folders" {
-            # TODO: test with short paths!
+        It "Create non-existing folders (TODO: Test with short paths)" {
             Get-ChildItem "$BlaDrive\Out_Test" -Recurse     | Remove-Item
             Get-ChildItem "$BlaDrive\Mirr_Test" -Recurse    | Remove-Item
             # (Get-ChildItem "$BlaDrive\Out_Test" -Recurse -ErrorAction SilentlyContinue).Count   | Out-Host
@@ -1090,12 +1088,12 @@ Describe "Start-FileSearch" {
             $test[0].OutSubfolder   | Should Be "\(2018_08_11) BLA"
             $test[11].OutSubfolder  | Should Be "\(2018_07_27) BLA"
         }
-        It "%y4%.%mo%.%d% %n%" {
+        It "%y4%.%mo%.%d% %n% (TODO: Why 2nd test 8th item?)" {
             $UserParams.OutputSubfolderStyle = "%y4%.%mo%.%d% %n%"
             $test = @(Start-FileSearch -UserParams $UserParams)
             ,$test | Should BeOfType array
             $test[0].OutSubfolder   | Should Be "\2018.08.11"
-            $test[8].OutSubfolder   | Should Be "\2018.07.27 folder_uncomplicated" # TODO: Why 8?
+            $test[8].OutSubfolder   | Should Be "\2018.07.27 folder_uncomplicated" #
         }
         It "%y4%%mo%%d% %y2%BLA" {
             $UserParams.OutputSubfolderStyle = "%y4%%mo%%d% %y2%BLA"
@@ -1537,7 +1535,6 @@ Describe "Start-SpaceCheck"{
         [hashtable]$UserParams = @{
             InputPath =             "$BlaDrive\In_Test"
             OutputPath =            "$BlaDrive\Out_Test"
-            # OutputPath =            "A:\Out_Test"  # TODO: Test with small volume, such as RAMdisk
             FormatPreference =      "include"
             FormatInExclude =       @("*.cr2","*.jpg","*.cr3")
             OutputFileStyle =       "%n%"
@@ -1570,12 +1567,22 @@ Describe "Start-SpaceCheck"{
         $InFiles = @(Start-FileSearch -UserParams $UserParams)
         $test = Start-SpaceCheck -InFiles $InFiles -UserParams $UserParams
         $test | Should BeOfType boolean
+        $test | Should Be $true
     }
     It "No problems with long paths" {
         $UserParams.InputPath = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
         $InFiles = @(Start-FileSearch -UserParams $UserParams)
         $test = Start-SpaceCheck -InFiles $InFiles -UserParams $UserParams
         $test | Should BeOfType boolean
+    }
+    It "Test with small volume" {
+        Write-Host "This only works if A:\Out_Test exists and is on a very small drive (e.g. RAM-volume)"
+        Pause
+        $UserParams.OutputPath = "A:\Out_Test"
+        $InFiles = @(Start-FileSearch -UserParams $UserParams)
+        $test = Start-SpaceCheck -InFiles $InFiles -UserParams $UserParams
+        $test | Should BeOfType boolean
+        $test | Should Be $False
     }
 }
 
@@ -1591,6 +1598,7 @@ Describe "Start-OverwriteProtection" {
             OutputSubfolderStyle =  "%y4%-%mo%-%d%"
             InputSubfolderSearch =  1
             OverwriteExistingFiles = 0
+            EnableLongPaths = 0
         }
     }
     New-Item -ItemType Directory -Path $BlaDrive
@@ -1644,8 +1652,7 @@ Describe "Start-OverwriteProtection" {
             }
             $counter | Should be 0
         }
-        It "Add _InCopyXY if file is there multiple times" {
-            # TODO: does not work with OutputSubfolderStyle like %n% (still true?)
+        It "Add _InCopyXY if file is there multiple times (TODO: probably does not work w/ OutputSubfolderStyle like %n%?)" {
             $UserParams.InputSubfolderSearch = 1
             $InFiles = @(Start-FileSearch -UserParams $UserParams)
             $NewFiles = $InFiles | Select-Object *
@@ -1685,6 +1692,68 @@ Describe "Start-OverwriteProtection" {
             }
             $counter | Should be $([math]::Floor(($InFiles.Length * 3 / 4)))
             $wrong  | Should be 0
+        }
+        It "Test if length is restricted with EnableLongPaths=0" {
+            $UserParams.EnableLongPaths = 0
+            $UserParams.OutputSubfolderStyle =  "%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%"
+            $InFiles = @(Start-FileSearch -UserParams $UserParams)
+            $NewFiles = $InFiles | Select-Object *
+            $test = @(Start-OverwriteProtection -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+            ,$test | Should BeOfType array
+            (Compare-Object $InFiles $test -Property InFullName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property InPath -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property InName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property InBaseName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property Extension -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property Size -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property Date -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property OutSubfolder -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
+            (Compare-Object $InFiles $test -Property OutPath -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
+            (Compare-Object $InFiles $test -Property OutName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
+            (Compare-Object $InFiles $test -Property OutBaseName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
+            (Compare-Object $InFiles $test -Property Hash -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property ToCopy -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            foreach($i in $test.OutName){
+                $i.Length | Should BeLessOrEqual 255
+            }
+            foreach($i in $test.OutSubfolder){
+                $i.Length | Should BeLessOrEqual 255
+            }
+        }
+        It "Test if length is not restricted with EnableLongPaths=1" {
+            $UserParams.EnableLongPaths = 1
+            $UserParams.OutputSubfolderStyle =  "%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%"
+            $InFiles = @(Start-FileSearch -UserParams $UserParams)
+            $NewFiles = $InFiles | Select-Object *
+            $test = @(Start-OverwriteProtection -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+            ,$test | Should BeOfType array
+            (Compare-Object $InFiles $test -Property InFullName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property InPath -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property InName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property InBaseName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property Extension -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property Size -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property Date -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property OutSubfolder -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property OutPath -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
+            (Compare-Object $InFiles $test -Property OutName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
+            (Compare-Object $InFiles $test -Property OutBaseName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
+            (Compare-Object $InFiles $test -Property Hash -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property ToCopy -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            [int]$counter = 0
+            foreach($i in $test.OutName){
+                if($i.Length -gt 255){
+                    $counter++
+                }
+            }
+            $counter | Should BeGreaterThan 0
+            [int]$counter = 0
+            foreach($i in $test.OutSubfolder){
+                if($i.Length -gt 255){
+                    $counter++
+                }
+            }
+            $counter | Should BeGreaterThan 0
         }
         It "Add _OutCopyXY if file is there mutliple times" {
             $UserParams.InputSubfolderSearch = 0
@@ -1774,7 +1843,6 @@ Describe "Start-OverwriteProtection" {
             $counter | Should be $([math]::floor($($InFiles.Length - 1) / 4 * 3))
         }
         It "Does not add things if not necessary" {
-            # TODO: write test for the rest of the files (i.e. those without both appendices)
             $UserParams.InputSubfolderSearch = 0
             Get-ChildItem -LiteralPath "$BlaDrive\Out_Test" -Recurse | Remove-Item -Recurse
             Start-Sleep -Milliseconds 250
@@ -1900,27 +1968,26 @@ Describe "Start-OverwriteProtection" {
 }
 
 Describe "Start-FileCopy"{
-    It "Copy Files"{
-        # TODO: From here
+    It "Copy Files (TODO: Everything.)"{
+        #TODO: From here
     }
 }
 
-<#
-    Describe "Start-7zip"{
-        It "Starting 7zip"{
 
-        }
+Describe "Start-7zip"{
+    It "Starting 7zip (TODO: everything.)"{
+
     }
+}
 
-    Describe "Start-FileVerification"{
-        It "Verify newly copied files"{
+Describe "Start-FileVerification"{
+    It "Verify newly copied files (TODO: everything.)"{
 
-        }
     }
+}
 
-    Describe "Set-HistFile"{
-        It "Write new file-attributes to history-file"{
+Describe "Set-HistFile"{
+    It "Write new file-attributes to history-file (TODO: everything.)"{
 
-        }
     }
-#>
+}

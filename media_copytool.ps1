@@ -351,29 +351,31 @@ Function Write-ColorOut(){
         [int]$Indentation=0
     )
     <#
-        if($ForegroundColor.Length -ge 3){
-            $old_fg_color = [Console]::ForegroundColor
-            [Console]::ForegroundColor = $ForegroundColor
-        }
-        if($BackgroundColor.Length -ge 3){
-            $old_bg_color = [Console]::BackgroundColor
-            [Console]::BackgroundColor = $BackgroundColor
-        }
-        if($Indentation -gt 0){
-            [Console]::CursorLeft = $Indentation
-        }
+        if($script:UserParams.InfoPreference -gt 0){
+            if($ForegroundColor.Length -ge 3){
+                $old_fg_color = [Console]::ForegroundColor
+                [Console]::ForegroundColor = $ForegroundColor
+            }
+            if($BackgroundColor.Length -ge 3){
+                $old_bg_color = [Console]::BackgroundColor
+                [Console]::BackgroundColor = $BackgroundColor
+            }
+            if($Indentation -gt 0){
+                [Console]::CursorLeft = $Indentation
+            }
 
-        if($NoNewLine -eq $false){
-            [Console]::WriteLine($Object)
-        }else{
-            [Console]::Write($Object)
-        }
+            if($NoNewLine -eq $false){
+                [Console]::WriteLine($Object)
+            }else{
+                [Console]::Write($Object)
+            }
 
-        if($ForegroundColor.Length -ge 3){
-            [Console]::ForegroundColor = $old_fg_color
-        }
-        if($BackgroundColor.Length -ge 3){
-            [Console]::BackgroundColor = $old_bg_color
+            if($ForegroundColor.Length -ge 3){
+                [Console]::ForegroundColor = $old_fg_color
+            }
+            if($BackgroundColor.Length -ge 3){
+                [Console]::BackgroundColor = $old_bg_color
+            }
         }
     #>
 }
@@ -415,10 +417,10 @@ Function Start-Sound(){
 
 # DEFINITION: Pause the programme if debug-var is active. Also, enable measuring times per command with -debug 3.
 Function Invoke-Pause(){
-    if($script:InfoPreference -gt 0){
+    if($UserParams.InfoPreference -gt 0){
         Write-ColorOut "Processing-time:`t$($script:timer.elapsed.TotalSeconds)" -ForegroundColor Magenta
     }
-    if($script:InfoPreference -gt 1){
+    if($UserParams.InfoPreference -gt 1){
         $script:timer.Reset()
         Pause
         $script:timer.Start()
@@ -436,7 +438,7 @@ Function Invoke-Close(){
         Start-Sleep -Milliseconds 5
         Get-RSJob | Remove-RSJob
     }
-    if($script:InfoPreference -gt 0){
+    if($UserParams.InfoPreference -gt 0){
         Pause
     }
 
@@ -467,7 +469,7 @@ $standby = @'
 
     try{
         [int]$inter = (Start-Process powershell -ArgumentList "-EncodedCommand $standby" -WindowStyle Hidden -PassThru).Id
-        if($script:InfoPreference -gt 0){
+        if($UserParams.InfoPreference -gt 0){
             Write-ColorOut "preventsleep-PID is $("{0:D8}" -f $inter)" -ForegroundColor Gray -BackgroundColor DarkGray -Indentation 4
         }
         Start-Sleep -Milliseconds 25
@@ -1019,7 +1021,6 @@ Function Test-UserValues(){
             if($UserParams.OutputPath.Length -lt 2 -or (Test-Path -LiteralPath $UserParams.OutputPath -PathType Container -ErrorAction SilentlyContinue) -eq $false){
                 if((Split-Path -Parent -Path $UserParams.OutputPath).Length -gt 1 -and (Test-Path -LiteralPath $(Split-Path -Qualifier -Path $UserParams.OutputPath) -PathType Container -ErrorAction SilentlyContinue) -eq $true){
                     try{
-                        # TODO: Implement length restriction:
                         if($UserParams.EnableLongPaths -eq 0){
                             $inter = $UserParams.OutputPath.Substring(0, [math]::Min($UserParams.OutputPath.Length, 250))
                             if($inter -ne $UserParams.OutputPath){
@@ -1061,7 +1062,6 @@ Function Test-UserValues(){
                 if($UserParams.MirrorPath.Length -lt 2 -or (Test-Path -LiteralPath $UserParams.MirrorPath -PathType Container -ErrorAction SilentlyContinue) -eq $false){
                     if((Split-Path -Parent -Path $UserParams.MirrorPath).Length -gt 1 -and (Test-Path -LiteralPath $(Split-Path -Qualifier -Path $UserParams.MirrorPath) -PathType Container -ErrorAction SilentlyContinue) -eq $true){
                         try{
-                            # TODO: Implement length restriction:
                             if($UserParams.EnableLongPaths -eq 0){
                                 $inter = $UserParams.MirrorPath.Substring(0, [math]::Min($UserParams.MirrorPath.Length, 250))
                                 if($inter -ne $UserParams.MirrorPath){
@@ -1096,13 +1096,9 @@ Function Test-UserValues(){
             $invalidChars = "[{0}]" -f [RegEx]::Escape($([IO.Path]::GetInvalidFileNameChars() -join ''))
             $UserParams.OutputSubfolderStyle = $UserParams.OutputSubfolderStyle -Replace $invalidChars
             $UserParams.OutputSubfolderStyle = $UserParams.OutputSubfolderStyle.ToLower() -Replace $invalidChars -Replace '^\ +$',"" -Replace '\ +$',""
-            # TODO: Implement length restriction: (do this in start-filesearch)
-            # $UserParams.OutputSubfolderStyle = $UserParams.OutputSubfolderStyle.Substring(0, [math]::Min($UserParams.OutputSubfolderStyle.Length, 250))
         # DEFINITION: $OutputFileStyle
             $invalidChars = "[{0}]" -f [RegEx]::Escape($([IO.Path]::GetInvalidFileNameChars() -join ''))
             $UserParams.OutputFileStyle = $UserParams.OutputFileStyle.ToLower() -Replace $invalidChars -Replace '^\ +$',"" -Replace '\ +$',""
-            # TODO: Implement length restriction: (do this in start-filesearch)
-            # $UserParams.OutputFileStyle = $UserParams.OutputFileStyle.Substring(0, [math]::Min($UserParams.OutputFileStyle.Length, 250))
             if($UserParams.OutputFileStyle.Length -lt 2 -or $UserParams.OutputFileStyle -match '^\s*$'){
                 Write-ColorOut "Invalid choice of -OutputFileStyle." -ForegroundColor Red -Indentation 4
                 throw
@@ -1237,7 +1233,7 @@ Function Show-Parameters(){
     Write-ColorOut "-RememberOutPath`t`t=`t$($UserParams.RememberOutPath)" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-RememberMirrorPath`t`t=`t$($UserParams.RememberMirrorPath)" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-RememberSettings`t`t=`t$($UserParams.RememberSettings)" -ForegroundColor Cyan -Indentation 4
-    Write-ColorOut "-Debug`t`t`t=`t$($script:InfoPreference)" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-Debug`t`t`t=`t$($UserParams.InfoPreference)" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "These values come from $($UserParams.JSONParamPath):" -ForegroundColor DarkCyan -Indentation 2
     Write-ColorOut "-InputPath`t`t`t=`t$($UserParams.InputPath)" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-OutputPath`t`t`t=`t$($UserParams.OutputPath)" -ForegroundColor Cyan -Indentation 4
@@ -1305,7 +1301,7 @@ Function Set-Parameters(){
         try{
             $jsonparams = @()
             $jsonparams += Get-Content -LiteralPath $UserParams.JSONParamPath -Raw -Encoding UTF8 -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
-            if($script:InfoPreference -gt 1){
+            if($UserParams.InfoPreference -gt 1){
                 Write-ColorOut "From:" -ForegroundColor Yellow -Indentation 2
                 $jsonparams | ConvertTo-Json -ErrorAction Stop | Out-Host
             }
@@ -1365,7 +1361,7 @@ Function Set-Parameters(){
     $jsonparams = $jsonparams | ConvertTo-Json -Depth 5
     $jsonparams | Out-Null
 
-    if($script:InfoPreference -gt 1){
+    if($UserParams.InfoPreference -gt 1){
         Write-ColorOut "To:" -ForegroundColor Yellow -Indentation 2
         $jsonparams | Out-Host
     }
@@ -1465,8 +1461,6 @@ Function Start-FileSearch(){
     }elseif($UserParams.OutputSubfolderStyle -notmatch '^%n%$'){
         [datetime]$unixOrigin = New-Object -Type DateTime -ArgumentList 1970, 1, 1, 0, 0, 0, 0
         for($i=0; $i -lt $InFiles.Length; $i++){
-            # TODO: Get from Unix time back to yyyy-MM-dd_HH-mm-ss or something
-            # [int32]$unixTime = ([DateTimeOffset]$InFiles[$i].Date).ToUnixTimeSeconds()
             [string]$backconvert = ($unixOrigin.AddSeconds($InFiles[$i].Date)).ToString("yyyy-MM-dd_HH-mm-ss")
             $InFiles[$i].OutSubfolder = "\" + $($UserParams.OutputSubfolderStyle.Replace("%y4%","$($backconvert.Substring(0,4))").Replace("%y2%","$($backconvert.Substring(2,2))").Replace("%mo%","$($backconvert.Substring(5,2))").Replace("%d%","$($backconvert.Substring(8,2))").Replace("%h%","$($backconvert.Substring(11,2))").Replace("%mi%","$($backconvert.Substring(14,2))").Replace("%s%","$($backconvert.Substring(17,2))").Replace("%n%","$($InFiles[$i].OutSubFolder)")) -Replace '\ $',''
         }
@@ -1483,7 +1477,6 @@ Function Start-FileSearch(){
         for($i=0; $i -lt $InFiles.Length; $i++){
             [string]$backconvert = ($unixOrigin.AddSeconds($InFiles[$i].Date)).ToString("yyyy-MM-dd_HH-mm-ss")
             $InFiles[$i].InBaseName = $UserParams.OutputFileStyle.Replace("%y4%","$($backconvert.Substring(0,4))").Replace("%y2%","$($backconvert.Substring(2,2))").Replace("%mo%","$($backconvert.Substring(5,2))").Replace("%d%","$($backconvert.Substring(8,2))").Replace("%h%","$($backconvert.Substring(11,2))").Replace("%mi%","$($backconvert.Substring(14,2))").Replace("%s%","$($backconvert.Substring(17,2))").Replace("%n%","$($InFiles[$i].InBaseName)")
-
             $inter = $InFiles[$i].InBaseName
             for($k=0; $k -lt $regexCounter.matches($InFiles[$i].InBaseName).count; $k++){
                 $match = [regex]::Match($inter, '%c.%')
@@ -1494,7 +1487,7 @@ Function Start-FileSearch(){
         }
     }
 
-    if($script:InfoPreference -gt 1){
+    if($UserParams.InfoPreference -gt 1){
         if((Read-Host "    Show all found files? Positive answers: $PositiveAnswers") -in $PositiveAnswers){
             for($i=0; $i -lt $InFiles.Length; $i++){
                 Write-ColorOut "$($InFiles[$i].InFullName.Replace($UserParams.InputPath,"."))" -ForegroundColor Gray -Indentation 4
@@ -1536,7 +1529,7 @@ Function Get-HistFile(){
         }
         $files_history | Out-Null
 
-        if($script:InfoPreference -gt 1){
+        if($UserParams.InfoPreference -gt 1){
             if((Read-Host "    Show found history-values? Positive answers: $PositiveAnswers") -in $PositiveAnswers){
                 Write-ColorOut "Found values: $($files_history.Length)" -ForegroundColor Yellow -Indentation 4
                 Write-ColorOut "Name`t`tDate`t`tSize`t`tHash" -Indentation 4
@@ -1546,7 +1539,6 @@ Function Get-HistFile(){
             }
         }
 
-        # TODO: can Hashes be $null? if so, delete from this if-clause:
         if("null" -in $files_history -or $files_history.InName.Length -lt 1 -or ($files_history.Length -gt 1 -and (($files_history.InName.Length -ne $files_history.Date.Length) -or ($files_history.InName.Length -ne $files_history.Size.Length) -or ($files_history.InName.Length -ne $files_history.Hash.Length) -or ($files_history.InName -contains $null) -or ($files_history.Date -contains $null) -or ($files_history.Size -contains $null) -or ($files_history.Hash -contains $null)))){
             Write-ColorOut "Some values in the history-file $($UserParams.HistFilePath) seem wrong - it's safest to delete the whole file." -ForegroundColor Magenta -Indentation 4
             Write-ColorOut "InNames: $($files_history.InName.Length) Dates: $($files_history.Date.Length) Sizes: $($files_history.Size.Length) Hashes: $($files_history.Hash.Length)" -Indentation 4
@@ -1650,7 +1642,7 @@ Function Start-DupliCheckHist(){
         Write-Progress -Activity "Comparing input-files to already copied files (history-file).." -Status "Done!" -Completed
     #>
 
-    if($script:InfoPreference -gt 1){
+    if($UserParams.InfoPreference -gt 1){
         if((Read-Host "    Show result? Positive answers: $PositiveAnswers") -in $PositiveAnswers){
             Write-ColorOut "`r`n`tFiles to skip / process:" -ForegroundColor Yellow
             for($i=0; $i -lt $InFiles.Length; $i++){
@@ -1870,7 +1862,9 @@ Function Start-OverwriteProtection(){
         [int]$Mirror =              $(throw 'Mirror is required by Start-OverwriteProtection')
     )
     if($Mirror -eq 1){
-        $UserParams.OutputPath = $UserParams.MirrorPath
+        $OutputPath = $UserParams.MirrorPath
+    }else{
+        $OutputPath = $UserParams.OutputPath
     }
     Write-ColorOut "$(Get-CurrentDate)  --  Prevent overwriting " -ForegroundColor Cyan -NoNewLine
     if($UserParams.OverwriteExistingFiles -eq 0){
@@ -1889,15 +1883,24 @@ Function Start-OverwriteProtection(){
             $sw.Start()
         }
 
+        [int]$maxpathlength = (255 - $InFiles[$i].Extension.Length)
+
+        # restrict subfolder path length:
+        if($UserParams.EnableLongPaths -eq 0 -and $InFiles[$i].OutSubfolder.Length -gt 255){
+            $InFiles[$i].OutSubfolder = "$($InFiles[$i].OutSubfolder.Substring(0, [math]::Min($InFiles[$i].OutSubfolder.Length, 119)))---$($InFiles[$i].OutSubfolder.Substring([math]::Max(123, ($InFiles[$i].OutSubfolder.Length - 123)), 123))"
+        }
         # create outpath:
-        $InFiles[$i].OutPath = $("$($UserParams.OutputPath)$($InFiles[$i].OutSubfolder)").Replace("\\","\").Replace("\\","\")
+        $InFiles[$i].OutPath = $("$($OutputPath)$($InFiles[$i].OutSubfolder)").Replace("\\","\").Replace("\\","\")
         $InFiles[$i].OutBaseName = $InFiles[$i].InBaseName
-        $InFiles[$i].OutName = "$($InFiles[$i].InBaseName)$($InFiles[$i].Extension)"
+        # restrict length of file names (found multiple times here):
+        if($UserParams.EnableLongPaths -eq 0 -and $InFiles[$i].OutBaseName.Length -gt $maxpathlength){
+            $InFiles[$i].OutBaseName = "$($InFiles[$i].OutBaseName.Substring(0, [math]::Min($InFiles[$i].OutBaseName.Length, 119)))---$($InFiles[$i].OutBaseName.Substring([math]::Max(123, ($InFiles[$i].OutBaseName.Length - 123)), 123))"
+        }
         # check for files with same name from input:
         [int]$j = 1
         [int]$k = 1
         while($true){
-            [string]$check = "$($InFiles[$i].OutPath)\$($InFiles[$i].OutName)"
+            [string]$check = "$($InFiles[$i].OutPath)\$($InFiles[$i].OutBaseName)$($InFiles[$i].Extension)"
             if($check -notin $allpaths){
                 if((Test-Path -LiteralPath $check -PathType Leaf) -eq $false -or $UserParams.OverwriteExistingFiles -eq 1){
                     $allpaths += $check
@@ -1905,34 +1908,45 @@ Function Start-OverwriteProtection(){
                 }else{
                     if($k -eq 1){
                         $InFiles[$i].OutBaseName = "$($InFiles[$i].OutBaseName)_OutCopy$k"
+                        if($UserParams.EnableLongPaths -eq 0 -and $InFiles[$i].OutBaseName.Length -gt $maxpathlength){
+                            $InFiles[$i].OutBaseName = "$($InFiles[$i].OutBaseName.Substring(0, [math]::Min($InFiles[$i].OutBaseName.Length, ([math]::Floor($maxpathlength / 2)))))---$($InFiles[$i].OutBaseName.Substring([math]::Max(([math]::Floor($maxpathlength / 2)), ($InFiles[$i].OutBaseName.Length - ([math]::Floor($maxpathlength / 2)))), ([math]::Floor($maxpathlength / 2))))"
+                        }
                     }else{
                         $InFiles[$i].OutBaseName = $InFiles[$i].OutBaseName -replace "_OutCopy$($k - 1)","_OutCopy$k"
+                        if($UserParams.EnableLongPaths -eq 0 -and $InFiles[$i].OutBaseName.Length -gt $maxpathlength){
+                            $InFiles[$i].OutBaseName = "$($InFiles[$i].OutBaseName.Substring(0, [math]::Min($InFiles[$i].OutBaseName.Length, 119)))---$($InFiles[$i].OutBaseName.Substring([math]::Max(123, ($InFiles[$i].OutBaseName.Length - 123)), 123))"
+                        }
                     }
-                    $InFiles[$i].OutName = "$($InFiles[$i].OutBaseName)$($InFiles[$i].Extension)"
                     $k++
-                    # if($script:InfoPreference -ne 0){Write-ColorOut $InFiles[$i].OutBaseName} #VERBOSE
+                    if($UserParams.InfoPreference -gt 0){$InFiles[$i].OutBaseName | Out-Host} #VERBOSE
                     continue
                 }
             }else{
                 if($j -eq 1){
                     $InFiles[$i].OutBaseName = "$($InFiles[$i].OutBaseName)_InCopy$j"
+                    if($UserParams.EnableLongPaths -eq 0 -and $InFiles[$i].OutBaseName.Length -gt 245){
+                        $InFiles[$i].OutBaseName = "$($InFiles[$i].OutBaseName.Substring(0, [math]::Min($InFiles[$i].OutBaseName.Length, 119)))---$($InFiles[$i].OutBaseName.Substring([math]::Max(123, ($InFiles[$i].OutBaseName.Length - 123)), 123))"
+                    }
                 }else{
                     $InFiles[$i].OutBaseName = $InFiles[$i].OutBaseName -replace "_InCopy$($j - 1)","_InCopy$j"
+                    if($UserParams.EnableLongPaths -eq 0 -and $InFiles[$i].OutBaseName.Length -gt 245){
+                        $InFiles[$i].OutBaseName = "$($InFiles[$i].OutBaseName.Substring(0, [math]::Min($InFiles[$i].OutBaseName.Length, 119)))---$($InFiles[$i].OutBaseName.Substring([math]::Max(123, ($InFiles[$i].OutBaseName.Length - 123)), 123))"
+                    }
                 }
-                $InFiles[$i].OutName = "$($InFiles[$i].OutBaseName)$($InFiles[$i].Extension)"
                 $j++
-                # if($script:InfoPreference -ne 0){Write-ColorOut $InFiles[$i].OutBaseName} #VERBOSE
+                if($UserParams.InfoPreference -gt 0){$InFiles[$i].OutBaseName | Out-Host} #VERBOSE
                 continue
             }
         }
+        $InFiles[$i].OutName = "$($InFiles[$i].OutBaseName)$($InFiles[$i].Extension)"
     }
     Write-Progress -Activity "Prevent overwriting existing files..." -Status "Done!" -Completed
 
-    if($script:InfoPreference -gt 1){
+    if($UserParams.InfoPreference -gt 1){
         if((Read-Host "    Show all names? Positive answers: $PositiveAnswers") -in $PositiveAnswers){
             [int]$indent = 0
             for($i=0; $i -lt $InFiles.Length; $i++){
-                Write-ColorOut "    $($InFiles[$i].OutPath.Replace($UserParams.OutputPath,"."))\$($InFiles[$i].OutName)`t`t" -NoNewLine -ForegroundColor Gray
+                Write-ColorOut "    $($InFiles[$i].OutPath.Replace($OutputPath,"."))\$($InFiles[$i].OutName)`t`t" -NoNewLine -ForegroundColor Gray
                 if($indent -lt 2){
                     $indent++
                 }else{
@@ -2025,7 +2039,7 @@ Function Start-FileCopy(){
     }
 
 
-    if($script:InfoPreference -gt 1){
+    if($UserParams.InfoPreference -gt 1){
         [int]$inter = Read-Host "    Show all commands? `"1`" for yes, `"2`" for writing them as files to your script's path."
         if($inter -gt 0){
             foreach($i in $rc_command){
@@ -2188,7 +2202,7 @@ Function Start-FileVerification(){
     [int]$verified = 0
     [int]$unverified = 0
     [int]$inter=0
-    if($script:InfoPreference -gt 1){
+    if($UserParams.InfoPreference -gt 1){
         [int]$inter = Read-Host "    Show files? Positive answers: $PositiveAnswers"
     }
     for($i=0; $i -lt $InFiles.Length; $i++){
@@ -2290,7 +2304,7 @@ Function Start-Everything(){
     Write-ColorOut "`r`n$(Get-CurrentDate)  --  Starting everything..." -NoNewLine -ForegroundColor Cyan -BackgroundColor DarkGray
     Write-ColorOut "A                               A" -ForegroundColor DarkGray -BackgroundColor DarkGray
 
-    if($script:InfoPreference -gt 0){
+    if($UserParams.InfoPreference -gt 0){
         $script:timer = [diagnostics.stopwatch]::StartNew()
     }
 
