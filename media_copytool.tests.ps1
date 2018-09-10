@@ -1455,7 +1455,13 @@ Describe "Start-InputGetHash" {
             }
         }
         It "No re-hashing of files" {
-            # TODO:
+            $InFiles = @(Start-FileSearch -UserParams $UserParams)
+            $InFiles | ForEach-Object {$_.Hash = "123"}
+            $test = @(Start-InputGetHash -InFiles $InFiles)
+            ,$test | Should BeOfType array
+            foreach($i in $test.Hash){
+                $i | Should Be ("123")
+            }
         }
         It "Work even if one file already has a hash" {
             $InFiles = @(Start-FileSearch -UserParams $UserParams)
