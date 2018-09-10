@@ -144,60 +144,75 @@
                         IsChecked="True"
                         Content="All"
                         ToolTip="Copy all files."
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,34,0,0"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,24,0,0"
                     />
                     <RadioButton x:Name="RadioButtonInclude" GroupName="CopyFormats"
                         Content="Include:"
                         ToolTip="Will use Get-ChildItem's -Filter - fast option."
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,64,0,0"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,44,0,0"
                     />
                     <TextBox x:Name="TextBoxInclude"
                         Text="TextBoxInclude" FontFamily="Consolas,Segoe UI,Arial" ToolTip="*.ext1|*.ext2|*.ext3"
                         IsEnabled="{Binding IsChecked, ElementName=RadioButtonInclude, Mode=OneWay}"
                         VerticalContentAlignment="Center" VerticalScrollBarVisibility="Disabled" TextWrapping="Wrap"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,60,0,0"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,42,0,0"
                         Panel.ZIndex="1"
-                        Height="22" Width="140"
+                        Height="18" Width="140"
                     />
                     <RadioButton x:Name="RadioButtonExclude" GroupName="CopyFormats"
                         Content="Exclude:"
                         ToolTip="Will use Get-ChildItem's -Exclude - slow option."
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,94,0,0"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,64,0,0"
                     />
                     <TextBox x:Name="TextBoxExclude"
                         Text="TextBoxExclude" FontFamily="Consolas,Segoe UI,Arial" ToolTip="*.ext1|*.ext2|*.ext3"
                         IsEnabled="{Binding IsChecked, ElementName=RadioButtonExclude, Mode=OneWay}"
                         VerticalContentAlignment="Center" VerticalScrollBarVisibility="Disabled" TextWrapping="Wrap"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,90,0,0"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,63,0,0"
                         Panel.ZIndex="1"
-                        Height="22" Width="140"
+                        Height="18" Width="140"
                     />
-                    <Rectangle Fill="#FFB3B6B5" Stroke="#FF878787" Panel.ZIndex="-1" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="0,125,0,0" Height="2" Width="250"/>
+                    <Rectangle Fill="#FFB3B6B5" Stroke="#FF878787" Panel.ZIndex="-1" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="5,87,0,0" Height="2" Width="240"/>
 
-                    <TextBlock x:Name="TextBlockHistFileUse"
-                        Text="History-file options:"
+                    <TextBlock x:Name="TextBlockDupliChecks"
+                        Text="Duplicate checks:"
                         FontWeight="Bold"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="10,135,0,0"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="10,92,0,0"
                     />
                     <CheckBox x:Name="CheckBoxUseHistFile"
                         Content="Use history-file to prevent duplicates" ToolTip="Default. Fast way to prevent already copied files from being copied again." VerticalContentAlignment="Center"
                         Foreground="#FF00A22C"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,155,0,0"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,112,0,0"
                     />
                     <ComboBox x:Name="ComboBoxWriteHistFile" SelectedIndex="0"
                         ToolTip="Choose how the script writes new files to the history-file." VerticalContentAlignment="Center"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,175,0,0"
-                        Height="23" Width="215">
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,132,0,0"
+                        Height="20" Width="215">
                         <ComboBoxItem Content="Write old &amp; new files to history-file"/>
                         <ComboBoxItem Content="Overwrite old files with new ones"/>
                         <ComboBoxItem Content="Do not add new files to history-file"/>
                     </ComboBox>
                     <CheckBox x:Name="CheckBoxCheckHashHist"
                         Content="Include hashes in duplicate-check" ToolTip="If unchecked, duplicate-check is done via name, size, date. If checked, hash is added. Enabling duplicate-check in output-path disables this function." VerticalContentAlignment="Center"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,203,0,0"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,157,0,0"
                         Width="215"
                     />
-                    <Rectangle Fill="#FFB3B6B5" Stroke="#FF878787" Panel.ZIndex="-1" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="250,0,0,0" Height="240" Width="2"/>
+                    <CheckBox x:Name="CheckBoxOutputDupli"
+                        Content="Check for duplicates in output-path" ToolTip="Searches for duplicates in the output-path (incl. subfolders). Ideal if you have used LR or other import-tools since the last card-formatting." VerticalContentAlignment="Center"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,177,0,0"
+                        Width="250"
+                    />
+                    <CheckBox x:Name="CheckBoxAvoidIdenticalFiles"
+                        Content="Avoid double-file-copies" ToolTip="If the same file is found twice in the input, this will only copy one of them." VerticalContentAlignment="Center"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,197,0,0"
+                        Width="250"
+                    />
+                    <CheckBox x:Name="CheckBoxAcceptTimeDiff"
+                        Content="Accept 3 sec. difference" ToolTip="Use this if you use 2 or more cards at once." VerticalContentAlignment="Center"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,217,0,0"
+                        Width="250"
+                    />
+                    <Rectangle Fill="#FFB3B6B5" Stroke="#FF878787" Panel.ZIndex="-1" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="250,5,0,0" Height="225" Width="2"/>
 
                     <TextBlock x:Name="TextBlockOutSubStyle"
                         Text="Subfolder-style:"
@@ -207,11 +222,11 @@
                     <TextBox x:Name="TextBoxOutSubStyle"
                         Text="TextBoxOutSubStyle" FontFamily="Consolas,Segoe UI,Arial" ToolTip="Define your favorite subfolder-style. %n% keeps subfolder structure, an empty field means no subfolders."
                         VerticalContentAlignment="Center" VerticalScrollBarVisibility="Disabled" TextWrapping="Wrap"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="270,30,0,0"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="270,24,0,0"
                         Height="23" Width="215"
                     />
 
-                    <Rectangle Fill="#FFB3B6B5" Stroke="#FF878787" Panel.ZIndex="-1" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="250,60,0,0" Height="2" Width="250"/>
+                    <Rectangle Fill="#FFB3B6B5" Stroke="#FF878787" Panel.ZIndex="-1" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="255,60,0,0" Height="2" Width="240"/>
                     <TextBlock x:Name="TextBlockSpecChar"
                         Text="Magic strings for styles:"
                         FontWeight="Bold"
@@ -222,7 +237,7 @@
                         FontFamily="Consolas,Segoe UI,Arial"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="270,90,0,0"
                     />
-                    <Rectangle Fill="#FFB3B6B5" Stroke="#FF878787" Panel.ZIndex="-1" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="250,170,0,0" Height="2" Width="250"/>
+                    <Rectangle Fill="#FFB3B6B5" Stroke="#FF878787" Panel.ZIndex="-1" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="255,170,0,0" Height="2" Width="240"/>
 
                     <TextBlock x:Name="TextBlockOutFileStyle"
                         Text="File-renaming-style:"
@@ -235,7 +250,7 @@
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="270,200,0,0"
                         Height="23" Width="215"
                     />
-                    <Rectangle Fill="#FFB3B6B5" Stroke="#FF878787" Panel.ZIndex="-1" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="500,0,0,0" Height="240" Width="2"/>
+                    <Rectangle Fill="#FFB3B6B5" Stroke="#FF878787" Panel.ZIndex="-1" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="500,5,0,0" Height="225" Width="2"/>
 
                     <TextBlock x:Name="TextBlockOptions"
                         Text="Other options:"
@@ -247,56 +262,46 @@
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,25,0,0"
                         Width="250"
                     />
-                    <CheckBox x:Name="CheckBoxOutputDupli"
-                        Content="Check for duplicates in output-path" ToolTip="Searches for duplicates in the output-path (incl. subfolders). Ideal if you have used LR or other import-tools since the last card-formatting." VerticalContentAlignment="Center"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,45,0,0"
-                        Width="250"
-                    />
                     <CheckBox x:Name="CheckBoxVerifyCopies"
                         Content="Verify copied files" ToolTip="Suggestted. After copying, script will check if files were copied successfully. Disabling will save time." VerticalContentAlignment="Center"
                         Foreground="#FF00A22C"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,65,0,0"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,45,0,0"
                         Width="250"
                     />
                     <CheckBox x:Name="CheckBoxOverwriteExistingFiles"
                         Content="Overwrite existing files" ToolTip="If disabled, new files will get unique names. If enabled, existing files will be overwritten." VerticalContentAlignment="Center"
                         Foreground="#FFDE0000"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,85,0,0"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,65,0,0"
                         Width="250"
                     />
                     <CheckBox x:Name="CheckBoxEnableLongPath"
                         Content="Allow paths >260 characters (Win 10 only)" ToolTip="Enable paths longer than 260 characters (USE IT WITH WIN 10 AND ENABLED LONG PATHS ONLY!)." VerticalContentAlignment="Center"
                         Foreground="#FFDE0000"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,105,0,0"
-                        Width="250"
-                    />
-                    <CheckBox x:Name="CheckBoxAvoidIdenticalFiles"
-                        Content="Avoid double-file-copies" ToolTip="If the same file is found twice in the input, this will only copy one of them." VerticalContentAlignment="Center"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,125,0,0"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,85,0,0"
                         Width="250"
                     />
                     <CheckBox x:Name="CheckBoxZipMirror"
                         Content="Mirroring files as 7z-archive" ToolTip="ATM, THIS IS NOT SUPPORTED! Creating an archive with the input-files in it - good as a backup." VerticalContentAlignment="Center"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,145,0,0"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,105,0,0"
                         Width="250"
                     />
                     <Line Stretch="Fill" Stroke="Black" X1="1"
-                          VerticalAlignment="Top" HorizontalAlignment="Left" Margin="538,133,0,0" SnapsToDevicePixels="True" Height="18" Width="150" Grid.ZIndex="-99" />
+                          VerticalAlignment="Top" HorizontalAlignment="Left" Margin="538,113,0,0" SnapsToDevicePixels="True" Height="18" Width="150" Grid.ZIndex="-99" />
                     <CheckBox x:Name="CheckBoxUnmountInputDrive"
                         Content="Remove input-drive after copying" ToolTip="Safely removing the input-drive after successful verification (before mirroring). Note: It does not work with all drives - so double-check if your drive was removed!" VerticalContentAlignment="Center"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,165,0,0"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,145,0,0"
                         Width="250"
                     />
                     <CheckBox x:Name="CheckBoxPreventStandby"
                         Content="Prevent computer-standby" ToolTip="Prevents system from hibernating by simulating the keystroke of F13." VerticalContentAlignment="Center"
                         Foreground="#FF0080FF"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,185,0,0"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,165,0,0"
                         Width="250"
                     />
                     <CheckBox x:Name="CheckBoxRememberSettings"
                         Content="Save settings" ToolTip="Save all parameters (excl. Save-CheckBoxes)" VerticalContentAlignment="Center"
                         Foreground="#FFC90000" FontWeight="Bold"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="510,210,0,0" Padding="4,-2,0,0"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="510,205,0,0" Padding="4,-2,0,0"
                         Height="20" Width="100"
                     />
                 </Grid>

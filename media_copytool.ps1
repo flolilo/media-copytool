@@ -162,7 +162,7 @@
         any valid UTF8- *.json if -WriteHistFile is "Yes" or "Overwrite" (file specified by -HistFilePath),
         mc_parameters.json if -Remember* is specified
         File(s) will be saved into the script's directory.
-    
+
     .EXAMPLE
         See the preset/saved parameters of this script:
         media_copytool.ps1 -ShowParams 1
@@ -171,7 +171,7 @@
         media_copytool.ps1 -EnableGUI 1
     .EXAMPLE
         Copy Canon's Raw-Files, Movies, JPEGs from G:\ to D:\Backup and prevent the computer from ging to standby:
-        media_copytool.ps1 -PresetFormats "Can","Mov","Jpg" .InputPath "G:\" -OutputPath "D:\Backup" -PreventStandby 1 
+        media_copytool.ps1 -PresetFormats "Can","Mov","Jpg" .InputPath "G:\" -OutputPath "D:\Backup" -PreventStandby 1
 #>
 param(
     [int]$ShowParams =              0,
@@ -183,7 +183,7 @@ param(
     [int]$RememberOutPath =         0,
     [int]$RememberMirrorPath =      0,
     [int]$RememberSettings =        0,
-    [int]$Debug =                   1,
+    [int]$InfoPreference =          1,
     # From here on, parameters can be set both via parameters and via JSON file(s).
     [string]$InputPath =            "",
     [string]$OutputPath =           "",
@@ -199,6 +199,7 @@ param(
     [int]$HistCompareHashes =       -1,
     [int]$InputSubfolderSearch =    -1,
     [int]$CheckOutputDupli =        -1,
+    [int]$AcceptTimeDiff =          -1,
     [int]$VerifyCopies =            -1,
     [int]$OverwriteExistingFiles =  -1,
     [int]$EnableLongPaths =         -1,
@@ -233,6 +234,7 @@ param(
         HistCompareHashes =         $HistCompareHashes
         InputSubfolderSearch =      $InputSubfolderSearch
         CheckOutputDupli =          $CheckOutputDupli
+        AcceptTimeDiff =            $AcceptTimeDiff
         VerifyCopies =              $VerifyCopies
         OverwriteExistingFiles =    $OverwriteExistingFiles
         EnableLongPaths =           $EnableLongPaths
@@ -240,7 +242,7 @@ param(
         ZipMirror =                 $ZipMirror
         UnmountInputDrive =         $UnmountInputDrive
     }
-    Remove-Variable -Name ShowParams,EnableGUI,JSONParamPath,LoadParamPresetName,SaveParamPresetName,RememberInPath,RememberOutPath,RememberMirrorPath,RememberSettings,InputPath,OutputPath,MirrorEnable,MirrorPath,FormatPreference,FormatInExclude,OutputSubfolderStyle,OutputFileStyle,HistFilePath,UseHistFile,WriteHistFile,HistCompareHashes,InputSubfolderSearch,CheckOutputDupli,VerifyCopies,OverwriteExistingFiles,EnableLongPaths,AvoidIdenticalFiles,ZipMirror,UnmountInputDrive
+    Remove-Variable -Name ShowParams,EnableGUI,JSONParamPath,LoadParamPresetName,SaveParamPresetName,RememberInPath,RememberOutPath,RememberMirrorPath,RememberSettings,InputPath,OutputPath,MirrorEnable,MirrorPath,FormatPreference,FormatInExclude,OutputSubfolderStyle,OutputFileStyle,HistFilePath,UseHistFile,WriteHistFile,HistCompareHashes,InputSubfolderSearch,CheckOutputDupli,AcceptTimeDiff,VerifyCopies,OverwriteExistingFiles,EnableLongPaths,AvoidIdenticalFiles,ZipMirror,UnmountInputDrive
 
 # DEFINITION: Various vars: getting GUI variables, ThreadCount,...
     # GUI path:
@@ -251,6 +253,8 @@ param(
         [int]$ThreadCount = 4
     # Positive answers for users:
         [array]$PositiveAnswers = @("y","yes",1,"j","ja")
+    # Accepted seconds of difference between same files (e.g. if files are same, but timestamps vary by X seconds)
+        [int]$TimeDiff = 3
 # DEFINITION: Setting up load and save names for parameter presets:
     $UserParams.LoadParamPresetName = $UserParams.LoadParamPresetName.ToLower() -Replace '[^A-Za-z0-9_+-]',''
     if($UserParams.LoadParamPresetName.Length -lt 1){
@@ -269,7 +273,7 @@ param(
     [Threading.Thread]::CurrentThread.CurrentUICulture = 'en-US'
 # DEFINITION: Set default ErrorAction to Stop:
     # CREDIT: https://stackoverflow.com/a/21260623/8013879
-    if($Debug -eq 0){
+    if($InfoPreference -eq 0){
         $PSDefaultParameterValues = @{}
         $PSDefaultParameterValues += @{'*:ErrorAction' = 'Stop'}
         $ErrorActionPreference = 'Stop'
@@ -319,7 +323,7 @@ Function Write-ColorOut(){
             Using the [Console]-commands to make everything faster.
         .NOTES
             Date: 2018-03-11
-        
+
         .PARAMETER Object
             String to write out
         .PARAMETER ForegroundColor
@@ -364,7 +368,7 @@ Function Write-ColorOut(){
         }else{
             [Console]::Write($Object)
         }
-        
+
         if($ForegroundColor.Length -ge 3){
             [Console]::ForegroundColor = $old_fg_color
         }
@@ -386,7 +390,7 @@ Function Start-Sound(){
 
         .PARAMETER Success
             1 plays Windows's "tada"-sound, 0 plays Windows's "chimes"-sound.
-        
+
         .EXAMPLE
             For success: Start-Sound -Success 1
         .EXAMPLE
@@ -411,10 +415,10 @@ Function Start-Sound(){
 
 # DEFINITION: Pause the programme if debug-var is active. Also, enable measuring times per command with -debug 3.
 Function Invoke-Pause(){
-    if($script:Debug -gt 0){
+    if($script:InfoPreference -gt 0){
         Write-ColorOut "Processing-time:`t$($script:timer.elapsed.TotalSeconds)" -ForegroundColor Magenta
     }
-    if($script:Debug -gt 1){
+    if($script:InfoPreference -gt 1){
         $script:timer.Reset()
         Pause
         $script:timer.Start()
@@ -432,7 +436,7 @@ Function Invoke-Close(){
         Start-Sleep -Milliseconds 5
         Get-RSJob | Remove-RSJob
     }
-    if($script:Debug -gt 0){
+    if($script:InfoPreference -gt 0){
         Pause
     }
 
@@ -463,7 +467,7 @@ $standby = @'
 
     try{
         [int]$inter = (Start-Process powershell -ArgumentList "-EncodedCommand $standby" -WindowStyle Hidden -PassThru).Id
-        if($script:Debug -gt 0){
+        if($script:InfoPreference -gt 0){
             Write-ColorOut "preventsleep-PID is $("{0:D8}" -f $inter)" -ForegroundColor Gray -BackgroundColor DarkGray -Indentation 4
         }
         Start-Sleep -Milliseconds 25
@@ -482,7 +486,7 @@ $standby = @'
 
 # DEFINITION: Getting date and time in pre-formatted string:
 Function Get-CurrentDate(){
-    return $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
+    return $((Get-Date).ToString("yyyy-MM-dd HH:mm:ss"))
 }
 
 
@@ -563,11 +567,17 @@ Function Get-ParametersFromJSON(){
             if($UserParams.HistCompareHashes -eq -1 -or $Renew -eq 1){
                 [int]$UserParams.HistCompareHashes = $jsonparams.HistCompareHashes
             }
-            if($UserParams.InputSubfolderSearch -eq -1 -or $Renew -eq 1){
-                [int]$UserParams.InputSubfolderSearch = $jsonparams.InputSubfolderSearch
-            }
             if($UserParams.CheckOutputDupli -eq -1 -or $Renew -eq 1){
                 [int]$UserParams.CheckOutputDupli = $jsonparams.CheckOutputDupli
+            }
+            if($UserParams.AvoidIdenticalFiles -eq -1 -or $Renew -eq 1){
+                [int]$UserParams.AvoidIdenticalFiles = $jsonparams.AvoidIdenticalFiles
+            }
+            if($UserParams.AcceptTimeDiff -eq -1 -or $Renew -eq 1){
+                [int]$UserParams.AcceptTimeDiff = $jsonparams.AcceptTimeDiff
+            }
+            if($UserParams.InputSubfolderSearch -eq -1 -or $Renew -eq 1){
+                [int]$UserParams.InputSubfolderSearch = $jsonparams.InputSubfolderSearch
             }
             if($UserParams.VerifyCopies -eq -1 -or $Renew -eq 1){
                 [int]$UserParams.VerifyCopies = $jsonparams.VerifyCopies
@@ -577,9 +587,6 @@ Function Get-ParametersFromJSON(){
             }
             if($UserParams.EnableLongPaths -eq -1 -or $Renew -eq 1){
                 [int]$UserParams.EnableLongPaths = $jsonparams.EnableLongPaths
-            }
-            if($UserParams.AvoidIdenticalFiles -eq -1 -or $Renew -eq 1){
-                [int]$UserParams.AvoidIdenticalFiles = $jsonparams.AvoidIdenticalFiles
             }
             if($UserParams.ZipMirror -eq -1 -or $Renew -eq 1){
                 [int]$UserParams.ZipMirror = $jsonparams.ZipMirror
@@ -740,33 +747,33 @@ Function Start-GUI(){
                 Write-ColorOut "$($UserParams.JSONParamPath) does not exist - aborting!" -ForegroundColor  Magenta -Indentation 4
                 throw
             }
-            $GUIParams.TextBoxSavePreset.Text =         $UserParams.SaveParamPresetName
+            $GUIParams.TextBoxSavePreset.Text =             $UserParams.SaveParamPresetName
         # DEFINITION: In-, out-, mirrorpath:
-            $GUIParams.TextBoxInput.Text =              $UserParams.InputPath
-            $GUIParams.CheckBoxRememberIn.IsChecked =   $UserParams.RememberInPath
-            $GUIParams.TextBoxOutput.Text =             $UserParams.OutputPath
-            $GUIParams.CheckBoxRememberOut.IsChecked =  $UserParams.RememberOutPath
-            $GUIParams.CheckBoxMirror.IsChecked =       $UserParams.MirrorEnable
-            $GUIParams.TextBoxMirror.Text =             $UserParams.MirrorPath
+            $GUIParams.TextBoxInput.Text =                  $UserParams.InputPath
+            $GUIParams.CheckBoxRememberIn.IsChecked =       $UserParams.RememberInPath
+            $GUIParams.TextBoxOutput.Text =                 $UserParams.OutputPath
+            $GUIParams.CheckBoxRememberOut.IsChecked =      $UserParams.RememberOutPath
+            $GUIParams.CheckBoxMirror.IsChecked =           $UserParams.MirrorEnable
+            $GUIParams.TextBoxMirror.Text =                 $UserParams.MirrorPath
             $GUIParams.CheckBoxRememberMirror.IsChecked =   $UserParams.RememberMirrorPath
         # DEFINITION: History-file-path:
-            $GUIParams.TextBoxHistFile.Text =           $UserParams.HistFilePath
+            $GUIParams.TextBoxHistFile.Text =               $UserParams.HistFilePath
     # DEFINITION: Second page of GUI:
         # DEFINITION: Formats:
-            if($UserParams.FormatPreference -eq "include"){
-                $GUIParams.RadioButtonInclude.IsChecked = $true
-                $GUIParams.TextBoxInclude.Text = $UserParams.FormatInExclude -join "|"
-                $GUIParams.TextBoxExclude.Text = ""
-            }elseif($UserParams.FormatPreference -eq "exclude"){
-                $GUIParams.RadioButtonExclude.IsChecked = $true
-                $GUIParams.TextBoxExclude.Text = $UserParams.FormatInExclude -join "|"
-                $GUIParams.TextBoxInclude.Text = ""
+            if($UserParams.FormatPreference -in @("include","in")){
+                $GUIParams.RadioButtonInclude.IsChecked =   $true
+                $GUIParams.TextBoxInclude.Text =            $UserParams.FormatInExclude -join "|"
+                $GUIParams.TextBoxExclude.Text =            ""
+            }elseif($UserParams.FormatPreference -in @("exclude","ex")){
+                $GUIParams.RadioButtonExclude.IsChecked =   $true
+                $GUIParams.TextBoxExclude.Text =            $UserParams.FormatInExclude -join "|"
+                $GUIParams.TextBoxInclude.Text =            ""
             }else{
-                $GUIParams.RadioButtonAll.IsChecked = $true
-                $GUIParams.TextBoxInclude.Text = ""
-                $GUIParams.TextBoxExclude.Text = ""
+                $GUIParams.RadioButtonAll.IsChecked =   $true
+                $GUIParams.TextBoxInclude.Text =        ""
+                $GUIParams.TextBoxExclude.Text =        ""
             }
-        # DEFINITION: History:
+        # DEFINITION: Duplicates:
             $GUIParams.CheckBoxUseHistFile.IsChecked = $UserParams.UseHistFile
             $GUIParams.ComboBoxWriteHistFile.SelectedIndex = $(
                 if("yes"            -eq $UserParams.WriteHistFile){0}
@@ -774,21 +781,22 @@ Function Start-GUI(){
                 elseif("no"         -eq $UserParams.WriteHistFile){2}
                 else{0}
             )
-            $GUIParams.CheckBoxCheckHashHist.IsChecked =    $UserParams.HistCompareHashes
+            $GUIParams.CheckBoxCheckHashHist.IsChecked =        $UserParams.HistCompareHashes
+            $GUIParams.CheckBoxOutputDupli.IsChecked =          $UserParams.CheckOutputDupli
+            $GUIParams.CheckBoxAvoidIdenticalFiles.IsChecked =  $UserParams.AvoidIdenticalFiles
+            $GUIParams.CheckBoxAcceptTimeDiff.IsChecked =       $UserParams.AcceptTimeDiff
         # DEFINITION: (Re)naming:
-            $GUIParams.TextBoxOutSubStyle.Text = $UserParams.OutputSubfolderStyle
-            $GUIParams.TextBoxOutFileStyle.Text = $UserParams.OutputFileStyle
+            $GUIParams.TextBoxOutSubStyle.Text =    $UserParams.OutputSubfolderStyle
+            $GUIParams.TextBoxOutFileStyle.Text =   $UserParams.OutputFileStyle
         # DEFINITION: Other options:
-            $GUIParams.CheckBoxInSubSearch.IsChecked =      $UserParams.InputSubfolderSearch
-            $GUIParams.CheckBoxOutputDupli.IsChecked =      $UserParams.CheckOutputDupli
-            $GUIParams.CheckBoxVerifyCopies.IsChecked =     $UserParams.VerifyCopies
+            $GUIParams.CheckBoxInSubSearch.IsChecked =              $UserParams.InputSubfolderSearch
+            $GUIParams.CheckBoxVerifyCopies.IsChecked =             $UserParams.VerifyCopies
             $GUIParams.CheckBoxOverwriteExistingFiles.IsChecked =   $UserParams.OverwriteExistingFiles
-            $GUIParams.CheckBoxEnableLongPaths.IsChecked =  $UserParams.EnableLongPaths
-            $GUIParams.CheckBoxAvoidIdenticalFiles.IsChecked =      $UserParams.AvoidIdenticalFiles
+            $GUIParams.CheckBoxEnableLongPaths.IsChecked =          $UserParams.EnableLongPaths
             $GUIParams.CheckBoxZipMirror.IsChecked =                $UserParams.ZipMirror
             $GUIParams.CheckBoxUnmountInputDrive.IsChecked =        $UserParams.UnmountInputDrive
-            $GUIParams.CheckBoxPreventStandby.IsChecked =   $script:PreventStandby
-            $GUIParams.CheckBoxRememberSettings.IsChecked = $UserParams.RememberSettings
+            $GUIParams.CheckBoxPreventStandby.IsChecked =           $script:PreventStandby
+            $GUIParams.CheckBoxRememberSettings.IsChecked =         $UserParams.RememberSettings
 
     # DEFINITION: Load-Preset-Button:
         $GUIParams.ButtonLoadPreset.Add_Click({
@@ -843,8 +851,8 @@ Function Start-GUI(){
             # $FormatPreference
             $UserParams.FormatPreference = $(
                 if($GUIParams.RadioButtonAll.IsChecked -eq          $true){"all"}
-                elseif($GUIParams.RadioButtonInclude.IsChecked -eq  $true){"include"}
-                elseif($GUIParams.RadioButtonExclude.IsChecked -eq  $true){"exclude"}
+                elseif($GUIParams.RadioButtonInclude.IsChecked -eq  $true){"in"}
+                elseif($GUIParams.RadioButtonExclude.IsChecked -eq  $true){"ex"}
             )
             # $FormatInExclude
             [array]$UserParams.FormatInExclude = @()
@@ -881,14 +889,24 @@ Function Start-GUI(){
                 if($GUIParams.checkBoxCheckHashHist.IsChecked -eq $true){1}
                 else{0}
             )
-            # $InputSubfolderSearch
-            $UserParams.InputSubfolderSearch = $(
-                if($GUIParams.checkBoxInSubSearch.IsChecked -eq $true){1}
-                else{0}
-            )
             # $CheckOutputDupli
             $UserParams.CheckOutputDupli = $(
                 if($GUIParams.checkBoxOutputDupli.IsChecked -eq $true){1}
+                else{0}
+            )
+            # $AvoidIdenticalFiles
+            $UserParams.AvoidIdenticalFiles = $(
+                if($GUIParams.checkBoxAvoidIdenticalFiles.IsChecked -eq $true){1}
+                else{0}
+            )
+            # $AcceptTimeDiff
+            $UserParams.AcceptTimeDiff = $(
+                if($GUIParams.CheckBoxAcceptTimeDiff.IsChecked -eq $true){1}
+                else{0}
+            )
+            # $InputSubfolderSearch
+            $UserParams.InputSubfolderSearch = $(
+                if($GUIParams.checkBoxInSubSearch.IsChecked -eq $true){1}
                 else{0}
             )
             # $VerifyCopies
@@ -904,11 +922,6 @@ Function Start-GUI(){
             # $EnableLongPaths
             $UserParams.EnableLongPaths = $(
                 if($GUIParams.checkBoxEnableLongPaths.IsChecked -eq $true){1}
-                else{0}
-            )
-            # $AvoidIdenticalFiles
-            $UserParams.AvoidIdenticalFiles = $(
-                if($GUIParams.checkBoxAvoidIdenticalFiles.IsChecked -eq $true){1}
                 else{0}
             )
             # $ZipMirror
@@ -1069,7 +1082,7 @@ Function Test-UserValues(){
                 }
             }
         # DEFINITION: $FormatPreference
-            [array]$inter = @("all","include","exclude")
+            [array]$inter = @("all","include","in","exclude","ex")
             if($(Compare-Object $inter $UserParams.FormatPreference | Where-Object {$_.sideindicator -eq "=>"}).count -ne 0){
                 Write-ColorOut "Invalid choice of -FormatPreference." -ForegroundColor Red -Indentation 4
                 throw
@@ -1129,6 +1142,21 @@ Function Test-UserValues(){
                 Write-ColorOut "Invalid choice of -HistCompareHashes." -ForegroundColor Red -Indentation 4
                 throw
             }
+        # DEFINITION: $CheckOutputDupli
+            if($UserParams.CheckOutputDupli -notin (0..1)){
+                Write-ColorOut "Invalid choice of -CheckOutputDupli." -ForegroundColor Red -Indentation 4
+                throw
+            }
+        # DEFINITION: $AvoidIdenticalFiles
+            if($UserParams.AvoidIdenticalFiles -notin (0..1)){
+                Write-ColorOut "Invalid choice of -AvoidIdenticalFiles." -ForegroundColor Red -Indentation 4
+                throw
+            }
+        # DEFINITION: $AcceptTimeDiff
+            if($UserParams.AcceptTimeDiff -notin (0..1)){
+                Write-ColorOut "Invalid choice of -AcceptTimeDiff." -ForegroundColor Red -Indentation 4
+                throw
+            }
         # DEFINITION: $InputSubfolderSearch
             if($UserParams.InputSubfolderSearch -notin (0..1)){
                 Write-ColorOut "Invalid choice of -InputSubfolderSearch." -ForegroundColor Red -Indentation 4
@@ -1139,11 +1167,6 @@ Function Test-UserValues(){
                 [switch]$inter = $false
             }
             $UserParams.InputSubfolderSearch = $inter
-        # DEFINITION: $CheckOutputDupli
-            if($UserParams.CheckOutputDupli -notin (0..1)){
-                Write-ColorOut "Invalid choice of -CheckOutputDupli." -ForegroundColor Red -Indentation 4
-                throw
-            }
         # DEFINITION: $VerifyCopies
             if($UserParams.VerifyCopies -notin (0..1)){
                 Write-ColorOut "Invalid choice of -VerifyCopies." -ForegroundColor Red -Indentation 4
@@ -1157,11 +1180,6 @@ Function Test-UserValues(){
         # DEFINITION: $EnableLongPaths
             if($UserParams.EnableLongPaths -notin (0..1)){
                 Write-ColorOut "Invalid choice of -EnableLongPaths." -ForegroundColor Red -Indentation 4
-                throw
-            }
-        # DEFINITION: $AvoidIdenticalFiles
-            if($UserParams.AvoidIdenticalFiles -notin (0..1)){
-                Write-ColorOut "Invalid choice of -AvoidIdenticalFiles." -ForegroundColor Red -Indentation 4
                 throw
             }
         # DEFINITION: $ZipMirror
@@ -1219,7 +1237,7 @@ Function Show-Parameters(){
     Write-ColorOut "-RememberOutPath`t`t=`t$($UserParams.RememberOutPath)" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-RememberMirrorPath`t`t=`t$($UserParams.RememberMirrorPath)" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-RememberSettings`t`t=`t$($UserParams.RememberSettings)" -ForegroundColor Cyan -Indentation 4
-    Write-ColorOut "-Debug`t`t`t=`t$($script:Debug)" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-Debug`t`t`t=`t$($script:InfoPreference)" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "These values come from $($UserParams.JSONParamPath):" -ForegroundColor DarkCyan -Indentation 2
     Write-ColorOut "-InputPath`t`t`t=`t$($UserParams.InputPath)" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-OutputPath`t`t`t=`t$($UserParams.OutputPath)" -ForegroundColor Cyan -Indentation 4
@@ -1233,12 +1251,13 @@ Function Show-Parameters(){
     Write-ColorOut "-UseHistFile`t`t=`t$($UserParams.UseHistFile)" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-WriteHistFile`t`t=`t$($UserParams.WriteHistFile)" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-HistCompareHashes`t`t=`t$($UserParams.HistCompareHashes)" -ForegroundColor Cyan -Indentation 4
-    Write-ColorOut "-InputSubfolderSearch`t=`t$($UserParams.InputSubfolderSearch)" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-CheckOutputDupli`t`t=`t$($UserParams.CheckOutputDupli)" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-InputSubfolderSearch`t=`t$($UserParams.InputSubfolderSearch)" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-AvoidIdenticalFiles`t=`t$($UserParams.AvoidIdenticalFiles)" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-AcceptTimeDiff`t=`t$($UserParams.AcceptTimeDiff)" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-VerifyCopies`t`t=`t$($UserParams.VerifyCopies)" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-OverwriteExistingFiles`t=`t$($UserParams.OverwriteExistingFiles)" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-EnableLongPaths`t`t=`t$($UserParams.EnableLongPaths)" -ForegroundColor Cyan -Indentation 4
-    Write-ColorOut "-AvoidIdenticalFiles`t=`t$($UserParams.AvoidIdenticalFiles)" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-ZipMirror`t`t`t=`t$($UserParams.ZipMirror)" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-UnmountInputDrive`t`t=`t$($UserParams.UnmountInputDrive)" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-PreventStandby`t`t=`t$($script:PreventStandby)" -ForegroundColor Cyan -Indentation 4
@@ -1268,12 +1287,13 @@ Function Set-Parameters(){
                 UseHistFile             = $UserParams.UseHistFile
                 WriteHistFile           = $UserParams.WriteHistFile
                 HistCompareHashes       = $UserParams.HistCompareHashes
-                InputSubfolderSearch    = $(if($UserParams.InputSubfolderSearch -eq $true){1}else{0})
                 CheckOutputDupli        = $UserParams.CheckOutputDupli
+                AvoidIdenticalFiles     = $UserParams.AvoidIdenticalFiles
+                AcceptTimeDiff          = $UserParams.AcceptTimeDiff
+                InputSubfolderSearch    = $(if($UserParams.InputSubfolderSearch -eq $true){1}else{0})
                 VerifyCopies            = $UserParams.VerifyCopies
                 OverwriteExistingFiles  = $UserParams.OverwriteExistingFiles
                 EnableLongPaths         = $UserParams.EnableLongPaths
-                AvoidIdenticalFiles     = $UserParams.AvoidIdenticalFiles
                 ZipMirror               = $UserParams.ZipMirror
                 UnmountInputDrive       = $UserParams.UnmountInputDrive
                 PreventStandby          = $script:PreventStandby
@@ -1285,7 +1305,7 @@ Function Set-Parameters(){
         try{
             $jsonparams = @()
             $jsonparams += Get-Content -LiteralPath $UserParams.JSONParamPath -Raw -Encoding UTF8 -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
-            if($script:Debug -gt 1){
+            if($script:InfoPreference -gt 1){
                 Write-ColorOut "From:" -ForegroundColor Yellow -Indentation 2
                 $jsonparams | ConvertTo-Json -ErrorAction Stop | Out-Host
             }
@@ -1317,12 +1337,13 @@ Function Set-Parameters(){
                         $jsonparams.ParamPresetValues[$i].UseHistFile               = $inter.ParamPresetValues.UseHistFile
                         $jsonparams.ParamPresetValues[$i].WriteHistFile             = $inter.ParamPresetValues.WriteHistFile
                         $jsonparams.ParamPresetValues[$i].HistCompareHashes         = $inter.ParamPresetValues.HistCompareHashes
-                        $jsonparams.ParamPresetValues[$i].InputSubfolderSearch      = $inter.ParamPresetValues.InputSubfolderSearch
                         $jsonparams.ParamPresetValues[$i].CheckOutputDupli          = $inter.ParamPresetValues.CheckOutputDupli
+                        $jsonparams.ParamPresetValues[$i].AvoidIdenticalFiles       = $inter.ParamPresetValues.AvoidIdenticalFiles
+                        $jsonparams.ParamPresetValues[$i].AcceptTimeDiff            = $inter.ParamPresetValues.AcceptTimeDiff
+                        $jsonparams.ParamPresetValues[$i].InputSubfolderSearch      = $inter.ParamPresetValues.InputSubfolderSearch
                         $jsonparams.ParamPresetValues[$i].VerifyCopies              = $inter.ParamPresetValues.VerifyCopies
                         $jsonparams.ParamPresetValues[$i].OverwriteExistingFiles    = $inter.ParamPresetValues.OverwriteExistingFiles
                         $jsonparams.ParamPresetValues[$i].EnableLongPaths           = $inter.ParamPresetValues.EnableLongPaths
-                        $jsonparams.ParamPresetValues[$i].AvoidIdenticalFiles       = $inter.ParamPresetValues.AvoidIdenticalFiles
                         $jsonparams.ParamPresetValues[$i].ZipMirror                 = $inter.ParamPresetValues.ZipMirror
                         $jsonparams.ParamPresetValues[$i].UnmountInputDrive         = $inter.ParamPresetValues.UnmountInputDrive
                         $jsonparams.ParamPresetValues[$i].PreventStandby            = $inter.ParamPresetValues.PreventStandby
@@ -1344,7 +1365,7 @@ Function Set-Parameters(){
     $jsonparams = $jsonparams | ConvertTo-Json -Depth 5
     $jsonparams | Out-Null
 
-    if($script:Debug -gt 1){
+    if($script:InfoPreference -gt 1){
         Write-ColorOut "To:" -ForegroundColor Yellow -Indentation 2
         $jsonparams | Out-Host
     }
@@ -1385,7 +1406,7 @@ Function Start-FileSearch(){
 
     # Search files and get some information about them:
     [array]$allChosenFormats = $(
-        if($UserParams.FormatPreference -eq "include"){@($UserParams.FormatInExclude)}
+        if($UserParams.FormatPreference -in @("include","in")){@($UserParams.FormatInExclude)}
         else{@("*")}  # Excluded will be filtered after the search
     )
     [int]$counter = 1
@@ -1410,7 +1431,7 @@ Function Start-FileSearch(){
                 InBaseName = $_.BaseName
                 Extension = $_.Extension
                 Size = $_.Length
-                Date = $_.LastWriteTime.ToString("yyyy-MM-dd_HH-mm-ss")
+                Date = ([DateTimeOffset]$_.LastWriteTimeUtc).ToUnixTimeSeconds()
                 OutSubfolder = $($(Split-Path -Parent -Path $_.FullName).Replace("$($UserParams.InputPath)","")) -Replace('^\\','')
                 OutPath = "ZYX"
                 OutName = "ZYX"
@@ -1425,7 +1446,7 @@ Function Start-FileSearch(){
     Write-Progress -Id 1 -Activity "Find files in $($UserParams.InputPath)..." -Status "Done!" -Completed
     $sw.Reset()
 
-    if($UserParams.FormatPreference -eq "exclude"){
+    if($UserParams.FormatPreference -in @("exclude","ex")){
         foreach($i in $UserParams.FormatInExclude){
             [array]$InFiles = @($InFiles | Where-Object {$_.InName -notlike $i})
         }
@@ -1435,24 +1456,33 @@ Function Start-FileSearch(){
     $InFiles | Out-Null
 
     # Subfolder renaming style:
+        #no subfolder:
     if($UserParams.OutputSubfolderStyle.Length -eq 0 -or $UserParams.OutputSubfolderStyle -match '^\s*$'){
         foreach($i in $InFiles){
             $i.OutSubfolder = ""
         }
+        # Subfolder per date
     }elseif($UserParams.OutputSubfolderStyle -notmatch '^%n%$'){
-        foreach($i in $InFiles){
-            $i.OutSubfolder = "\" + $($UserParams.OutputSubfolderStyle.Replace("%y4%","$($i.Date.Substring(0,4))").Replace("%y2%","$($i.Date.Substring(2,2))").Replace("%mo%","$($i.Date.Substring(5,2))").Replace("%d%","$($i.Date.Substring(8,2))").Replace("%h%","$($i.Date.Substring(11,2))").Replace("%mi%","$($i.Date.Substring(14,2))").Replace("%s%","$($i.Date.Substring(17,2))").Replace("%n%","$($i.OutSubFolder)")) -Replace '\ $',''
+        [datetime]$unixOrigin = New-Object -Type DateTime -ArgumentList 1970, 1, 1, 0, 0, 0, 0
+        for($i=0; $i -lt $InFiles.Length; $i++){
+            # TODO: Get from Unix time back to yyyy-MM-dd_HH-mm-ss or something
+            # [int32]$unixTime = ([DateTimeOffset]$InFiles[$i].Date).ToUnixTimeSeconds()
+            [string]$backconvert = ($unixOrigin.AddSeconds($InFiles[$i].Date)).ToString("yyyy-MM-dd_HH-mm-ss")
+            $InFiles[$i].OutSubfolder = "\" + $($UserParams.OutputSubfolderStyle.Replace("%y4%","$($backconvert.Substring(0,4))").Replace("%y2%","$($backconvert.Substring(2,2))").Replace("%mo%","$($backconvert.Substring(5,2))").Replace("%d%","$($backconvert.Substring(8,2))").Replace("%h%","$($backconvert.Substring(11,2))").Replace("%mi%","$($backconvert.Substring(14,2))").Replace("%s%","$($backconvert.Substring(17,2))").Replace("%n%","$($InFiles[$i].OutSubFolder)")) -Replace '\ $',''
         }
     }else{
+        # subfolder per name
         foreach($i in $InFiles){
             $i.OutSubFolder = "\$($i.OutSubFolder)" -Replace '\ $',''
         }
     }
     # File renaming style:
     if($UserParams.OutputFileStyle -notmatch '^%n%$'){
+        [datetime]$unixOrigin = New-Object -Type DateTime -ArgumentList 1970, 1, 1, 0, 0, 0, 0
         $regexCounter = [regex]'%c.%'
         for($i=0; $i -lt $InFiles.Length; $i++){
-            $InFiles[$i].InBaseName = $UserParams.OutputFileStyle.Replace("%y4%","$($InFiles[$i].Date.Substring(0,4))").Replace("%y2%","$($InFiles[$i].Date.Substring(2,2))").Replace("%mo%","$($InFiles[$i].Date.Substring(5,2))").Replace("%d%","$($InFiles[$i].Date.Substring(8,2))").Replace("%h%","$($InFiles[$i].Date.Substring(11,2))").Replace("%mi%","$($InFiles[$i].Date.Substring(14,2))").Replace("%s%","$($InFiles[$i].Date.Substring(17,2))").Replace("%n%","$($InFiles[$i].InBaseName)")
+            [string]$backconvert = ($unixOrigin.AddSeconds($InFiles[$i].Date)).ToString("yyyy-MM-dd_HH-mm-ss")
+            $InFiles[$i].InBaseName = $UserParams.OutputFileStyle.Replace("%y4%","$($backconvert.Substring(0,4))").Replace("%y2%","$($backconvert.Substring(2,2))").Replace("%mo%","$($backconvert.Substring(5,2))").Replace("%d%","$($backconvert.Substring(8,2))").Replace("%h%","$($backconvert.Substring(11,2))").Replace("%mi%","$($backconvert.Substring(14,2))").Replace("%s%","$($backconvert.Substring(17,2))").Replace("%n%","$($InFiles[$i].InBaseName)")
 
             $inter = $InFiles[$i].InBaseName
             for($k=0; $k -lt $regexCounter.matches($InFiles[$i].InBaseName).count; $k++){
@@ -1464,7 +1494,7 @@ Function Start-FileSearch(){
         }
     }
 
-    if($script:Debug -gt 1){
+    if($script:InfoPreference -gt 1){
         if((Read-Host "    Show all found files? Positive answers: $PositiveAnswers") -in $PositiveAnswers){
             for($i=0; $i -lt $InFiles.Length; $i++){
                 Write-ColorOut "$($InFiles[$i].InFullName.Replace($UserParams.InputPath,"."))" -ForegroundColor Gray -Indentation 4
@@ -1498,15 +1528,15 @@ Function Get-HistFile(){
         $JSONFile | Out-Null
         $files_history = $JSONFile | ForEach-Object {
             [PSCustomObject]@{
-                InName = $_.InName
-                Date = $_.Date
-                Size = $_.Size
-                Hash = $_.Hash
+                InName = $_.N
+                Date = $_.D
+                Size = $_.S
+                Hash = $_.H
             }
         }
         $files_history | Out-Null
 
-        if($script:Debug -gt 1){
+        if($script:InfoPreference -gt 1){
             if((Read-Host "    Show found history-values? Positive answers: $PositiveAnswers") -in $PositiveAnswers){
                 Write-ColorOut "Found values: $($files_history.Length)" -ForegroundColor Yellow -Indentation 4
                 Write-ColorOut "Name`t`tDate`t`tSize`t`tHash" -Indentation 4
@@ -1557,29 +1587,70 @@ Function Start-DupliCheckHist(){
     $sw = [diagnostics.stopwatch]::StartNew()
     Write-ColorOut "$(Get-CurrentDate)  --  Checking for duplicates via history-file." -ForegroundColor Cyan
 
-    $properties = @("InName","Date","Size")
+    $InFiles = $InFiles | Sort-Object -Property InName,Date,Size
+    $InFiles | Out-Null
+    $HistFiles = $HistFiles | Sort-Object -Property InName,Date,Size
+    $HistFiles | Out-Null
     for($i=0; $i -lt $InFiles.Length; $i++){
         if($sw.Elapsed.TotalMilliseconds -ge 750){
-            Write-Progress -Activity "Comparing input-files to already copied files (history-file).." -PercentComplete $($i * 100 / $InFiles.Length) -Status "File # $($i + 1) / $($InFiles.Length) - $($InFiles[$i].name)"
+            Write-Progress -Activity "Comparing input-files to already copied files (history-file).." -PercentComplete $($i * 100 / $InFiles.Length) -Status "File # $($i + 1) / $($InFiles.Length) - $($InFiles[$i].Name)"
             $sw.Reset()
             $sw.Start()
         }
-
-        $inter = @(Compare-Object -ReferenceObject $InFiles[$i] -DifferenceObject $HistFiles -Property $properties -ExcludeDifferent -IncludeEqual -PassThru -ErrorAction Stop)
-        if($inter.Length -gt 0){
-            if($UserParams.HistCompareHashes -eq 1){
-                $InFiles[$i].Hash = Get-FileHash -LiteralPath $InFiles[$i].InFullName -Algorithm SHA1 | Select-Object -ExpandProperty Hash
-                if($InFiles[$i].Hash -in $inter.Hash){
+        [int]$h = 0
+        while($h -lt $HistFiles.Length){
+            if($InFiles[$i].InName -eq $HistFiles[$h].InName `
+            -and $InFiles[$i].Size -eq $HistFiles[$h].Size `
+            -and (($UserParams.AcceptTimeDiff -eq 0 -and $InFiles[$i].Date -eq $HistFiles[$h].Date) -or ($UserParams.AcceptTimeDiff -eq 1 -and ([math]::Sqrt([math]::pow(($InFiles[$i].Date - $HistFiles[$h].Date), 2))) -le $script:TimeDiff))){
+                if($UserParams.HistCompareHashes -eq 1){
+                    if($InFiles[$i].Hash -match '^ZYX$') {
+                        $InFiles[$i].Hash = Get-FileHash -LiteralPath $InFiles[$i].InFullName -Algorithm SHA1 | Select-Object -ExpandProperty Hash
+                    }
+                    if($InFiles[$i].Hash -eq $HistFiles[$h].Hash) {
+                        $InFiles[$i].ToCopy = 0
+                        break
+                    }else {
+                        $h++
+                        continue
+                    }
+                }else{
                     $InFiles[$i].ToCopy = 0
+                    break
                 }
             }else{
-                $InFiles[$i].ToCopy = 0
+                $h++
             }
         }
     }
     Write-Progress -Activity "Comparing input-files to already copied files (history-file).." -Status "Done!" -Completed
 
-    if($script:Debug -gt 1){
+    <# DOES NOT WORK AS INTENDED
+        $properties = @("InName","Size")
+        for($i=0; $i -lt $InFiles.Length; $i++){
+            if($sw.Elapsed.TotalMilliseconds -ge 750){
+                Write-Progress -Activity "Comparing input-files to already copied files (history-file).." -PercentComplete $($i * 100 / $InFiles.Length) -Status "File # $($i + 1) / $($InFiles.Length) - $($InFiles[$i].name)"
+                $sw.Reset()
+                $sw.Start()
+            }
+
+            $inter = @(Compare-Object -ReferenceObject $HistFiles -DifferenceObject $InFiles[$i] -Property $properties -ExcludeDifferent -IncludeEqual -PassThru -ErrorAction Stop)
+            if($inter.Length -gt 0){
+                if(($UserParams.AcceptTimeDiff -eq 1 -and ([math]::Sqrt([math]::pow(($InFiles[$i].Date - $inter.Date), 2))) -le $script:TimeDiff) -or ($UserParams.AcceptTimeDiff -eq 0 -and $InFiles[$i].Date -eq $inter.Date)){
+                    if($UserParams.HistCompareHashes -eq 1){
+                        $InFiles[$i].Hash = Get-FileHash -LiteralPath $InFiles[$i].InFullName -Algorithm SHA1 | Select-Object -ExpandProperty Hash
+                        if($InFiles[$i].Hash -in $inter.Hash){
+                            $InFiles[$i].ToCopy = 0
+                        }
+                    }else{
+                        $InFiles[$i].ToCopy = 0
+                    }
+                }
+            }
+        }
+        Write-Progress -Activity "Comparing input-files to already copied files (history-file).." -Status "Done!" -Completed
+    #>
+
+    if($script:InfoPreference -gt 1){
         if((Read-Host "    Show result? Positive answers: $PositiveAnswers") -in $PositiveAnswers){
             Write-ColorOut "`r`n`tFiles to skip / process:" -ForegroundColor Yellow
             for($i=0; $i -lt $InFiles.Length; $i++){
@@ -1615,12 +1686,11 @@ Function Start-DupliCheckOut(){
     # pre-defining variables:
     [array]$files_duplicheck = @()
     [int]$dupliindex_out = 0
-
-
     [array]$allChosenFormats = $(
-        if($UserParams.FormatPreference -eq "include"){@($UserParams.FormatInExclude)}
+        if($UserParams.FormatPreference -in @("include","in")){@($UserParams.FormatInExclude)}
         else{@("*")}
     )
+
     [int]$counter = 1
     for($i=0;$i -lt $allChosenFormats.Length; $i++){
         if($sw.Elapsed.TotalMilliseconds -ge 750 -or $counter -eq 1){
@@ -1640,8 +1710,8 @@ Function Start-DupliCheckOut(){
                 InFullName = $_.FullName
                 InName = $_.Name
                 Size = $_.Length
-                Date = $_.LastWriteTime.ToString("yyyy-MM-dd_HH-mm-ss")
-                Hash = $null
+                Date = ([DateTimeOffset]$($_.LastWriteTimeUtc)).ToUnixTimeSeconds()
+                Hash = "niente"
             }
             $counter++
         } -End {
@@ -1651,7 +1721,7 @@ Function Start-DupliCheckOut(){
     Write-Progress -Id 1 -Activity "Find files in $($UserParams.OutputPath)..." -Status "Done!" -Completed
     $sw.Reset()
 
-    if($UserParams.FormatPreference -eq "exclude"){
+    if($UserParams.FormatPreference -in @("exclude","ex")){
         foreach($i in $UserParams.FormatInExclude){
             [array]$files_duplicheck = @($files_duplicheck | Where-Object {$_.InName -notlike $i})
         }
@@ -1660,46 +1730,40 @@ Function Start-DupliCheckOut(){
 
     $sw.Start()
     if($files_duplicheck.Length -gt 0){
-        $properties = @("Date","Size")
-        for($i=0; $i -lt $files_duplicheck.Length; $i++){
-            if($sw.Elapsed.TotalMilliseconds -ge 750 -or $i -eq 0){
-                Write-Progress -Id 1 -Activity "Determine files in output that need to be checked..." -PercentComplete $($i * 100 / $($files_duplicheck.Length)) -Status "File # $($i + 1) / $($files_duplicheck.Length)"
+        $InFiles = $InFiles | Sort-Object -Property InName,Date,Size
+        $InFiles | Out-Null
+        $files_duplicheck = $files_duplicheck | Sort-Object -Property InName,Date,Size
+        $files_duplicheck | Out-Null
+
+        for($i=0; $i -lt $InFiles.Length; $i++){
+            if($sw.Elapsed.TotalMilliseconds -ge 750){
+                Write-Progress -Activity "Comparing input-files with files in output..." -PercentComplete $($i * 100 / $InFiles.Length) -Status "File # $($i + 1) / $($InFiles.Length) - $($InFiles[$i].Name)"
                 $sw.Reset()
                 $sw.Start()
             }
-            $inter = @(Compare-Object -ReferenceObject $files_duplicheck[$i] -DifferenceObject $InFiles -Property $properties -ExcludeDifferent -IncludeEqual -PassThru -ErrorAction Stop)
-            if($inter.Length -gt 0){
-                $files_duplicheck[$i].Hash = (Get-FileHash -LiteralPath $files_duplicheck[$i].InFullName -Algorithm SHA1 -ErrorAction Stop | Select-Object -ExpandProperty Hash)
-            }
-        }
-        $files_duplicheck = @($files_duplicheck | Where-Object {$_.Hash.Length -gt 0})
-
-        Write-Progress -Id 1 -Activity "Determine files in output that need to be checked..." -Status "Done!" -PercentComplete 100
-
-        if($files_duplicheck.Count -gt 0){
-            for($i = 0; $i -lt $InFiles.Length; $i++){
-                if($sw.Elapsed.TotalMilliseconds -ge 750 -or $i -eq 0){
-                    Write-Progress -Id 2 -Activity "Comparing input-files with files in output..." -PercentComplete $($i * 100 / $($InFiles.Length)) -Status "File # $($i + 1) / $($InFiles.Length)"
-                    $sw.Reset()
-                    $sw.Start()
-                }
-
-                $inter = @(Compare-Object -ReferenceObject $InFiles[$i] -DifferenceObject $files_duplicheck -Property $properties -ExcludeDifferent -IncludeEqual -PassThru -ErrorAction Stop)
-                if($inter.Length -gt 0){
-                    if($InFiles[$i].Hash.Length -lt 1){
+            [int]$h = 0
+            while($h -lt $files_duplicheck.Length){
+                if($InFiles[$i].InName -eq $files_duplicheck[$h].InName `
+                -and $InFiles[$i].Size -eq $files_duplicheck[$h].Size `
+                -and (($UserParams.AcceptTimeDiff -eq 0 -and $InFiles[$i].Date -eq $files_duplicheck[$h].Date) -or ($UserParams.AcceptTimeDiff -eq 1 -and ([math]::Sqrt([math]::pow(($InFiles[$i].Date - $files_duplicheck[$h].Date), 2))) -le $script:TimeDiff))){
+                    if($InFiles[$i].Hash -match '^ZYX$') {
                         $InFiles[$i].Hash = Get-FileHash -LiteralPath $InFiles[$i].InFullName -Algorithm SHA1 | Select-Object -ExpandProperty Hash
                     }
-                    if($InFiles[$i].Hash -in $inter.Hash){
+                    $files_duplicheck[$h].Hash = Get-FileHash -LiteralPath $files_duplicheck[$h].InFullName -Algorithm SHA1 | Select-Object -ExpandProperty Hash
+                    if($InFiles[$i].Hash -eq $files_duplicheck[$h].Hash) {
                         $InFiles[$i].ToCopy = 0
                         $dupliindex_out++
+                        break
+                    }else {
+                        $h++
+                        continue
                     }
+                }else{
+                    $h++
                 }
             }
-            Write-Progress -Id 2 -Activity "Comparing input-files with files in output..." -Status "Done!" -Completed
 
-            
-
-            if($script:Debug -gt 1){
+            if($script:InformationPreference -gt 1){
                 if((Read-Host "    Show all files? Positive answers: $PositiveAnswers") -in $PositiveAnswers){
                     Write-ColorOut "`r`n`tFiles to skip / process:" -ForegroundColor Yellow
                     for($i=0; $i -lt $InFiles.Length; $i++){
@@ -1712,13 +1776,12 @@ Function Start-DupliCheckOut(){
                 }
             }
             Write-ColorOut "Files to skip (outpath):`t$dupliindex_out" -ForegroundColor DarkGreen -Indentation 4
-
-            # To add the already found files to the hist-file:
-            [array]$script:dupliout = @($InFiles | Where-Object {$_.ToCopy -eq 0})
-            [array]$InFiles = @($InFiles | Where-Object {$_.ToCopy -eq 1})
-        }else{
-            Write-ColorOut "No potential dupli-files in $($UserParams.OutputPath) - skipping additional verification." -ForegroundColor Gray -Indentation 4
         }
+        Write-Progress -Activity "Comparing input-files with files in output..." -Status "Done!" -Completed
+
+        # To add the already found files to the hist-file:
+        [array]$script:dupliout = @($InFiles | Where-Object {$_.ToCopy -eq 0})
+        [array]$InFiles = @($InFiles | Where-Object {$_.ToCopy -eq 1})
 
         $script:resultvalues.dupliout = $dupliindex_out
     }else{
@@ -1738,7 +1801,7 @@ Function Start-InputGetHash(){
     Write-ColorOut "$(Get-CurrentDate)  --  Calculate remaining hashes..." -ForegroundColor Cyan
 
     if("ZYX" -in $InFiles.Hash){
-        $InFiles | Where-Object {$_.Hash -eq "ZYX"} | Start-RSJob -Name "GetHashRest" -FunctionsToLoad Write-ColorOut -ScriptBlock {
+        $InFiles | Where-Object {$_.Hash -match '^ZYX$'} | Start-RSJob -Name "GetHashRest" -FunctionsToLoad Write-ColorOut -ScriptBlock {
             try{
                 $_.Hash = (Get-FileHash -LiteralPath $_.InFullName -Algorithm SHA1 -ErrorAction Stop | Select-Object -ExpandProperty Hash)
             }catch{
@@ -1787,7 +1850,7 @@ Function Start-SpaceCheck(){
     [string]$OutPath = Split-Path -Path $UserParams.OutputPath -Qualifier
     [int]$free = ((Get-PSDrive -PSProvider 'FileSystem' | Where-Object {$_.root -match $OutPath} | Select-Object -ExpandProperty Free)[0] / 1MB)
     [int]$needed = $(($InFiles | Measure-Object -Sum -Property Size | Select-Object -ExpandProperty Sum) / 1MB)
-    
+
     if($needed -lt $free){
         Write-ColorOut "Free: $free MB`tNeeded: $needed MB  --  Okay!" -ForegroundColor Green -Indentation 4
         return $true
@@ -1848,7 +1911,7 @@ Function Start-OverwriteProtection(){
                     }
                     $InFiles[$i].OutName = "$($InFiles[$i].OutBaseName)$($InFiles[$i].Extension)"
                     $k++
-                    # if($script:Debug -ne 0){Write-ColorOut $InFiles[$i].OutBaseName}
+                    # if($script:InfoPreference -ne 0){Write-ColorOut $InFiles[$i].OutBaseName}
                     continue
                 }
             }else{
@@ -1859,14 +1922,14 @@ Function Start-OverwriteProtection(){
                 }
                 $InFiles[$i].OutName = "$($InFiles[$i].OutBaseName)$($InFiles[$i].Extension)"
                 $j++
-                # if($script:Debug -ne 0){Write-ColorOut $InFiles[$i].OutBaseName}
+                # if($script:InfoPreference -ne 0){Write-ColorOut $InFiles[$i].OutBaseName}
                 continue
             }
         }
     }
     Write-Progress -Activity "Prevent overwriting existing files..." -Status "Done!" -Completed
 
-    if($script:Debug -gt 1){
+    if($script:InfoPreference -gt 1){
         if((Read-Host "    Show all names? Positive answers: $PositiveAnswers") -in $PositiveAnswers){
             [int]$indent = 0
             for($i=0; $i -lt $InFiles.Length; $i++){
@@ -1962,8 +2025,8 @@ Function Start-FileCopy(){
         }
     }
 
-    
-    if($script:Debug -gt 1){
+
+    if($script:InfoPreference -gt 1){
         [int]$inter = Read-Host "    Show all commands? `"1`" for yes, `"2`" for writing them as files to your script's path."
         if($inter -gt 0){
             foreach($i in $rc_command){
@@ -2126,7 +2189,7 @@ Function Start-FileVerification(){
     [int]$verified = 0
     [int]$unverified = 0
     [int]$inter=0
-    if($script:Debug -gt 1){
+    if($script:InfoPreference -gt 1){
         [int]$inter = Read-Host "    Show files? Positive answers: $PositiveAnswers"
     }
     for($i=0; $i -lt $InFiles.Length; $i++){
@@ -2158,7 +2221,15 @@ Function Set-HistFile(){
     )
     Write-ColorOut "$(Get-CurrentDate)  --  Write attributes of successfully copied files to history-file..." -ForegroundColor Cyan
 
-    [array]$results = @($InFiles | Where-Object {$_.ToCopy -eq 0} | Select-Object -Property InName,Date,Size,Hash)
+    [array]$results = @()
+    [array]$results = @($InFiles | Where-Object {$_.ToCopy -eq 0} | ForEach-Object {
+        [PSCustomObject]@{
+            N = $_.InName
+            D = $_.Date
+            S = $_.Size
+            H = $_.Hash
+        }
+    })
 
     if($UserParams.WriteHistFile -eq "Yes" -and (Test-Path -LiteralPath $UserParams.HistFilePath -PathType Leaf) -eq $true){
         try{
@@ -2170,24 +2241,24 @@ Function Set-HistFile(){
         $JSON | Out-Null
         $results += $JSON | ForEach-Object {
             [PSCustomObject]@{
-                InName = $_.InName
-                Date = $_.Date
-                Size = $_.Size
-                Hash = $_.Hash
+                N = $_.InName
+                D = $_.Date
+                S = $_.Size
+                H = $_.Hash
             }
         }
     }
     if($UserParams.CheckOutputDupli -gt 0){
         $results += $script:dupliout | ForEach-Object {
             [PSCustomObject]@{
-                InName = $_.InName
-                Date = $_.Date
-                Size = $_.Size
-                Hash = $_.Hash
+                N = $_.InName
+                D = $_.Date
+                S = $_.Size
+                H = $_.Hash
             }
         }
     }
-    $results = $results | Sort-Object -Property InName,Date,Size,Hash -Unique | ConvertTo-Json
+    $results = $results | Sort-Object -Property N,D,S,H -Unique | ConvertTo-Json
     $results | Out-Null
 
     [int]$i = 0
@@ -2208,7 +2279,7 @@ Function Set-HistFile(){
             }
         }
     }
-    
+
     return $true
 }
 
@@ -2220,7 +2291,7 @@ Function Start-Everything(){
     Write-ColorOut "`r`n$(Get-CurrentDate)  --  Starting everything..." -NoNewLine -ForegroundColor Cyan -BackgroundColor DarkGray
     Write-ColorOut "A                               A" -ForegroundColor DarkGray -BackgroundColor DarkGray
 
-    if($script:Debug -gt 0){
+    if($script:InfoPreference -gt 0){
         $script:timer = [diagnostics.stopwatch]::StartNew()
     }
 
@@ -2454,7 +2525,7 @@ Function Start-Everything(){
     }else{
         Start-Sound -Success 0
     }
-    
+
     if($script:PreventStandby -gt 1){
         Stop-Process -Id $script:PreventStandby
     }

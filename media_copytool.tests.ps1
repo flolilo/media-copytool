@@ -35,11 +35,12 @@ Describe "Get-ParametersFromJSON" {
             UseHistFile =           -1
             WriteHistFile =         ""
             HistCompareHashes =     -1
-            InputSubfolderSearch =  -1
             CheckOutputDupli =      -1
+            InputSubfolderSearch =  -1
+            AvoidIdenticalFiles =   -1
+            AcceptTimeDiff =        -1
             VerifyCopies =          -1
             OverwriteExistingFiles = -1
-            AvoidIdenticalFiles =   -1
             ZipMirror =             -1
             UnmountInputDrive =     -1
         }
@@ -193,6 +194,10 @@ Describe "Get-ParametersFromJSON" {
             $test.UnmountInputDrive | Should BeOfType int
             $test.UnmountInputDrive | Should Be 24
         }
+        It "AcceptTimeDiff" {
+            $test.AcceptTimeDiff | Should BeOfType int
+            $test.AcceptTimeDiff | Should Be 26
+        }
         <# TODO: find a way to get Preventstandby working
             It "Preventstandby" {
                 $test.Preventstandby    | Should BeOfType int
@@ -240,6 +245,7 @@ Describe "Test-UserValues" {
             OverwriteExistingFiles = 0
             EnableLongPaths =       0
             AvoidIdenticalFiles =   0
+            AcceptTimeDiff =        0
             ZipMirror =             0
             UnmountInputDrive =     0
         }
@@ -360,6 +366,11 @@ Describe "Test-UserValues" {
         }
         It "AvoidIdenticalFiles" {
             $test = (Test-UserValues -UserParams $UserParams).AvoidIdenticalFiles
+            $test | Should BeOfType int
+            $test | Should Be 0
+        }
+        It "AcceptTimeDiff" {
+            $test = (Test-UserValues -UserParams $UserParams).AcceptTimeDiff
             $test | Should BeOfType int
             $test | Should Be 0
         }
@@ -534,6 +545,14 @@ Describe "Test-UserValues" {
             $UserParams.AvoidIdenticalFiles = 11
             {Test-UserValues -UserParams $UserParams} | Should Throw
         }
+        It "AcceptTimeDiff is wrong" {
+            $UserParams.AcceptTimeDiff = -1
+            {Test-UserValues -UserParams $UserParams} | Should Throw
+            $UserParams.AcceptTimeDiff = "hallo"
+            {Test-UserValues -UserParams $UserParams} | Should Throw
+            $UserParams.AcceptTimeDiff = 11
+            {Test-UserValues -UserParams $UserParams} | Should Throw
+        }
         It "ZipMirror is wrong" {
             $UserParams.ZipMirror = -1
             {Test-UserValues -UserParams $UserParams} | Should Throw
@@ -692,6 +711,7 @@ Describe "Show-Parameters" {
             OverwriteExistingFiles = 0
             EnableLongPaths =       0
             AvoidIdenticalFiles =   0
+            AcceptTimeDiff =      0
             ZipMirror =             0
             UnmountInputDrive =     0
         }
@@ -746,6 +766,7 @@ Describe "Set-Parameters" {
             OverwriteExistingFiles = 987
             EnableLongPaths =       987
             AvoidIdenticalFiles =   987
+            AcceptTimeDiff =        987
             ZipMirror =             987
             UnmountInputDrive =     987
         }
@@ -792,6 +813,7 @@ Describe "Set-Parameters" {
                     VerifyCopies =              $UserParams.VerifyCopies
                     OverwriteExistingFiles =    $UserParams.OverwriteExistingFiles
                     AvoidIdenticalFiles =       $UserParams.AvoidIdenticalFiles
+                    AcceptTimeDiff =            $UserParams.AcceptTimeDiff
                     ZipMirror =                 $UserParams.ZipMirror
                     UnmountInputDrive =         $UserParams.UnmountInputDrive
                     PreventStandby =            $script:PreventStandby
@@ -834,6 +856,7 @@ Describe "Set-Parameters" {
             $test.OverwriteExistingFiles    | Should Be $UserParams.OverwriteExistingFiles
             $test.EnableLongPaths           | Should Be $UserParams.EnableLongPaths
             $test.AvoidIdenticalFiles       | Should Be $UserParams.AvoidIdenticalFiles
+            $test.AcceptTimeDiff            | Should Be $UserParams.AcceptTimeDiff
             $test.ZipMirror                 | Should Be $UserParams.ZipMirror
             $test.UnmountInputDrive         | Should Be $UserParams.UnmountInputDrive
             $test.Preventstandby            | Should Be $script:Preventstandby
@@ -844,7 +867,7 @@ Describe "Set-Parameters" {
             $test | Should Be $true
             $test = @(Get-Content -LiteralPath $UserParams.JSONParamPath -Encoding UTF8 -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop)
             ,$test | Should BeOfType array
-            
+
             $bla = @("default")
             (Compare-Object $test.ParamPresetName $bla -ErrorAction SilentlyContinue).count | Should Be 0
             $test = $test.ParamPresetValues
@@ -865,6 +888,7 @@ Describe "Set-Parameters" {
             $test[0].VerifyCopies               | Should Be $UserParams.VerifyCopies
             $test[0].OverwriteExistingFiles     | Should Be $UserParams.OverwriteExistingFiles
             $test[0].AvoidIdenticalFiles        | Should Be $UserParams.AvoidIdenticalFiles
+            $test[0].AcceptTimeDiff             | Should Be $UserParams.AcceptTimeDiff
             $test[0].ZipMirror                  | Should Be $UserParams.ZipMirror
             $test[0].UnmountInputDrive          | Should Be $UserParams.UnmountInputDrive
             $test[0].Preventstandby             | Should Be $script:Preventstandby
@@ -893,6 +917,7 @@ Describe "Set-Parameters" {
             $test[0].VerifyCopies               | Should Be $UserParams.VerifyCopies
             $test[0].OverwriteExistingFiles     | Should Be $UserParams.OverwriteExistingFiles
             $test[0].AvoidIdenticalFiles        | Should Be $UserParams.AvoidIdenticalFiles
+            $test[0].AcceptTimeDiff             | Should Be $UserParams.AcceptTimeDiff
             $test[0].ZipMirror                  | Should Be $UserParams.ZipMirror
             $test[0].UnmountInputDrive          | Should Be $UserParams.UnmountInputDrive
             $test[0].Preventstandby             | Should Be $script:Preventstandby
@@ -929,6 +954,7 @@ Describe "Set-Parameters" {
         $test.VerifyCopies              | Should Be $UserParams.VerifyCopies
         $test.OverwriteExistingFiles    | Should Be $UserParams.OverwriteExistingFiles
         $test.AvoidIdenticalFiles       | Should Be $UserParams.AvoidIdenticalFiles
+        $test.AcceptTimeDiff            | Should Be $UserParams.AcceptTimeDiff
         $test.ZipMirror                 | Should Be $UserParams.ZipMirror
         $test.UnmountInputDrive         | Should Be $UserParams.UnmountInputDrive
         $test.Preventstandby            | Should Be $script:Preventstandby
@@ -980,7 +1006,7 @@ Describe "Start-FileSearch" {
             $test.InPath            | Should Be $UserParams.InputPath
             $test.InName            | Should Be "file specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©.cr2"
             $test.InBaseName        | Should Be "file specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
-            $test.Date              | Should Be "2018-03-12_18-01-43"
+            $test.Date              | Should Be 1533978891
         }
         It "No problems with Long paths" {
             $script:input_recurse = $false
@@ -993,7 +1019,7 @@ Describe "Start-FileSearch" {
             $test.InPath            | Should Be $UserParams.InputPath
             $test.InName            | Should Be "file_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_thEND.cr2"
             $test.InBaseName        | Should Be "file_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_thEND"
-            $test.Date              | Should Be "2018-03-12_18-01-43"
+            $test.Date              | Should Be 1532682860
         }
     }
     Context "Include, All, Exclude" {
@@ -1054,36 +1080,36 @@ Describe "Start-FileSearch" {
             $UserParams.OutputSubfolderStyle = "%y4%-%mo%-%d%"
             $test = @(Start-FileSearch -UserParams $UserParams)
             ,$test | Should BeOfType array
-            $test[0].OutSubfolder   | Should Be "\2018-03-12"
-            $test[11].OutSubfolder  | Should Be "\2018-03-12"
+            $test[0].OutSubfolder   | Should Be "\2018-08-11"
+            $test[11].OutSubfolder  | Should Be "\2018-07-27"
         }
         It "(%y4%_%mo%_%d%) BLA" {
             $UserParams.OutputSubfolderStyle = "(%y4%_%mo%_%d%) BLA"
             $test = @(Start-FileSearch -UserParams $UserParams)
             ,$test | Should BeOfType array
-            $test[0].OutSubfolder   | Should Be "\(2018_03_12) BLA"
-            $test[11].OutSubfolder  | Should Be "\(2018_03_12) BLA"
+            $test[0].OutSubfolder   | Should Be "\(2018_08_11) BLA"
+            $test[11].OutSubfolder  | Should Be "\(2018_07_27) BLA"
         }
         It "%y4%.%mo%.%d% %n%" {
             $UserParams.OutputSubfolderStyle = "%y4%.%mo%.%d% %n%"
             $test = @(Start-FileSearch -UserParams $UserParams)
             ,$test | Should BeOfType array
-            $test[0].OutSubfolder   | Should Be "\2018.03.12"
-            $test[8].OutSubfolder   | Should Be "\2018.03.12 folder_uncomplicated"
+            $test[0].OutSubfolder   | Should Be "\2018.08.11"
+            $test[8].OutSubfolder   | Should Be "\2018.07.27 folder_uncomplicated" # TODO: Why 8?
         }
         It "%y4%%mo%%d% %y2%BLA" {
             $UserParams.OutputSubfolderStyle = "%y4%%mo%%d% %y2%BLA"
             $test = @(Start-FileSearch -UserParams $UserParams)
             ,$test | Should BeOfType array
-            $test[0].OutSubfolder   | Should Be "\20180312 18BLA"
-            $test[11].OutSubfolder  | Should Be "\20180312 18BLA"
+            $test[0].OutSubfolder   | Should Be "\20180811 18BLA"
+            $test[11].OutSubfolder  | Should Be "\20180727 18BLA"
         }
         It "%y2%-%mo%-%d%" {
             $UserParams.OutputSubfolderStyle = "%y2%-%mo%-%d%"
             $test = @(Start-FileSearch -UserParams $UserParams)
             ,$test | Should BeOfType array
-            $test[0].OutSubfolder   | Should Be "\18-03-12"
-            $test[11].OutSubfolder  | Should Be "\18-03-12"
+            $test[0].OutSubfolder   | Should Be "\18-08-11"
+            $test[11].OutSubfolder  | Should Be "\18-07-27"
         }
     }
     It "OutputFileStyle" {
@@ -1091,9 +1117,9 @@ Describe "Start-FileSearch" {
         $UserParams.OutputFileStyle = "BLA_%c3% %n% %y4%-%mo%-%d%_%h%-%mi%-%s%_%y2% %n% %c1% %y4%-%mo%-%d%_%h%-%mi%-%s%"
         $test = @(Start-FileSearch -UserParams $UserParams)
         ,$test | Should BeOfType array
-        $test[0].InBaseName | Should Be "BLA_001 file specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ© 2018-03-12_18-01-43_18 file specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ© 1 2018-03-12_18-01-43"
-        $test[1].InBaseName | Should Be "BLA_002 file_uncomplicated 2018-03-12_18-01-43_18 file_uncomplicated 2 2018-03-12_18-01-43"
-        $test[11].InBaseName | Should Be "BLA_012 file_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_thEND 2018-03-12_18-01-43_18 file_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_thEND 12 2018-03-12_18-01-43"
+        $test[0].InBaseName | Should Be "BLA_001 file specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ© 2018-08-11_09-14-51_18 file specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ© 1 2018-08-11_09-14-51"
+        $test[1].InBaseName | Should Be "BLA_002 file_uncomplicated 2018-07-09_09-14-36_18 file_uncomplicated 2 2018-07-09_09-14-36"
+        $test[11].InBaseName | Should Be "BLA_012 file_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_thEND 2018-07-27_09-14-20_18 file_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_thEND 12 2018-07-27_09-14-20"
     }
 }
 
@@ -1115,19 +1141,19 @@ Describe "Get-HistFile" {
         It "Get array from regular histfile"{
             $test = @(Get-HistFile -UserParams $UserParams)
             ,$test | Should BeOfType array
-            $test[3].InName | Should Be "file_uncomplicated.jpg"
-            $test[3].Date   | Should Be "2018-03-17_15-10-58"
-            $test[3].size   | Should Be 4408
-            $test[3].hash   | Should Be "BDF90B1006CEADA6355E5274CDCDD96788624D7C"
+            $test[3].InName | Should Be "file_single.CR4"
+            $test[3].Date   | Should Be 1520874103
+            $test[3].size   | Should Be 990
+            $test[3].hash   | Should Be "3A3514D39089FAF261CAF7EC50CB06D44021C424"
         }
         It "Get array even if just one file is found" {
             $UserParams.HistFilePath = "$BlaDrive\In_Test\hist_simpleset.json"
             $test = @(Get-HistFile -UserParams $UserParams)
             ,$test | Should BeOfType array
             $test.InName | Should Be "file_uncomplicated.CR2"
-            $test.Date | Should Be "2018-03-12_18-01-43"
-            $test.size | Should Be 990
-            $test.hash | Should Be "3A3514D39089FAF261CAF7EC50CB06D44021C424"
+            $test.Date | Should Be 1531127676
+            $test.size | Should Be 540
+            $test.hash | Should Be "0EDB0FA60F13FFE645FA3C502D46707F68232561"
         }
         It "Return empty array for empty histfile" {
             Mock Read-Host {return 1}
@@ -1177,9 +1203,9 @@ Describe "Get-HistFile" {
         ,$test | Should BeOfType array
         $test = $test | Where-Object {$_.InName -eq "file specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©.jpg"}
         $test.InName | Should Be "file specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©.jpg"
-        $test.Date   | Should Be "2018-03-17_15-11-08"
-        $test.size   | Should Be 4408
-        $test.hash   | Should Be "BDF90B1006CEADA6355E5274CDCDD96788624D7C"
+        $test.Date   | Should Be 1535793091
+        $test.size   | Should Be 1342
+        $test.hash   | Should Be "1D2E6B753FBFB23FB8C4D636DBD8A09547328870"
     }
     It "No problems with long paths" {
         $UserParams.HistFilePath = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND\hist_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_tEND.json"
@@ -1187,9 +1213,9 @@ Describe "Get-HistFile" {
         ,$test | Should BeOfType array
         $test = $test | Where-Object {$_.InName -eq "file specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©.jpg"}
         $test.InName | Should Be "file specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©.jpg"
-        $test.Date   | Should Be "2018-03-17_15-11-08"
-        $test.size   | Should Be 4408
-        $test.hash   | Should Be "BDF90B1006CEADA6355E5274CDCDD96788624D7C"
+        $test.Date   | Should Be 1535793091
+        $test.size   | Should Be 1342
+        $test.hash   | Should Be "1D2E6B753FBFB23FB8C4D636DBD8A09547328870"
     }
 }
 
@@ -1207,6 +1233,7 @@ Describe "Start-DupliCheckHist" {
             UseHistFile =           1
             WriteHistFile =         "yes"
             HistCompareHashes =     1
+            AcceptTimeDiff =        0
             InputSubfolderSearch =  1
         }
     }
@@ -1216,18 +1243,44 @@ Describe "Start-DupliCheckHist" {
     Pop-Location
 
     Context "Working normal" {
-        It "Return array with correct params, don't overlap w/ HistFiles" {
+        It "Return array with correct params, find duplicates" {
             $InFiles = @(Start-FileSearch -UserParams $UserParams)
             $HistFiles = @(Get-HistFile -UserParams $UserParams)
             $test = @(Start-DupliCheckHist -InFiles $InFiles -HistFiles $HistFiles -UserParams $UserParams)
             ,$test | Should BeOfType array
             $test.Length | Should Be 0
         }
+        It "Return array with correct params, don't false-positive things" {
+            $UserParams.HistFilePath = "$BlaDrive\In_Test\hist_uncomplicated_nodup.json"
+            $InFiles = @(Start-FileSearch -UserParams $UserParams)
+            $HistFiles = @(Get-HistFile -UserParams $UserParams)
+            $test = @(Start-DupliCheckHist -InFiles $InFiles -HistFiles $HistFiles -UserParams $UserParams)
+            ,$test | Should BeOfType array
+            $test.Length | Should Be 24
+        }
+        It "Works with `$AcceptTimeDiff (1/2)" {
+            $UserParams.AcceptTimeDiff = 1
+            $InFiles = @(Start-FileSearch -UserParams $UserParams)
+            $HistFiles = @(Get-HistFile -UserParams $UserParams)
+            $test = @(Start-DupliCheckHist -InFiles $InFiles -HistFiles $HistFiles -UserParams $UserParams)
+            ,$test | Should BeOfType array
+            $test.Length | Should Be 0
+        }
+        It "Works with `$AcceptTimeDiff (2/2)" {
+            $UserParams.AcceptTimeDiff = 1
+            $UserParams.HistFilePath = "$BlaDrive\In_Test\hist_uncomplicated_accepttime.json"
+            $InFiles = @(Start-FileSearch -UserParams $UserParams)
+            $HistFiles = @(Get-HistFile -UserParams $UserParams)
+            $test = @(Start-DupliCheckHist -InFiles $InFiles -HistFiles $HistFiles -UserParams $UserParams)
+            ,$test | Should BeOfType array
+            $test.Length | Should Be 20
+        }
         It "Throws Error when parameters are wrong / missing" {
             {Start-DupliCheckHist} | Should Throw
             {Start-DupliCheckHist -InFiles @() -HistFiles @() -UserParams @()} | Should Throw
         }
         It "Does find a new file" {
+            $UserParams.AcceptTimeDiff = 1
             $UserParams.WriteHistFile = "no"
             "Blabla" | Out-File "$BlaDrive\In_Test\NEWFILE.jpg" -Encoding utf8
 
@@ -1278,6 +1331,7 @@ Describe "Start-DupliCheckOut" {
             OutputFileStyle =       "%n%"
             OutputSubfolderStyle =  "%y4%-%mo%-%d%"
             InputSubfolderSearch =  1
+            AcceptTimeDiff =        0
         }
     }
     New-Item -ItemType Directory -Path $BlaDrive
@@ -1297,20 +1351,53 @@ Describe "Start-DupliCheckOut" {
             ,$test | Should BeOfType array
             $test.Length | Should Be 24
         }
-        It "Mark all CR2s as already copied" {
-            Get-ChildItem -LiteralPath "$BlaDrive\Out_Test" -Recurse | Remove-Item
+        It "Mark all CR2s as already copied (as they are)" {
+            Get-ChildItem -LiteralPath "$BlaDrive\Out_Test" -Recurse | Remove-Item -Recurse
             Get-ChildItem -LiteralPath "$BlaDrive\In_Test" -Recurse | Copy-Item -Destination "$BlaDrive\Out_Test" -Recurse
             Get-ChildItem -Path "$BlaDrive\Out_Test" -Exclude *.cr2 -File -Recurse | Remove-Item
-
             $InFiles = @(Start-FileSearch -UserParams $UserParams)
             $test = @(Start-DupliCheckOut -InFiles $InFiles -UserParams $UserParams)
             ,$test | Should BeOfType array
             $test.Length | Should Be 12
+            $test.Extension | Should -Not -Contain ".cr2"
+            $test.Extension | Should -Contain ".jpg"
 
-            Get-ChildItem -LiteralPath "$BlaDrive\Out_Test" -Recurse -File | Remove-Item
+            Get-ChildItem -LiteralPath "$BlaDrive\Out_Test" -Recurse -File | Remove-Item -Recurse
+        }
+        It "Check time difference w/ `$AcceptTimeDiff=0" {
+            Get-ChildItem -LiteralPath "$BlaDrive\Out_Test" -Recurse | Remove-Item -Recurse
+            Get-ChildItem -LiteralPath "$BlaDrive\In_Test" -Recurse | Copy-Item -Destination "$BlaDrive\Out_Test" -Recurse
+            Get-ChildItem -LiteralPath "$BlaDrive\Out_Test" -Recurse -File | ForEach-Object {$_.LastWriteTime = $_.LastWriteTime.AddSeconds(2)}
+            Start-Sleep -Milliseconds 250
+            $InFiles = @(Start-FileSearch -UserParams $UserParams)
+            $test = @(Start-DupliCheckOut -InFiles $InFiles -UserParams $UserParams)
+            ,$test | Should BeOfType array
+            $test.Length | Should Be 24
+        }
+        It "Check time difference w/ `$AcceptTimeDiff=1" {
+            $UserParams.AcceptTimeDiff = 1
+            Get-ChildItem -LiteralPath "$BlaDrive\Out_Test" -Recurse | Remove-Item -Recurse
+            Get-ChildItem -LiteralPath "$BlaDrive\In_Test" -Recurse | Copy-Item -Destination "$BlaDrive\Out_Test" -Recurse
+            Get-ChildItem -LiteralPath "$BlaDrive\Out_Test" -Recurse -File | ForEach-Object {$_.LastWriteTime = $_.LastWriteTime.AddSeconds(2)}
+            Start-Sleep -Milliseconds 250
+            $InFiles = @(Start-FileSearch -UserParams $UserParams)
+            $test = @(Start-DupliCheckOut -InFiles $InFiles -UserParams $UserParams)
+            , $test | Should BeOfType array
+            $test.Length | Should Be 0
+        }
+        It "Check different hashes and sizes, too" {
+            Get-ChildItem -LiteralPath "$BlaDrive\Out_Test" -Recurse | Remove-Item -Recurse
+            Get-ChildItem -LiteralPath "$BlaDrive\In_Test" -Recurse | Copy-Item -Destination "$BlaDrive\Out_Test" -Recurse
+            Get-ChildItem -LiteralPath "$BlaDrive\Out_Test" -Recurse -File | ForEach-Object {Out-File -InputObject "a" -LiteralPath $_.FullName -Append -Encoding utf8 -Force}
+            Start-Sleep -Milliseconds 250
+            $InFiles = @(Start-FileSearch -UserParams $UserParams)
+            $test = @(Start-DupliCheckOut -InFiles $InFiles -UserParams $UserParams)
+            , $test | Should BeOfType array
+            $test.Length | Should Be 24
         }
     }
     It "No problems with SpecChars" {
+        Get-ChildItem -LiteralPath "$BlaDrive\Out_Test" -Recurse | Remove-Item -Recurse
         Get-ChildItem -LiteralPath "$BlaDrive\In_Test" -Recurse -Directory | Copy-Item -Destination "$BlaDrive\Out_Test"
 
         $UserParams.InputPath = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
@@ -1367,13 +1454,16 @@ Describe "Start-InputGetHash" {
                 $i | Should Not Be ("ZYX")
             }
         }
+        It "No re-hashing of files" {
+            # TODO:
+        }
         It "Work even if one file already has a hash" {
             $InFiles = @(Start-FileSearch -UserParams $UserParams)
             $InFiles[2].Hash = "TEST"
             $test = @(Start-InputGetHash -InFiles $InFiles)
             ,$test | Should BeOfType array
             $Test[2].Hash | Should Be "TEST"
-            $test = $test | Where-Object {$_.Hash -eq "ZYX"}
+            $test = $test | Where-Object {$_.Hash -match '^ZYX$'}
             $test.Length | Should Be 0
         }
     }
