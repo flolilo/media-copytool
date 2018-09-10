@@ -2,7 +2,7 @@
 # Maybe also comment out write-colorout function.
 
 # DEFINITION: Get all error-outputs in English:
-    [Threading.Thread]::CurrentThread.CurrentUICulture = 'en-US'
+[Threading.Thread]::CurrentThread.CurrentUICulture = 'en-US'
 # DEFINITION: Hopefully avoiding errors by wrong encoding now:
     $OutputEncoding = New-Object -TypeName System.Text.UTF8Encoding
     [Console]::InputEncoding = New-Object -TypeName System.Text.UTF8Encoding
