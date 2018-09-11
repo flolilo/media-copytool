@@ -1991,7 +1991,7 @@ Describe "Start-FileCopy"{
             $bla = Start-FileCopy -UserParams $UserParams -InFiles $test
             (Compare-Object -ReferenceObject $(Get-LongChildItem -Path "$($UserParams.InputPath)" -Include *.cr2,*.jpg,*.cr3 -Recurse) -DifferenceObject $(Get-LongChildItem -Path "$($UserParams.OutputPath)" -Include *.cr2,*.jpg,*.cr3 -Recurse) -Property Size,LastWriteTime -ErrorAction SilentlyContinue).count | Should Be 0
         }
-        It "TODO: Overwrite old files" {
+        It "Overwrite old files" {
             Get-LongChildItem $UserParams.OutputPath -File -Recurse | Remove-LongItem -Recurse -Force
             Start-Sleep -Milliseconds 10
             $UserParams.OverwriteExistingFiles = 1
@@ -2005,7 +2005,7 @@ Describe "Start-FileCopy"{
             (Get-LongChildItem $UserParams.OutputPath -File -Recurse).Length | Should Be $InFiles.Length
             Get-LongChildItem $UserParams.OutputPath -File -Recurse | % {$_.FullName | Should Not BeLike "*OutCopy*"}
         }
-        It "TODO: Don't overwrite old files" {
+        It "Don't overwrite old files" {
             Get-LongChildItem $UserParams.OutputPath -File -Recurse | Remove-LongItem -Recurse -Force
             Start-Sleep -Milliseconds 10
             $UserParams.OverwriteExistingFiles = 0
@@ -2017,17 +2017,27 @@ Describe "Start-FileCopy"{
             start-sleep -Milliseconds 10
             $test2 = @(Start-OverwriteProtection -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
             Start-FileCopy -UserParams $UserParams -InFiles $test2
-            start-sleep -Seconds 1
-            $test2 | Format-List | Out-Host
-            Pause
+            start-sleep -Milliseconds 10
             (Get-LongChildItem $UserParams.OutputPath -File -Include *.cr2,*.jpg,*.cr3 -Recurse).Length | Should Be ($test.Length * 2)
-            Get-LongChildItem $UserParams.OutputPath -File -Include *.cr2,*.jpg,*.cr3 -Recurse | % {$_.FullName | Should BeLike "*OutCopy*"}
+            (Get-LongChildItem $UserParams.OutputPath -File -Include *.cr2,*.jpg,*.cr3 -Recurse | ? {$_.FullName -match '^.*_OutCopy\d.*$'}).Length | Should Be ($test.Length)
         }
-        It "TODO: Special Characters" {
-
+        It "Special Characters" {
+            $UserParams.InputPath = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
+            $UserParams.OutputPath = "$BlaDrive\Out_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
+            $InFiles = @(Start-FileSearch -UserParams $UserParams)
+            $NewFiles = $InFiles | Select-Object *
+            $test = @(Start-OverwriteProtection -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+            $bla = Start-FileCopy -UserParams $UserParams -InFiles $test
+            (Compare-Object -ReferenceObject $(Get-LongChildItem -Path "$($UserParams.InputPath)" -Include *.cr2,*.jpg,*.cr3 -Recurse) -DifferenceObject $(Get-LongChildItem -Path "$($UserParams.OutputPath)" -Include *.cr2,*.jpg,*.cr3 -Recurse) -Property Size,LastWriteTime -ErrorAction SilentlyContinue).count | Should Be 0
         }
-        It "TODO: Long paths" {
-
+        It "Long paths" {
+            $UserParams.InputPath = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
+            $UserParams.OutputPath = "$BlaDrive\Out_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
+            $InFiles = @(Start-FileSearch -UserParams $UserParams)
+            $NewFiles = $InFiles | Select-Object *
+            $test = @(Start-OverwriteProtection -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+            $bla = Start-FileCopy -UserParams $UserParams -InFiles $test
+            (Compare-Object -ReferenceObject $(Get-LongChildItem -Path "$($UserParams.InputPath)" -Include *.cr2,*.jpg,*.cr3 -Recurse) -DifferenceObject $(Get-LongChildItem -Path "$($UserParams.OutputPath)" -Include *.cr2,*.jpg,*.cr3 -Recurse) -Property Size,LastWriteTime -ErrorAction SilentlyContinue).count | Should Be 0
         }
     }
 }

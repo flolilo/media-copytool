@@ -1977,7 +1977,7 @@ Function Start-OverwriteProtection(){
             }
         }
         $InFiles[$i].OutName = "$($InFiles[$i].OutBaseName)$($InFiles[$i].Extension)"
-        # $InFiles[$i] | Format-List -Property InFullName,OutBaseName,OutName,OutPath | Out-Host
+        # $InFiles[$i] | Format-List -Property InFullName,OutBaseName,OutName,OutPath | Out-Host #VERBOSE
     }
     Write-Progress -Activity "Prevent overwriting existing files..." -Status "Done!" -Completed
 
@@ -2038,7 +2038,7 @@ Function Start-FileCopy(){
     # setting up robocopy:
     [array]$rc_command = @()
     # CREDIT: https://stackoverflow.com/a/40750265/8013879
-    [string]$rc_suffix = "/R:5 /W:15 /MT:$($script:ThreadCount) /XO /XC /XN /NC /NJH /J /IT /IS"
+    [string]$rc_suffix = "/R:5 /W:15 /MT:$($script:ThreadCount) /ETA /NC /NJH /J /IT /IS /UNICODE"
     [string]$rc_inter_inpath = ""
     [string]$rc_inter_outpath = ""
     [string]$rc_inter_files = ""
@@ -2119,6 +2119,7 @@ Function Start-FileCopy(){
         Start-Process robocopy -ArgumentList $rc_command[$i] -Wait -NoNewWindow
     }
 
+    # Start Copy-LongItem:
     $sw = [diagnostics.stopwatch]::StartNew()
     for($i=0; $i -lt $ps_files.Length; $i++){
         if($sw.Elapsed.TotalMilliseconds -ge 750 -or $i -eq 0){
