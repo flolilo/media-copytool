@@ -481,8 +481,8 @@ $standby = @'
     Write-Host "(PID = $("{0:D8}" -f $pid))" -ForegroundColor Gray
     $MyShell = New-Object -ComObject "Wscript.Shell"
     while($true){
-        $MyShell.sendkeys("{F15}")
         Start-Sleep -Seconds 90
+        $MyShell.sendkeys("{F15}")
     }
 '@
     $standby = [System.Text.Encoding]::Unicode.GetBytes($standby)
@@ -1890,6 +1890,23 @@ Function Start-OverwriteProtection(){
         Write-ColorOut "only freshly copied files..." -ForegroundColor Cyan
     }
 
+    Function Get-ShorterPath(){
+        param(
+            [ValidateNotNullOrEmpty()]
+            [string]$InString =         $(throw 'InString is required by Get-ShorterPath'),
+            [ValidateNotNullOrEmpty()]
+            [hashtable]$UserParams =    $(throw 'UserParams is required by Get-ShorterPath'),
+            [int]$maxpathlength =       $(throw 'maxpathlength is required by Get-ShorterPath')
+        )
+
+        [int]$1st = ([math]::Floor($maxpathlength/2) - 1)
+        [int]$2nd = ([math]::Floor($maxpathlength/2) - 1)
+
+        $InString = "$($InString.Substring(0, [math]::Min($InString.Length, $1st)))---$($InString.Substring([math]::Max($2nd, ($InString.Length - $2nd)), $2nd))"
+
+        return $InString
+    }
+
     [array]$allpaths = @()
 
     $sw = [diagnostics.stopwatch]::StartNew()
@@ -1904,14 +1921,14 @@ Function Start-OverwriteProtection(){
 
         # restrict subfolder path length:
         if($InFiles[$i].OutSubfolder.Length -gt 255){
-            $InFiles[$i].OutSubfolder = "$($InFiles[$i].OutSubfolder.Substring(0, [math]::Min($InFiles[$i].OutSubfolder.Length, 119)))---$($InFiles[$i].OutSubfolder.Substring([math]::Max(123, ($InFiles[$i].OutSubfolder.Length - 123)), 123))"
+            $InFiles[$i].OutSubfolder = $(Get-ShorterPath -InString $InFiles[$i].OutSubfolder -UserParams $UserParams -maxpathlength 255)
         }
         # create outpath:
         $InFiles[$i].OutPath = $("$($OutputPath)$($InFiles[$i].OutSubfolder)").Replace("\\","\").Replace("\\","\")
         $InFiles[$i].OutBaseName = $InFiles[$i].InBaseName
         # restrict length of file names (found multiple times here):
         if($InFiles[$i].OutBaseName.Length -gt $maxpathlength){
-            $InFiles[$i].OutBaseName = "$($InFiles[$i].OutBaseName.Substring(0, [math]::Min($InFiles[$i].OutBaseName.Length, 119)))---$($InFiles[$i].OutBaseName.Substring([math]::Max(123, ($InFiles[$i].OutBaseName.Length - 123)), 123))"
+            $InFiles[$i].OutBaseName = $(Get-ShorterPath -InString $InFiles[$i].OutBaseName -UserParams $UserParams -maxpathlength $maxpathlength)
         }
         # check for files with same name from input:
         [int]$j = 1
@@ -1926,36 +1943,41 @@ Function Start-OverwriteProtection(){
                     if($k -eq 1){
                         $InFiles[$i].OutBaseName = "$($InFiles[$i].OutBaseName)_OutCopy$k"
                         if($InFiles[$i].OutBaseName.Length -gt $maxpathlength){
-                            $InFiles[$i].OutBaseName = "$($InFiles[$i].OutBaseName.Substring(0, [math]::Min($InFiles[$i].OutBaseName.Length, ([math]::Floor($maxpathlength / 2)))))---$($InFiles[$i].OutBaseName.Substring([math]::Max(([math]::Floor($maxpathlength / 2)), ($InFiles[$i].OutBaseName.Length - ([math]::Floor($maxpathlength / 2)))), ([math]::Floor($maxpathlength / 2))))"
+                            $InFiles[$i].OutBaseName = $(Get-ShorterPath -InString $InFiles[$i].OutBaseName -UserParams $UserParams -maxpathlength $maxpathlength)
                         }
                     }else{
                         $InFiles[$i].OutBaseName = $InFiles[$i].OutBaseName -replace "_OutCopy$($k - 1)","_OutCopy$k"
                         if($InFiles[$i].OutBaseName.Length -gt $maxpathlength){
-                            $InFiles[$i].OutBaseName = "$($InFiles[$i].OutBaseName.Substring(0, [math]::Min($InFiles[$i].OutBaseName.Length, 119)))---$($InFiles[$i].OutBaseName.Substring([math]::Max(123, ($InFiles[$i].OutBaseName.Length - 123)), 123))"
+                            $InFiles[$i].OutBaseName = $(Get-ShorterPath -InString $InFiles[$i].OutBaseName -UserParams $UserParams -maxpathlength $maxpathlength)
                         }
                     }
                     $k++
-                    if($UserParams.InfoPreference -gt 0){$InFiles[$i].OutBaseName | Out-Host} #VERBOSE
+                    if($UserParams.InfoPreference -gt 0){
+                        $InFiles[$i].OutBaseName | Out-Host #VERBOSE
+                    }
                     continue
                 }
             }else{
                 if($j -eq 1){
                     $InFiles[$i].OutBaseName = "$($InFiles[$i].OutBaseName)_InCopy$j"
-                    if($InFiles[$i].OutBaseName.Length -gt 245){
-                        $InFiles[$i].OutBaseName = "$($InFiles[$i].OutBaseName.Substring(0, [math]::Min($InFiles[$i].OutBaseName.Length, 119)))---$($InFiles[$i].OutBaseName.Substring([math]::Max(123, ($InFiles[$i].OutBaseName.Length - 123)), 123))"
+                    if($InFiles[$i].OutBaseName.Length -gt $maxpathlength){
+                        $InFiles[$i].OutBaseName = $(Get-ShorterPath -InString $InFiles[$i].OutBaseName -UserParams $UserParams -maxpathlength $maxpathlength)
                     }
                 }else{
                     $InFiles[$i].OutBaseName = $InFiles[$i].OutBaseName -replace "_InCopy$($j - 1)","_InCopy$j"
-                    if($InFiles[$i].OutBaseName.Length -gt 245){
-                        $InFiles[$i].OutBaseName = "$($InFiles[$i].OutBaseName.Substring(0, [math]::Min($InFiles[$i].OutBaseName.Length, 119)))---$($InFiles[$i].OutBaseName.Substring([math]::Max(123, ($InFiles[$i].OutBaseName.Length - 123)), 123))"
+                    if($InFiles[$i].OutBaseName.Length -gt $maxpathlength){
+                        $InFiles[$i].OutBaseName = $(Get-ShorterPath -InString $InFiles[$i].OutBaseName -UserParams $UserParams -maxpathlength $maxpathlength)
                     }
                 }
                 $j++
-                if($UserParams.InfoPreference -gt 0){$InFiles[$i].OutBaseName | Out-Host} #VERBOSE
+                if($UserParams.InfoPreference -gt 0){
+                    $InFiles[$i].OutBaseName | Out-Host #VERBOSE
+                }
                 continue
             }
         }
         $InFiles[$i].OutName = "$($InFiles[$i].OutBaseName)$($InFiles[$i].Extension)"
+        # $InFiles[$i] | Format-List -Property InFullName,OutBaseName,OutName,OutPath | Out-Host
     }
     Write-Progress -Activity "Prevent overwriting existing files..." -Status "Done!" -Completed
 
@@ -2015,7 +2037,8 @@ Function Start-FileCopy(){
 
     # setting up robocopy:
     [array]$rc_command = @()
-    [string]$rc_suffix = "/R:5 /W:15 /MT:$($script:ThreadCount) /XO /XC /XN /NC /NJH /J"
+    # CREDIT: https://stackoverflow.com/a/40750265/8013879
+    [string]$rc_suffix = "/R:5 /W:15 /MT:$($script:ThreadCount) /XO /XC /XN /NC /NJH /J /IT /IS"
     [string]$rc_inter_inpath = ""
     [string]$rc_inter_outpath = ""
     [string]$rc_inter_files = ""
@@ -2107,14 +2130,20 @@ Function Start-FileCopy(){
             New-LongItem -Path "$($ps_files[$i].OutPath)" -ItemType Directory -ErrorAction Stop -WarningAction SilentlyContinue
             Start-Sleep -Milliseconds 1
             Copy-LongItem -Path "$($ps_files[$i].InFullName)" -Destination "$($ps_files[$i].OutPath)\$($ps_files[$i].OutName)" -Force -ErrorAction Stop
+            Write-Host $ps_files[$i].OutName -ForegroundColor Green
         }catch{
             Write-ColorOut "Copying failed for $($ps_files[$i].InFullName) $($ps_files[$i].OutPath)\$($ps_files[$i].OutName)" -ForegroundColor Magenta -Indentation 4
+            Write-Host $ps_files[$i].OutName -ForegroundColor Red
             Start-Sleep -Seconds 2
         }
     }
     Write-Progress -Activity "Starting Copying.." -Status "Done!" -Completed
 
-    Write-VolumeCache -DriveLetter "$($(Split-Path -Path $UserParams.OutputPath -Qualifier).Replace(":",''))"
+    try{
+        Write-VolumeCache -DriveLetter "$($(Split-Path -Path $UserParams.OutputPath -Qualifier).Replace(":",''))" -ErrorAction Stop
+    }catch{
+        Start-Sleep -Seconds 5
+    }
     Start-Sleep -Milliseconds 250
 
     <#

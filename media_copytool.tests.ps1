@@ -1992,10 +1992,36 @@ Describe "Start-FileCopy"{
             (Compare-Object -ReferenceObject $(Get-LongChildItem -Path "$($UserParams.InputPath)" -Include *.cr2,*.jpg,*.cr3 -Recurse) -DifferenceObject $(Get-LongChildItem -Path "$($UserParams.OutputPath)" -Include *.cr2,*.jpg,*.cr3 -Recurse) -Property Size,LastWriteTime -ErrorAction SilentlyContinue).count | Should Be 0
         }
         It "TODO: Overwrite old files" {
-
+            Get-LongChildItem $UserParams.OutputPath -File -Recurse | Remove-LongItem -Recurse -Force
+            Start-Sleep -Milliseconds 10
+            $UserParams.OverwriteExistingFiles = 1
+            $UserParams.InputSubfolderSearch = 0
+            $InFiles = @(Start-FileSearch -UserParams $UserParams)
+            $NewFiles = $InFiles | Select-Object *
+            $test = @(Start-OverwriteProtection -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+            Start-FileCopy -UserParams $UserParams -InFiles $test
+            $test2 = @(Start-OverwriteProtection -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+            Start-FileCopy -UserParams $UserParams -InFiles $test2
+            (Get-LongChildItem $UserParams.OutputPath -File -Recurse).Length | Should Be $InFiles.Length
+            Get-LongChildItem $UserParams.OutputPath -File -Recurse | % {$_.FullName | Should Not BeLike "*OutCopy*"}
         }
         It "TODO: Don't overwrite old files" {
-
+            Get-LongChildItem $UserParams.OutputPath -File -Recurse | Remove-LongItem -Recurse -Force
+            Start-Sleep -Milliseconds 10
+            $UserParams.OverwriteExistingFiles = 0
+            $UserParams.InputSubfolderSearch = 0
+            $InFiles = @(Start-FileSearch -UserParams $UserParams)
+            $NewFiles = $InFiles | Select-Object *
+            $test = @(Start-OverwriteProtection -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+            Start-FileCopy -UserParams $UserParams -InFiles $test
+            start-sleep -Milliseconds 10
+            $test2 = @(Start-OverwriteProtection -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+            Start-FileCopy -UserParams $UserParams -InFiles $test2
+            start-sleep -Seconds 1
+            $test2 | Format-List | Out-Host
+            Pause
+            (Get-LongChildItem $UserParams.OutputPath -File -Include *.cr2,*.jpg,*.cr3 -Recurse).Length | Should Be ($test.Length * 2)
+            Get-LongChildItem $UserParams.OutputPath -File -Include *.cr2,*.jpg,*.cr3 -Recurse | % {$_.FullName | Should BeLike "*OutCopy*"}
         }
         It "TODO: Special Characters" {
 
