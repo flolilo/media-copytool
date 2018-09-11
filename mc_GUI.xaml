@@ -275,7 +275,7 @@
                         Width="250"
                     />
                     <CheckBox x:Name="CheckBoxEnableLongPaths"
-                        Content="Allow paths >260 characters (Win 10 only)" ToolTip="Enable paths longer than 260 characters (USE IT WITH WIN 10 AND ENABLED LONG PATHS ONLY!)." VerticalContentAlignment="Center"
+                        Content="Allow paths >260 characters (Win 10 only)" ToolTip="Enable paths longer than 260 characters." VerticalContentAlignment="Center"
                         Foreground="#FFDE0000"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,85,0,0"
                         Width="250"

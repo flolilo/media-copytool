@@ -532,7 +532,7 @@ Function Get-ParametersFromJSON(){
             $jsonparams = Get-Content -LiteralPath $UserParams.JSONParamPath -Raw -Encoding UTF8 -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
             if($jsonparams.Length -eq 0){
                 Write-ColorOut "$($UserParams.JSONParamPath.Replace("$($PSScriptRoot)",".")) is empty!" -ForegroundColor Magenta -Indentation 4
-                throw
+                throw '$UserParams.JSONParamPath is empty'
             }
 
             if($UserParams.LoadParamPresetName -in $jsonparams.ParamPresetName){
@@ -622,13 +622,13 @@ Function Get-ParametersFromJSON(){
             Write-ColorOut "$($UserParams.JSONParamPath.Replace("$($PSScriptRoot)",".")) cannot be loaded - aborting!" -ForegroundColor Red -Indentation 4
             Write-ColorOut "(You can specify the path with -JSONParamPath (w/o GUI) - or use `"-EnableGUI 1`".)" -ForegroundColor Magenta -Indentation 4
             Start-Sleep -Seconds 5
-            throw
+            throw '$UserParams.JSONParamPath cannot be loaded'
         }
     }else{
         Write-ColorOut "$($UserParams.JSONParamPath.Replace("$($PSScriptRoot)",".")) does not exist - aborting!" -ForegroundColor Red -Indentation 4
         Write-ColorOut "(You can specify the path with -JSONParamPath (w/o GUI) - or use `"-EnableGUI 1`".)" -ForegroundColor Magenta -Indentation 4
         Start-Sleep -Seconds 5
-        throw
+        throw '$UserParams.JSONParamPath does not exist'
     }
 
     return $UserParams
@@ -1026,7 +1026,7 @@ Function Test-UserValues(){
 
         if($UserParams.InputPath.Length -lt 2 -or (Test-Path -LiteralPath $UserParams.InputPath -PathType Container -ErrorAction SilentlyContinue) -eq $false){
             Write-ColorOut "Input-path $($UserParams.InputPath) could not be found." -ForegroundColor Red -Indentation 4
-            throw
+            throw 'Input-path $UserParams.InputPath could not be found.'
         }
     # DEFINITION: $OutputPath
         $invalidChars = "[{0}]" -f [RegEx]::Escape($([IO.Path]::GetInvalidFileNameChars() -join '' -replace '\\',''))
@@ -1040,7 +1040,7 @@ Function Test-UserValues(){
 
         if($UserParams.OutputPath -eq $UserParams.InputPath){
             Write-ColorOut "Output-path $($UserParams.OutputPath) is the same as input-path." -ForegroundColor Red -Indentation 4
-            throw
+            throw 'Output-path $UserParams.OutputPath is the same as input-path.'
         }
         if($UserParams.OutputPath.Length -lt 2 -or (Test-Path -LiteralPath $UserParams.OutputPath -PathType Container -ErrorAction SilentlyContinue) -eq $false){
             if((Split-Path -Parent -Path $UserParams.OutputPath).Length -gt 1 -and (Test-Path -LiteralPath $(Split-Path -Qualifier -Path $UserParams.OutputPath) -PathType Container -ErrorAction SilentlyContinue) -eq $true){
@@ -1064,7 +1064,7 @@ Function Test-UserValues(){
     # DEFINITION: $MirrorEnable
         if($UserParams.MirrorEnable -notin (0..1)){
             Write-ColorOut "Invalid choice of -MirrorEnable." -ForegroundColor Red -Indentation 4
-            throw
+            throw 'Invalid choice of -MirrorEnable.'
         }
     # DEFINITION: $MirrorPath
         $invalidChars = "[{0}]" -f [RegEx]::Escape($([IO.Path]::GetInvalidFileNameChars() -join '' -replace '\\',''))
@@ -1079,7 +1079,7 @@ Function Test-UserValues(){
         if($UserParams.MirrorEnable -eq 1){
             if($UserParams.MirrorPath -eq $UserParams.InputPath -or $UserParams.MirrorPath -eq $UserParams.OutputPath){
                 Write-ColorOut "Additional output-path $($UserParams.MirrorPath) is the same as input- or output-path." -ForegroundColor Red -Indentation 4
-                throw
+                throw 'Additional output-path $UserParams.MirrorPath is the same as input- or output-path.'
             }
             if($UserParams.MirrorPath.Length -lt 2 -or (Test-Path -LiteralPath $UserParams.MirrorPath -PathType Container -ErrorAction SilentlyContinue) -eq $false){
                 if((Split-Path -Parent -Path $UserParams.MirrorPath).Length -gt 1 -and (Test-Path -LiteralPath $(Split-Path -Qualifier -Path $UserParams.MirrorPath) -PathType Container -ErrorAction SilentlyContinue) -eq $true){
@@ -1097,7 +1097,7 @@ Function Test-UserValues(){
                     }
                 }else{
                     Write-ColorOut "Additional output-path $($UserParams.MirrorPath) not found." -ForegroundColor Red -Indentation 4
-                    throw
+                    throw 'Additional output-path $UserParams.MirrorPath not found.'
                 }
             }
         }
@@ -1122,18 +1122,18 @@ Function Test-UserValues(){
         $UserParams.OutputFileStyle = $UserParams.OutputFileStyle.ToLower() -Replace $invalidChars -Replace '^\ +$',"" -Replace '\ +$',""
         if($UserParams.OutputFileStyle.Length -lt 2 -or $UserParams.OutputFileStyle -match '^\s*$'){
             Write-ColorOut "Invalid choice of -OutputFileStyle." -ForegroundColor Red -Indentation 4
-            throw
+            throw 'Invalid choice of -OutputFileStyle.'
         }
     # DEFINITION: $UseHistFile
         if($UserParams.UseHistFile -notin (0..1)){
             Write-ColorOut "Invalid choice of -UseHistFile." -ForegroundColor Red -Indentation 4
-            throw
+            throw 'Invalid choice of -UseHistFile.'
         }
     # DEFINITION: $WriteHistFile
         [array]$inter=@("yes","no","overwrite")
         if($UserParams.WriteHistFile -notin $inter -or $UserParams.WriteHistFile.Length -gt $inter[2].Length){
             Write-ColorOut "Invalid choice of -WriteHistFile." -ForegroundColor Red -Indentation 4
-            throw
+            throw 'Invalid choice of -WriteHistFile.'
         }
     # DEFINITION: $HistFilePath
         $invalidChars = "[{0}]" -f [RegEx]::Escape($([IO.Path]::GetInvalidFileNameChars() -join '' -replace '\\',''))
@@ -1151,31 +1151,31 @@ Function Test-UserValues(){
                 }
             }else{
                 Write-ColorOut "-HistFilePath $($UserParams.HistFilePath) could not be found." -ForegroundColor Red -Indentation 4
-                throw
+                throw '-HistFilePath $UserParams.HistFilePath could not be found.'
             }
         }
     # DEFINITION: $HistCompareHashes
         if($UserParams.HistCompareHashes -notin (0..1)){
             Write-ColorOut "Invalid choice of -HistCompareHashes." -ForegroundColor Red -Indentation 4
-            throw
+            throw 'Invalid choice of -HistCompareHashes.'
         }
     # DEFINITION: $CheckOutputDupli
         if($UserParams.CheckOutputDupli -notin (0..1)){
             Write-ColorOut "Invalid choice of -CheckOutputDupli." -ForegroundColor Red -Indentation 4
-            throw
+            throw 'Invalid choice of -CheckOutputDupli.'
         }
     # DEFINITION: $AvoidIdenticalFiles
         if($UserParams.AvoidIdenticalFiles -notin (0..1)){
             Write-ColorOut "Invalid choice of -AvoidIdenticalFiles." -ForegroundColor Red -Indentation 4
-            throw
+            throw 'Invalid choice of -AvoidIdenticalFiles.'
         }
     # DEFINITION: $AcceptTimeDiff
         if($UserParams.AcceptTimeDiff -notin (0..1)){
             Write-ColorOut "Invalid choice of -AcceptTimeDiff." -ForegroundColor Red -Indentation 4
-            throw
+            throw 'Invalid choice of -AcceptTimeDiff.'
         }
     # DEFINITION: $InputSubfolderSearch
-        if($UserParams.InputSubfolderSearch -notin (0..1)){
+        if($UserParams.InputSubfolderSearch -notin (0..1) -and $UserParams.InputSubfolderSearch -notin @($true,$false)){
             Write-ColorOut "Invalid choice of -InputSubfolderSearch ($($UserParams.InputSubfolderSearch))." -ForegroundColor Red -Indentation 4
             throw 'Invalid choice of -InputSubfolderSearch.'
         }elseif($UserParams.InputSubfolderSearch -eq 1){
@@ -1187,52 +1187,52 @@ Function Test-UserValues(){
     # DEFINITION: $VerifyCopies
         if($UserParams.VerifyCopies -notin (0..1)){
             Write-ColorOut "Invalid choice of -VerifyCopies." -ForegroundColor Red -Indentation 4
-            throw
+            throw 'Invalid choice of -VerifyCopies.'
         }
     # DEFINITION: $OverwriteExistingFiles
         if($UserParams.OverwriteExistingFiles -notin (0..1)){
             Write-ColorOut "Invalid choice of -OverwriteExistingFiles." -ForegroundColor Red -Indentation 4
-            throw
+            throw 'Invalid choice of -OverwriteExistingFiles.'
         }
     # DEFINITION: $EnableLongPaths
         if($UserParams.EnableLongPaths -notin (0..1)){
             Write-ColorOut "Invalid choice of -EnableLongPaths." -ForegroundColor Red -Indentation 4
-            throw
+            throw 'Invalid choice of -EnableLongPaths.'
         }
     # DEFINITION: $ZipMirror
         if($UserParams.ZipMirror -notin (0..1)){
             Write-ColorOut "Invalid choice of -ZipMirror." -ForegroundColor Red -Indentation 4
-            throw
+            throw 'Invalid choice of -ZipMirror.'
         }
     # DEFINITION: $UnmountInputDrive
         if($UserParams.UnmountInputDrive -notin (0..1)){
             Write-ColorOut "Invalid choice of -UnmountInputDrive." -ForegroundColor Red -Indentation 4
-            throw
+            throw 'Invalid choice of -UnmountInputDrive.'
         }
     # DEFINITION: $PreventStandby (SCRIPT VAR)
-        if($script:PreventStandby -notin (0..1)){
+        if($script:PreventStandby -notin (0..1) -or $script:PreventStandby -notin ($true,$false)){
             Write-ColorOut "Invalid choice of -PreventStandby." -ForegroundColor Red -Indentation 4
-            throw
+            throw 'Invalid choice of -PreventStandby.'
         }
     # DEFINITION: $RememberInPath
         if($UserParams.RememberInPath -notin (0..1)){
             Write-ColorOut "Invalid choice of -RememberInPath." -ForegroundColor Red -Indentation 4
-            throw
+            throw 'Invalid choice of -RememberInPath.'
         }
     # DEFINITION: $RememberOutPath
         if($UserParams.RememberOutPath -notin (0..1)){
             Write-ColorOut "Invalid choice of -RememberOutPath." -ForegroundColor Red -Indentation 4
-            throw
+            throw 'Invalid choice of -RememberOutPath.'
         }
     # DEFINITION: $RememberMirrorPath
         if($UserParams.RememberMirrorPath -notin (0..1)){
             Write-ColorOut "Invalid choice of -RememberMirrorPath." -ForegroundColor Red -Indentation 4
-            throw
+            throw 'Invalid choice of -RememberMirrorPath.'
         }
     # DEFINITION: $RememberSettings
         if($UserParams.RememberSettings -notin (0..1)){
             Write-ColorOut "Invalid choice of -RememberSettings." -ForegroundColor Red -Indentation 4
-            throw
+            throw 'Invalid choice of -RememberSettings.'
         }
 
     # DEFINITION: If everything was sucessful, return UserParams:
@@ -1537,7 +1537,7 @@ Function Get-HistFile(){
         }catch{
             Write-ColorOut "Could not load $($UserParams.HistFilePath)." -ForegroundColor Red -Indentation 4
             Start-Sleep -Seconds 5
-            throw
+            throw 'Could not load $UserParams.HistFilePath.'
         }
         $JSONFile | Out-Null
         $files_history = $JSONFile | ForEach-Object {
@@ -1567,7 +1567,7 @@ Function Get-HistFile(){
                 return @()
             }else{
                 Write-ColorOut "`r`n`tAborting.`r`n" -ForegroundColor Magenta
-                throw
+                throw 'Aborting.'
             }
         }
         if("ZYX" -in $files_history.Hash -and $UserParams.HistCompareHashes -eq 1){
@@ -1580,7 +1580,7 @@ Function Get-HistFile(){
             return @()
         }else{
             Write-ColorOut "`r`n`tAborting.`r`n" -ForegroundColor Magenta
-            throw
+            throw 'Aborting.'
         }
     }
 
@@ -2496,7 +2496,7 @@ Function Start-Everything(){
         Write-ColorOut "Files left after dupli-check(s):`t$($script:resultvalues.ingoing - $script:resultvalues.duplihist - $script:resultvalues.dupliout - $script:resultvalues.identicalFiles) = $($script:resultvalues.copyfiles)" -ForegroundColor Yellow -Indentation 4
 
         # DEFINITION: Get free space:
-        if((Start-SpaceCheck -InFiles $inputfiles -OutPath $UserParams.OutputPath) -eq $false){
+        if((Start-SpaceCheck -UserParams $UserParams -InFiles $inputfiles -OutPath $UserParams.OutputPath) -eq $false){
             Start-Sound -Success 0
             Start-Sleep -Seconds 2
             if($UserParams.EnableGUI -eq 1){
