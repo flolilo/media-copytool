@@ -279,7 +279,7 @@ param(
         $ErrorActionPreference = 'Stop'
     }
 
-# DEFINITION: Load PoshRSJob:
+# DEFINITION: Load PoshRSJob & PSAlphaFS:
     try{
         Import-Module -Name "PoshRSJob" -NoClobber -Global -ErrorAction Stop
     }catch{
@@ -296,6 +296,27 @@ param(
             Write-Host "github.com/proxb/PoshRSJob/releases " -NoNewline
             Write-Host "and install it to " -ForegroundColor Red -NoNewline
             Write-Host "<SCRIPT_PATH>\Modules\PoshRSJob\<VERSION.NUMBER>" -NoNewline -ForegroundColor Gray
+            Write-Host "." -ForegroundColor Red
+            Pause
+            Exit
+        }
+    }
+    try{
+        Import-Module -Name "PSAlphaFS" -NoClobber -Global -ErrorAction Stop
+    }catch{
+        try{
+            [string]$PSAlphaFSPath = Get-ChildItem -LiteralPath $PSScriptRoot\Modules\PSAlphaFS -Recurse -Filter PSAlphaFS.psm1 -ErrorAction Stop | Select-Object -ExpandProperty FullName
+            Import-Module $PSAlphaFSPath -NoClobber -Global -ErrorAction Stop
+            Remove-Variable -Name PSAlphaFS
+        }catch{
+            Write-Host "Could not load Module `"PSAlphaFS`" - Please install it in an " -ForegroundColor Red -NoNewline
+            Write-Host "administrative console " -ForegroundColor Yellow -NoNewline
+            Write-Host "via " -ForegroundColor Red -NoNewline
+            Write-Host "Install-Module PSAlphaFS" -NoNewline
+            Write-Host ", download it from " -ForegroundColor Red -NoNewline
+            Write-Host "powershellgallery.com/packages/PSAlphaFS " -NoNewline
+            Write-Host "and install it to " -ForegroundColor Red -NoNewline
+            Write-Host "<SCRIPT_PATH>\Modules\PSAlphaFS\<VERSION.NUMBER>" -NoNewline -ForegroundColor Gray
             Write-Host "." -ForegroundColor Red
             Pause
             Exit
@@ -1021,14 +1042,12 @@ Function Test-UserValues(){
             if($UserParams.OutputPath.Length -lt 2 -or (Test-Path -LiteralPath $UserParams.OutputPath -PathType Container -ErrorAction SilentlyContinue) -eq $false){
                 if((Split-Path -Parent -Path $UserParams.OutputPath).Length -gt 1 -and (Test-Path -LiteralPath $(Split-Path -Qualifier -Path $UserParams.OutputPath) -PathType Container -ErrorAction SilentlyContinue) -eq $true){
                     try{
-                        if($UserParams.EnableLongPaths -eq 0){
-                            $inter = $UserParams.OutputPath.Substring(0, [math]::Min($UserParams.OutputPath.Length, 250))
-                            if($inter -ne $UserParams.OutputPath){
-                                Write-ColorOut "OutputPath was longer than 260 characters - shortened it to 250 to allow files to be named." -ForegroundColor Magenta -Indentation 4
-                                $UserParams.OutputPath = $inter
-                            }
+                        [string]$inter = $UserParams.OutputPath.Substring(0, [math]::Min($UserParams.OutputPath.Length, 250))
+                        if($inter -ne $UserParams.OutputPath){
+                            Write-ColorOut "OutputPath was longer than 250 characters - shortened it to 250 to allow files to be named." -ForegroundColor Magenta -Indentation 4
+                            $UserParams.OutputPath = $inter
                         }
-                        New-Item -ItemType Directory -Path $UserParams.OutputPath -ErrorAction Stop | Out-Null
+                        New-LongItem -ItemType Directory -Path $UserParams.OutputPath -WarningAction SilentlyContinue -ErrorAction Stop | Out-Null
                         Write-ColorOut "Output-path $($UserParams.OutputPath) created." -ForegroundColor Yellow -Indentation 4
                     }catch{
                         Write-ColorOut "Could not create output-path $($UserParams.OutputPath)." -ForegroundColor Red -Indentation 4
@@ -1047,7 +1066,7 @@ Function Test-UserValues(){
         # DEFINITION: $MirrorPath
             $invalidChars = "[{0}]" -f [RegEx]::Escape($([IO.Path]::GetInvalidFileNameChars() -join '' -replace '\\',''))
             $separator = '\:\\'
-            $inter = $UserParams.MirrorPath -Split $separator
+            [array]$inter = $UserParams.MirrorPath -Split $separator
             $inter[1] = $inter[1] -Replace $invalidChars
             $UserParams.MirrorPath = $inter -join "$([regex]::Unescape($separator))"
             if($UserParams.MirrorPath -match '^.{3,}\\$'){
@@ -1062,14 +1081,12 @@ Function Test-UserValues(){
                 if($UserParams.MirrorPath.Length -lt 2 -or (Test-Path -LiteralPath $UserParams.MirrorPath -PathType Container -ErrorAction SilentlyContinue) -eq $false){
                     if((Split-Path -Parent -Path $UserParams.MirrorPath).Length -gt 1 -and (Test-Path -LiteralPath $(Split-Path -Qualifier -Path $UserParams.MirrorPath) -PathType Container -ErrorAction SilentlyContinue) -eq $true){
                         try{
-                            if($UserParams.EnableLongPaths -eq 0){
-                                $inter = $UserParams.MirrorPath.Substring(0, [math]::Min($UserParams.MirrorPath.Length, 250))
-                                if($inter -ne $UserParams.MirrorPath){
-                                    Write-ColorOut "MirrorPath was longer than 260 characters - shortened it to 250 to allow files to be named." -ForegroundColor Magenta -Indentation 4
-                                    $UserParams.MirrorPath = $inter
-                                }
+                            [string]$inter = $UserParams.MirrorPath.Substring(0, [math]::Min($UserParams.MirrorPath.Length, 250))
+                            if($inter -ne $UserParams.MirrorPath){
+                                Write-ColorOut "MirrorPath was longer than 250 characters - shortened it to 250 to allow files to be named." -ForegroundColor Magenta -Indentation 4
+                                $UserParams.MirrorPath = $inter
                             }
-                            New-Item -ItemType Directory -Path $UserParams.MirrorPath -ErrorAction Stop | Out-Null
+                            New-LongItem -ItemType Directory -Path $UserParams.MirrorPath -WarningAction SilentlyContinue -ErrorAction Stop | Out-Null
                             Write-ColorOut "Mirror-path $($UserParams.MirrorPath) created." -ForegroundColor Yellow -Indentation 4
                         }catch{
                             Write-ColorOut "Could not create mirror-path $($UserParams.MirrorPath)." -ForegroundColor Red -Indentation 4
@@ -1886,14 +1903,14 @@ Function Start-OverwriteProtection(){
         [int]$maxpathlength = (255 - $InFiles[$i].Extension.Length)
 
         # restrict subfolder path length:
-        if($UserParams.EnableLongPaths -eq 0 -and $InFiles[$i].OutSubfolder.Length -gt 255){
+        if($InFiles[$i].OutSubfolder.Length -gt 255){
             $InFiles[$i].OutSubfolder = "$($InFiles[$i].OutSubfolder.Substring(0, [math]::Min($InFiles[$i].OutSubfolder.Length, 119)))---$($InFiles[$i].OutSubfolder.Substring([math]::Max(123, ($InFiles[$i].OutSubfolder.Length - 123)), 123))"
         }
         # create outpath:
         $InFiles[$i].OutPath = $("$($OutputPath)$($InFiles[$i].OutSubfolder)").Replace("\\","\").Replace("\\","\")
         $InFiles[$i].OutBaseName = $InFiles[$i].InBaseName
         # restrict length of file names (found multiple times here):
-        if($UserParams.EnableLongPaths -eq 0 -and $InFiles[$i].OutBaseName.Length -gt $maxpathlength){
+        if($InFiles[$i].OutBaseName.Length -gt $maxpathlength){
             $InFiles[$i].OutBaseName = "$($InFiles[$i].OutBaseName.Substring(0, [math]::Min($InFiles[$i].OutBaseName.Length, 119)))---$($InFiles[$i].OutBaseName.Substring([math]::Max(123, ($InFiles[$i].OutBaseName.Length - 123)), 123))"
         }
         # check for files with same name from input:
@@ -1908,12 +1925,12 @@ Function Start-OverwriteProtection(){
                 }else{
                     if($k -eq 1){
                         $InFiles[$i].OutBaseName = "$($InFiles[$i].OutBaseName)_OutCopy$k"
-                        if($UserParams.EnableLongPaths -eq 0 -and $InFiles[$i].OutBaseName.Length -gt $maxpathlength){
+                        if($InFiles[$i].OutBaseName.Length -gt $maxpathlength){
                             $InFiles[$i].OutBaseName = "$($InFiles[$i].OutBaseName.Substring(0, [math]::Min($InFiles[$i].OutBaseName.Length, ([math]::Floor($maxpathlength / 2)))))---$($InFiles[$i].OutBaseName.Substring([math]::Max(([math]::Floor($maxpathlength / 2)), ($InFiles[$i].OutBaseName.Length - ([math]::Floor($maxpathlength / 2)))), ([math]::Floor($maxpathlength / 2))))"
                         }
                     }else{
                         $InFiles[$i].OutBaseName = $InFiles[$i].OutBaseName -replace "_OutCopy$($k - 1)","_OutCopy$k"
-                        if($UserParams.EnableLongPaths -eq 0 -and $InFiles[$i].OutBaseName.Length -gt $maxpathlength){
+                        if($InFiles[$i].OutBaseName.Length -gt $maxpathlength){
                             $InFiles[$i].OutBaseName = "$($InFiles[$i].OutBaseName.Substring(0, [math]::Min($InFiles[$i].OutBaseName.Length, 119)))---$($InFiles[$i].OutBaseName.Substring([math]::Max(123, ($InFiles[$i].OutBaseName.Length - 123)), 123))"
                         }
                     }
@@ -1924,12 +1941,12 @@ Function Start-OverwriteProtection(){
             }else{
                 if($j -eq 1){
                     $InFiles[$i].OutBaseName = "$($InFiles[$i].OutBaseName)_InCopy$j"
-                    if($UserParams.EnableLongPaths -eq 0 -and $InFiles[$i].OutBaseName.Length -gt 245){
+                    if($InFiles[$i].OutBaseName.Length -gt 245){
                         $InFiles[$i].OutBaseName = "$($InFiles[$i].OutBaseName.Substring(0, [math]::Min($InFiles[$i].OutBaseName.Length, 119)))---$($InFiles[$i].OutBaseName.Substring([math]::Max(123, ($InFiles[$i].OutBaseName.Length - 123)), 123))"
                     }
                 }else{
                     $InFiles[$i].OutBaseName = $InFiles[$i].OutBaseName -replace "_InCopy$($j - 1)","_InCopy$j"
-                    if($UserParams.EnableLongPaths -eq 0 -and $InFiles[$i].OutBaseName.Length -gt 245){
+                    if($InFiles[$i].OutBaseName.Length -gt 245){
                         $InFiles[$i].OutBaseName = "$($InFiles[$i].OutBaseName.Substring(0, [math]::Min($InFiles[$i].OutBaseName.Length, 119)))---$($InFiles[$i].OutBaseName.Substring([math]::Max(123, ($InFiles[$i].OutBaseName.Length - 123)), 123))"
                     }
                 }
@@ -1945,13 +1962,16 @@ Function Start-OverwriteProtection(){
     # Check OutPath for length:
     # TODO: This is a crude implementation. It should be better than this in the future, e.g. change names instead of throwing.
     if($UserParams.EnableLongPaths -eq 0){
+        [int]$counter = 0
         foreach($i in $InFiles){
             [string]$pathtest = "$($i.OutPath)\$($i.OutName)"
             if($pathtest.Length -gt 260){
                 Write-ColorOut "$pathtest would be over 260 characters long." -ForegroundColor Red -Indentation 4
-                Start-Sleep -Seconds 2
-                $i.ToCopy = 0
+                $counter++
             }
+        }
+        if($counter -gt 0){
+            Start-Sleep -Seconds 5
         }
     }
 
@@ -1990,7 +2010,8 @@ Function Start-FileCopy(){
         Write-ColorOut "$($UserParams.OutputPath)\$($UserParams.OutputSubfolderStyle)..." -ForegroundColor Cyan
     }
 
-    $InFiles = $InFiles | Sort-Object -Property InPath,OutPath
+    $InFiles = $InFiles | Where-Object {$_.ToCopy -eq 1} | Sort-Object -Property InPath,OutPath
+    $InFiles | Out-Null
 
     # setting up robocopy:
     [array]$rc_command = @()
@@ -1999,40 +2020,42 @@ Function Start-FileCopy(){
     [string]$rc_inter_outpath = ""
     [string]$rc_inter_files = ""
     # setting up xcopy:
-    [array]$xc_command = @()
-    [string]$xc_suffix = " /Q /J /Y"
+    # [array]$xc_command = @()
+    # [string]$xc_suffix = " /Q /J /Y"
+    [array]$ps_files = @()
 
     for($i=0; $i -lt $InFiles.length; $i++){
-        if($InFiles[$i].tocopy -eq 1){
-            # check if files is qualified for robocopy (out-name = in-name):
-            if($InFiles[$i].outname -eq $(Split-Path -Leaf -Path $InFiles[$i].FullName)){
-                if($rc_inter_inpath.Length -eq 0 -or $rc_inter_outpath.Length -eq 0 -or $rc_inter_files.Length -eq 0){
-                    $rc_inter_inpath = "`"$($InFiles[$i].inpath)`""
-                    $rc_inter_outpath = "`"$($InFiles[$i].outpath)`""
-                    $rc_inter_files = "`"$($InFiles[$i].outname)`" "
-                # if in-path and out-path stay the same (between files)...
-                }elseif("`"$($InFiles[$i].inpath)`"" -eq $rc_inter_inpath -and "`"$($InFiles[$i].outpath)`"" -eq $rc_inter_outpath){
-                    # if command-length is within boundary:
-                    if($($rc_inter_inpath.Length + $rc_inter_outpath.Length + $rc_inter_files.Length + $InFiles[$i].outname.Length) -lt 8100){
-                        $rc_inter_files += "`"$($InFiles[$i].outname)`" "
-                    }else{
-                        $rc_command += "$rc_inter_inpath $rc_inter_outpath $rc_inter_files $rc_suffix"
-                        $rc_inter_files = "`"$($InFiles[$i].outname)`" "
-                    }
-                # if in-path and out-path DON'T stay the same (between files):
+        # check if files is qualified for robocopy (out-name = in-name):
+        if($InFiles[$i].OutBaseName -eq $InFiles[$i].InBaseName){
+            if($rc_inter_inpath.Length -eq 0 -or $rc_inter_outpath.Length -eq 0 -or $rc_inter_files.Length -eq 0){
+                $rc_inter_inpath = "`"$($InFiles[$i].InPath)`""
+                $rc_inter_outpath = "`"$($InFiles[$i].OutPath)`""
+                $rc_inter_files = "`"$($InFiles[$i].OutName)`" "
+            # if in-path and out-path stay the same (between files)...
+            }elseif("`"$($InFiles[$i].InPath)`"" -eq $rc_inter_inpath -and "`"$($InFiles[$i].OutPath)`"" -eq $rc_inter_outpath){
+                # if command-length is within boundary:
+                if($($rc_inter_inpath.Length + $rc_inter_outpath.Length + $rc_inter_files.Length + $InFiles[$i].OutName.Length) -lt 8100){
+                    $rc_inter_files += "`"$($InFiles[$i].OutName)`" "
                 }else{
                     $rc_command += "$rc_inter_inpath $rc_inter_outpath $rc_inter_files $rc_suffix"
-                    $rc_inter_inpath = "`"$($InFiles[$i].inpath)`""
-                    $rc_inter_outpath = "`"$($InFiles[$i].outpath)`""
-                    $rc_inter_files = "`"$($InFiles[$i].outname)`" "
+                    $rc_inter_files = "`"$($InFiles[$i].OutName)`" "
                 }
-
-            # if NOT qualified for robocopy:
+            # if in-path and out-path DON'T stay the same (between files):
             }else{
-                $xc_command += "`"$($InFiles[$i].FullName)`" `"$($InFiles[$i].outpath)\$($InFiles[$i].outname)*`" $xc_suffix"
+                $rc_command += "$rc_inter_inpath $rc_inter_outpath $rc_inter_files $rc_suffix"
+                $rc_inter_inpath = "`"$($InFiles[$i].InPath)`""
+                $rc_inter_outpath = "`"$($InFiles[$i].OutPath)`""
+                $rc_inter_files = "`"$($InFiles[$i].OutName)`" "
             }
+        # if NOT qualified for robocopy:
+        }else{
+            # $xc_command += "`"$($InFiles[$i].InFullName)`" `"$($InFiles[$i].OutPath)\$($InFiles[$i].OutName)*`" $xc_suffix"
+            $ps_files += $InFiles[$i]
         }
     }
+    $InFiles | Out-Null
+    $ps_files | Out-Null
+
     # if last element is robocopy:
     if($rc_inter_inpath.Length -ne 0 -or $rc_inter_outpath.Length -ne 0 -or $rc_inter_files.Length -ne 0){
         if($rc_inter_inpath -notin $rc_command -or $rc_inter_outpath -notin $rc_command -or $rc_inter_files -notin $rc_command){
@@ -2040,7 +2063,7 @@ Function Start-FileCopy(){
         }
     }
 
-
+    # infos if needed:
     if($UserParams.InfoPreference -gt 1){
         [int]$inter = Read-Host "    Show all commands? `"1`" for yes, `"2`" for writing them as files to your script's path."
         if($inter -gt 0){
@@ -2050,10 +2073,18 @@ Function Start-FileCopy(){
                     [System.IO.File]::AppendAllText("$($PSScriptRoot)\robocopy_commands.txt", $i)
                 }
             }
-            foreach($i in $xc_command){
-                Write-ColorOut "xcopy $i`r`n" -ForegroundColor Gray -Indentation 4
+            <#
+                foreach($i in $xc_command){
+                    Write-ColorOut "xcopy $i`r`n" -ForegroundColor Gray -Indentation 4
+                    if($inter -eq 2){
+                        [System.IO.File]::AppendAllText("$($PSScriptRoot)\xcopy_commands.txt", $i)
+                    }
+                }
+            #>
+            foreach($i in $ps_files){
+                Write-ColorOut "Copy-LongItem $($i.InFullName) $($i.OutPath)\$($i.OutName)`r`n" -ForegroundColor Gray -Indentation 4
                 if($inter -eq 2){
-                    [System.IO.File]::AppendAllText("$($PSScriptRoot)\xcopy_commands.txt", $i)
+                    [System.IO.File]::AppendAllText("$($PSScriptRoot)\ps_commands.txt", "$($i.InFullName) $($i.OutPath)\$($i.OutName)")
                 }
             }
             Invoke-Pause
@@ -2065,31 +2096,51 @@ Function Start-FileCopy(){
         Start-Process robocopy -ArgumentList $rc_command[$i] -Wait -NoNewWindow
     }
 
-    # start xcopy:
     $sw = [diagnostics.stopwatch]::StartNew()
-    [int]$counter=0
-    for($i=0; $i -lt $xc_command.Length; $i++){
-        while($counter -ge $script:ThreadCount){
-            $counter = @(Get-Process -Name xcopy -ErrorAction SilentlyContinue).count
-            Start-Sleep -Milliseconds 10
-        }
+    for($i=0; $i -lt $ps_files.Length; $i++){
         if($sw.Elapsed.TotalMilliseconds -ge 750 -or $i -eq 0){
-            Write-Progress -Activity "Starting Xcopy.." -PercentComplete $($i / $xc_command.Length * 100) -Status "File # $($i + 1) / $($xc_command.Length)"
+            Write-Progress -Activity "Starting Copying.." -PercentComplete $($i / $ps_files.Length * 100) -Status "File # $($i + 1) / $($ps_files.Length)"
             $sw.Reset()
             $sw.Start()
         }
-        Start-Process xcopy -ArgumentList $xc_command[$i] -WindowStyle Hidden
-        $counter++
+        try{
+            New-LongItem -Path "$($ps_files[$i].OutPath)" -ItemType Directory -ErrorAction Stop -WarningAction SilentlyContinue
+            Start-Sleep -Milliseconds 1
+            Copy-LongItem -Path "$($ps_files[$i].InFullName)" -Destination "$($ps_files[$i].OutPath)\$($ps_files[$i].OutName)" -Force -ErrorAction Stop
+        }catch{
+            Write-ColorOut "Copying failed for $($ps_files[$i].InFullName) $($ps_files[$i].OutPath)\$($ps_files[$i].OutName)" -ForegroundColor Magenta -Indentation 4
+            Start-Sleep -Seconds 2
+        }
     }
-    while($counter -gt 0){
-        $counter = @(Get-Process -Name xcopy -ErrorAction SilentlyContinue).count
-        Start-Sleep -Milliseconds 25
-    }
-    Write-Progress -Activity "Starting Xcopy.." -Status "Done!" -Completed
+    Write-Progress -Activity "Starting Copying.." -Status "Done!" -Completed
 
+    Write-VolumeCache -DriveLetter "$($(Split-Path -Path $UserParams.OutputPath -Qualifier).Replace(":",''))"
     Start-Sleep -Milliseconds 250
 
-    $sw.Reset()
+    <#
+        # start xcopy:
+        $sw = [diagnostics.stopwatch]::StartNew()
+        [int]$counter=0
+        for($i=0; $i -lt $xc_command.Length; $i++){
+            while($counter -ge $script:ThreadCount){
+                $counter = @(Get-Process -Name xcopy -ErrorAction SilentlyContinue).count
+                Start-Sleep -Milliseconds 10
+            }
+            if($sw.Elapsed.TotalMilliseconds -ge 750 -or $i -eq 0){
+                Write-Progress -Activity "Starting Xcopy.." -PercentComplete $($i / $xc_command.Length * 100) -Status "File # $($i + 1) / $($xc_command.Length)"
+                $sw.Reset()
+                $sw.Start()
+            }
+            $xc_command[$i] | Out-Host
+            Start-Process xcopy -ArgumentList $xc_command[$i] -NoNewWindow # -WindowStyle Hidden
+            $counter++
+        }
+        while($counter -gt 0){
+            $counter = @(Get-Process -Name xcopy -ErrorAction SilentlyContinue).count
+            Start-Sleep -Milliseconds 25
+        }
+        Write-Progress -Activity "Starting Xcopy.." -Status "Done!" -Completed
+    #>
 }
 
 # DEFINITION: Starting 7zip:
@@ -2176,7 +2227,7 @@ Function Start-FileVerification(){
             if($_.Hash -ne $hash){
                 Write-ColorOut "Broken:`t$inter" -ForegroundColor Red -Indentation 4
                 try{
-                    Rename-Item -LiteralPath $inter -NewName "$($inter)_broken" -ErrorAction Stop
+                    Rename-LongItem -Path $inter -NewName "$($inter)_broken" -ErrorAction Stop
                 }catch{
                     Write-ColorOut "Renaming $inter failed." -ForegroundColor Magenta -Indentation 4
                 }
@@ -2184,7 +2235,7 @@ Function Start-FileVerification(){
                 $_.ToCopy = 0
                 if((Test-Path -LiteralPath "$($inter)_broken" -PathType Leaf) -eq $true){
                     try{
-                        Remove-Item -LiteralPath "$($inter)_broken" -ErrorAction Stop
+                        Remove-LongItem -Path "$($inter)_broken" -ErrorAction Stop
                     }catch{
                         Write-ColorOut "Removing $($inter)_broken failed." -ForegroundColor Magenta -Indentation 4
                     }
@@ -2193,7 +2244,7 @@ Function Start-FileVerification(){
         }else{
             Write-ColorOut "Missing:`t$inter" -ForegroundColor Red -Indentation 4
             try{
-                New-Item -ItemType File -Path "$($inter)_broken" -ErrorAction Stop | Out-Null
+                New-LongItem -ItemType File -Path "$($inter)_broken" -ErrorAction Stop | Out-Null
             }catch{
                 Write-ColorOut "Creating $($inter)_broken failed." -ForegroundColor Magenta -Indentation 4
             }

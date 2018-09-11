@@ -2,7 +2,7 @@
 # Maybe also comment out write-colorout function.
 
 # DEFINITION: Get all error-outputs in English:
-[Threading.Thread]::CurrentThread.CurrentUICulture = 'en-US'
+    [Threading.Thread]::CurrentThread.CurrentUICulture = 'en-US'
 # DEFINITION: Hopefully avoiding errors by wrong encoding now:
     $OutputEncoding = New-Object -TypeName System.Text.UTF8Encoding
     [Console]::InputEncoding = New-Object -TypeName System.Text.UTF8Encoding
@@ -672,8 +672,8 @@ Describe "Test-UserValues" {
             $UserParams.HistFilePath    = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND\hist_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_tEND.json"
             $test = Test-UserValues -UserParams $UserParams
             $test | Should BeOfType hashtable
-            Test-Path -LiteralPath "$BlaDrive\Out_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND" -PathType Container | Should Be $true
-            Test-Path -LiteralPath "$BlaDrive\Mirr_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND" -PathType Container | Should Be $true
+            Test-Path -LiteralPath $UserParams.OutputPath.Substring(0, [math]::Min($UserParams.OutputPath.Length, 250)) -PathType Container | Should Be $true
+            Test-Path -LiteralPath $UserParams.MirrorPath.Substring(0, [math]::Min($UserParams.MirrorPath.Length, 250)) -PathType Container | Should Be $true
         }
     }
 }
@@ -1693,7 +1693,7 @@ Describe "Start-OverwriteProtection" {
             $counter | Should be $([math]::Floor(($InFiles.Length * 3 / 4)))
             $wrong  | Should be 0
         }
-        It "Test if length is restricted with EnableLongPaths=0" {
+        It "Test if length is restricted with EnableLongPaths=0 (TODO: Limit size of string to XYZ?)" {
             $UserParams.EnableLongPaths = 0
             $UserParams.OutputSubfolderStyle =  "%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%"
             $InFiles = @(Start-FileSearch -UserParams $UserParams)
@@ -1712,18 +1712,14 @@ Describe "Start-OverwriteProtection" {
             (Compare-Object $InFiles $test -Property OutName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
             (Compare-Object $InFiles $test -Property OutBaseName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
             (Compare-Object $InFiles $test -Property Hash -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
-            (Compare-Object $InFiles $test -Property ToCopy -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
-            foreach($i in $test.OutName){
-                $i.Length | Should BeLessOrEqual 255
-            }
-            foreach($i in $test.OutSubfolder){
-                $i.Length | Should BeLessOrEqual 255
-            }
-            foreach($i in $test.ToCopy){
-                $i | Should Be 0
-            }
+            (Compare-Object $InFiles $test -Property ToCopy -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            <# TODO: Limit size of string to XYZ?
+                foreach($i in $test){
+                    ("$($i.OutPath)\$($i.OutName)").Length | Should BeLessOrEqual 255
+                }
+            #>
         }
-        It "Test if length is not restricted with EnableLongPaths=1" {
+        It "Test if length is not restricted with EnableLongPaths=1 (TODO: Per limitations, EnableLongPaths=1 still has to limit each element of the path to 255 chars)" {
             $UserParams.EnableLongPaths = 1
             $UserParams.OutputSubfolderStyle =  "%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%"
             $InFiles = @(Start-FileSearch -UserParams $UserParams)
@@ -1737,26 +1733,18 @@ Describe "Start-OverwriteProtection" {
             (Compare-Object $InFiles $test -Property Extension -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
             (Compare-Object $InFiles $test -Property Size -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
             (Compare-Object $InFiles $test -Property Date -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
-            (Compare-Object $InFiles $test -Property OutSubfolder -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property OutSubfolder -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
             (Compare-Object $InFiles $test -Property OutPath -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
             (Compare-Object $InFiles $test -Property OutName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
             (Compare-Object $InFiles $test -Property OutBaseName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
             (Compare-Object $InFiles $test -Property Hash -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
             (Compare-Object $InFiles $test -Property ToCopy -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
-            [int]$counter = 0
             foreach($i in $test.OutName){
-                if($i.Length -gt 255){
-                    $counter++
-                }
+                $i.Length | Should BeLessOrEqual 255
             }
-            $counter | Should BeGreaterThan 0
-            [int]$counter = 0
             foreach($i in $test.OutSubfolder){
-                if($i.Length -gt 255){
-                    $counter++
-                }
+                $i.Length | Should BeLessOrEqual 255
             }
-            $counter | Should BeGreaterThan 0
         }
         It "Add _OutCopyXY if file is there mutliple times" {
             $UserParams.InputSubfolderSearch = 0
@@ -1971,8 +1959,50 @@ Describe "Start-OverwriteProtection" {
 }
 
 Describe "Start-FileCopy"{
-    It "Copy Files (TODO: Everything.)"{
-        #TODO: From here
+    $BlaDrive = "$TestDrive\media-copytool_TEST"
+    BeforeEach {
+        [hashtable]$UserParams = @{
+            InputPath =             "$BlaDrive\In_Test"
+            OutputPath =            "$BlaDrive\Out_Test"
+            FormatPreference =      "include"
+            FormatInExclude =       @("*.cr2","*.jpg","*.cr3")
+            OutputFileStyle =       "%n%"
+            OutputSubfolderStyle =  "%y4%-%mo%-%d%"
+            InputSubfolderSearch =  1
+            OverwriteExistingFiles = 0
+            EnableLongPaths =       1
+        }
+    }
+    New-Item -ItemType Directory -Path $BlaDrive
+    Push-Location $BlaDrive
+    Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x -aoa -bb0 -pdefault -sccUTF-8 -spf2 `"$($PSScriptRoot)\media_copytool_TESTFILES.7z`" `"-o.\`" " -WindowStyle Minimized -Wait
+    Pop-Location
+
+    Context "Works as planned" {
+        It "Throw if no/wrong parameter" {
+            {Start-FileCopy} | Should Throw
+            {Start-FileCopy -InFiles @()} | Should Throw
+            {Start-FileCopy -UserParams 1} | Should Throw
+        }
+        It "Copy all files to %y4%-%mo%-%d%" {
+            $InFiles = @(Start-FileSearch -UserParams $UserParams)
+            $NewFiles = $InFiles | Select-Object *
+            $test = @(Start-OverwriteProtection -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+            $bla = Start-FileCopy -UserParams $UserParams -InFiles $test
+            (Compare-Object -ReferenceObject $(Get-LongChildItem -Path "$($UserParams.InputPath)" -Include *.cr2,*.jpg,*.cr3 -Recurse) -DifferenceObject $(Get-LongChildItem -Path "$($UserParams.OutputPath)" -Include *.cr2,*.jpg,*.cr3 -Recurse) -Property Size,LastWriteTime -ErrorAction SilentlyContinue).count | Should Be 0
+        }
+        It "TODO: Overwrite old files" {
+
+        }
+        It "TODO: Don't overwrite old files" {
+
+        }
+        It "TODO: Special Characters" {
+
+        }
+        It "TODO: Long paths" {
+
+        }
     }
 }
 

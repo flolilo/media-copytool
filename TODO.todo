@@ -2,7 +2,7 @@ Todo:
     [ ] Create a all-round Pester-script @high
     [ ] Make sure that only allowed names are used for files & folders.
         [ ] https://msdn.microsoft.com/en-us/library/windows/desktop/aa365247(v=vs.85).aspx & https://cosmoskey.blogspot.co.at/2009/09/powershell-function-convert.html @critical
-    [ ] look for alternative to xcopy (e.g. `Copy-Item` and `Write-FileSystemCache`?). i.e. is file-buffering really that bad?
+    [ ] Check impact of file buffering through `Copy-LongItem` and `Write-FileSystemCache` @low
     [ ] Add support for multiple input-folders, especially for `AvoidIdenticalFiles`?
     [ ] Create GUI in C#, call CLI-only, param-only PoSh-script with it (i.e. `media-copytool.exe` opens GUI, then passes values to `media-copytool.ps1`)
         [ ] Separate GUI from rest of the script: GUI starts script with parameters. (2nd script) @high
@@ -10,6 +10,7 @@ Todo:
     [ ] test [`PSThreadJob`](https://github.com/PaulHigin/PSThreadJob) performance. @low
     [ ] Deutsche Übersetzung (sinnvollerweise erst mit Message-Variablen, daher in weiter Ferne) @low
 To test (for bugs/regresses):
+    [ ] look for alternative to xcopy (e.g. `Copy-LongItem` and `Write-FileSystemCache`)
     [ ] Maybe recall `$Debug` to something like `$InfoPreference`? @low
     [ ] Option to ignore 3 seconds in difference in `LastWriteTime` (i.e. different cards with same files)
         [ ] Go for UNIX-Times? https://stackoverflow.com/questions/10781697/convert-unix-time-with-powershell
