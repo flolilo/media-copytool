@@ -10,6 +10,9 @@
 . $PSScriptRoot\media_copytool.ps1
 
 Describe "Get-ParametersFromJSON" {
+    Mock Write-ColorOut {}
+    # Mock Start-Everything {}
+    # Mock Start-GUI {}
     $BlaDrive = "$TestDrive\media-copytool_TEST"
     BeforeEach {
         [hashtable]$UserParams = @{
@@ -206,13 +209,17 @@ Describe "Get-ParametersFromJSON" {
 }
 
 Describe "Start-GUI" {
+    Mock Write-ColorOut {}
+    # Mock Start-Everything {}
     It "TODO: find a way to get this working." {
 
     }
 }
 
-
 Describe "Test-UserValues" {
+    Mock Write-ColorOut {}
+    # Mock Start-Everything {}
+    # Mock Start-GUI {}
     $BlaDrive = "$TestDrive\media-copytool_TEST"
     BeforeEach {
         [hashtable]$UserParams = @{
@@ -302,6 +309,21 @@ Describe "Test-UserValues" {
             $test = (Test-UserValues -UserParams $UserParams).FormatPreference
             $test | Should BeOfType string
             $test | Should Be "include"
+            $UserParams.InputSubfolderSearch = 1
+            $UserParams.FormatPreference = "include"
+            {Test-UserValues -UserParams $UserParams} | Should Not Throw
+            $UserParams.InputSubfolderSearch = 1
+            $UserParams.FormatPreference = "in"
+            {Test-UserValues -UserParams $UserParams} | Should Not Throw
+            $UserParams.InputSubfolderSearch = 1
+            $UserParams.FormatPreference = "ex"
+            {Test-UserValues -UserParams $UserParams} | Should Not Throw
+            $UserParams.InputSubfolderSearch = 1
+            $UserParams.FormatPreference = "exclude"
+            {Test-UserValues -UserParams $UserParams} | Should Not Throw
+            $UserParams.InputSubfolderSearch = 1
+            $UserParams.FormatPreference = "all"
+            {Test-UserValues -UserParams $UserParams} | Should Not Throw
         }
         It "FormatInExclude" {
             $test = (Test-UserValues -UserParams $UserParams).FormatInExclude
@@ -679,6 +701,10 @@ Describe "Test-UserValues" {
 }
 
 Describe "Show-Parameters" {
+    Mock Write-ColorOut {}
+    # Mock Start-Everything {}
+    # Mock Start-GUI {}
+    $BlaDrive = "$TestDrive\media-copytool_TEST"
     BeforeEach {
         [hashtable]$UserParams = @{
             ShowParams =            0
@@ -734,6 +760,9 @@ Describe "Show-Parameters" {
 }
 
 Describe "Set-Parameters" {
+    Mock Write-ColorOut {}
+    # Mock Start-Everything {}
+    # Mock Start-GUI {}
     $BlaDrive = "$TestDrive\media-copytool_TEST"
     BeforeEach {
         [hashtable]$UserParams = @{
@@ -960,6 +989,9 @@ Describe "Set-Parameters" {
 }
 
 Describe "Start-FileSearch" {
+    Mock Write-ColorOut {}
+    # Mock Start-Everything {}
+    # Mock Start-GUI {}
     $BlaDrive = "$TestDrive\media-copytool_TEST"
     BeforeEach {
         [hashtable]$UserParams = @{
@@ -1122,6 +1154,9 @@ Describe "Start-FileSearch" {
 }
 
 Describe "Get-HistFile" {
+    Mock Write-ColorOut {}
+    # Mock Start-Everything {}
+    # Mock Start-GUI {}
     $BlaDrive = "$TestDrive\media-copytool_TEST"
     BeforeEach {
         [hashtable]$UserParams = @{
@@ -1218,6 +1253,9 @@ Describe "Get-HistFile" {
 }
 
 Describe "Start-DupliCheckHist" {
+    Mock Write-ColorOut {}
+    # Mock Start-Everything {}
+    # Mock Start-GUI {}
     $BlaDrive = "$TestDrive\media-copytool_TEST"
     BeforeEach {
         [hashtable]$UserParams = @{
@@ -1319,6 +1357,9 @@ Describe "Start-DupliCheckHist" {
 }
 
 Describe "Start-DupliCheckOut" {
+    Mock Write-ColorOut {}
+    # Mock Start-Everything {}
+    # Mock Start-GUI {}
     $BlaDrive = "$TestDrive\media-copytool_TEST"
     BeforeEach {
         [hashtable]$UserParams = @{
@@ -1418,6 +1459,9 @@ Describe "Start-DupliCheckOut" {
 }
 
 Describe "Start-InputGetHash" {
+    Mock Write-ColorOut {}
+    # Mock Start-Everything {}
+    # Mock Start-GUI {}
     $BlaDrive = "$TestDrive\media-copytool_TEST"
     BeforeEach {
         [hashtable]$UserParams = @{
@@ -1494,6 +1538,9 @@ Describe "Start-InputGetHash" {
 }
 
 Describe "Start-PreventingDoubleCopies" {
+    Mock Write-ColorOut {}
+    # Mock Start-Everything {}
+    # Mock Start-GUI {}
     $BlaDrive = "$TestDrive\media-copytool_TEST"
     BeforeEach {
         [hashtable]$UserParams = @{
@@ -1530,6 +1577,9 @@ Describe "Start-PreventingDoubleCopies" {
 }
 
 Describe "Start-SpaceCheck"{
+    Mock Write-ColorOut {}
+    # Mock Start-Everything {}
+    # Mock Start-GUI {}
     $BlaDrive = "$TestDrive\media-copytool_TEST"
     BeforeEach {
         [hashtable]$UserParams = @{
@@ -1587,6 +1637,9 @@ Describe "Start-SpaceCheck"{
 }
 
 Describe "Start-OverwriteProtection" {
+    Mock Write-ColorOut {}
+    # Mock Start-Everything {}
+    # Mock Start-GUI {}
     $BlaDrive = "$TestDrive\media-copytool_TEST"
     BeforeEach {
         [hashtable]$UserParams = @{
@@ -1959,6 +2012,9 @@ Describe "Start-OverwriteProtection" {
 }
 
 Describe "Start-FileCopy"{
+    Mock Write-ColorOut {}
+    # Mock Start-Everything {}
+    # Mock Start-GUI {}
     $BlaDrive = "$TestDrive\media-copytool_TEST"
     BeforeEach {
         [hashtable]$UserParams = @{
@@ -2044,18 +2100,27 @@ Describe "Start-FileCopy"{
 
 
 Describe "Start-7zip"{
+    Mock Write-ColorOut {}
+    # Mock Start-Everything {}
+    # Mock Start-GUI {}
     It "Starting 7zip (TODO: everything.)"{
 
     }
 }
 
 Describe "Start-FileVerification"{
+    Mock Write-ColorOut {}
+    # Mock Start-Everything {}
+    # Mock Start-GUI {}
     It "Verify newly copied files (TODO: everything.)"{
 
     }
 }
 
 Describe "Set-HistFile"{
+    Mock Write-ColorOut {}
+    # Mock Start-Everything {}
+    # Mock Start-GUI {}
     It "Write new file-attributes to history-file (TODO: everything.)"{
 
     }

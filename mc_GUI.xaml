@@ -61,7 +61,7 @@
                     <CheckBox x:Name="CheckBoxRememberIn"
                         Content="Save" ToolTip="Remembers the Input-Path for future executions." VerticalContentAlignment="Center"
                         Foreground="#FFC90000" FontWeight="Bold"
-                        VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,60,15,0" Padding="4,-2,0,0" 
+                        VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,60,15,0" Padding="4,-2,0,0"
                         Height="22" Width="60"
                     />
                     <TextBlock x:Name="TextBlockOutput"
@@ -72,7 +72,7 @@
                     <TextBox x:Name="TextBoxOutput"
                         Text="TextBoxOutput" FontFamily="Consolas,Segoe UI,Arial"
                         VerticalScrollBarVisibility="Disabled" VerticalContentAlignment="Center"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,90,0,0" 
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,90,0,0"
                         Height="22" Width="510"
                     />
                     <Button x:Name="ButtonSearchOut"
@@ -118,7 +118,7 @@
                     <TextBox x:Name="TextBoxHistFile"
                         Text="TextBoxHistFile" FontFamily="Consolas,Segoe UI,Arial"
                         VerticalScrollBarVisibility="Disabled" VerticalContentAlignment="Center"
-                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,160,0,0" 
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,160,0,0"
                         Height="22" Width="510"
                     />
                     <Button x:Name="ButtonSearchHistFile"
@@ -274,7 +274,7 @@
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,65,0,0"
                         Width="250"
                     />
-                    <CheckBox x:Name="CheckBoxEnableLongPath"
+                    <CheckBox x:Name="CheckBoxEnableLongPaths"
                         Content="Allow paths >260 characters (Win 10 only)" ToolTip="Enable paths longer than 260 characters (USE IT WITH WIN 10 AND ENABLED LONG PATHS ONLY!)." VerticalContentAlignment="Center"
                         Foreground="#FFDE0000"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,85,0,0"
