@@ -787,15 +787,15 @@ Function Start-GUI(){
                 if($UserParams.FormatPreference -in @("include","in")){
                     $GUIParams.RadioButtonInclude.IsChecked =   $true
                     $GUIParams.TextBoxInclude.Text =            $UserParams.FormatInExclude -join "|"
-                    $GUIParams.TextBoxExclude.Text =            ""
+                    $GUIParams.TextBoxExclude.Text =            $UserParams.FormatInExclude -join "|"
                 }elseif($UserParams.FormatPreference -in @("exclude","ex")){
                     $GUIParams.RadioButtonExclude.IsChecked =   $true
                     $GUIParams.TextBoxExclude.Text =            $UserParams.FormatInExclude -join "|"
-                    $GUIParams.TextBoxInclude.Text =            ""
+                    $GUIParams.TextBoxInclude.Text =            $UserParams.FormatInExclude -join "|"
                 }else{
                     $GUIParams.RadioButtonAll.IsChecked =   $true
-                    $GUIParams.TextBoxInclude.Text =        ""
-                    $GUIParams.TextBoxExclude.Text =        ""
+                    $GUIParams.TextBoxInclude.Text =        $UserParams.FormatInExclude -join "|"
+                    $GUIParams.TextBoxExclude.Text =        $UserParams.FormatInExclude -join "|"
                 }
             # DEFINITION: Duplicates:
                 $GUIParams.CheckBoxUseHistFile.IsChecked = $UserParams.UseHistFile
@@ -810,8 +810,8 @@ Function Start-GUI(){
                     $GUIParams.CheckBoxAvoidIdenticalFiles.IsChecked =  $UserParams.AvoidIdenticalFiles
                     $GUIParams.CheckBoxAcceptTimeDiff.IsChecked =       $UserParams.AcceptTimeDiff
                 # DEFINITION: (Re)naming:
-                    $GUIParams.TextBoxOutSubStyle.Text =    $UserParams.OutputSubfolderStyle
-                    $GUIParams.TextBoxOutFileStyle.Text =   $UserParams.OutputFileStyle
+                    $GUIParams.TextBoxOutSubStyle.Text =        $UserParams.OutputSubfolderStyle
+                    $GUIParams.TextBoxOutFileStyle.Text =       $UserParams.OutputFileStyle
                 # DEFINITION: Other options:
                     $GUIParams.CheckBoxInSubSearch.IsChecked =              $UserParams.InputSubfolderSearch
                     $GUIParams.CheckBoxVerifyCopies.IsChecked =             $UserParams.VerifyCopies
