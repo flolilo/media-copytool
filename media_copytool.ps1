@@ -1220,7 +1220,7 @@ Function Test-UserValues(){
             throw 'Invalid choice of -UnmountInputDrive.'
         }
     # DEFINITION: $PreventStandby (SCRIPT VAR)
-        if($script:PreventStandby -notin (0..1) -or $script:PreventStandby -notin ($true,$false)){
+        if($script:PreventStandby -notin (0..1)){
             Write-ColorOut "Invalid choice of -PreventStandby." -ForegroundColor Red -Indentation 4
             throw 'Invalid choice of -PreventStandby.'
         }
