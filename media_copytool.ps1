@@ -418,7 +418,7 @@ Function Start-Sound(){
             For fail: Start-Sound -Success 0
     #>
     param(
-        [int]$Success = $(throw '-Success is needed by Start-Sound!')
+        [int]$Success = $(Write-ColorOut "-Success is needed by Start-Sound!" -ForegroundColor Magenta)
     )
 
     try{
@@ -434,7 +434,7 @@ Function Start-Sound(){
     }
 }
 
-# DEFINITION: Pause the programme if debug-var is active. Also, enable measuring times per command with -debug 3.
+# DEFINITION: Pause the programme if debug-var is active. Also, enable measuring times per command with -debug 3.c
 Function Invoke-Pause(){
     if($UserParams.InfoPreference -gt 0){
         Write-ColorOut "Processing-time:`t$($script:timer.elapsed.TotalSeconds)" -ForegroundColor Magenta
@@ -518,12 +518,12 @@ Function Get-CurrentDate(){
 # ==================================================================================================
 
 # DEFINITION: Get parameters from JSON file:
-Function Get-ParametersFromJSON(){
+Function Read-ParametersFromJSON(){
     param(
         [ValidateNotNullOrEmpty()]
-        [hashtable]$UserParams = $(throw 'UserParams is required by Get-ParametersFromJSON'),
+        [hashtable]$UserParams = $(throw 'UserParams is required by Read-ParametersFromJSON'),
         [ValidateRange(0,1)]
-        [int]$Renew = $(throw 'Renew is required by Get-ParametersFromJSON')
+        [int]$Renew = $(throw 'Renew is required by Read-ParametersFromJSON')
     )
     Write-ColorOut "$(Get-CurrentDate)  --  Getting parameter-values..." -ForegroundColor Cyan
 
@@ -645,17 +645,15 @@ Function Start-GUI(){
         [ValidateNotNullOrEmpty()]
         [string]$GUIPath = $(throw 'GUIPath is required by Start-GUI'),
         [ValidateNotNullOrEmpty()]
-        [hashtable]$UserParams = $(throw 'UserParams is required by Start-GUI'),
-        [ValidateRange(0,1)]
-        [int]$GetXAML = $(throw 'GetXAML is required by Start-GUI')
+        [hashtable]$UserParams = $(throw 'UserParams is required by Start-GUI')
     )
     # DEFINITION: "Select"-Window for buttons to choose a path.
     Function Get-GUIFolder(){
         param(
-            [Parameter(Mandatory=$true)]
-            [string]$ToInfluence,
-            [Parameter(Mandatory=$true)]
-            [hashtable]$GUIParams
+            [ValidateNotNullOrEmpty()]
+            [string]$ToInfluence = $(throw 'ToInfluence is required by Get-GUIFolder'),
+            [ValidateNotNullOrEmpty()]
+            [hashtable]$GUIParams = $(throw 'GUIParams is required by Get-GUIFolder')
         )
 
         if($ToInfluence -ne "histfile"){
@@ -673,11 +671,11 @@ Function Start-GUI(){
 
             if($browse.ShowDialog() -eq "OK"){
                 if($ToInfluence -eq "input"){
-                    $GUIParams.textBoxInput.Text = $browse.SelectedPath
+                    $GUIParams.TeBx_Input.Text = $browse.SelectedPath
                 }elseif($ToInfluence -eq "output"){
-                    $GUIParams.textBoxOutput.Text = $browse.SelectedPath
+                    $GUIParams.TeBx_Output.Text = $browse.SelectedPath
                 }elseif($ToInfluence -eq "mirror"){
-                    $GUIParams.textBoxMirror.Text = $browse.SelectedPath
+                    $GUIParams.TeBx_Mirror.Text = $browse.SelectedPath
                 }
             }
         }else{
@@ -688,7 +686,7 @@ Function Start-GUI(){
 
             if($browse.ShowDialog() -eq "OK"){
                 if($browse.FileName -like "*.json"){
-                    $GUIParams.textBoxHistFile.Text = $browse.FileName
+                    $GUIParams.TeBx_HistFile.Text = $browse.FileName
                 }
             }
         }
@@ -697,49 +695,47 @@ Function Start-GUI(){
     }
 
     # DEFINITION: Load GUI layout from XAML-File
-        if($GetXAML -eq 1){
-            if((Test-Path -LiteralPath $GUIPath -PathType Leaf) -eq $true){
-                try{
-                    $inputXML = Get-Content -LiteralPath $GUIPath -Encoding UTF8 -ErrorAction Stop
-                }catch{
-                    Write-ColorOut "Could not load $GUIPath - GUI can therefore not start." -ForegroundColor Red
-                    Pause
-                    throw 'Could not load $GUIPath - GUI can therefore not start.'
-                }
-            }else{
-                Write-ColorOut "Could not find $GUIPath - GUI can therefore not start." -ForegroundColor Red
-                Pause
-                throw 'Could not find $GUIPath - GUI can therefore not start.'
-            }
-
+        if((Test-Path -LiteralPath $GUIPath -PathType Leaf) -eq $true){
             try{
-                [void][System.Reflection.Assembly]::LoadWithPartialName('presentationframework')
-                [xml]$xaml = $inputXML -replace '\(\(MC_VERSION\)\)',"$script:VersionNumber" -replace 'mc:Ignorable="d"','' -replace "x:Name",'Name' -replace '^<Win.*', '<Window'
-                $reader = (New-Object System.Xml.XmlNodeReader $xaml)
-                $script:Form = [Windows.Markup.XamlReader]::Load($reader)
-            }
-            catch{
-                Write-ColorOut "Unable to load Windows.Markup.XamlReader. Usually this means that you haven't installed .NET Framework. Please download and install the latest .NET Framework Web-Installer for your OS: " -ForegroundColor Red
-                Write-ColorOut "https://duckduckgo.com/?q=net+framework+web+installer&t=h_&ia=web"
-                Write-ColorOut "Alternatively, this script will now start in CLI-mode, which requires you to enter all variables via parameter flags (e.g. `"-Inputpath C:\InputPath`")." -ForegroundColor Yellow
+                $inputXML = Get-Content -LiteralPath $GUIPath -Encoding UTF8 -ErrorAction Stop
+            }catch{
+                Write-ColorOut "Could not load $GUIPath - GUI can therefore not start." -ForegroundColor Red
                 Pause
-                throw 'Unable to load Windows.Markup.XamlReader.'
+                throw 'Could not load $GUIPath - GUI can therefore not start.'
             }
+        }else{
+            Write-ColorOut "Could not find $GUIPath - GUI can therefore not start." -ForegroundColor Red
+            Pause
+            throw 'Could not find $GUIPath - GUI can therefore not start.'
+        }
 
-            [hashtable]$GUIParams = @{}
-            $xaml.SelectNodes("//*[@Name]") | ForEach-Object {
-                # Do not add TextBlocks, as those will not be altered and only mess around:
-                if(($script:Form.FindName($_.Name)).ToString() -ne "System.Windows.Controls.TextBlock"){
-                    $GUIParams.Add($($_.Name), $script:Form.FindName($_.Name))
-                }
-            }
+        try{
+            [void][System.Reflection.Assembly]::LoadWithPartialName('presentationframework')
+            [xml]$xaml = $inputXML -replace '\(\(MC_VERSION\)\)',"$script:VersionNumber" -replace 'mc:Ignorable="d"','' -replace "x:Name",'Name' -replace '^<Win.*', '<Window'
+            $reader = (New-Object System.Xml.XmlNodeReader $xaml)
+            $Form = [Windows.Markup.XamlReader]::Load($reader)
+        }
+        catch{
+            Write-ColorOut "Unable to load Windows.Markup.XamlReader. Usually this means that you haven't installed .NET Framework. Please download and install the latest .NET Framework Web-Installer for your OS: " -ForegroundColor Red
+            Write-ColorOut "https://duckduckgo.com/?q=net+framework+web+installer&t=h_&ia=web"
+            Write-ColorOut "Alternatively, this script will now start in CLI-mode, which requires you to enter all variables via parameter flags (e.g. `"-Inputpath C:\InputPath`")." -ForegroundColor Yellow
+            Pause
+            throw 'Unable to load Windows.Markup.XamlReader.'
+        }
 
-            if($script:getWPF -ne 0){
-                Write-ColorOut "Found these interactable elements:" -ForegroundColor Cyan
-                $GUIParams | Format-Table -AutoSize | Out-Host
-                Pause
-                Invoke-Close
+        [hashtable]$GUIParams = @{}
+        $xaml.SelectNodes("//*[@Name]") | ForEach-Object {
+            # Do not add TextBlocks, as those will not be altered and only mess around:
+            if(($Form.FindName($_.Name)).ToString() -ne "System.Windows.Controls.TextBlock"){
+                $GUIParams.Add($($_.Name), $Form.FindName($_.Name))
             }
+        }
+
+        if($script:getWPF -ne 0){
+            Write-ColorOut "Found these interactable elements:" -ForegroundColor Cyan
+            $GUIParams | Format-Table -AutoSize | Out-Host
+            Pause
+            Invoke-Close
         }
 
     # DEFINITION: Fill first page of GUI:
@@ -749,16 +745,16 @@ Function Start-GUI(){
                     $jsonparams = Get-Content -Path $UserParams.JSONParamPath -Raw -Encoding UTF8 -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
                     if($jsonparams.ParamPresetName -is [array]){
                         $jsonparams.ParamPresetName | ForEach-Object {
-                            $GUIParams.comboBoxLoadPreset.AddChild($_)
+                            $GUIParams.CoBx_LoadPreset.AddChild($_)
                         }
                         for($i=0; $i -lt $jsonparams.ParamPresetName.length; $i++){
                             if($jsonparams.ParamPresetName[$i] -eq $UserParams.LoadParamPresetName){
-                                $GUIParams.comboBoxLoadPreset.SelectedIndex = $i
+                                $GUIParams.CoBx_LoadPreset.SelectedIndex = $i
                             }
                         }
                     }else{
-                        $GUIParams.comboBoxLoadPreset.AddChild($jsonparams.ParamPresetName)
-                        $GUIParams.comboBoxLoadPreset.SelectedIndex = 0
+                        $GUIParams.CoBx_LoadPreset.AddChild($jsonparams.ParamPresetName)
+                        $GUIParams.CoBx_LoadPreset.SelectedIndex = 0
                     }
                 }catch{
                     Write-ColorOut "Getting preset-names from $($UserParams.JSONParamPath) failed - aborting!" -ForegroundColor Magenta -Indentation 4
@@ -770,229 +766,245 @@ Function Start-GUI(){
             }
 
         try{
-            $GUIParams.TextBoxSavePreset.Text =             $UserParams.SaveParamPresetName
+            $GUIParams.TeBx_SavePreset.Text =            $UserParams.SaveParamPresetName
 
             # DEFINITION: In-, out-, mirrorpath:
-                $GUIParams.TextBoxInput.Text =                  $UserParams.InputPath
-                $GUIParams.CheckBoxRememberIn.IsChecked =       $UserParams.RememberInPath
-                $GUIParams.TextBoxOutput.Text =                 $UserParams.OutputPath
-                $GUIParams.CheckBoxRememberOut.IsChecked =      $UserParams.RememberOutPath
-                $GUIParams.CheckBoxMirror.IsChecked =           $UserParams.MirrorEnable
-                $GUIParams.TextBoxMirror.Text =                 $UserParams.MirrorPath
-                $GUIParams.CheckBoxRememberMirror.IsChecked =   $UserParams.RememberMirrorPath
+                $GUIParams.TeBx_Input.Text =             $UserParams.InputPath
+                $GUIParams.ChBx_RememberIn.IsChecked =   $UserParams.RememberInPath
+                $GUIParams.TeBx_Output.Text =            $UserParams.OutputPath
+                $GUIParams.ChBx_RememberOut.IsChecked =  $UserParams.RememberOutPath
+                $GUIParams.ChBx_Mirror.IsChecked =       $UserParams.MirrorEnable
+                $GUIParams.TeBx_Mirror.Text =            $UserParams.MirrorPath
+                $GUIParams.ChBx_RememberMirror.IsChecked =   $UserParams.RememberMirrorPath
             # DEFINITION: History-file-path:
-                $GUIParams.TextBoxHistFile.Text =               $UserParams.HistFilePath
+                $GUIParams.TeBx_HistFile.Text =          $UserParams.HistFilePath
     # DEFINITION: Second page of GUI:
             # DEFINITION: Formats:
                 if($UserParams.FormatPreference -in @("include","in")){
-                    $GUIParams.RadioButtonInclude.IsChecked =   $true
-                    $GUIParams.TextBoxInclude.Text =            $UserParams.FormatInExclude -join "|"
-                    $GUIParams.TextBoxExclude.Text =            $UserParams.FormatInExclude -join "|"
+                    $GUIParams.RaBn_Include.IsChecked =  $true
+                    $GUIParams.TeBx_Include.Text =   $UserParams.FormatInExclude -join "|"
+                    $GUIParams.TeBx_Exclude.Text =   $UserParams.FormatInExclude -join "|"
                 }elseif($UserParams.FormatPreference -in @("exclude","ex")){
-                    $GUIParams.RadioButtonExclude.IsChecked =   $true
-                    $GUIParams.TextBoxExclude.Text =            $UserParams.FormatInExclude -join "|"
-                    $GUIParams.TextBoxInclude.Text =            $UserParams.FormatInExclude -join "|"
+                    $GUIParams.RaBn_Exclude.IsChecked =  $true
+                    $GUIParams.TeBx_Exclude.Text =   $UserParams.FormatInExclude -join "|"
+                    $GUIParams.TeBx_Include.Text =   $UserParams.FormatInExclude -join "|"
                 }else{
-                    $GUIParams.RadioButtonAll.IsChecked =   $true
-                    $GUIParams.TextBoxInclude.Text =        $UserParams.FormatInExclude -join "|"
-                    $GUIParams.TextBoxExclude.Text =        $UserParams.FormatInExclude -join "|"
+                    $GUIParams.RaBn_All.IsChecked =      $true
+                    $GUIParams.TeBx_Include.Text =   $UserParams.FormatInExclude -join "|"
+                    $GUIParams.TeBx_Exclude.Text =   $UserParams.FormatInExclude -join "|"
                 }
             # DEFINITION: Duplicates:
-                $GUIParams.CheckBoxUseHistFile.IsChecked = $UserParams.UseHistFile
-                $GUIParams.ComboBoxWriteHistFile.SelectedIndex = $(
+                $GUIParams.ChBx_UseHistFile.IsChecked = $UserParams.UseHistFile
+                $GUIParams.CoBx_WriteHistFile.SelectedIndex = $(
                     if("yes"            -eq $UserParams.WriteHistFile){0}
                     elseif("Overwrite"  -eq $UserParams.WriteHistFile){1}
                     elseif("no"         -eq $UserParams.WriteHistFile){2}
                     else{0}
                     )
-                    $GUIParams.CheckBoxCheckHashHist.IsChecked =        $UserParams.HistCompareHashes
-                    $GUIParams.CheckBoxOutputDupli.IsChecked =          $UserParams.CheckOutputDupli
-                    $GUIParams.CheckBoxAvoidIdenticalFiles.IsChecked =  $UserParams.AvoidIdenticalFiles
-                    $GUIParams.CheckBoxAcceptTimeDiff.IsChecked =       $UserParams.AcceptTimeDiff
+                    $GUIParams.ChBx_CheckHashHist.IsChecked =        $UserParams.HistCompareHashes
+                    $GUIParams.ChBx_OutputDupli.IsChecked =          $UserParams.CheckOutputDupli
+                    $GUIParams.ChBx_AvoidIdenticalFiles.IsChecked =  $UserParams.AvoidIdenticalFiles
+                    $GUIParams.ChBx_AcceptTimeDiff.IsChecked =       $UserParams.AcceptTimeDiff
                 # DEFINITION: (Re)naming:
-                    $GUIParams.TextBoxOutSubStyle.Text =        $UserParams.OutputSubfolderStyle
-                    $GUIParams.TextBoxOutFileStyle.Text =       $UserParams.OutputFileStyle
+                    $GUIParams.TeBx_OutSubStyle.Text =   $UserParams.OutputSubfolderStyle
+                    $GUIParams.TeBx_OutFileStyle.Text =  $UserParams.OutputFileStyle
                 # DEFINITION: Other options:
-                    $GUIParams.CheckBoxInSubSearch.IsChecked =              $UserParams.InputSubfolderSearch
-                    $GUIParams.CheckBoxVerifyCopies.IsChecked =             $UserParams.VerifyCopies
-                    $GUIParams.CheckBoxOverwriteExistingFiles.IsChecked =   $UserParams.OverwriteExistingFiles
-                    $GUIParams.CheckBoxEnableLongPaths.IsChecked =          $UserParams.EnableLongPaths
-                    $GUIParams.CheckBoxZipMirror.IsChecked =                $UserParams.ZipMirror
-                    $GUIParams.CheckBoxUnmountInputDrive.IsChecked =        $UserParams.UnmountInputDrive
-                    $GUIParams.CheckBoxPreventStandby.IsChecked =           $script:PreventStandby
-                    $GUIParams.CheckBoxRememberSettings.IsChecked =         $UserParams.RememberSettings
+                    $GUIParams.ChBx_InSubSearch.IsChecked =              $UserParams.InputSubfolderSearch
+                    $GUIParams.ChBx_VerifyCopies.IsChecked =             $UserParams.VerifyCopies
+                    $GUIParams.ChBx_OverwriteExistingFiles.IsChecked =   $UserParams.OverwriteExistingFiles
+                    $GUIParams.ChBx_EnableLongPaths.IsChecked =          $UserParams.EnableLongPaths
+                    $GUIParams.ChBx_ZipMirror.IsChecked =                $UserParams.ZipMirror
+                    $GUIParams.ChBx_UnmountInputDrive.IsChecked =        $UserParams.UnmountInputDrive
+                    $GUIParams.ChBx_PreventStandby.IsChecked =           $script:PreventStandby
+                    $GUIParams.ChBx_RememberSettings.IsChecked =         $UserParams.RememberSettings
                 # DEFINITION: Load-Preset-Button:
-                    $GUIParams.ButtonLoadPreset.Add_Click({
+                    $GUIParams.Butn_LoadPreset.Add_Click({
                         if($jsonparams.ParamPresetName -is [array]){
                             for($i=0; $i -lt $jsonparams.ParamPresetName.Length; $i++){
-                                if($i -eq $GUIParams.ComboBoxLoadPreset.SelectedIndex){
+                                if($i -eq $GUIParams.CoBx_LoadPreset.SelectedIndex){
                                     [string]$UserParams.LoadParamPresetName = $jsonparams.ParamPresetName[$i]
                         }
                     }
                 }else{
                     [string]$UserParams.LoadParamPresetName = $jsonparams.ParamPresetName
                 }
-                $script:Form.Close()
-                Get-ParametersFromJSON -UserParams $UserParams -Renew 1
+                $Form.Close()
+                Read-ParametersFromJSON -UserParams $UserParams -Renew 1
                 Start-Sleep -Milliseconds 2
-                Start-GUI -GUIPath $GUIPath -UserParams $UserParams -GetXAML 0
+                Start-GUI -GUIPath $GUIPath -UserParams $UserParams
             })
     # DEFINITION: InPath-Button:
-            $GUIParams.ButtonSearchIn.Add_Click({
-                Get-GUIFolder -ToInfluence "input" -GUIParams $GUIParams
+            $GUIParams.Butn_SearchIn.Add_Click({
+                try{
+                    Get-GUIFolder -ToInfluence "input" -GUIParams $GUIParams
+                }catch{
+                    Write-ColorOut "Get-GUIFolder input failed." -ForegroundColor Red
+                }
             })
     # DEFINITION: OutPath-Button:
-            $GUIParams.ButtonSearchOut.Add_Click({
-                Get-GUIFolder -ToInfluence "output" -GUIParams $GUIParams
+            $GUIParams.Butn_SearchOut.Add_Click({
+                try{
+                    Get-GUIFolder -ToInfluence "output" -GUIParams $GUIParams
+                }catch{
+                    Write-ColorOut "Get-GUIFolder output failed." -ForegroundColor Red
+                }
             })
     # DEFINITION: MirrorPath-Button:
-            $GUIParams.ButtonSearchMirror.Add_Click({
-                Get-GUIFolder -ToInfluence "mirror" -GUIParams $GUIParams
+            $GUIParams.Butn_SearchMirror.Add_Click({
+                try{
+                    Get-GUIFolder -ToInfluence "mirror" -GUIParams $GUIParams
+                }catch{
+                    Write-ColorOut "Get-GUIFolder mirror failed." -ForegroundColor Red
+                }
             })
     # DEFINITION: HistoryPath-Button:
-            $GUIParams.ButtonSearchHistFile.Add_Click({
-                Get-GUIFolder -ToInfluence "histfile" -GUIParams $GUIParams
+            $GUIParams.Butn_SearchHistFile.Add_Click({
+                try{
+                    Get-GUIFolder -ToInfluence "histfile" -GUIParams $GUIParams
+                }catch{
+                    Write-ColorOut "Get-GUIFolder histfile failed." -ForegroundColor Red
+                }
             })
     # DEFINITION: Start-Button:
-            $GUIParams.ButtonStart.Add_Click({
+            $GUIParams.Butn_Start.Add_Click({
                 # $SaveParamPresetName
-                $UserParams.SaveParamPresetName = $($GUIParams.textBoxSavePreset.Text.ToLower() -Replace '[^A-Za-z0-9_+-]','')
+                $UserParams.SaveParamPresetName = $($GUIParams.TeBx_SavePreset.Text.ToLower() -Replace '[^A-Za-z0-9_+-]','')
                 $UserParams.SaveParamPresetName = $UserParams.SaveParamPresetName.Substring(0, [math]::Min($UserParams.SaveParamPresetName.Length, 64))
                 # $InputPath
-                $UserParams.InputPath = $GUIParams.textBoxInput.Text
+                $UserParams.InputPath =     $GUIParams.TeBx_Input.Text
                 # $OutputPath
-                $UserParams.OutputPath = $GUIParams.textBoxOutput.Text
+                $UserParams.OutputPath =    $GUIParams.TeBx_Output.Text
                 # $MirrorEnable
                 $UserParams.MirrorEnable = $(
-                    if($GUIParams.checkBoxMirror.IsChecked -eq $true){1}
+                    if($GUIParams.ChBx_Mirror.IsChecked -eq $true){1}
                     else{0}
                 )
                 # $MirrorPath
-                if($GUIParams.checkBoxMirror.IsChecked -eq $true){
-                    $UserParams.MirrorPath = $GUIParams.textBoxMirror.Text
+                if($GUIParams.ChBx_Mirror.IsChecked -eq $true){
+                    $UserParams.MirrorPath = $GUIParams.TeBx_Mirror.Text
                 }
                 # $FormatPreference
                 $UserParams.FormatPreference = $(
-                    if($GUIParams.RadioButtonAll.IsChecked -eq          $true){"all"}
-                    elseif($GUIParams.RadioButtonInclude.IsChecked -eq  $true){"include"}
-                    elseif($GUIParams.RadioButtonExclude.IsChecked -eq  $true){"exclude"}
+                    if($GUIParams.RaBn_All.IsChecked -eq          $true){"all"}
+                    elseif($GUIParams.RaBn_Include.IsChecked -eq  $true){"include"}
+                    elseif($GUIParams.RaBn_Exclude.IsChecked -eq  $true){"exclude"}
                 )
                 # $FormatInExclude
                 [array]$UserParams.FormatInExclude = @()
                 $separator = "|"
                 $option = [System.StringSplitOptions]::RemoveEmptyEntries
                 $UserParams.FormatInExclude = $(
-                    if($GUIParams.RadioButtonAll.IsChecked -eq          $true){@("*")}
-                    elseif($GUIParams.RadioButtonInclude.IsChecked -eq  $true){
-                        $GUIParams.TextBoxInclude.Text.Replace(" ",'').Split($separator,$option)
+                    if($GUIParams.RaBn_All.IsChecked -eq          $true){@("*")}
+                    elseif($GUIParams.RaBn_Include.IsChecked -eq  $true){
+                        $GUIParams.TeBx_Include.Text.Replace(" ",'').Split($separator,$option)
                     }
-                    elseif($GUIParams.RadioButtonExclude.IsChecked -eq  $true){
-                        $GUIParams.TextBoxExclude.Text.Replace(" ",'').Split($separator,$option)
+                    elseif($GUIParams.RaBn_Exclude.IsChecked -eq  $true){
+                        $GUIParams.TeBx_Exclude.Text.Replace(" ",'').Split($separator,$option)
                     }
                 )
                 # $OutputSubfolderStyle
-                $UserParams.OutputSubfolderStyle = $GUIParams.TextBoxOutSubStyle.Text
+                $UserParams.OutputSubfolderStyle =  $GUIParams.TeBx_OutSubStyle.Text
                 # $OutputFileStyle
-                $UserParams.OutputFileStyle = $GUIParams.TextBoxOutFileStyle.Text
+                $UserParams.OutputFileStyle =       $GUIParams.TeBx_OutFileStyle.Text
                 # $UseHistFile
                 $UserParams.UseHistFile = $(
-                    if($GUIParams.checkBoxUseHistFile.IsChecked -eq $true){1}
+                    if($GUIParams.ChBx_UseHistFile.IsChecked -eq $true){1}
                     else{0}
                 )
                 # $WriteHistFile
                 $UserParams.WriteHistFile = $(
-                    if($GUIParams.comboBoxWriteHistFile.SelectedIndex -eq 0){"yes"}
-                    elseif($GUIParams.comboBoxWriteHistFile.SelectedIndex -eq 1){"overwrite"}
-                    elseif($GUIParams.comboBoxWriteHistFile.SelectedIndex -eq 2){"no"}
+                    if($GUIParams.CoBx_WriteHistFile.SelectedIndex -eq 0){"yes"}
+                    elseif($GUIParams.CoBx_WriteHistFile.SelectedIndex -eq 1){"overwrite"}
+                    elseif($GUIParams.CoBx_WriteHistFile.SelectedIndex -eq 2){"no"}
                 )
                 # $HistFilePath
-                $UserParams.HistFilePath = $GUIParams.textBoxHistFile.Text
+                $UserParams.HistFilePath = $GUIParams.TeBx_HistFile.Text
                 # $HistCompareHashes
                 $UserParams.HistCompareHashes = $(
-                    if($GUIParams.checkBoxCheckHashHist.IsChecked -eq $true){1}
+                    if($GUIParams.ChBx_CheckHashHist.IsChecked -eq $true){1}
                     else{0}
                 )
                 # $CheckOutputDupli
                 $UserParams.CheckOutputDupli = $(
-                    if($GUIParams.checkBoxOutputDupli.IsChecked -eq $true){1}
+                    if($GUIParams.ChBx_OutputDupli.IsChecked -eq $true){1}
                         else{0}
                 )
                 # $AvoidIdenticalFiles
                 $UserParams.AvoidIdenticalFiles = $(
-                    if($GUIParams.checkBoxAvoidIdenticalFiles.IsChecked -eq $true){1}
+                    if($GUIParams.ChBx_AvoidIdenticalFiles.IsChecked -eq $true){1}
                     else{0}
                 )
                 # $AcceptTimeDiff
                 $UserParams.AcceptTimeDiff = $(
-                    if($GUIParams.CheckBoxAcceptTimeDiff.IsChecked -eq $true){1}
+                    if($GUIParams.ChBx_AcceptTimeDiff.IsChecked -eq $true){1}
                     else{0}
                 )
                 # $InputSubfolderSearch
                 $UserParams.InputSubfolderSearch = $(
-                    if($GUIParams.checkBoxInSubSearch.IsChecked -eq $true){1}
+                    if($GUIParams.ChBx_InSubSearch.IsChecked -eq $true){1}
                     else{0}
                 )
                 # $VerifyCopies
                 $UserParams.VerifyCopies = $(
-                    if($GUIParams.checkBoxVerifyCopies.IsChecked -eq $true){1}
+                    if($GUIParams.ChBx_VerifyCopies.IsChecked -eq $true){1}
                     else{0}
                 )
                 # $OverwriteExistingFiles
                 $UserParams.OverwriteExistingFiles = $(
-                    if($GUIParams.checkBoxOverwriteExistingFiles.IsChecked -eq $true){1}
+                    if($GUIParams.ChBx_OverwriteExistingFiles.IsChecked -eq $true){1}
                     else{0}
                 )
                 # $EnableLongPaths
                 $UserParams.EnableLongPaths = $(
-                    if($GUIParams.checkBoxEnableLongPaths.IsChecked -eq $true){1}
+                    if($GUIParams.ChBx_EnableLongPaths.IsChecked -eq $true){1}
                     else{0}
                 )
                 # $ZipMirror
                 $UserParams.ZipMirror = $(
-                    if($GUIParams.checkBoxZipMirror.IsChecked -eq $true){1}
+                    if($GUIParams.ChBx_ZipMirror.IsChecked -eq $true){1}
                     else{0}
                 )
                 # $UnmountInputDrive
                 $UserParams.UnmountInputDrive = $(
-                    if($GUIParams.checkBoxUnmountInputDrive.IsChecked -eq $true){1}
+                    if($GUIParams.ChBx_UnmountInputDrive.IsChecked -eq $true){1}
                     else{0}
                 )
                 # $PreventStandby (SCRIPT VAR)
                 $script:PreventStandby = $(
-                    if($GUIParams.checkBoxPreventStandby.IsChecked -eq $true){1}
+                    if($GUIParams.ChBx_PreventStandby.IsChecked -eq $true){1}
                     else{0}
                 )
                 # $RememberInPath
                 $UserParams.RememberInPath = $(
-                    if($GUIParams.checkBoxRememberIn.IsChecked -eq $true){1}
+                    if($GUIParams.ChBx_RememberIn.IsChecked -eq $true){1}
                     else{0}
                 )
                 # $RememberOutPath
                 $UserParams.RememberOutPath = $(
-                    if($GUIParams.checkBoxRememberOut.IsChecked -eq $true){1}
+                    if($GUIParams.ChBx_RememberOut.IsChecked -eq $true){1}
                     else{0}
                 )
                 # $RememberMirrorPath
                 $UserParams.RememberMirrorPath = $(
-                    if($GUIParams.checkBoxRememberMirror.IsChecked -eq $true){1}
+                    if($GUIParams.ChBx_RememberMirror.IsChecked -eq $true){1}
                     else{0}
                 )
                 # $RememberSettings
                 $UserParams.RememberSettings = $(
-                    if($GUIParams.checkBoxRememberSettings.IsChecked -eq $true){1}
+                    if($GUIParams.ChBx_RememberSettings.IsChecked -eq $true){1}
                     else{0}
                 )
 
-                $script:Form.Close()
+                $Form.Close()
                 Start-Everything -UserParams $UserParams
             })
     # DEFINITION: About-Button:
-            $GUIParams.ButtonAbout.Add_Click({
+            $GUIParams.Butn_About.Add_Click({
                 Start-Process powershell -ArgumentList "Get-Help $($PSCommandPath) -detailed" -NoNewWindow -Wait
             })
     # DEFINITION: Close-Button:
-            $GUIParams.ButtonClose.Add_Click({
-                $script:Form.Close()
+            $GUIParams.Butn_Close.Add_Click({
+                $Form.Close()
                 Invoke-Close
             })
     }catch{
@@ -1001,9 +1013,7 @@ Function Start-GUI(){
     }
 
     # DEFINITION: Start GUI:
-        $script:Form.ShowDialog() | Out-Null
-
-        return $script:Form
+        $Form.ShowDialog() | Out-Null
 }
 
 # DEFINITION: Get values from Params, then check the main input- and outputfolder:
@@ -1243,7 +1253,7 @@ Function Test-UserValues(){
 Function Show-Parameters(){
     param(
         [ValidateNotNullOrEmpty()]
-        [hashtable]$UserParams = $(throw 'UserParams is required by Show-Parameters')
+        [hashtable]$UserParams = $(Write-ColorOut 'UserParams is required by Show-Parameters' -ForegroundColor Magenta)
     )
     Write-ColorOut "Parameters:" -ForegroundColor Green
     Write-ColorOut "-EnableGUI`t`t`t=`t$($UserParams.EnableGUI)" -ForegroundColor Cyan -Indentation 4
@@ -1281,7 +1291,7 @@ Function Show-Parameters(){
 }
 
 # DEFINITION: If checked, remember values for future use:
-Function Set-Parameters(){
+Function Write-Parameters(){
     param(
         [ValidateNotNullOrEmpty()]
         [hashtable]$UserParams = $(throw 'UserParams is required by Show-Parameters')
@@ -1329,7 +1339,7 @@ Function Set-Parameters(){
         }catch{
             Write-ColorOut "Getting parameters from $($UserParams.JSONParamPath) failed - aborting!" -ForegroundColor Red
             Start-Sleep -Seconds 5
-            return $false
+            throw 'Getting parameters from $UserParams.JSONParamPath failed'
         }
         if($jsonparams.ParamPresetName.GetType().Name -eq "Object[]" -and $inter.ParamPresetName -in $jsonparams.ParamPresetName){
             Write-ColorOut "Preset $($inter.ParamPresetName) will be updated." -ForegroundColor DarkGreen -Indentation 4
@@ -1400,19 +1410,17 @@ Function Set-Parameters(){
                 Continue
             }else{
                 Write-ColorOut "Writing to parameter-file failed!" -ForegroundColor Magenta -Indentation 4
-                return $false
+                throw 'Writing to parameter-file failed'
             }
         }
     }
-
-    return $true
 }
 
 # DEFINITION: Searching for selected formats in Input-Path, getting Path, Name, Time, and calculating Hash:
-Function Start-FileSearch(){
+Function Get-InFiles(){
     param(
         [ValidateNotNullOrEmpty()]
-        [hashtable]$UserParams = $(throw 'UserParams is required by Start-FileSearch')
+        [hashtable]$UserParams = $(throw 'UserParams is required by Get-InFiles')
     )
     $sw = [diagnostics.stopwatch]::StartNew()
     Write-ColorOut "$(Get-CurrentDate)  --  Finding files." -ForegroundColor Cyan
@@ -1523,10 +1531,10 @@ Function Start-FileSearch(){
 }
 
 # DEFINITION: Get History-File:
-Function Get-HistFile(){
+Function Read-HistFile(){
     param(
         [ValidateNotNullOrEmpty()]
-        [hashtable]$UserParams = $(throw 'UserParams is required by Get-HistFile')
+        [hashtable]$UserParams = $(throw 'UserParams is required by Read-HistFile')
     )
     Write-ColorOut "$(Get-CurrentDate)  --  Checking for history-file, importing values..." -ForegroundColor Cyan
 
@@ -1588,14 +1596,14 @@ Function Get-HistFile(){
 }
 
 # DEFINITION: dupli-check via history-file:
-Function Start-DupliCheckHist(){
+Function Test-DupliHist(){
     param(
         [ValidateNotNullOrEmpty()]
-        [array]$InFiles = $(throw 'InFiles is required by Start-DupliCheckHist'),
+        [array]$InFiles = $(throw 'InFiles is required by Test-DupliHist'),
         [ValidateNotNullOrEmpty()]
-        [array]$HistFiles = $(throw 'HistFiles is required by Start-DupliCheckHist'),
+        [array]$HistFiles = $(throw 'HistFiles is required by Test-DupliHist'),
         [ValidateNotNullOrEmpty()]
-        [hashtable]$UserParams = $(throw 'UserParams is required by Start-DupliCheckHist')
+        [hashtable]$UserParams = $(throw 'UserParams is required by Test-DupliHist')
     )
     $sw = [diagnostics.stopwatch]::StartNew()
     Write-ColorOut "$(Get-CurrentDate)  --  Checking for duplicates via history-file." -ForegroundColor Cyan
@@ -1686,12 +1694,12 @@ Function Start-DupliCheckHist(){
 }
 
 # DEFINITION: dupli-check via output-folder:
-Function Start-DupliCheckOut(){
+Function Test-DupliOut(){
     param(
         [ValidateNotNullOrEmpty()]
-        [array]$InFiles =           $(throw 'InFiles is required by Start-DupliCheckOut'),
+        [array]$InFiles =           $(throw 'InFiles is required by Test-DupliOut'),
         [ValidateNotNullOrEmpty()]
-        [hashtable]$UserParams =    $(throw 'UserParams is required by Start-DupliCheckOut')
+        [hashtable]$UserParams =    $(throw 'UserParams is required by Test-DupliOut')
     )
     $sw = [diagnostics.stopwatch]::StartNew()
     Write-ColorOut "$(Get-CurrentDate)  --  Checking for duplicates in OutPath." -ForegroundColor Cyan
@@ -1806,10 +1814,10 @@ Function Start-DupliCheckOut(){
 }
 
 # DEFINITION: Calculate hashes (if not yet done):
-Function Start-InputGetHash(){
+Function Get-InFileHash(){
     param(
         [ValidateNotNullOrEmpty()]
-        [array]$InFiles = $(throw 'InFiles is required by Start-InputGetHash')
+        [array]$InFiles = $(throw 'InFiles is required by Get-InFileHash')
     )
     Write-ColorOut "$(Get-CurrentDate)  --  Calculate remaining hashes..." -ForegroundColor Cyan
 
@@ -1831,10 +1839,10 @@ Function Start-InputGetHash(){
 }
 
 # DEFINITION: Avoid copying identical files from the input-path:
-Function Start-PreventingDoubleCopies(){
+Function Clear-IdenticalInFiles(){
     param(
         [ValidateNotNullOrEmpty()]
-        [array]$InFiles = $(throw 'InFiles is required by Start-PreventingDoubleCopies')
+        [array]$InFiles = $(throw 'InFiles is required by Clear-IdenticalInFiles')
     )
     Write-ColorOut "$(Get-CurrentDate)  --  Avoid identical input-files..." -ForegroundColor Cyan
 
@@ -1851,12 +1859,12 @@ Function Start-PreventingDoubleCopies(){
 }
 
 # DEFINITION: Check for free space on the destination volume:
-Function Start-SpaceCheck(){
+Function Test-DiskSpace(){
     param(
         [ValidateNotNullOrEmpty()]
-        [array]$InFiles =           $(throw 'InFiles is required by Start-SpaceCheck'),
+        [array]$InFiles =           $(throw 'InFiles is required by Test-DiskSpace'),
         [ValidateNotNullOrEmpty()]
-        [hashtable]$UserParams =    $(throw 'UserParams is required by Start-SpaceCheck')
+        [hashtable]$UserParams =    $(throw 'UserParams is required by Test-DiskSpace')
     )
     Write-ColorOut "$(Get-CurrentDate)  --  Checking if free space is sufficient..." -ForegroundColor Cyan
 
@@ -1874,13 +1882,13 @@ Function Start-SpaceCheck(){
 }
 
 # DEFINITION: Check if filename already exists and if so, then choose new name for copying:
-Function Start-OverwriteProtection(){
+Function Protect-OutFileOverwrite(){
     param(
         [ValidateNotNullOrEmpty()]
-        [array]$InFiles =           $(throw 'InFiles is required by Start-OverwriteProtection'),
+        [array]$InFiles =           $(throw 'InFiles is required by Protect-OutFileOverwrite'),
         [ValidateNotNullOrEmpty()]
-        [hashtable]$UserParams =    $(throw 'UserParams is required by Start-OverwriteProtection'),
-        [int]$Mirror =              $(throw 'Mirror is required by Start-OverwriteProtection')
+        [hashtable]$UserParams =    $(throw 'UserParams is required by Protect-OutFileOverwrite'),
+        [int]$Mirror =              $(throw 'Mirror is required by Protect-OutFileOverwrite')
     )
     if($Mirror -eq 1){
         $OutputPath = $UserParams.MirrorPath
@@ -2020,12 +2028,12 @@ Function Start-OverwriteProtection(){
 }
 
 # DEFINITION: Copy Files:
-Function Start-FileCopy(){
+Function Copy-InFiles(){
     param(
         [ValidateNotNullOrEmpty()]
-        [array]$InFiles =           $(throw 'InFiles is required by Start-FileCopy'),
+        [array]$InFiles =           $(throw 'InFiles is required by Copy-InFiles'),
         [ValidateNotNullOrEmpty()]
-        [hashtable]$UserParams =    $(throw 'UserParams is required by Start-FileCopy')
+        [hashtable]$UserParams =    $(throw 'UserParams is required by Copy-InFiles')
     )
     Write-ColorOut "$(Get-Date -Format "dd.MM.yy HH:mm:ss")  --  Copy files from $($UserParams.InputPath) to " -NoNewLine -ForegroundColor Cyan
     if($UserParams.OutputSubfolderStyle -eq "none"){
@@ -2127,7 +2135,7 @@ Function Start-FileCopy(){
     $sw = [diagnostics.stopwatch]::StartNew()
     for($i=0; $i -lt $ps_files.Length; $i++){
         if($sw.Elapsed.TotalMilliseconds -ge 750 -or $i -eq 0){
-            Write-Progress -Activity "Starting Copying.." -PercentComplete $($i / $ps_files.Length * 100) -Status "File # $($i + 1) / $($ps_files.Length)"
+            Write-Progress -Activity "Copy files to $($UserParams.OutputPath)\$($Userparams.OutputSubfolderStyle)" -PercentComplete $($i / $ps_files.Length * 100) -Status "File # $($i + 1) / $($ps_files.Length)"
             $sw.Reset()
             $sw.Start()
         }
@@ -2135,12 +2143,13 @@ Function Start-FileCopy(){
             New-LongItem -Path "$($ps_files[$i].OutPath)" -ItemType Directory -ErrorAction Stop -WarningAction SilentlyContinue
             Start-Sleep -Milliseconds 1
             Copy-LongItem -Path "$($ps_files[$i].InFullName)" -Destination "$($ps_files[$i].OutPath)\$($ps_files[$i].OutName)" -Force -ErrorAction Stop
+            Write-ColorOut "$($ps_files[$i].InName) $($ps_files[$i].OutName)" -ForegroundColor DarkGray -Indentation 4
         }catch{
-            Write-ColorOut "Copying failed for $($ps_files[$i].InFullName) $($ps_files[$i].OutPath)\$($ps_files[$i].OutName)" -ForegroundColor Magenta -Indentation 4
+            Write-ColorOut "Copying failed for $($ps_files[$i].InName) $($ps_files[$i].OutPath)\$($ps_files[$i].OutName)" -ForegroundColor Magenta -Indentation 4
             Start-Sleep -Seconds 2
         }
     }
-    Write-Progress -Activity "Starting Copying.." -Status "Done!" -Completed
+    Write-Progress -Activity "Copy files to $($UserParams.OutputPath)\$($Userparams.OutputSubfolderStyle)" -Status "Done!" -Completed
 
     try{
         Write-VolumeCache -DriveLetter "$($(Split-Path -Path $UserParams.OutputPath -Qualifier).Replace(":",''))" -ErrorAction Stop
@@ -2176,13 +2185,13 @@ Function Start-FileCopy(){
 }
 
 # DEFINITION: Starting 7zip:
-Function Start-7zip(){
+Function Compress-InFiles(){
     param(
         [string]$7zexe = "$($PSScriptRoot)\7z.exe",
         [ValidateNotNullOrEmpty()]
-        [array]$InFiles =           $(throw 'InFiles is required by Start-7zip'),
+        [array]$InFiles =           $(throw 'InFiles is required by Compress-InFiles'),
         [ValidateNotNullOrEmpty()]
-        [hashtable]$UserParams =    $(throw 'UserParams is required by Start-7zip')
+        [hashtable]$UserParams =    $(throw 'UserParams is required by Compress-InFiles')
     )
     Write-ColorOut "$(Get-CurrentDate)  --  Zipping files..." -ForegroundColor Cyan
 
@@ -2238,12 +2247,12 @@ Function Start-7zip(){
 }
 
 # DEFINITION: Verify newly copied files
-Function Start-FileVerification(){
+Function Test-CopiedFiles(){
     param(
         [ValidateNotNullOrEmpty()]
-        [array]$InFiles =           $(throw 'InFiles is required by Start-FileVerification')
+        [array]$InFiles =           $(throw 'InFiles is required by Test-CopiedFiles')
         # [ValidateNotNullOrEmpty()]
-        # [hashtable]$UserParams =    $(throw 'UserParams is required by Start-FileVerification')
+        # [hashtable]$UserParams =    $(throw 'UserParams is required by Test-CopiedFiles')
     )
     Write-ColorOut "$(Get-CurrentDate)  --  Verify newly copied files..." -ForegroundColor Cyan
 
@@ -2310,12 +2319,12 @@ Function Start-FileVerification(){
 }
 
 # DEFINITION: Write new file-attributes to history-file:
-Function Set-HistFile(){
+Function Write-HistFile(){
     param(
         [ValidateNotNullOrEmpty()]
-        [array]$InFiles =           $(throw 'InFiles is required by Set-HistFile'),
+        [array]$InFiles =           $(throw 'InFiles is required by Write-HistFile'),
         [ValidateNotNullOrEmpty()]
-        [hashtable]$UserParams =    $(throw 'UserParams is required by Set-HistFile')
+        [hashtable]$UserParams =    $(throw 'UserParams is required by Write-HistFile')
     )
     Write-ColorOut "$(Get-CurrentDate)  --  Write attributes of successfully copied files to history-file..." -ForegroundColor Cyan
 
@@ -2394,15 +2403,12 @@ Function Start-Everything(){
     }
 
     while($true){
-        # DEFINITION: Get User-Values:
+        # DEFINITION: Test User-Values:
         try{
             $UserParams = Test-UserValues -UserParams $UserParams
         }catch{
             Start-Sound -Success 0
             Start-Sleep -Seconds 2
-            if($UserParams.EnableGUI -eq 1){
-                Start-GUI -GUIPath $GUIPath -UserParams $UserParams -GetXAML 0
-            }
             break
         }
         Invoke-Pause
@@ -2416,7 +2422,9 @@ Function Start-Everything(){
 
         # DEFINITION: If enabled, remember parameters:
         if($UserParams.RememberInPath -ne 0 -or $UserParams.RememberOutPath -ne 0 -or $UserParams.RememberMirrorPath -ne 0 -or $UserParams.RememberSettings -ne 0){
-            if((Set-Parameters -UserParams $UserParams) -eq $false){
+            try{
+                Write-Parameters -UserParams $UserParams
+            }catch{
                 Invoke-Close
             }
             Invoke-Pause
@@ -2428,14 +2436,16 @@ Function Start-Everything(){
         }
 
         # DEFINITION: Search for files:
-        [array]$inputfiles = @(Start-FileSearch -UserParams $UserParams)
+        try{
+            [array]$inputfiles = @(Get-InFiles -UserParams $UserParams)
+        }catch{
+            Write-ColorOut "Get-InFiles failed" -ForegroundColor Red
+            break
+        }
         if($inputfiles.Length -lt 1){
             Write-ColorOut "$($inputfiles.Length) files left to copy - aborting rest of the script." -ForegroundColor Magenta
             Start-Sound -Success 1
             Start-Sleep -Seconds 2
-            if($UserParams.EnableGUI -eq 1){
-                Start-GUI -GUIPath $GUIPath -UserParams $UserParams
-            }
             break
         }
         Invoke-Pause
@@ -2444,12 +2454,14 @@ Function Start-Everything(){
         [array]$histfiles = @()
         if($UserParams.UseHistFile -eq 1){
             try{
-                [array]$histfiles = @(Get-HistFile -UserParams $UserParams)
+                [array]$histfiles = @(Read-HistFile -UserParams $UserParams)
                 Invoke-Pause
             }catch{
+                Write-ColorOut "Read-HistFile failed" -ForegroundColor Red
                 break
             }
-        }elseif($histfiles.Length -le 0){
+        }
+        if($histfiles.Length -le 0){
             Write-ColorOut "No History-files found." -ForegroundColor Gray -Indentation 4
             $UserParams.UseHistFile = 0
             if($UserParams.WriteHistFile -eq "yes"){
@@ -2457,14 +2469,16 @@ Function Start-Everything(){
             }
         }else{
             # DEFINITION: If enabled: Check for duplicates against history-files:
-            [array]$inputfiles = @(Start-DupliCheckHist -InFile $inputfiles -HistFiles $histfiles -UserParams $UserParams)
+            try{
+                [array]$inputfiles = @(Test-DupliHist -InFile $inputfiles -HistFiles $histfiles -UserParams $UserParams)
+            }catch{
+                Write-ColorOut "Test-DupliHist failed" -ForegroundColor Red
+                break
+            }
             if($inputfiles.Length -lt 1){
                 Write-ColorOut "$($inputfiles.Length) files left to copy - aborting rest of the script." -ForegroundColor Magenta
                 Start-Sound -Success 1
                 Start-Sleep -Seconds 2
-                if($UserParams.EnableGUI -eq 1){
-                    Start-GUI -GUIPath $GUIPath -UserParams $UserParams
-                }
                 break
             }
             Invoke-Pause
@@ -2472,14 +2486,16 @@ Function Start-Everything(){
 
         # DEFINITION: If enabled: Check for duplicates against output-files:
         if($UserParams.CheckOutputDupli -eq 1){
-            [array]$inputfiles = (Start-DupliCheckOut -InFiles $inputfiles -UserParams $UserParams)
+            try{
+                [array]$inputfiles = (Test-DupliOut -InFiles $inputfiles -UserParams $UserParams)
+            }catch{
+                Write-ColorOut "Test-DupliOut failed" -ForegroundColor Red
+                break
+            }
             if($inputfiles.Length -lt 1){
                 Write-ColorOut "$($inputfiles.Length) files left to copy - aborting rest of the script." -ForegroundColor Magenta
                 Start-Sound -Success 1
                 Start-Sleep -Seconds 2
-                if($UserParams.EnableGUI -eq 1){
-                    Start-GUI -GUIPath $GUIPath -UserParams $UserParams
-                }
                 break
             }
             Invoke-Pause
@@ -2487,21 +2503,34 @@ Function Start-Everything(){
 
         # DEFINITION: Avoid copying input-files more than once:
         if($UserParams.AvoidIdenticalFiles -eq 1){
-            [array]$inputfiles = (Start-InputGetHash -InFiles $inputfiles)
+            try{
+                [array]$inputfiles = (Get-InFileHash -InFiles $inputfiles)
+            }catch{
+                Write-ColorOut "Get-InFileHash failed" -ForegroundColor Red
+                break
+            }
             Invoke-Pause
-            [array]$inputfiles = Start-PreventingDoubleCopies -InFiles $inputfiles
+            try{
+                [array]$inputfiles = Clear-IdenticalInFiles -InFiles $inputfiles
+            }catch{
+                Write-ColorOut "Clear-IdenticalInFiles failed" -ForegroundColor Red
+                break
+            }
             Invoke-Pause
         }
 
         Write-ColorOut "Files left after dupli-check(s):`t$($script:resultvalues.ingoing - $script:resultvalues.duplihist - $script:resultvalues.dupliout - $script:resultvalues.identicalFiles) = $($script:resultvalues.copyfiles)" -ForegroundColor Yellow -Indentation 4
 
         # DEFINITION: Get free space:
-        if((Start-SpaceCheck -UserParams $UserParams -InFiles $inputfiles -OutPath $UserParams.OutputPath) -eq $false){
+        try{
+            [bool]$Test = Test-DiskSpace -UserParams $UserParams -InFiles $inputfiles -OutPath $UserParams.OutputPath
+        }catch{
+            Write-ColorOut "Test-DiskSpace failed" -ForegroundColor Red
+                break
+        }
+        if($Test -eq $false){
             Start-Sound -Success 0
             Start-Sleep -Seconds 2
-            if($UserParams.EnableGUI -eq 1){
-                Start-GUI -GUIPath $GUIPath -UserParams $UserParams
-            }
             break
         }
         Invoke-Pause
@@ -2514,23 +2543,34 @@ Function Start-Everything(){
                 if((Read-Host " Positive answers: $PositiveAnswers") -notin $PositiveAnswers){
                     Write-ColorOut "Aborting." -ForegroundColor Cyan
                     Start-Sleep -Seconds 2
-                    if($UserParams.EnableGUI -eq 1){
-                        Start-GUI -GUIPath $GUIPath -UserParams $UserParams
-                    }
                     break
                 }
             }
-            [array]$inputfiles = (Start-OverwriteProtection -InFiles $inputfiles -UserParams $UserParams -Mirror 0)
+            try{
+                [array]$inputfiles = (Protect-OutFileOverwrite -InFiles $inputfiles -UserParams $UserParams -Mirror 0)
+            }catch{
+                Write-ColorOut "Protect-OutFileOverwrite failed" -ForegroundColor Red
+                break
+            }
             Invoke-Pause
-            # TODO: try-catch
-            Start-FileCopy -InFiles $inputfiles -UserParams $UserParams
+            try{
+                Copy-InFiles -InFiles $inputfiles -UserParams $UserParams
+            }catch{
+                Write-ColorOut "Copy-InFiles failed" -ForegroundColor Red
+                break
+            }
             Invoke-Pause
             if($UserParams.VerifyCopies -eq 1){
                 # DEFINITION: Get hashes of all remaining input-files:
-                [array]$inputfiles = (Start-InputGetHash -InFiles $inputfiles)
-                Invoke-Pause
-                [array]$inputfiles = (Start-FileVerification -InFiles $inputfiles)
-                Invoke-Pause
+                try{
+                    [array]$inputfiles = (Get-InFileHash -InFiles $inputfiles)
+                    Invoke-Pause
+                    [array]$inputfiles = (Test-CopiedFiles -InFiles $inputfiles)
+                    Invoke-Pause
+                }catch{
+                    Write-ColorOut "Test-CopiedFiles failed" -ForegroundColor Red
+                    break
+                }
                 $j++
             }else{
                 foreach($instance in $inputfiles.tocopy){
@@ -2542,8 +2582,8 @@ Function Start-Everything(){
         if($UserParams.UnmountInputDrive -eq 1){
             # CREDIT: https://serverfault.com/a/580298
             # TODO: Find a solution that works with all drives.
-            $driveEject = New-Object -comObject Shell.Application
             try{
+                $driveEject = New-Object -comObject Shell.Application
                 $driveEject.Namespace(17).ParseName($(Split-Path -Qualifier -Path $UserParams.InputPath)).InvokeVerb("Eject")
                 Write-ColorOut "Drive $(Split-Path -Qualifier -Path $UserParams.InputPath) successfully ejected!" -ForegroundColor DarkCyan -BackgroundColor Gray
             }
@@ -2552,17 +2592,25 @@ Function Start-Everything(){
             }
         }
         if($UserParams.WriteHistFile -ne "no"){
-            Set-HistFile -InFiles $inputfiles -UserParams $UserParams
+            try{
+                Write-HistFile -InFiles $inputfiles -UserParams $UserParams
+            }catch{
+                Write-ColorOut "Write-HistFile failed" -ForegroundColor Red
+                break
+            }
             Invoke-Pause
         }
         if($UserParams.MirrorEnable -eq 1){
             # DEFINITION: Get free space:
-            if((Start-SpaceCheck -InFiles $inputfiles -OutPath $UserParams.MirrorPath) -eq $false){
+            try{
+                [bool]$Test = Test-DiskSpace -InFiles $inputfiles -OutPath $UserParams.MirrorPath
+            }catch{
+                Write-ColorOut "Test-DiskSpace failed" -ForegroundColor Red
+                break
+            }
+            if($Test -eq $false){
                 Start-Sound -Success 0
                 Start-Sleep -Seconds 2
-                if($UserParams.EnableGUI -eq 1){
-                    Start-GUI -GUIPath $GUIPath -UserParams $UserParams
-                }
                 break
             }
             Invoke-Pause
@@ -2578,7 +2626,12 @@ Function Start-Everything(){
             }
 
             if($UserParams.ZipMirror -eq 1){
-                Start-7zip -InFiles $inputfiles
+                try{
+                    Compress-InFiles -InFiles $inputfiles
+                }catch{
+                    Write-ColorOut "Compress-InFiles failed" -ForegroundColor Red
+                    break
+                }
                 Invoke-Pause
             }else{
                 $j = 1
@@ -2589,12 +2642,22 @@ Function Start-Everything(){
                             break
                         }
                     }
-                    [array]$inputfiles = (Start-OverwriteProtection -InFiles $inputfiles -UserParams $UserParams -Mirror 1)
+                    [array]$inputfiles = (Protect-OutFileOverwrite -InFiles $inputfiles -UserParams $UserParams -Mirror 1)
                     Invoke-Pause
-                    Start-FileCopy -InFiles $inputfiles -UserParams $UserParams
+                    try{
+                        Copy-InFiles -InFiles $inputfiles -UserParams $UserParams
+                    }catch{
+                        Write-ColorOut "Copy-InFiles failed" -ForegroundColor Red
+                        break
+                    }
                     Invoke-Pause
                     if($UserParams.VerifyCopies -eq 1){
-                        [array]$inputfiles = (Start-FileVerification -InFiles $inputfiles)
+                        try{
+                            [array]$inputfiles = (Test-CopiedFiles -InFiles $inputfiles)
+                        }catch{
+                            Write-ColorOut "Test-CopiedFiles failed" -ForegroundColor Red
+                            break
+                        }
                         Invoke-Pause
                         $j++
                     }else{
@@ -2625,10 +2688,18 @@ Function Start-Everything(){
     }
 
     if($script:PreventStandby -gt 1){
-        Stop-Process -Id $script:PreventStandby
+        try{
+            Stop-Process -Id $script:PreventStandby
+        }catch{
+            Write-ColorOut "Stop-Process -Id $($script:PreventStandby) failed" -ForegroundColor Red
+        }
     }
     if($UserParams.EnableGUI -eq 1){
-        Start-GUI -GUIPath $GUIPath -UserParams $UserParams
+        try{
+            Start-GUI -GUIPath $script:GUIPath -UserParams $UserParams
+        }catch{
+            Write-ColorOut "Re-starting Start-GUI failed" -ForegroundColor Red
+        }
     }
 }
 
@@ -2647,29 +2718,32 @@ Function Start-Everything(){
     $Host.UI.RawUI.WindowTitle = "CLI: Media-Copytool $VersionNumber"
 
 # DEFINITION: Start-up:
-    while($true){
+    try{
+        [hashtable]$UserParams = Read-ParametersFromJSON -UserParams $UserParams -Renew 0
+    }catch{
+        Throw 'Could not read Parameters from JSON.'
+        Start-Sleep -Seconds 2
+    }
+    if($UserParams.EnableGUI -eq 1){
         try{
-            [hashtable]$UserParams = Get-ParametersFromJSON -UserParams $UserParams -Renew 0
+            Start-GUI -GUIPath $GUIPath -UserParams $UserParams
         }catch{
-            break
-        }
-        if($UserParams.EnableGUI -eq 1){
-            try{
-                Start-GUI -GUIPath $GUIPath -UserParams $UserParams -GetXAML 1
-                Break
-            }catch{
-                Write-ColorOut "GUI could not be started!" -ForegroundColor Red
-                $UserParams.EnableGUI = 0
-                Continue
-            }
-        }elseif($UserParams.EnableGUI -eq 0){
+            Write-ColorOut "GUI could not be started!" -ForegroundColor Red
+            $UserParams.EnableGUI = 0
             Start-Everything -UserParams $UserParams
-            Break
-        }else{
-            Write-ColorOut "Invalid choice of -EnableGUI value (0, 1). Trying GUI..." -ForegroundColor Red
-            Start-Sleep -Seconds 2
-            $UserParams.EnableGUI = 1
-            Continue
+        }
+    }elseif($UserParams.EnableGUI -eq 0){
+        Start-Everything -UserParams $UserParams
+    }else{
+        Write-ColorOut "Invalid choice of -EnableGUI value (0, 1). Trying GUI..." -ForegroundColor Red
+        Start-Sleep -Seconds 2
+        $UserParams.EnableGUI = 1
+        try{
+            Start-GUI -GUIPath $GUIPath -UserParams $UserParams
+        }catch{
+            Write-ColorOut "GUI could not be started!" -ForegroundColor Red
+            $UserParams.EnableGUI = 0
+            Start-Everything -UserParams $UserParams
         }
     }
 #>

@@ -9,7 +9,7 @@
 
 . $PSScriptRoot\media_copytool.ps1
 
-Describe "Get-ParametersFromJSON" {
+Describe "Read-ParametersFromJSON" {
     Mock Write-ColorOut {}
     # Mock Start-Everything {}
     # Mock Start-GUI {}
@@ -56,45 +56,45 @@ Describe "Get-ParametersFromJSON" {
 
     Context "Uncomplicated file interaction" {
         It "Work fine with proper parameters" {
-            $test = Get-ParametersFromJSON -UserParams $UserParams -Renew 1
+            $test = Read-ParametersFromJSON -UserParams $UserParams -Renew 1
             $test | Should BeOfType hashtable
             $test.LoadParamPresetName   | Should Be "default"
         }
         It "Nonexistent/Empty LoadParamPresetName leads to `"default`"" {
             $UserParams.LoadParamPresetName = "nonexistent"
-            $test = Get-ParametersFromJSON -UserParams $UserParams -Renew 1
+            $test = Read-ParametersFromJSON -UserParams $UserParams -Renew 1
             $test | Should BeOfType hashtable
             $test.LoadParamPresetName   | Should Be "default"
 
             $UserParams.LoadParamPresetName = ""
-            $test = Get-ParametersFromJSON -UserParams $UserParams -Renew 1
+            $test = Read-ParametersFromJSON -UserParams $UserParams -Renew 1
             $test | Should BeOfType hashtable
             $test.LoadParamPresetName   | Should Be "default"
         }
         It "Throw when not finding anything" {
             $UserParams.JSONParamPath = "$BlaDrive\In_Test\notthere.json"
-            {Get-ParametersFromJSON -UserParams $UserParams -Renew 1} | Should Throw
+            {Read-ParametersFromJSON -UserParams $UserParams -Renew 1} | Should Throw
         }
         It "Throw error when UserParams are of wrong type" {
-            {Get-ParametersFromJSON -UserParams "hallo" -Renew 1} | Should Throw
-            {Get-ParametersFromJSON -UserParams $UserParams -Renew "hallo"} | Should Throw
+            {Read-ParametersFromJSON -UserParams "hallo" -Renew 1} | Should Throw
+            {Read-ParametersFromJSON -UserParams $UserParams -Renew "hallo"} | Should Throw
         }
         It "Throw error with empty UserParams" {
-            {Get-ParametersFromJSON} | Should Throw
-            {Get-ParametersFromJSON -UserParams @{} -Renew 1} | Should Throw
-            {Get-ParametersFromJSON -UserParams $UserParams} | Should Throw
-            {Get-ParametersFromJSON -Renew 1} | Should Throw
+            {Read-ParametersFromJSON} | Should Throw
+            {Read-ParametersFromJSON -UserParams @{} -Renew 1} | Should Throw
+            {Read-ParametersFromJSON -UserParams $UserParams} | Should Throw
+            {Read-ParametersFromJSON -Renew 1} | Should Throw
         }
         It "Throw error when param.JSON is empty" {
             $UserParams.JSONParamPath = "$BlaDrive\In_Test\param_empty.json"
-            {Get-ParametersFromJSON  -UserParams $UserParams -Renew 1} | Should Throw
+            {Read-ParametersFromJSON  -UserParams $UserParams -Renew 1} | Should Throw
         }
     }
     It "Special characters file&preset interaction" {
         $UserParams.JSONParamPath = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©\param specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©.json"
         "specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
         $UserParams.LoadParamPresetName = "specchar"
-        $test = Get-ParametersFromJSON -UserParams $UserParams -Renew 1
+        $test = Read-ParametersFromJSON -UserParams $UserParams -Renew 1
         $test | Should BeOfType hashtable
         $test.LoadParamPresetName | Should Be "specchar"
         $test.InputPath             | Should Be "F:\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
@@ -105,7 +105,7 @@ Describe "Get-ParametersFromJSON" {
     It "Long filename file&preset interaction" {
         $UserParams.JSONParamPath = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND\param_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_END.json"
         $UserParams.LoadParamPresetName = "long"
-        $test = Get-ParametersFromJSON -UserParams $UserParams -Renew 1
+        $test = Read-ParametersFromJSON -UserParams $UserParams -Renew 1
         $test | Should BeOfType hashtable
         $test.LoadParamPresetName | Should Be "long"
         $test.InputPath             | Should Be "F:\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
@@ -116,7 +116,7 @@ Describe "Get-ParametersFromJSON" {
     Context "Test the returned values" {
         $UserParams.JSONParamPath = "$BlaDrive\In_Test\param_uncomplicated.json"
         $UserParams.LoadParamPresetName = "bla"
-        $test = Get-ParametersFromJSON -UserParams $UserParams -Renew 1
+        $test = Read-ParametersFromJSON -UserParams $UserParams -Renew 1
         It "InputPath" {
             $test.InputPath     | Should BeOfType string
             $test.InputPath     | Should Be "F:\ooBar"
@@ -406,7 +406,7 @@ Describe "Test-UserValues" {
             $test | Should Be 0
         }
         It "Preventstandby (TODO: Make this work)" {
-            # $test = (Get-ParametersFromJSON -UserParams $UserParams -Renew 1).Preventstandby
+            # $test = (Read-ParametersFromJSON -UserParams $UserParams -Renew 1).Preventstandby
             # $test | Should BeOfType int
             # $test | Should Be 112
         }
@@ -759,7 +759,7 @@ Describe "Show-Parameters" {
     }
 }
 
-Describe "Set-Parameters" {
+Describe "Write-Parameters" {
     Mock Write-ColorOut {}
     # Mock Start-Everything {}
     # Mock Start-GUI {}
@@ -805,18 +805,18 @@ Describe "Set-Parameters" {
     Pop-Location
 
     It "Throws when no/wrong param" {
-        {Set-Parameters} | Should Throw
-        {Set-Parameters -UserParams @{}} | Should Throw
-        {Set-Parameters -UserParams 123} | Should Throw
+        {Write-Parameters} | Should Throw
+        {Write-Parameters -UserParams @{}} | Should Throw
+        {Write-Parameters -UserParams 123} | Should Throw
     }
     It "Returns `$false if JSON cannot be made" {
         $UserParams.JSONParamPath = "\\0.0.0.0\noparam.json"
-        $test = Set-Parameters -UserParams $UserParams
+        $test = Write-Parameters -UserParams $UserParams
         $test | Should Be $false
     }
     Context "Work correctly with valid param" {
         It "Return `$true when param is correct" {
-            $test = Set-Parameters -UserParams $UserParams
+            $test = Write-Parameters -UserParams $UserParams
             $test | Should Be $true
         }
         It "Replace only preset" {
@@ -850,13 +850,13 @@ Describe "Set-Parameters" {
             $jsonparams | Out-Null
             [System.IO.File]::WriteAllText($UserParams.JSONParamPath, $jsonparams)
             Start-Sleep -Milliseconds 25
-            $test = Set-Parameters -UserParams $UserParams
+            $test = Write-Parameters -UserParams $UserParams
             $test | Should Be $true
         }
         It "Add `"BLA`"" {
             $UserParams.SaveParamPresetName = "BLA"
 
-            $test = Set-Parameters -UserParams $UserParams
+            $test = Write-Parameters -UserParams $UserParams
             $test | Should Be $true
 
             $test = Get-Content -LiteralPath $UserParams.JSONParamPath -Encoding UTF8 -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
@@ -890,7 +890,7 @@ Describe "Set-Parameters" {
         }
         It "Create a new JSON" {
             Remove-Item -LiteralPath $UserParams.JSONParamPath
-            $test = Set-Parameters -UserParams $UserParams
+            $test = Write-Parameters -UserParams $UserParams
             $test | Should Be $true
             $test = @(Get-Content -LiteralPath $UserParams.JSONParamPath -Encoding UTF8 -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop)
             ,$test | Should BeOfType array
@@ -954,7 +954,7 @@ Describe "Set-Parameters" {
         $UserParams.JSONParamPath = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©\param specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©.json"
         $UserParams.SaveParamPresetName = "bla"
 
-        $test = Set-Parameters -UserParams $UserParams
+        $test = Write-Parameters -UserParams $UserParams
         $test | Should Be $true
 
         $test = Get-Content -LiteralPath $UserParams.JSONParamPath -Encoding UTF8 -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
@@ -988,7 +988,7 @@ Describe "Set-Parameters" {
     }
 }
 
-Describe "Start-FileSearch" {
+Describe "Get-InFiles" {
     Mock Write-ColorOut {}
     # Mock Start-Everything {}
     # Mock Start-GUI {}
@@ -1010,26 +1010,26 @@ Describe "Start-FileSearch" {
 
     Context "Basic functions" {
         It "Return array if successful" {
-            $test = @(Start-FileSearch -UserParams $UserParams)
+            $test = @(Get-InFiles -UserParams $UserParams)
             ,$test          | Should BeOfType array
             $test.length    | Should Be (Get-ChildItem -LiteralPath $UserParams.InputPath -Filter $UserParams.FormatInExclude[0] -Recurse).count
         }
         It "Return array even if only one file is found" {
             $UserParams.FormatInExclude = @("*.cr3")
-            $test = @(Start-FileSearch -UserParams $UserParams)
+            $test = @(Get-InFiles -UserParams $UserParams)
             ,$test          | Should BeOfType array
             $test.length    | Should Be 1
         }
         It "Throw if no/wrong param" {
-            {Start-FileSearch} | Should Throw
-            {Start-FileSearch -UserParams 123} | Should Throw
-            {Start-FileSearch -UserParams @{}} | Should Throw
+            {Get-InFiles} | Should Throw
+            {Get-InFiles -UserParams 123} | Should Throw
+            {Get-InFiles -UserParams @{}} | Should Throw
         }
         It "No problems with SpecChars" {
             $script:input_recurse = $false
             $UserParams.FormatInExclude = @("*")
             $UserParams.InputPath = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
-            $test = @(Start-FileSearch -UserParams $UserParams)
+            $test = @(Get-InFiles -UserParams $UserParams)
             ,$test          | Should BeOfType array
             $test.length    | Should Be 8
             $test = $test | Where-Object {$_.InBaseName -match 'file\ specChar\.\(]\)\{\[}à°\^âaà``\$öäüß''\#!%&=´@€\+,;-Æ©$' -and $_.Extension -eq ".cr2"}
@@ -1042,7 +1042,7 @@ Describe "Start-FileSearch" {
             $script:input_recurse = $false
             $UserParams.FormatInExclude = @("*")
             $UserParams.InputPath = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
-            $test = @(Start-FileSearch -UserParams $UserParams)
+            $test = @(Get-InFiles -UserParams $UserParams)
             ,$test          | Should BeOfType array
             $test.length    | Should Be 8
             $test = $test | Where-Object {$_.InBaseName -match 'file_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_thEND$' -and $_.Extension -eq ".cr2"}
@@ -1057,21 +1057,21 @@ Describe "Start-FileSearch" {
             $UserParams.InputPath = "$BlaDrive\In_Test"
             $UserParams.FormatPreference = "all"
             $UserParams.FormatInExclude = @("*.JPG")
-            $test = @(Start-FileSearch -UserParams $UserParams)
+            $test = @(Get-InFiles -UserParams $UserParams)
             ,$test          | Should BeOfType array
             $test.length    | Should Be (Get-ChildItem -LiteralPath $UserParams.InputPath -Filter "*" -Recurse -File).count
         }
         It "Include" {
             $UserParams.FormatPreference = "include"
             $UserParams.FormatInExclude = @("*.JPG","*.cr3")
-            $test = @(Start-FileSearch -UserParams $UserParams)
+            $test = @(Get-InFiles -UserParams $UserParams)
             ,$test          | Should BeOfType array
             $test.length    | Should Be (Get-ChildItem -Path $($UserParams.InputPath -Replace '\\$','\\\*') -Include $UserParams.FormatInExclude -File -Recurse).count
         }
         It "Exclude" {
             $UserParams.FormatPreference = "exclude"
             $UserParams.FormatInExclude = @("*.JPG")
-            $test = @(Start-FileSearch -UserParams $UserParams)
+            $test = @(Get-InFiles -UserParams $UserParams)
             ,$test          | Should BeOfType array
             $test.length    | Should Be (Get-ChildItem -Path $($UserParams.InputPath -Replace '\\$','\\\*') -Exclude $UserParams.FormatInExclude -File -Recurse).count
         }
@@ -1082,61 +1082,61 @@ Describe "Start-FileSearch" {
         }
         It "none (`"`")" {
             $UserParams.OutputSubfolderStyle = ""
-            $test = @(Start-FileSearch -UserParams $UserParams)
+            $test = @(Get-InFiles -UserParams $UserParams)
             ,$test | Should BeOfType array
             $test[0].OutSubfolder   | Should Be ""
             $test[11].OutSubfolder  | Should Be ""
 
             $UserParams.OutputSubfolderStyle = " "
-            $test = @(Start-FileSearch -UserParams $UserParams)
+            $test = @(Get-InFiles -UserParams $UserParams)
             ,$test | Should BeOfType array
             $test[0].OutSubfolder   | Should Be ""
             $test[11].OutSubfolder  | Should Be ""
         }
         It "unchanged (`"%n%`")" {
             $UserParams.OutputSubfolderStyle = "%n%"
-            $test = @(Start-FileSearch -UserParams $UserParams)
+            $test = @(Get-InFiles -UserParams $UserParams)
             ,$test | Should BeOfType array
             $test[0].OutSubfolder   | Should Be "\"
             $test[8].OutSubfolder   | Should Be "\folder_uncomplicated"
 
             $UserParams.OutputSubfolderStyle = "%n% "
-            $test = @(Start-FileSearch -UserParams $UserParams)
+            $test = @(Get-InFiles -UserParams $UserParams)
             ,$test | Should BeOfType array
             $test[0].OutSubfolder   | Should Be "\"
             $test[8].OutSubfolder   | Should Be "\folder_uncomplicated"
         }
         It "%y4%-%mo%-%d%" {
             $UserParams.OutputSubfolderStyle = "%y4%-%mo%-%d%"
-            $test = @(Start-FileSearch -UserParams $UserParams)
+            $test = @(Get-InFiles -UserParams $UserParams)
             ,$test | Should BeOfType array
             $test[0].OutSubfolder   | Should Be "\2018-08-11"
             $test[11].OutSubfolder  | Should Be "\2018-07-27"
         }
         It "(%y4%_%mo%_%d%) BLA" {
             $UserParams.OutputSubfolderStyle = "(%y4%_%mo%_%d%) BLA"
-            $test = @(Start-FileSearch -UserParams $UserParams)
+            $test = @(Get-InFiles -UserParams $UserParams)
             ,$test | Should BeOfType array
             $test[0].OutSubfolder   | Should Be "\(2018_08_11) BLA"
             $test[11].OutSubfolder  | Should Be "\(2018_07_27) BLA"
         }
         It "%y4%.%mo%.%d% %n% (TODO: Why 2nd test 8th item?)" {
             $UserParams.OutputSubfolderStyle = "%y4%.%mo%.%d% %n%"
-            $test = @(Start-FileSearch -UserParams $UserParams)
+            $test = @(Get-InFiles -UserParams $UserParams)
             ,$test | Should BeOfType array
             $test[0].OutSubfolder   | Should Be "\2018.08.11"
             $test[8].OutSubfolder   | Should Be "\2018.07.27 folder_uncomplicated" #
         }
         It "%y4%%mo%%d% %y2%BLA" {
             $UserParams.OutputSubfolderStyle = "%y4%%mo%%d% %y2%BLA"
-            $test = @(Start-FileSearch -UserParams $UserParams)
+            $test = @(Get-InFiles -UserParams $UserParams)
             ,$test | Should BeOfType array
             $test[0].OutSubfolder   | Should Be "\20180811 18BLA"
             $test[11].OutSubfolder  | Should Be "\20180727 18BLA"
         }
         It "%y2%-%mo%-%d%" {
             $UserParams.OutputSubfolderStyle = "%y2%-%mo%-%d%"
-            $test = @(Start-FileSearch -UserParams $UserParams)
+            $test = @(Get-InFiles -UserParams $UserParams)
             ,$test | Should BeOfType array
             $test[0].OutSubfolder   | Should Be "\18-08-11"
             $test[11].OutSubfolder  | Should Be "\18-07-27"
@@ -1145,7 +1145,7 @@ Describe "Start-FileSearch" {
     It "OutputFileStyle" {
         $UserParams.FormatInExclude = @("*.cr2")
         $UserParams.OutputFileStyle = "BLA_%c3% %n% %y4%-%mo%-%d%_%h%-%mi%-%s%_%y2% %n% %c1% %y4%-%mo%-%d%_%h%-%mi%-%s%"
-        $test = @(Start-FileSearch -UserParams $UserParams)
+        $test = @(Get-InFiles -UserParams $UserParams)
         ,$test | Should BeOfType array
         $test[0].InBaseName | Should Be "BLA_001 file specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ© 2018-08-11_09-14-51_18 file specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ© 1 2018-08-11_09-14-51"
         $test[1].InBaseName | Should Be "BLA_002 file_uncomplicated 2018-07-09_09-14-36_18 file_uncomplicated 2 2018-07-09_09-14-36"
@@ -1153,7 +1153,7 @@ Describe "Start-FileSearch" {
     }
 }
 
-Describe "Get-HistFile" {
+Describe "Read-HistFile" {
     Mock Write-ColorOut {}
     # Mock Start-Everything {}
     # Mock Start-GUI {}
@@ -1172,7 +1172,7 @@ Describe "Get-HistFile" {
 
     Context "Work properly" {
         It "Get array from regular histfile"{
-            $test = @(Get-HistFile -UserParams $UserParams)
+            $test = @(Read-HistFile -UserParams $UserParams)
             ,$test | Should BeOfType array
             $test[3].InName | Should Be "file_single.CR4"
             $test[3].Date   | Should Be 1520874103
@@ -1181,7 +1181,7 @@ Describe "Get-HistFile" {
         }
         It "Get array even if just one file is found" {
             $UserParams.HistFilePath = "$BlaDrive\In_Test\hist_simpleset.json"
-            $test = @(Get-HistFile -UserParams $UserParams)
+            $test = @(Read-HistFile -UserParams $UserParams)
             ,$test | Should BeOfType array
             $test.InName | Should Be "file_uncomplicated.CR2"
             $test.Date | Should Be 1531127676
@@ -1191,48 +1191,48 @@ Describe "Get-HistFile" {
         It "Return empty array for empty histfile" {
             Mock Read-Host {return 1}
             $UserParams.HistFilePath = "$BlaDrive\In_Test\hist_empty.json"
-            $test = @(Get-HistFile -UserParams $UserParams)
+            $test = @(Read-HistFile -UserParams $UserParams)
             ,$test | Should BeOfType array
             $test | Should Be @()
         }
         It "Throw if user does not want to work with empty histfile" {
             Mock Read-Host {return 0}
             $UserParams.HistFilePath = "$BlaDrive\In_Test\hist_empty.json"
-            {Get-HistFile -UserParams $UserParams} | Should Throw
+            {Read-HistFile -UserParams $UserParams} | Should Throw
         }
         It "Return array for broken histfile" {
             $UserParams.HistFilePath = "$BlaDrive\In_Test\hist_broken.json"
             Mock Read-Host {return 1}
-            $test = @(Get-HistFile -UserParams $UserParams)
+            $test = @(Read-HistFile -UserParams $UserParams)
             ,$test | Should BeOfType array
             $test | Should Be @()
         }
         It "Throw if user does not want to work with broken histfile" {
             Mock Read-Host {return 0}
             $UserParams.HistFilePath = "$BlaDrive\In_Test\hist_broken.json"
-            {Get-HistFile -UserParams $UserParams} | Should Throw
+            {Read-HistFile -UserParams $UserParams} | Should Throw
         }
         It "Return empty array for no histfile" {
             Mock Read-Host {return 1}
             $UserParams.HistFilePath = "$BlaDrive\In_Test\nohistfile.json"
-            $test = @(Get-HistFile -UserParams $UserParams)
+            $test = @(Read-HistFile -UserParams $UserParams)
             ,$test | Should BeOfType array
             $test | Should Be @()
         }
         It "Throw if user does not want to work with no histfile" {
             Mock Read-Host {return 0}
             $UserParams.HistFilePath = "$BlaDrive\In_Test\nohistfile.json"
-            {Get-HistFile -UserParams $UserParams} | Should Throw
+            {Read-HistFile -UserParams $UserParams} | Should Throw
         }
         It "Throw if params are wrong/missing" {
-            {Get-HistFile} | Should Throw
-            {Get-HistFile -UserParams 123} | Should Throw
-            {Get-HistFile -UserParams @{}} | Should Throw
+            {Read-HistFile} | Should Throw
+            {Read-HistFile -UserParams 123} | Should Throw
+            {Read-HistFile -UserParams @{}} | Should Throw
         }
     }
     It "No problems with SpecChars" {
         $UserParams.HistFilePath = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©\hist specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©.json"
-        $test = @(Get-HistFile -UserParams $UserParams)
+        $test = @(Read-HistFile -UserParams $UserParams)
         ,$test | Should BeOfType array
         $test = $test | Where-Object {$_.InName -eq "file specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©.jpg"}
         $test.InName | Should Be "file specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©.jpg"
@@ -1242,7 +1242,7 @@ Describe "Get-HistFile" {
     }
     It "No problems with long paths" {
         $UserParams.HistFilePath = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND\hist_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_tEND.json"
-        $test = @(Get-HistFile -UserParams $UserParams)
+        $test = @(Read-HistFile -UserParams $UserParams)
         ,$test | Should BeOfType array
         $test = $test | Where-Object {$_.InName -eq "file specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©.jpg"}
         $test.InName | Should Be "file specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©.jpg"
@@ -1252,7 +1252,7 @@ Describe "Get-HistFile" {
     }
 }
 
-Describe "Start-DupliCheckHist" {
+Describe "Test-DupliHist" {
     Mock Write-ColorOut {}
     # Mock Start-Everything {}
     # Mock Start-GUI {}
@@ -1280,49 +1280,49 @@ Describe "Start-DupliCheckHist" {
 
     Context "Working normal" {
         It "Return array with correct params, find duplicates" {
-            $InFiles = @(Start-FileSearch -UserParams $UserParams)
-            $HistFiles = @(Get-HistFile -UserParams $UserParams)
-            $test = @(Start-DupliCheckHist -InFiles $InFiles -HistFiles $HistFiles -UserParams $UserParams)
+            $InFiles = @(Get-InFiles -UserParams $UserParams)
+            $HistFiles = @(Read-HistFile -UserParams $UserParams)
+            $test = @(Test-DupliHist -InFiles $InFiles -HistFiles $HistFiles -UserParams $UserParams)
             ,$test | Should BeOfType array
             $test.Length | Should Be 0
         }
         It "Return array with correct params, don't false-positive things" {
             $UserParams.HistFilePath = "$BlaDrive\In_Test\hist_uncomplicated_nodup.json"
-            $InFiles = @(Start-FileSearch -UserParams $UserParams)
-            $HistFiles = @(Get-HistFile -UserParams $UserParams)
-            $test = @(Start-DupliCheckHist -InFiles $InFiles -HistFiles $HistFiles -UserParams $UserParams)
+            $InFiles = @(Get-InFiles -UserParams $UserParams)
+            $HistFiles = @(Read-HistFile -UserParams $UserParams)
+            $test = @(Test-DupliHist -InFiles $InFiles -HistFiles $HistFiles -UserParams $UserParams)
             ,$test | Should BeOfType array
             $test.Length | Should Be 24
         }
         It "Works with `$AcceptTimeDiff (1/2)" {
             $UserParams.AcceptTimeDiff = 1
-            $InFiles = @(Start-FileSearch -UserParams $UserParams)
-            $HistFiles = @(Get-HistFile -UserParams $UserParams)
-            $test = @(Start-DupliCheckHist -InFiles $InFiles -HistFiles $HistFiles -UserParams $UserParams)
+            $InFiles = @(Get-InFiles -UserParams $UserParams)
+            $HistFiles = @(Read-HistFile -UserParams $UserParams)
+            $test = @(Test-DupliHist -InFiles $InFiles -HistFiles $HistFiles -UserParams $UserParams)
             ,$test | Should BeOfType array
             $test.Length | Should Be 0
         }
         It "Works with `$AcceptTimeDiff (2/2)" {
             $UserParams.AcceptTimeDiff = 1
             $UserParams.HistFilePath = "$BlaDrive\In_Test\hist_uncomplicated_accepttime.json"
-            $InFiles = @(Start-FileSearch -UserParams $UserParams)
-            $HistFiles = @(Get-HistFile -UserParams $UserParams)
-            $test = @(Start-DupliCheckHist -InFiles $InFiles -HistFiles $HistFiles -UserParams $UserParams)
+            $InFiles = @(Get-InFiles -UserParams $UserParams)
+            $HistFiles = @(Read-HistFile -UserParams $UserParams)
+            $test = @(Test-DupliHist -InFiles $InFiles -HistFiles $HistFiles -UserParams $UserParams)
             ,$test | Should BeOfType array
             $test.Length | Should Be 20
         }
         It "Throws Error when parameters are wrong / missing" {
-            {Start-DupliCheckHist} | Should Throw
-            {Start-DupliCheckHist -InFiles @() -HistFiles @() -UserParams @()} | Should Throw
+            {Test-DupliHist} | Should Throw
+            {Test-DupliHist -InFiles @() -HistFiles @() -UserParams @()} | Should Throw
         }
         It "Does find a new file" {
             $UserParams.AcceptTimeDiff = 1
             $UserParams.WriteHistFile = "no"
             "Blabla" | Out-File "$BlaDrive\In_Test\NEWFILE.jpg" -Encoding utf8
 
-            $InFiles = @(Start-FileSearch -UserParams $UserParams)
-            $HistFiles = @(Get-HistFile -UserParams $UserParams)
-            $test = @(Start-DupliCheckHist -InFiles $InFiles -HistFiles $HistFiles -UserParams $UserParams)
+            $InFiles = @(Get-InFiles -UserParams $UserParams)
+            $HistFiles = @(Read-HistFile -UserParams $UserParams)
+            $test = @(Test-DupliHist -InFiles $InFiles -HistFiles $HistFiles -UserParams $UserParams)
             ,$test | Should BeOfType array
             $test.Length | Should Be 1
             $test.InFullName | Should Be "$BlaDrive\In_Test\NEWFILE.jpg"
@@ -1335,10 +1335,10 @@ Describe "Start-DupliCheckHist" {
         $UserParams.OutputPath = "$BlaDrive\Out_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
         $UserParams.HistFilePath = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©\hist specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©.json"
 
-        $InFiles = @(Start-FileSearch -UserParams $UserParams)
-        $HistFiles = @(Get-HistFile -UserParams $UserParams)
+        $InFiles = @(Get-InFiles -UserParams $UserParams)
+        $HistFiles = @(Read-HistFile -UserParams $UserParams)
 
-        $test = @(Start-DupliCheckHist -InFiles $InFiles -HistFiles $HistFiles -UserParams $UserParams)
+        $test = @(Test-DupliHist -InFiles $InFiles -HistFiles $HistFiles -UserParams $UserParams)
         ,$test | Should BeOfType array
         $test.length | Should Be 0
     }
@@ -1347,16 +1347,16 @@ Describe "Start-DupliCheckHist" {
         $UserParams.OutputPath = "$BlaDrive\Out_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
         $UserParams.HistFilePath = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND\hist_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_tEND.json"
 
-        $InFiles = @(Start-FileSearch -UserParams $UserParams)
-        $HistFiles = @(Get-HistFile -UserParams $UserParams)
+        $InFiles = @(Get-InFiles -UserParams $UserParams)
+        $HistFiles = @(Read-HistFile -UserParams $UserParams)
 
-        $test = @(Start-DupliCheckHist -InFiles $InFiles -HistFiles $HistFiles -UserParams $UserParams)
+        $test = @(Test-DupliHist -InFiles $InFiles -HistFiles $HistFiles -UserParams $UserParams)
         ,$test | Should BeOfType array
         $test.length | Should Be 0
     }
 }
 
-Describe "Start-DupliCheckOut" {
+Describe "Test-DupliOut" {
     Mock Write-ColorOut {}
     # Mock Start-Everything {}
     # Mock Start-GUI {}
@@ -1380,13 +1380,13 @@ Describe "Start-DupliCheckOut" {
 
     Context "Works as planned" {
         It "Throw if wron/no parameter" {
-            {Start-DupliCheckOut} | Should Throw
-            {Start-DupliCheckOut -InFiles @("Bla")} | Should Throw
-            {Start-DupliCheckOut -InFiles @() -UserParams @{}} | Should Throw
+            {Test-DupliOut} | Should Throw
+            {Test-DupliOut -InFiles @("Bla")} | Should Throw
+            {Test-DupliOut -InFiles @() -UserParams @{}} | Should Throw
         }
         It "Mark no file if no file is double" {
-            $InFiles = @(Start-FileSearch -UserParams $UserParams)
-            $test = @(Start-DupliCheckOut -InFiles $InFiles -UserParams $UserParams)
+            $InFiles = @(Get-InFiles -UserParams $UserParams)
+            $test = @(Test-DupliOut -InFiles $InFiles -UserParams $UserParams)
             ,$test | Should BeOfType array
             $test.Length | Should Be 24
         }
@@ -1394,8 +1394,8 @@ Describe "Start-DupliCheckOut" {
             Get-ChildItem -LiteralPath "$BlaDrive\Out_Test" -Recurse | Remove-Item -Recurse
             Get-ChildItem -LiteralPath "$BlaDrive\In_Test" -Recurse | Copy-Item -Destination "$BlaDrive\Out_Test" -Recurse
             Get-ChildItem -Path "$BlaDrive\Out_Test" -Exclude *.cr2 -File -Recurse | Remove-Item
-            $InFiles = @(Start-FileSearch -UserParams $UserParams)
-            $test = @(Start-DupliCheckOut -InFiles $InFiles -UserParams $UserParams)
+            $InFiles = @(Get-InFiles -UserParams $UserParams)
+            $test = @(Test-DupliOut -InFiles $InFiles -UserParams $UserParams)
             ,$test | Should BeOfType array
             $test.Length | Should Be 12
             $test.Extension | Should -Not -Contain ".cr2"
@@ -1408,8 +1408,8 @@ Describe "Start-DupliCheckOut" {
             Get-ChildItem -LiteralPath "$BlaDrive\In_Test" -Recurse | Copy-Item -Destination "$BlaDrive\Out_Test" -Recurse
             Get-ChildItem -LiteralPath "$BlaDrive\Out_Test" -Recurse -File | ForEach-Object {$_.LastWriteTime = $_.LastWriteTime.AddSeconds(2)}
             Start-Sleep -Milliseconds 250
-            $InFiles = @(Start-FileSearch -UserParams $UserParams)
-            $test = @(Start-DupliCheckOut -InFiles $InFiles -UserParams $UserParams)
+            $InFiles = @(Get-InFiles -UserParams $UserParams)
+            $test = @(Test-DupliOut -InFiles $InFiles -UserParams $UserParams)
             ,$test | Should BeOfType array
             $test.Length | Should Be 24
         }
@@ -1419,8 +1419,8 @@ Describe "Start-DupliCheckOut" {
             Get-ChildItem -LiteralPath "$BlaDrive\In_Test" -Recurse | Copy-Item -Destination "$BlaDrive\Out_Test" -Recurse
             Get-ChildItem -LiteralPath "$BlaDrive\Out_Test" -Recurse -File | ForEach-Object {$_.LastWriteTime = $_.LastWriteTime.AddSeconds(2)}
             Start-Sleep -Milliseconds 250
-            $InFiles = @(Start-FileSearch -UserParams $UserParams)
-            $test = @(Start-DupliCheckOut -InFiles $InFiles -UserParams $UserParams)
+            $InFiles = @(Get-InFiles -UserParams $UserParams)
+            $test = @(Test-DupliOut -InFiles $InFiles -UserParams $UserParams)
             , $test | Should BeOfType array
             $test.Length | Should Be 0
         }
@@ -1429,8 +1429,8 @@ Describe "Start-DupliCheckOut" {
             Get-ChildItem -LiteralPath "$BlaDrive\In_Test" -Recurse | Copy-Item -Destination "$BlaDrive\Out_Test" -Recurse
             Get-ChildItem -LiteralPath "$BlaDrive\Out_Test" -Recurse -File | ForEach-Object {Out-File -InputObject "a" -LiteralPath $_.FullName -Append -Encoding utf8 -Force}
             Start-Sleep -Milliseconds 250
-            $InFiles = @(Start-FileSearch -UserParams $UserParams)
-            $test = @(Start-DupliCheckOut -InFiles $InFiles -UserParams $UserParams)
+            $InFiles = @(Get-InFiles -UserParams $UserParams)
+            $test = @(Test-DupliOut -InFiles $InFiles -UserParams $UserParams)
             , $test | Should BeOfType array
             $test.Length | Should Be 24
         }
@@ -1442,8 +1442,8 @@ Describe "Start-DupliCheckOut" {
         $UserParams.InputPath = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
         $UserParams.OutputPath = "$BlaDrive\Out_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
 
-        $InFiles = @(Start-FileSearch -UserParams $UserParams)
-        $test = @(Start-DupliCheckOut -InFiles $InFiles -UserParams $UserParams)
+        $InFiles = @(Get-InFiles -UserParams $UserParams)
+        $test = @(Test-DupliOut -InFiles $InFiles -UserParams $UserParams)
         ,$test | Should BeOfType array
         $test.length | Should Be 6
     }
@@ -1451,14 +1451,14 @@ Describe "Start-DupliCheckOut" {
         $UserParams.InputPath = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
         $UserParams.OutputPath = "$BlaDrive\Out_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
 
-        $InFiles = @(Start-FileSearch -UserParams $UserParams)
-        $test = @(Start-DupliCheckOut -InFiles $InFiles -UserParams $UserParams)
+        $InFiles = @(Get-InFiles -UserParams $UserParams)
+        $test = @(Test-DupliOut -InFiles $InFiles -UserParams $UserParams)
         ,$test | Should BeOfType array
         $test.length | Should Be 6
     }
 }
 
-Describe "Start-InputGetHash" {
+Describe "Get-InFileHash" {
     Mock Write-ColorOut {}
     # Mock Start-Everything {}
     # Mock Start-GUI {}
@@ -1485,30 +1485,30 @@ Describe "Start-InputGetHash" {
 
     Context "Works as planned" {
         It "Throw if no/wrong parameter" {
-            {Start-InputGetHash} | Should Throw
-            {Start-InputGetHash -InFiles @()} | Should Throw
+            {Get-InFileHash} | Should Throw
+            {Get-InFileHash -InFiles @()} | Should Throw
         }
         It "Works as planned" {
-            $InFiles = @(Start-FileSearch -UserParams $UserParams)
-            $test = @(Start-InputGetHash -InFiles $InFiles)
+            $InFiles = @(Get-InFiles -UserParams $UserParams)
+            $test = @(Get-InFileHash -InFiles $InFiles)
             ,$test | Should BeOfType array
             foreach($i in $test.Hash){
                 $i | Should Not Be ("ZYX")
             }
         }
         It "No re-hashing of files" {
-            $InFiles = @(Start-FileSearch -UserParams $UserParams)
+            $InFiles = @(Get-InFiles -UserParams $UserParams)
             $InFiles | ForEach-Object {$_.Hash = "123"}
-            $test = @(Start-InputGetHash -InFiles $InFiles)
+            $test = @(Get-InFileHash -InFiles $InFiles)
             ,$test | Should BeOfType array
             foreach($i in $test.Hash){
                 $i | Should Be ("123")
             }
         }
         It "Work even if one file already has a hash" {
-            $InFiles = @(Start-FileSearch -UserParams $UserParams)
+            $InFiles = @(Get-InFiles -UserParams $UserParams)
             $InFiles[2].Hash = "TEST"
-            $test = @(Start-InputGetHash -InFiles $InFiles)
+            $test = @(Get-InFileHash -InFiles $InFiles)
             ,$test | Should BeOfType array
             $Test[2].Hash | Should Be "TEST"
             $test = $test | Where-Object {$_.Hash -match '^ZYX$'}
@@ -1518,8 +1518,8 @@ Describe "Start-InputGetHash" {
     It "No problems with SpecChars" {
         $UserParams.InputPath = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
 
-        $InFiles = @(Start-FileSearch -UserParams $UserParams)
-        $test = @(Start-InputGetHash -InFiles $InFiles)
+        $InFiles = @(Get-InFiles -UserParams $UserParams)
+        $test = @(Get-InFileHash -InFiles $InFiles)
         ,$test | Should BeOfType array
         foreach($i in $test.Hash){
             $i | Should Not Be ("ZYX")
@@ -1528,8 +1528,8 @@ Describe "Start-InputGetHash" {
     It "No problems with long paths" {
         $UserParams.InputPath = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
 
-        $InFiles = @(Start-FileSearch -UserParams $UserParams)
-        $test = @(Start-InputGetHash -InFiles $InFiles)
+        $InFiles = @(Get-InFiles -UserParams $UserParams)
+        $test = @(Get-InFileHash -InFiles $InFiles)
         ,$test | Should BeOfType array
         foreach($i in $test.Hash){
             $i | Should Not Be ("ZYX")
@@ -1537,7 +1537,7 @@ Describe "Start-InputGetHash" {
     }
 }
 
-Describe "Start-PreventingDoubleCopies" {
+Describe "Clear-IdenticalInFiles" {
     Mock Write-ColorOut {}
     # Mock Start-Everything {}
     # Mock Start-GUI {}
@@ -1564,19 +1564,19 @@ Describe "Start-PreventingDoubleCopies" {
 
     Context "Works as planned" {
         It "Throw if no/wrong parameter" {
-            {Start-PreventingDoubleCopies} | Should Throw
-            {Start-PreventingDoubleCopies -InFiles @()} | Should Throw
+            {Clear-IdenticalInFiles} | Should Throw
+            {Clear-IdenticalInFiles -InFiles @()} | Should Throw
         }
         It "Works as it should" {
-            $InFiles = @(Start-FileSearch -UserParams $UserParams)
-            $test = @(Start-PreventingDoubleCopies -InFiles $InFiles)
+            $InFiles = @(Get-InFiles -UserParams $UserParams)
+            $test = @(Clear-IdenticalInFiles -InFiles $InFiles)
             ,$test | Should BeOfType array
             $test.Length | Should Be 7
         }
     }
 }
 
-Describe "Start-SpaceCheck"{
+Describe "Test-DiskSpace"{
     Mock Write-ColorOut {}
     # Mock Start-Everything {}
     # Mock Start-GUI {}
@@ -1603,40 +1603,40 @@ Describe "Start-SpaceCheck"{
 
     Context "Works as planned" {
         It "Throw if no/wrong parameter" {
-            {Start-SpaceCheck} | Should Throw
-            {Start-SpaceCheck -InFiles @()} | Should Throw
+            {Test-DiskSpace} | Should Throw
+            {Test-DiskSpace -InFiles @()} | Should Throw
         }
         It "Works as it should" {
-            $InFiles = @(Start-FileSearch -UserParams $UserParams)
-            $test = Start-SpaceCheck -InFiles $InFiles -UserParams $UserParams
+            $InFiles = @(Get-InFiles -UserParams $UserParams)
+            $test = Test-DiskSpace -InFiles $InFiles -UserParams $UserParams
             $test | Should BeOfType boolean
         }
     }
     It "No problems with SpecChars" {
         $UserParams.InputPath = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
-        $InFiles = @(Start-FileSearch -UserParams $UserParams)
-        $test = Start-SpaceCheck -InFiles $InFiles -UserParams $UserParams
+        $InFiles = @(Get-InFiles -UserParams $UserParams)
+        $test = Test-DiskSpace -InFiles $InFiles -UserParams $UserParams
         $test | Should BeOfType boolean
         $test | Should Be $true
     }
     It "No problems with long paths" {
         $UserParams.InputPath = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
-        $InFiles = @(Start-FileSearch -UserParams $UserParams)
-        $test = Start-SpaceCheck -InFiles $InFiles -UserParams $UserParams
+        $InFiles = @(Get-InFiles -UserParams $UserParams)
+        $test = Test-DiskSpace -InFiles $InFiles -UserParams $UserParams
         $test | Should BeOfType boolean
     }
     It "Test with small volume" {
         Write-Host "This only works if A:\Out_Test exists and is on a very small drive (e.g. RAM-volume)"
         Pause
         $UserParams.OutputPath = "A:\Out_Test"
-        $InFiles = @(Start-FileSearch -UserParams $UserParams)
-        $test = Start-SpaceCheck -InFiles $InFiles -UserParams $UserParams
+        $InFiles = @(Get-InFiles -UserParams $UserParams)
+        $test = Test-DiskSpace -InFiles $InFiles -UserParams $UserParams
         $test | Should BeOfType boolean
         $test | Should Be $False
     }
 }
 
-Describe "Start-OverwriteProtection" {
+Describe "Protect-OutFileOverwrite" {
     Mock Write-ColorOut {}
     # Mock Start-Everything {}
     # Mock Start-GUI {}
@@ -1661,15 +1661,15 @@ Describe "Start-OverwriteProtection" {
 
     Context "Works as planned" {
         It "Throw if no/wrong parameter" {
-            {Start-OverwriteProtection} | Should Throw
-            {Start-OverwriteProtection -InFiles @()} | Should Throw
-            {Start-OverwriteProtection -Mirror 1} | Should Throw
+            {Protect-OutFileOverwrite} | Should Throw
+            {Protect-OutFileOverwrite -InFiles @()} | Should Throw
+            {Protect-OutFileOverwrite -Mirror 1} | Should Throw
         }
         It "Add nothing if not needed" {
             $UserParams.InputSubfolderSearch = 0
-            $InFiles = @(Start-FileSearch -UserParams $UserParams)
+            $InFiles = @(Get-InFiles -UserParams $UserParams)
             $NewFiles = $InFiles | Select-Object *
-            $test = @(Start-OverwriteProtection -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+            $test = @(Protect-OutFileOverwrite -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
             ,$test | Should BeOfType array
             (Compare-Object $InFiles $test -Property InFullName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
             (Compare-Object $InFiles $test -Property InPath -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
@@ -1707,9 +1707,9 @@ Describe "Start-OverwriteProtection" {
         }
         It "Add _InCopyXY if file is there multiple times (TODO: probably does not work w/ OutputSubfolderStyle like %n%?)" {
             $UserParams.InputSubfolderSearch = 1
-            $InFiles = @(Start-FileSearch -UserParams $UserParams)
+            $InFiles = @(Get-InFiles -UserParams $UserParams)
             $NewFiles = $InFiles | Select-Object *
-            $test = @(Start-OverwriteProtection -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+            $test = @(Protect-OutFileOverwrite -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
             ,$test | Should BeOfType array
             (Compare-Object $InFiles $test -Property InFullName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
             (Compare-Object $InFiles $test -Property InPath -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
@@ -1749,9 +1749,9 @@ Describe "Start-OverwriteProtection" {
         It "Test if length is restricted with EnableLongPaths=0 (TODO: Limit size of string to XYZ?)" {
             $UserParams.EnableLongPaths = 0
             $UserParams.OutputSubfolderStyle =  "%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%"
-            $InFiles = @(Start-FileSearch -UserParams $UserParams)
+            $InFiles = @(Get-InFiles -UserParams $UserParams)
             $NewFiles = $InFiles | Select-Object *
-            $test = @(Start-OverwriteProtection -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+            $test = @(Protect-OutFileOverwrite -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
             ,$test | Should BeOfType array
             (Compare-Object $InFiles $test -Property InFullName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
             (Compare-Object $InFiles $test -Property InPath -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
@@ -1775,9 +1775,9 @@ Describe "Start-OverwriteProtection" {
         It "Test if length is not restricted with EnableLongPaths=1 (TODO: Per limitations, EnableLongPaths=1 still has to limit each element of the path to 255 chars)" {
             $UserParams.EnableLongPaths = 1
             $UserParams.OutputSubfolderStyle =  "%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%-%y4%"
-            $InFiles = @(Start-FileSearch -UserParams $UserParams)
+            $InFiles = @(Get-InFiles -UserParams $UserParams)
             $NewFiles = $InFiles | Select-Object *
-            $test = @(Start-OverwriteProtection -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+            $test = @(Protect-OutFileOverwrite -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
             ,$test | Should BeOfType array
             (Compare-Object $InFiles $test -Property InFullName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
             (Compare-Object $InFiles $test -Property InPath -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
@@ -1804,9 +1804,9 @@ Describe "Start-OverwriteProtection" {
             $UserParams.OutputSubfolderStyle = ""
             Get-ChildItem -LiteralPath "$BlaDrive\In_Test" -Recurse | Copy-Item -Destination "$BlaDrive\Out_Test" -Recurse -ErrorAction SilentlyContinue
 
-            $InFiles = @(Start-FileSearch -UserParams $UserParams)
+            $InFiles = @(Get-InFiles -UserParams $UserParams)
             $NewFiles = $InFiles | Select-Object *
-            $test = @(Start-OverwriteProtection -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+            $test = @(Protect-OutFileOverwrite -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
             ,$test | Should BeOfType array
             (Compare-Object $InFiles $test -Property InFullName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
             (Compare-Object $InFiles $test -Property InPath -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
@@ -1850,9 +1850,9 @@ Describe "Start-OverwriteProtection" {
             Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x -aoa -bb0 -pdefault -sccUTF-8 -spf2 `"$BlaDrive\Out_Test\InCopyTEST.7z`" `"-o.\`" " -WindowStyle Minimized -Wait
             Pop-Location
 
-            $InFiles = @(Start-FileSearch -UserParams $UserParams)
+            $InFiles = @(Get-InFiles -UserParams $UserParams)
             $NewFiles = $InFiles | Select-Object *
-            $test = @(Start-OverwriteProtection -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+            $test = @(Protect-OutFileOverwrite -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
             ,$test | Should BeOfType array
             (Compare-Object $InFiles $test -Property InFullName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
             (Compare-Object $InFiles $test -Property InPath -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
@@ -1891,9 +1891,9 @@ Describe "Start-OverwriteProtection" {
             Get-ChildItem -LiteralPath "$BlaDrive\Out_Test" -Recurse | Remove-Item -Recurse
             Start-Sleep -Milliseconds 250
 
-            $InFiles = @(Start-FileSearch -UserParams $UserParams)
+            $InFiles = @(Get-InFiles -UserParams $UserParams)
             $NewFiles = $InFiles | Select-Object *
-            $test = @(Start-OverwriteProtection -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+            $test = @(Protect-OutFileOverwrite -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
             ,$test | Should BeOfType array
             (Compare-Object $InFiles $test -Property InFullName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
             (Compare-Object $InFiles $test -Property InPath -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
@@ -1932,9 +1932,9 @@ Describe "Start-OverwriteProtection" {
             $UserParams.OutputPath = "$BlaDrive\Out_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
             New-Item -ItemType Directory -Path $UserParams.OutputPath
             Get-ChildItem -LiteralPath "$BlaDrive\In_Test" -File | Copy-Item -Destination $UserParams.OutputPath
-            $InFiles = @(Start-FileSearch -UserParams $UserParams)
+            $InFiles = @(Get-InFiles -UserParams $UserParams)
             $NewFiles = $InFiles | Select-Object *
-            $test = @(Start-OverwriteProtection -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+            $test = @(Protect-OutFileOverwrite -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
             ,$test | Should BeOfType array
             (Compare-Object $InFiles $test -Property InFullName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
             (Compare-Object $InFiles $test -Property InPath -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
@@ -1972,9 +1972,9 @@ Describe "Start-OverwriteProtection" {
             $UserParams.OutputPath = "$BlaDrive\Out_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
             New-Item -ItemType Directory -Path $UserParams.OutputPath
             Get-ChildItem -LiteralPath "$BlaDrive\In_Test" -File | Copy-Item -Destination $UserParams.OutputPath
-            $InFiles = @(Start-FileSearch -UserParams $UserParams)
+            $InFiles = @(Get-InFiles -UserParams $UserParams)
             $NewFiles = $InFiles | Select-Object *
-            $test = @(Start-OverwriteProtection -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+            $test = @(Protect-OutFileOverwrite -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
             ,$test | Should BeOfType array
             (Compare-Object $InFiles $test -Property InFullName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
             (Compare-Object $InFiles $test -Property InPath -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
@@ -2011,7 +2011,7 @@ Describe "Start-OverwriteProtection" {
     }
 }
 
-Describe "Start-FileCopy"{
+Describe "Copy-InFiles"{
     Mock Write-ColorOut {}
     # Mock Start-Everything {}
     # Mock Start-GUI {}
@@ -2036,15 +2036,15 @@ Describe "Start-FileCopy"{
 
     Context "Works as planned" {
         It "Throw if no/wrong parameter" {
-            {Start-FileCopy} | Should Throw
-            {Start-FileCopy -InFiles @()} | Should Throw
-            {Start-FileCopy -UserParams 1} | Should Throw
+            {Copy-InFiles} | Should Throw
+            {Copy-InFiles -InFiles @()} | Should Throw
+            {Copy-InFiles -UserParams 1} | Should Throw
         }
         It "Copy all files to %y4%-%mo%-%d%" {
-            $InFiles = @(Start-FileSearch -UserParams $UserParams)
+            $InFiles = @(Get-InFiles -UserParams $UserParams)
             $NewFiles = $InFiles | Select-Object *
-            $test = @(Start-OverwriteProtection -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
-            $bla = Start-FileCopy -UserParams $UserParams -InFiles $test
+            $test = @(Protect-OutFileOverwrite -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+            $bla = Copy-InFiles -UserParams $UserParams -InFiles $test
             (Compare-Object -ReferenceObject $(Get-LongChildItem -Path "$($UserParams.InputPath)" -Include *.cr2,*.jpg,*.cr3 -Recurse) -DifferenceObject $(Get-LongChildItem -Path "$($UserParams.OutputPath)" -Include *.cr2,*.jpg,*.cr3 -Recurse) -Property Size,LastWriteTime -ErrorAction SilentlyContinue).count | Should Be 0
         }
         It "Overwrite old files" {
@@ -2052,12 +2052,12 @@ Describe "Start-FileCopy"{
             Start-Sleep -Milliseconds 10
             $UserParams.OverwriteExistingFiles = 1
             $UserParams.InputSubfolderSearch = 0
-            $InFiles = @(Start-FileSearch -UserParams $UserParams)
+            $InFiles = @(Get-InFiles -UserParams $UserParams)
             $NewFiles = $InFiles | Select-Object *
-            $test = @(Start-OverwriteProtection -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
-            Start-FileCopy -UserParams $UserParams -InFiles $test
-            $test2 = @(Start-OverwriteProtection -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
-            Start-FileCopy -UserParams $UserParams -InFiles $test2
+            $test = @(Protect-OutFileOverwrite -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+            Copy-InFiles -UserParams $UserParams -InFiles $test
+            $test2 = @(Protect-OutFileOverwrite -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+            Copy-InFiles -UserParams $UserParams -InFiles $test2
             (Get-LongChildItem $UserParams.OutputPath -File -Recurse).Length | Should Be $InFiles.Length
             Get-LongChildItem $UserParams.OutputPath -File -Recurse | % {$_.FullName | Should Not BeLike "*OutCopy*"}
         }
@@ -2066,13 +2066,13 @@ Describe "Start-FileCopy"{
             Start-Sleep -Milliseconds 10
             $UserParams.OverwriteExistingFiles = 0
             $UserParams.InputSubfolderSearch = 0
-            $InFiles = @(Start-FileSearch -UserParams $UserParams)
+            $InFiles = @(Get-InFiles -UserParams $UserParams)
             $NewFiles = $InFiles | Select-Object *
-            $test = @(Start-OverwriteProtection -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
-            Start-FileCopy -UserParams $UserParams -InFiles $test
+            $test = @(Protect-OutFileOverwrite -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+            Copy-InFiles -UserParams $UserParams -InFiles $test
             start-sleep -Milliseconds 10
-            $test2 = @(Start-OverwriteProtection -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
-            Start-FileCopy -UserParams $UserParams -InFiles $test2
+            $test2 = @(Protect-OutFileOverwrite -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+            Copy-InFiles -UserParams $UserParams -InFiles $test2
             start-sleep -Milliseconds 10
             (Get-LongChildItem $UserParams.OutputPath -File -Include *.cr2,*.jpg,*.cr3 -Recurse).Length | Should Be ($test.Length * 2)
             (Get-LongChildItem $UserParams.OutputPath -File -Include *.cr2,*.jpg,*.cr3 -Recurse | ? {$_.FullName -match '^.*_OutCopy\d.*$'}).Length | Should Be ($test.Length)
@@ -2080,26 +2080,26 @@ Describe "Start-FileCopy"{
         It "Special Characters" {
             $UserParams.InputPath = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
             $UserParams.OutputPath = "$BlaDrive\Out_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
-            $InFiles = @(Start-FileSearch -UserParams $UserParams)
+            $InFiles = @(Get-InFiles -UserParams $UserParams)
             $NewFiles = $InFiles | Select-Object *
-            $test = @(Start-OverwriteProtection -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
-            $bla = Start-FileCopy -UserParams $UserParams -InFiles $test
+            $test = @(Protect-OutFileOverwrite -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+            $bla = Copy-InFiles -UserParams $UserParams -InFiles $test
             (Compare-Object -ReferenceObject $(Get-LongChildItem -Path "$($UserParams.InputPath)" -Include *.cr2,*.jpg,*.cr3 -Recurse) -DifferenceObject $(Get-LongChildItem -Path "$($UserParams.OutputPath)" -Include *.cr2,*.jpg,*.cr3 -Recurse) -Property Size,LastWriteTime -ErrorAction SilentlyContinue).count | Should Be 0
         }
         It "Long paths" {
             $UserParams.InputPath = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
             $UserParams.OutputPath = "$BlaDrive\Out_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
-            $InFiles = @(Start-FileSearch -UserParams $UserParams)
+            $InFiles = @(Get-InFiles -UserParams $UserParams)
             $NewFiles = $InFiles | Select-Object *
-            $test = @(Start-OverwriteProtection -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
-            $bla = Start-FileCopy -UserParams $UserParams -InFiles $test
+            $test = @(Protect-OutFileOverwrite -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+            $bla = Copy-InFiles -UserParams $UserParams -InFiles $test
             (Compare-Object -ReferenceObject $(Get-LongChildItem -Path "$($UserParams.InputPath)" -Include *.cr2,*.jpg,*.cr3 -Recurse) -DifferenceObject $(Get-LongChildItem -Path "$($UserParams.OutputPath)" -Include *.cr2,*.jpg,*.cr3 -Recurse) -Property Size,LastWriteTime -ErrorAction SilentlyContinue).count | Should Be 0
         }
     }
 }
 
 
-Describe "Start-7zip"{
+Describe "Compress-InFiles"{
     Mock Write-ColorOut {}
     # Mock Start-Everything {}
     # Mock Start-GUI {}
@@ -2108,7 +2108,7 @@ Describe "Start-7zip"{
     }
 }
 
-Describe "Start-FileVerification"{
+Describe "Test-CopiedFiles"{
     Mock Write-ColorOut {}
     # Mock Start-Everything {}
     # Mock Start-GUI {}
@@ -2117,11 +2117,20 @@ Describe "Start-FileVerification"{
     }
 }
 
-Describe "Set-HistFile"{
+Describe "Write-HistFile"{
     Mock Write-ColorOut {}
     # Mock Start-Everything {}
     # Mock Start-GUI {}
     It "Write new file-attributes to history-file (TODO: everything.)"{
+
+    }
+}
+
+Describe "StartEverything"{
+    Mock Write-ColorOut {}
+    # Mock Start-Everything {}
+    # Mock Start-GUI {}
+    It "Starts all the things. (TODO: everything.)"{
 
     }
 }

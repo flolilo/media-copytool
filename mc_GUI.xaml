@@ -16,117 +16,117 @@
         <TabControl x:Name="tabControl" VerticalAlignment="Top" Margin="0,0,0,0" Height="260" Background="#FFB3B6B5" BorderBrush="#FF878787">
             <TabItem Header="Paths">
                 <Grid Background="#FFB3B6B5">
-                    <TextBlock x:Name="TextBlockLoadPreset"
+                    <TextBlock x:Name="TeBk_LoadPreset"
                         Text="Load preset:" FontWeight="Bold" TextAlignment="Right"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,23,0,0"
                         Width="70"
                     />
-                    <ComboBox x:Name="ComboBoxLoadPreset" FontFamily="Consolas,Segoe UI,Arial"
+                    <ComboBox x:Name="CoBx_LoadPreset" FontFamily="Consolas,Segoe UI,Arial"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,20,0,0"
                         Height="22" Width="180"
                     />
-                    <Button x:Name="ButtonLoadPreset"
+                    <Button x:Name="Butn_LoadPreset"
                         Content="Load"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="290,20,0,0"
                         Height="22" Width="60"
                     />
-                    <TextBlock x:Name="TextBlockSavePreset"
+                    <TextBlock x:Name="TeBk_SavePreset"
                         Text="Save preset:" FontWeight="Bold" TextAlignment="Right"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="380,23,0,0"
                         Width="70"
                     />
-                    <TextBox x:Name="TextBoxSavePreset"
+                    <TextBox x:Name="TeBx_SavePreset"
                         Text="default" FontFamily="Consolas,Segoe UI,Arial" MaxLength="64"
                         VerticalScrollBarVisibility="Disabled" VerticalContentAlignment="Center"
                         ToolTip="default: default. (max. 64 characters; A-z,0-9,+,-,_ are allowed)"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="460,20,0,0"
                         Height="22" Width="200"
                     />
-                    <TextBlock x:Name="TextBlockInput"
+                    <TextBlock x:Name="TeBk_Input"
                         Text="Input-path:" TextAlignment="Right"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,63,0,0"
                         Width="70"
                     />
-                    <TextBox x:Name="TextBoxInput"
-                        Text="TextBoxInput" FontFamily="Consolas,Segoe UI,Arial"
+                    <TextBox x:Name="TeBx_Input"
+                        Text="TeBx_Input" FontFamily="Consolas,Segoe UI,Arial"
                         VerticalScrollBarVisibility="Disabled" VerticalContentAlignment="Center"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,60,0,0"
                         Height="22" Width="510"
                     />
-                    <Button x:Name="ButtonSearchIn"
+                    <Button x:Name="Butn_SearchIn"
                         Content="Select Path..."
                         VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,60,80,0"
                         Height="22" Width="80"
                     />
-                    <CheckBox x:Name="CheckBoxRememberIn"
+                    <CheckBox x:Name="ChBx_RememberIn"
                         Content="Save" ToolTip="Remembers the Input-Path for future executions." VerticalContentAlignment="Center"
                         Foreground="#FFC90000" FontWeight="Bold"
                         VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,60,15,0" Padding="4,-2,0,0"
                         Height="22" Width="60"
                     />
-                    <TextBlock x:Name="TextBlockOutput"
+                    <TextBlock x:Name="TeBk_Output"
                         Text="Output-path:" TextAlignment="Right"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,93,0,0"
                         Width="70"
                     />
-                    <TextBox x:Name="TextBoxOutput"
-                        Text="TextBoxOutput" FontFamily="Consolas,Segoe UI,Arial"
+                    <TextBox x:Name="TeBx_Output"
+                        Text="TeBx_Output" FontFamily="Consolas,Segoe UI,Arial"
                         VerticalScrollBarVisibility="Disabled" VerticalContentAlignment="Center"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,90,0,0"
                         Height="22" Width="510"
                     />
-                    <Button x:Name="ButtonSearchOut"
+                    <Button x:Name="Butn_SearchOut"
                         Content="Select Path..."
                         VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,90,80,0"
                         Height="22" Width="80"
                     />
-                    <CheckBox x:Name="CheckBoxRememberOut"
+                    <CheckBox x:Name="ChBx_RememberOut"
                         Content="Save" ToolTip="Remembers the Output-Path for future executions." VerticalContentAlignment="Center"
                         Foreground="#FFC90000" FontWeight="Bold"
                         VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,90,15,0" Padding="4,-2,0,0"
                         Height="22" Width="60"
                     />
-                    <CheckBox x:Name="CheckBoxMirror"
+                    <CheckBox x:Name="ChBx_Mirror"
                         Content=":Mirror" ToolTip="Enable if you want to Mirror the copied files to a second path." FlowDirection="RightToLeft" VerticalContentAlignment="Center" UseLayoutRounding="False"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,120,0,0" Padding="4,-2,0,0" BorderThickness="1"
                         Height="22" Width="70"
                     />
-                    <TextBox x:Name="TextBoxMirror"
+                    <TextBox x:Name="TeBx_Mirror"
                         IsEnabled="{Binding IsChecked, ElementName=CheckBoxMirror, Mode=OneWay}"
-                        Text="TextBoxMirror" FontFamily="Consolas,Segoe UI,Arial"
+                        Text="TeBx_Mirror" FontFamily="Consolas,Segoe UI,Arial"
                         VerticalScrollBarVisibility="Disabled" VerticalContentAlignment="Center"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,120,0,0"
                         Height="22" Width="510"
                     />
-                    <Button x:Name="ButtonSearchMirror"
+                    <Button x:Name="Butn_SearchMirror"
                         Content="Select Path..."
                         VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,120,80,0"
                         Height="22" Width="80"
                     />
-                    <CheckBox x:Name="CheckBoxRememberMirror"
+                    <CheckBox x:Name="ChBx_RememberMirror"
                         IsEnabled="{Binding IsChecked, ElementName=CheckBoxMirror, Mode=OneWay}"
                         Content="Save" ToolTip="Remembers the additional Output-Path for future executions." VerticalContentAlignment="Center"
                         Foreground="#FFC90000" FontWeight="Bold"
                         VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,120,15,0" Padding="4,-2,0,0"
                         Height="22" Width="60"
                     />
-                    <TextBlock x:Name="TextBlockHistFilePath"
+                    <TextBlock x:Name="TeBk_HistFilePath"
                         Text="HistFile-path:" TextAlignment="Right"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,163,0,0"
                         Width="70"
                     />
-                    <TextBox x:Name="TextBoxHistFile"
-                        Text="TextBoxHistFile" FontFamily="Consolas,Segoe UI,Arial"
+                    <TextBox x:Name="TeBx_HistFile"
+                        Text="TeBx_HistFile" FontFamily="Consolas,Segoe UI,Arial"
                         VerticalScrollBarVisibility="Disabled" VerticalContentAlignment="Center"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,160,0,0"
                         Height="22" Width="510"
                     />
-                    <Button x:Name="ButtonSearchHistFile"
+                    <Button x:Name="Butn_SearchHistFile"
                         Content="Select File..."
                         VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,160,80,0"
                         Height="22" Width="80"
                     />
-                    <TextBlock x:Name="TextBlockReminder"
+                    <TextBlock x:Name="TeBk_Reminder"
                         Text="For all options and features, go to the Settings-tab!"
                         Foreground="#FF2C2C2C" FontSize="16" FontWeight="Bold"
                         VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,200,0,0"
@@ -135,37 +135,37 @@
             </TabItem>
             <TabItem Header="Settings">
                 <Grid Background="#FFB3B6B5">
-                    <TextBlock Name="TextBlockPresetFormats"
+                    <TextBlock Name="TeBk_PresetFormats"
                         Text="Formats to copy:"
                         FontWeight="Bold"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="10,5,0,0"
                     />
-                    <RadioButton x:Name="RadioButtonAll" GroupName="CopyFormats"
+                    <RadioButton x:Name="RaBn_All" GroupName="CopyFormats"
                         IsChecked="True"
                         Content="All"
                         ToolTip="Copy all files."
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,24,0,0"
                     />
-                    <RadioButton x:Name="RadioButtonInclude" GroupName="CopyFormats"
+                    <RadioButton x:Name="RaBn_Include" GroupName="CopyFormats"
                         Content="Include:"
                         ToolTip="Will use Get-ChildItem's -Filter - fast option."
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,44,0,0"
                     />
-                    <TextBox x:Name="TextBoxInclude"
-                        Text="TextBoxInclude" FontFamily="Consolas,Segoe UI,Arial" ToolTip="*.ext1|*.ext2|*.ext3"
+                    <TextBox x:Name="TeBx_Include"
+                        Text="TeBx_Include" FontFamily="Consolas,Segoe UI,Arial" ToolTip="*.ext1|*.ext2|*.ext3"
                         IsEnabled="{Binding IsChecked, ElementName=RadioButtonInclude, Mode=OneWay}"
                         VerticalContentAlignment="Center" VerticalScrollBarVisibility="Disabled" TextWrapping="Wrap"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,42,0,0"
                         Panel.ZIndex="1"
                         Height="18" Width="140"
                     />
-                    <RadioButton x:Name="RadioButtonExclude" GroupName="CopyFormats"
+                    <RadioButton x:Name="RaBn_Exclude" GroupName="CopyFormats"
                         Content="Exclude:"
                         ToolTip="Will use Get-ChildItem's -Exclude - slow option."
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,64,0,0"
                     />
-                    <TextBox x:Name="TextBoxExclude"
-                        Text="TextBoxExclude" FontFamily="Consolas,Segoe UI,Arial" ToolTip="*.ext1|*.ext2|*.ext3"
+                    <TextBox x:Name="TeBx_Exclude"
+                        Text="TeBx_Exclude" FontFamily="Consolas,Segoe UI,Arial" ToolTip="*.ext1|*.ext2|*.ext3"
                         IsEnabled="{Binding IsChecked, ElementName=RadioButtonExclude, Mode=OneWay}"
                         VerticalContentAlignment="Center" VerticalScrollBarVisibility="Disabled" TextWrapping="Wrap"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,63,0,0"
@@ -174,17 +174,17 @@
                     />
                     <Rectangle Fill="#FFB3B6B5" Stroke="#FF878787" Panel.ZIndex="-1" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="5,87,0,0" Height="2" Width="240"/>
 
-                    <TextBlock x:Name="TextBlockDupliChecks"
+                    <TextBlock x:Name="TeBk_DupliChecks"
                         Text="Duplicate checks:"
                         FontWeight="Bold"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="10,92,0,0"
                     />
-                    <CheckBox x:Name="CheckBoxUseHistFile"
+                    <CheckBox x:Name="ChBx_UseHistFile"
                         Content="Use history-file to prevent duplicates" ToolTip="Default. Fast way to prevent already copied files from being copied again." VerticalContentAlignment="Center"
                         Foreground="#FF00A22C"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,112,0,0"
                     />
-                    <ComboBox x:Name="ComboBoxWriteHistFile" SelectedIndex="0"
+                    <ComboBox x:Name="CoBx_WriteHistFile" SelectedIndex="0"
                         ToolTip="Choose how the script writes new files to the history-file." VerticalContentAlignment="Center"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,132,0,0"
                         Height="20" Width="215">
@@ -192,113 +192,113 @@
                         <ComboBoxItem Content="Overwrite old files with new ones"/>
                         <ComboBoxItem Content="Do not add new files to history-file"/>
                     </ComboBox>
-                    <CheckBox x:Name="CheckBoxCheckHashHist"
+                    <CheckBox x:Name="ChBx_CheckHashHist"
                         Content="Include hashes in duplicate-check" ToolTip="If unchecked, duplicate-check is done via name, size, date. If checked, hash is added. Enabling duplicate-check in output-path disables this function." VerticalContentAlignment="Center"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,157,0,0"
                         Width="215"
                     />
-                    <CheckBox x:Name="CheckBoxOutputDupli"
+                    <CheckBox x:Name="ChBx_OutputDupli"
                         Content="Check for duplicates in output-path" ToolTip="Searches for duplicates in the output-path (incl. subfolders). Ideal if you have used LR or other import-tools since the last card-formatting." VerticalContentAlignment="Center"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,177,0,0"
                         Width="250"
                     />
-                    <CheckBox x:Name="CheckBoxAvoidIdenticalFiles"
+                    <CheckBox x:Name="ChBx_AvoidIdenticalFiles"
                         Content="Avoid double-file-copies" ToolTip="If the same file is found twice in the input, this will only copy one of them." VerticalContentAlignment="Center"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,197,0,0"
                         Width="250"
                     />
-                    <CheckBox x:Name="CheckBoxAcceptTimeDiff"
+                    <CheckBox x:Name="ChBx_AcceptTimeDiff"
                         Content="Accept 3 sec. difference" ToolTip="Use this if you use 2 or more cards at once." VerticalContentAlignment="Center"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,217,0,0"
                         Width="250"
                     />
                     <Rectangle Fill="#FFB3B6B5" Stroke="#FF878787" Panel.ZIndex="-1" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="250,5,0,0" Height="225" Width="2"/>
 
-                    <TextBlock x:Name="TextBlockOutSubStyle"
+                    <TextBlock x:Name="TeBk_OutSubStyle"
                         Text="Subfolder-style:"
                         FontWeight="Bold"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="260,5,0,0"
                     />
-                    <TextBox x:Name="TextBoxOutSubStyle"
-                        Text="TextBoxOutSubStyle" FontFamily="Consolas,Segoe UI,Arial" ToolTip="Define your favorite subfolder-style. %n% keeps subfolder structure, an empty field means no subfolders."
+                    <TextBox x:Name="TeBx_OutSubStyle"
+                        Text="TeBx_OutSubStyle" FontFamily="Consolas,Segoe UI,Arial" ToolTip="Define your favorite subfolder-style. %n% keeps subfolder structure, an empty field means no subfolders."
                         VerticalContentAlignment="Center" VerticalScrollBarVisibility="Disabled" TextWrapping="Wrap"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="270,24,0,0"
                         Height="23" Width="215"
                     />
 
                     <Rectangle Fill="#FFB3B6B5" Stroke="#FF878787" Panel.ZIndex="-1" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="255,60,0,0" Height="2" Width="240"/>
-                    <TextBlock x:Name="TextBlockSpecChar"
+                    <TextBlock x:Name="TeBk_SpecChar"
                         Text="Magic strings for styles:"
                         FontWeight="Bold"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="260,65,0,0"
                     />
-                    <TextBlock x:Name="TextBlockSpecCharExplanation"
+                    <TextBlock x:Name="TeBk_SpecCharExplanation"
                         Text="%y4% = 2018&#x09;%y2% = 18&#10;%mo% = 01&#x09;%d% = 31&#10;%h% = 23    %mi% = 59    %s% = 59&#10;%n% = Unchanged name&#10;%c_% = Counter (%c1% - %c9%)"
                         FontFamily="Consolas,Segoe UI,Arial"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="270,90,0,0"
                     />
                     <Rectangle Fill="#FFB3B6B5" Stroke="#FF878787" Panel.ZIndex="-1" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="255,170,0,0" Height="2" Width="240"/>
 
-                    <TextBlock x:Name="TextBlockOutFileStyle"
+                    <TextBlock x:Name="TeBk_OutFileStyle"
                         Text="File-renaming-style:"
                         FontWeight="Bold"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="260,175,0,0"
                     />
-                    <TextBox x:Name="TextBoxOutFileStyle"
-                        Text="TextBoxOutFileStyle" FontFamily="Consolas,Segoe UI,Arial" ToolTip="Choose your favorite style for renaming the input-files."
+                    <TextBox x:Name="TeBx_OutFileStyle"
+                        Text="TeBx_OutFileStyle" FontFamily="Consolas,Segoe UI,Arial" ToolTip="Choose your favorite style for renaming the input-files."
                         VerticalContentAlignment="Center" VerticalScrollBarVisibility="Disabled" TextWrapping="Wrap"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="270,200,0,0"
                         Height="23" Width="215"
                     />
                     <Rectangle Fill="#FFB3B6B5" Stroke="#FF878787" Panel.ZIndex="-1" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="500,5,0,0" Height="225" Width="2"/>
 
-                    <TextBlock x:Name="TextBlockOptions"
+                    <TextBlock x:Name="TeBk_Options"
                         Text="Other options:"
                         FontWeight="Bold"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="510,5,0,0"
                     />
-                    <CheckBox x:Name="CheckBoxInSubSearch"
+                    <CheckBox x:Name="ChBx_InSubSearch"
                         Content="Dive into subfolders in input-path" ToolTip="Default. E.g. not only searching files in E:\DCIM, but also in E:\DCIM\abc" VerticalContentAlignment="Center"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,25,0,0"
                         Width="250"
                     />
-                    <CheckBox x:Name="CheckBoxVerifyCopies"
+                    <CheckBox x:Name="ChBx_VerifyCopies"
                         Content="Verify copied files" ToolTip="Suggestted. After copying, script will check if files were copied successfully. Disabling will save time." VerticalContentAlignment="Center"
                         Foreground="#FF00A22C"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,45,0,0"
                         Width="250"
                     />
-                    <CheckBox x:Name="CheckBoxOverwriteExistingFiles"
+                    <CheckBox x:Name="ChBx_OverwriteExistingFiles"
                         Content="Overwrite existing files" ToolTip="If disabled, new files will get unique names. If enabled, existing files will be overwritten." VerticalContentAlignment="Center"
                         Foreground="#FFDE0000"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,65,0,0"
                         Width="250"
                     />
-                    <CheckBox x:Name="CheckBoxEnableLongPaths"
+                    <CheckBox x:Name="ChBx_EnableLongPaths"
                         Content="Allow paths >260 characters (Win 10 only)" ToolTip="Enable paths longer than 260 characters." VerticalContentAlignment="Center"
                         Foreground="#FFDE0000"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,85,0,0"
                         Width="250"
                     />
-                    <CheckBox x:Name="CheckBoxZipMirror"
+                    <CheckBox x:Name="ChBx_ZipMirror"
                         Content="Mirroring files as 7z-archive" ToolTip="ATM, THIS IS NOT SUPPORTED! Creating an archive with the input-files in it - good as a backup." VerticalContentAlignment="Center"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,105,0,0"
                         Width="250"
                     />
                     <Line Stretch="Fill" Stroke="Black" X1="1"
                           VerticalAlignment="Top" HorizontalAlignment="Left" Margin="538,113,0,0" SnapsToDevicePixels="True" Height="18" Width="150" Grid.ZIndex="-99" />
-                    <CheckBox x:Name="CheckBoxUnmountInputDrive"
+                    <CheckBox x:Name="ChBx_UnmountInputDrive"
                         Content="Remove input-drive after copying" ToolTip="Safely removing the input-drive after successful verification (before mirroring). Note: It does not work with all drives - so double-check if your drive was removed!" VerticalContentAlignment="Center"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,145,0,0"
                         Width="250"
                     />
-                    <CheckBox x:Name="CheckBoxPreventStandby"
+                    <CheckBox x:Name="ChBx_PreventStandby"
                         Content="Prevent computer-standby" ToolTip="Prevents system from hibernating by simulating the keystroke of F13." VerticalContentAlignment="Center"
                         Foreground="#FF0080FF"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="520,165,0,0"
                         Width="250"
                     />
-                    <CheckBox x:Name="CheckBoxRememberSettings"
+                    <CheckBox x:Name="ChBx_RememberSettings"
                         Content="Save settings" ToolTip="Save all parameters (excl. Save-CheckBoxes)" VerticalContentAlignment="Center"
                         Foreground="#FFC90000" FontWeight="Bold"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="510,205,0,0" Padding="4,-2,0,0"
@@ -307,18 +307,18 @@
                 </Grid>
             </TabItem>
         </TabControl>
-        <Button x:Name="ButtonStart"
+        <Button x:Name="Butn_Start"
             Content="START"
             FontWeight="Bold"
             VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,15"
             Width="100" Height="20"
         />
-        <Button x:Name="ButtonClose"
+        <Button x:Name="Butn_Close"
             Content="EXIT"
             VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,40,15"
             Width="100" Height="20"
         />
-        <Button x:Name="ButtonAbout"
+        <Button x:Name="Butn_About"
             Content="About / Help"
             VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="40,0,0,15"
             Width="100" Height="20"
