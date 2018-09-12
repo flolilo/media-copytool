@@ -1626,13 +1626,15 @@ Describe "Test-DiskSpace"{
         $test | Should BeOfType boolean
     }
     It "Test with small volume" {
-        Write-Host "This only works if A:\Out_Test exists and is on a very small drive (e.g. RAM-volume)"
-        Pause
-        $UserParams.OutputPath = "A:\Out_Test"
-        $InFiles = @(Get-InFiles -UserParams $UserParams)
-        $test = Test-DiskSpace -InFiles $InFiles -UserParams $UserParams
-        $test | Should BeOfType boolean
-        $test | Should Be $False
+        if((Test-Path -Path "A:\")){
+            $UserParams.OutputPath = "A:\Out_Test"
+            $InFiles = @(Get-InFiles -UserParams $UserParams)
+            $test = Test-DiskSpace -InFiles $InFiles -UserParams $UserParams
+            $test | Should BeOfType boolean
+            $test | Should Be $False
+        }else{
+            Write-Host "This only works if A:\Out_Test exists and is on a very small drive (e.g. RAM-volume)" -ForegroundColor Magenta
+        }
     }
 }
 
