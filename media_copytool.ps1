@@ -1185,15 +1185,14 @@ Function Test-UserValues(){
             throw 'Invalid choice of -AcceptTimeDiff.'
         }
     # DEFINITION: $InputSubfolderSearch
-        if($UserParams.InputSubfolderSearch -notin (0..1) -and $UserParams.InputSubfolderSearch -notin @($true,$false)){
+        if($UserParams.InputSubfolderSearch -notin (0..1)){
             Write-ColorOut "Invalid choice of -InputSubfolderSearch ($($UserParams.InputSubfolderSearch))." -ForegroundColor Red -Indentation 4
             throw 'Invalid choice of -InputSubfolderSearch.'
         }elseif($UserParams.InputSubfolderSearch -eq 1){
-            [switch]$inter = $true
+            [switch]$UserParams.InputSubfolderSearch = $true
         }else{
-            [switch]$inter = $false
+            [switch]$UserParams.InputSubfolderSearch = $false
         }
-        $UserParams.InputSubfolderSearch = $inter
     # DEFINITION: $VerifyCopies
         if($UserParams.VerifyCopies -notin (0..1)){
             Write-ColorOut "Invalid choice of -VerifyCopies." -ForegroundColor Red -Indentation 4
