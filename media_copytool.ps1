@@ -2318,7 +2318,7 @@ Function Test-CopiedFiles(){
     return $InFiles
 }
 
-# DEFINITION: Write new file-attributes to history-file:
+# DEFINITION: Write new files' attributes to history-file:
 Function Write-HistFile(){
     param(
         [ValidateNotNullOrEmpty()]
@@ -2526,7 +2526,7 @@ Function Start-Everything(){
             [bool]$Test = Test-DiskSpace -UserParams $UserParams -InFiles $inputfiles -OutPath $UserParams.OutputPath
         }catch{
             Write-ColorOut "Test-DiskSpace failed" -ForegroundColor Red
-                break
+            break
         }
         if($Test -eq $false){
             Start-Sound -Success 0
@@ -2560,17 +2560,24 @@ Function Start-Everything(){
                 break
             }
             Invoke-Pause
+
+            # DEFINITION: Check copied files:
             if($UserParams.VerifyCopies -eq 1){
-                # DEFINITION: Get hashes of all remaining input-files:
+                 # Get hashes of remaining files:
                 try{
                     [array]$inputfiles = (Get-InFileHash -InFiles $inputfiles)
-                    Invoke-Pause
+                }catch{
+                    Write-ColorOut "Get-InFileHash failed" -ForegroundColor Red
+                    break
+                }
+                Invoke-Pause
+                try{
                     [array]$inputfiles = (Test-CopiedFiles -InFiles $inputfiles)
-                    Invoke-Pause
                 }catch{
                     Write-ColorOut "Test-CopiedFiles failed" -ForegroundColor Red
                     break
                 }
+                Invoke-Pause
                 $j++
             }else{
                 foreach($instance in $inputfiles.tocopy){
@@ -2710,7 +2717,7 @@ Function Start-Everything(){
 # ==============================================================================
 # ==================================================================================================
 
-# (COMMENT THIS BLOCK FOR PESTER)
+<# (COMMENT THIS BLOCK FOR PESTER)
 # DEFINITION: Console banner
     Write-ColorOut "                            flolilo's Media-Copytool                            " -ForegroundColor DarkCyan -BackgroundColor Gray
     Write-ColorOut "                          $VersionNumber           " -ForegroundColor DarkMagenta -BackgroundColor DarkGray -NoNewLine
