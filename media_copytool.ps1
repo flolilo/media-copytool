@@ -436,10 +436,10 @@ Function Start-Sound(){
 
 # DEFINITION: Pause the programme if debug-var is active. Also, enable measuring times per command with -debug 3.c
 Function Invoke-Pause(){
-    if($UserParams.InfoPreference -gt 0){
+    if($script:InfoPreference -gt 0){
         Write-ColorOut "Processing-time:`t$($script:timer.elapsed.TotalSeconds)" -ForegroundColor Magenta
     }
-    if($UserParams.InfoPreference -gt 1){
+    if($script:InfoPreference -gt 1){
         $script:timer.Reset()
         Pause
         $script:timer.Start()
@@ -457,7 +457,7 @@ Function Invoke-Close(){
         Start-Sleep -Milliseconds 5
         Get-RSJob | Remove-RSJob
     }
-    if($UserParams.InfoPreference -gt 0){
+    if($script:InfoPreference -gt 0){
         Pause
     }
 
@@ -488,7 +488,7 @@ $standby = @'
 
     try{
         [int]$inter = (Start-Process powershell -ArgumentList "-EncodedCommand $standby" -WindowStyle Hidden -PassThru).Id
-        if($UserParams.InfoPreference -gt 0){
+        if($script:InfoPreference -gt 0){
             Write-ColorOut "preventsleep-PID is $("{0:D8}" -f $inter)" -ForegroundColor Gray -BackgroundColor DarkGray -Indentation 4
         }
         Start-Sleep -Milliseconds 25
@@ -1262,7 +1262,7 @@ Function Show-Parameters(){
     Write-ColorOut "-RememberOutPath`t`t=`t$($UserParams.RememberOutPath)" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-RememberMirrorPath`t`t=`t$($UserParams.RememberMirrorPath)" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-RememberSettings`t`t=`t$($UserParams.RememberSettings)" -ForegroundColor Cyan -Indentation 4
-    Write-ColorOut "-Debug`t`t`t=`t$($UserParams.InfoPreference)" -ForegroundColor Cyan -Indentation 4
+    Write-ColorOut "-Debug`t`t`t=`t$($script:InfoPreference)" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "These values come from $($UserParams.JSONParamPath):" -ForegroundColor DarkCyan -Indentation 2
     Write-ColorOut "-InputPath`t`t`t=`t$($UserParams.InputPath)" -ForegroundColor Cyan -Indentation 4
     Write-ColorOut "-OutputPath`t`t`t=`t$($UserParams.OutputPath)" -ForegroundColor Cyan -Indentation 4
@@ -1330,7 +1330,7 @@ Function Write-JsonParameters(){
         try{
             $jsonparams = @()
             $jsonparams += Get-Content -LiteralPath $UserParams.JSONParamPath -Raw -Encoding UTF8 -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
-            if($UserParams.InfoPreference -gt 1){
+            if($script:InfoPreference -gt 1){
                 Write-ColorOut "From:" -ForegroundColor Yellow -Indentation 2
                 $jsonparams | ConvertTo-Json -ErrorAction Stop | Out-Host
             }
@@ -1390,7 +1390,7 @@ Function Write-JsonParameters(){
     $jsonparams = $jsonparams | ConvertTo-Json -Depth 5
     $jsonparams | Out-Null
 
-    if($UserParams.InfoPreference -gt 1){
+    if($script:InfoPreference -gt 1){
         Write-ColorOut "To:" -ForegroundColor Yellow -Indentation 2
         $jsonparams | Out-Host
     }
@@ -1514,7 +1514,7 @@ Function Get-InFiles(){
         }
     }
 
-    if($UserParams.InfoPreference -gt 1){
+    if($script:InfoPreference -gt 1){
         if((Read-Host "    Show all found files? Positive answers: $PositiveAnswers") -in $PositiveAnswers){
             for($i=0; $i -lt $InFiles.Length; $i++){
                 Write-ColorOut "$($InFiles[$i].InFullName.Replace($UserParams.InputPath,"."))" -ForegroundColor Gray -Indentation 4
@@ -1556,7 +1556,7 @@ Function Read-JsonHistory(){
         }
         $files_history | Out-Null
 
-        if($UserParams.InfoPreference -gt 1){
+        if($script:InfoPreference -gt 1){
             if((Read-Host "    Show found history-values? Positive answers: $PositiveAnswers") -in $PositiveAnswers){
                 Write-ColorOut "Found values: $($files_history.Length)" -ForegroundColor Yellow -Indentation 4
                 Write-ColorOut "Name`t`tDate`t`tSize`t`tHash" -Indentation 4
@@ -1622,8 +1622,8 @@ Function Test-DupliHist(){
             -and $InFiles[$i].Size -eq $HistFiles[$h].Size `
             -and (($UserParams.AcceptTimeDiff -eq 0 -and $InFiles[$i].Date -eq $HistFiles[$h].Date) -or ($UserParams.AcceptTimeDiff -eq 1 -and ([math]::Sqrt([math]::pow(($InFiles[$i].Date - $HistFiles[$h].Date), 2))) -le $script:TimeDiff))){
                 if($UserParams.HistCompareHashes -eq 1){
-                    if($InFiles[$i].Hash -match '^ZYX$') {
-                        $InFiles[$i].Hash = Get-FileHash -LiteralPath $InFiles[$i].InFullName -Algorithm SHA1 | Select-Object -ExpandProperty Hash
+                    if($InFiles[$i].Hash -match '^ZYX.*$') {
+                        $InFiles[$i].Hash = (Get-FileHash -LiteralPath $InFiles[$i].InFullName -Algorithm SHA1 | Select-Object -ExpandProperty Hash)
                     }
                     if($InFiles[$i].Hash -eq $HistFiles[$h].Hash) {
                         $InFiles[$i].ToCopy = 0
@@ -1669,7 +1669,7 @@ Function Test-DupliHist(){
         Write-Progress -Activity "Comparing input-files to already copied files (history-file).." -Status "Done!" -Completed
     #>
 
-    if($UserParams.InfoPreference -gt 1){
+    if($script:InfoPreference -gt 1){
         if((Read-Host "    Show result? Positive answers: $PositiveAnswers") -in $PositiveAnswers){
             Write-ColorOut "`r`n`tFiles to skip / process:" -ForegroundColor Yellow
             for($i=0; $i -lt $InFiles.Length; $i++){
@@ -1765,10 +1765,10 @@ Function Test-DupliOut(){
                 if($InFiles[$i].InName -eq $files_duplicheck[$h].InName `
                 -and $InFiles[$i].Size -eq $files_duplicheck[$h].Size `
                 -and (($UserParams.AcceptTimeDiff -eq 0 -and $InFiles[$i].Date -eq $files_duplicheck[$h].Date) -or ($UserParams.AcceptTimeDiff -eq 1 -and ([math]::Sqrt([math]::pow(($InFiles[$i].Date - $files_duplicheck[$h].Date), 2))) -le $script:TimeDiff))){
-                    if($InFiles[$i].Hash -match '^ZYX$') {
-                        $InFiles[$i].Hash = Get-FileHash -LiteralPath $InFiles[$i].InFullName -Algorithm SHA1 | Select-Object -ExpandProperty Hash
+                    if($InFiles[$i].Hash -match '^ZYX.*$') {
+                        $InFiles[$i].Hash = (Get-FileHash -LiteralPath $InFiles[$i].InFullName -Algorithm SHA1 | Select-Object -ExpandProperty Hash)
                     }
-                    $files_duplicheck[$h].Hash = Get-FileHash -LiteralPath $files_duplicheck[$h].InFullName -Algorithm SHA1 | Select-Object -ExpandProperty Hash
+                    $files_duplicheck[$h].Hash = (Get-FileHash -LiteralPath $files_duplicheck[$h].InFullName -Algorithm SHA1 | Select-Object -ExpandProperty Hash)
                     if($InFiles[$i].Hash -eq $files_duplicheck[$h].Hash) {
                         $InFiles[$i].ToCopy = 0
                         $dupliindex_out++
@@ -1820,12 +1820,12 @@ Function Get-InFileHash(){
     Write-ColorOut "$(Get-CurrentDate)  --  Calculate remaining hashes..." -ForegroundColor Cyan
 
     if("ZYX" -in $InFiles.Hash){
-        $InFiles | Where-Object {$_.Hash -match '^ZYX$'} | Start-RSJob -Name "GetHashRest" -FunctionsToLoad Write-ColorOut -ScriptBlock {
+        $InFiles | Where-Object {$_.Hash -match '^ZYX.*$'} | Start-RSJob -Name "GetHashRest" -FunctionsToLoad Write-ColorOut -ScriptBlock {
             try{
                 $_.Hash = (Get-FileHash -LiteralPath $_.InFullName -Algorithm SHA1 -ErrorAction Stop | Select-Object -ExpandProperty Hash)
             }catch{
                 Write-ColorOut "Failed to get hash of `"$($_.InFullName)`"" -ForegroundColor Red -Indentation 4
-                $_.Hash = "GetHashRestWRONG"
+                $_.Hash = "ZYXGetHashRestWRONG"
             }
         } | Wait-RSJob -ShowProgress | Receive-RSJob
         Get-RSJob -Name "GetHashRest" | Remove-RSJob
@@ -1962,7 +1962,7 @@ Function Protect-OutFileOverwrite(){
                         }
                     }
                     $k++
-                    if($UserParams.InfoPreference -gt 0){
+                    if($script:InfoPreference -gt 0){
                         $InFiles[$i].OutBaseName | Out-Host #VERBOSE
                     }
                     continue
@@ -1980,7 +1980,7 @@ Function Protect-OutFileOverwrite(){
                     }
                 }
                 $j++
-                if($UserParams.InfoPreference -gt 0){
+                if($script:InfoPreference -gt 0){
                     $InFiles[$i].OutBaseName | Out-Host #VERBOSE
                 }
                 continue
@@ -2007,7 +2007,7 @@ Function Protect-OutFileOverwrite(){
         }
     }
 
-    if($UserParams.InfoPreference -gt 1){
+    if($script:InfoPreference -gt 1){
         if((Read-Host "    Show all names? Positive answers: $PositiveAnswers") -in $PositiveAnswers){
             [int]$indent = 0
             for($i=0; $i -lt $InFiles.Length; $i++){
@@ -2097,7 +2097,7 @@ Function Copy-InFiles(){
     }
 
     # infos if needed:
-    if($UserParams.InfoPreference -gt 1){
+    if($script:InfoPreference -gt 1){
         [int]$inter = Read-Host "    Show all commands? `"1`" for yes, `"2`" for writing them as files to your script's path."
         if($inter -gt 0){
             foreach($i in $rc_command){
@@ -2294,14 +2294,14 @@ Function Test-CopiedFiles(){
     [int]$verified = 0
     [int]$unverified = 0
     [int]$inter=0
-    if($UserParams.InfoPreference -gt 1){
+    if($script:InfoPreference -gt 1){
         [int]$inter = Read-Host "    Show files? Positive answers: $PositiveAnswers"
     }
     for($i=0; $i -lt $InFiles.Length; $i++){
         if($InFiles[$i].tocopy -eq 1){
             $unverified++
             if($inter -in $PositiveAnswers){
-                Write-ColorOut $InFiles[$i].outname -ForegroundColor Red -Indentation 4
+                Write-ColorOut "$($InFiles[$i].outname)" -ForegroundColor Red -Indentation 4
             }
         }else{
             $verified++
@@ -2396,7 +2396,7 @@ Function Start-Everything(){
     Write-ColorOut "`r`n$(Get-CurrentDate)  --  Starting everything..." -NoNewLine -ForegroundColor Cyan -BackgroundColor DarkGray
     Write-ColorOut "A                               A" -ForegroundColor DarkGray -BackgroundColor DarkGray
 
-    if($UserParams.InfoPreference -gt 0){
+    if($script:InfoPreference -gt 0){
         $script:timer = [diagnostics.stopwatch]::StartNew()
     }
 
@@ -2715,7 +2715,7 @@ Function Start-Everything(){
 # ==============================================================================
 # ==================================================================================================
 
-<# (COMMENT THIS BLOCK FOR PESTER)
+# (COMMENT THIS BLOCK FOR PESTER)
 # DEFINITION: Console banner
     Write-ColorOut "                            flolilo's Media-Copytool                            " -ForegroundColor DarkCyan -BackgroundColor Gray
     Write-ColorOut "                          $VersionNumber           " -ForegroundColor DarkMagenta -BackgroundColor DarkGray -NoNewLine
