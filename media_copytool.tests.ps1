@@ -9,7 +9,7 @@
 
 . $PSScriptRoot\media_copytool.ps1
 
-Describe "Read-ParametersFromJSON" {
+Describe "Read-JsonParameters" {
     Mock Write-ColorOut {}
     # Mock Start-Everything {}
     # Mock Start-GUI {}
@@ -56,45 +56,45 @@ Describe "Read-ParametersFromJSON" {
 
     Context "Uncomplicated file interaction" {
         It "Work fine with proper parameters" {
-            $test = Read-ParametersFromJSON -UserParams $UserParams -Renew 1
+            $test = Read-JsonParameters -UserParams $UserParams -Renew 1
             $test | Should BeOfType hashtable
             $test.LoadParamPresetName   | Should Be "default"
         }
         It "Nonexistent/Empty LoadParamPresetName leads to `"default`"" {
             $UserParams.LoadParamPresetName = "nonexistent"
-            $test = Read-ParametersFromJSON -UserParams $UserParams -Renew 1
+            $test = Read-JsonParameters -UserParams $UserParams -Renew 1
             $test | Should BeOfType hashtable
             $test.LoadParamPresetName   | Should Be "default"
 
             $UserParams.LoadParamPresetName = ""
-            $test = Read-ParametersFromJSON -UserParams $UserParams -Renew 1
+            $test = Read-JsonParameters -UserParams $UserParams -Renew 1
             $test | Should BeOfType hashtable
             $test.LoadParamPresetName   | Should Be "default"
         }
         It "Throw when not finding anything" {
             $UserParams.JSONParamPath = "$BlaDrive\In_Test\notthere.json"
-            {Read-ParametersFromJSON -UserParams $UserParams -Renew 1} | Should Throw
+            {Read-JsonParameters -UserParams $UserParams -Renew 1} | Should Throw
         }
         It "Throw error when UserParams are of wrong type" {
-            {Read-ParametersFromJSON -UserParams "hallo" -Renew 1} | Should Throw
-            {Read-ParametersFromJSON -UserParams $UserParams -Renew "hallo"} | Should Throw
+            {Read-JsonParameters -UserParams "hallo" -Renew 1} | Should Throw
+            {Read-JsonParameters -UserParams $UserParams -Renew "hallo"} | Should Throw
         }
         It "Throw error with empty UserParams" {
-            {Read-ParametersFromJSON} | Should Throw
-            {Read-ParametersFromJSON -UserParams @{} -Renew 1} | Should Throw
-            {Read-ParametersFromJSON -UserParams $UserParams} | Should Throw
-            {Read-ParametersFromJSON -Renew 1} | Should Throw
+            {Read-JsonParameters} | Should Throw
+            {Read-JsonParameters -UserParams @{} -Renew 1} | Should Throw
+            {Read-JsonParameters -UserParams $UserParams} | Should Throw
+            {Read-JsonParameters -Renew 1} | Should Throw
         }
         It "Throw error when param.JSON is empty" {
             $UserParams.JSONParamPath = "$BlaDrive\In_Test\param_empty.json"
-            {Read-ParametersFromJSON  -UserParams $UserParams -Renew 1} | Should Throw
+            {Read-JsonParameters  -UserParams $UserParams -Renew 1} | Should Throw
         }
     }
     It "Special characters file&preset interaction" {
         $UserParams.JSONParamPath = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©\param specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©.json"
         "specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
         $UserParams.LoadParamPresetName = "specchar"
-        $test = Read-ParametersFromJSON -UserParams $UserParams -Renew 1
+        $test = Read-JsonParameters -UserParams $UserParams -Renew 1
         $test | Should BeOfType hashtable
         $test.LoadParamPresetName | Should Be "specchar"
         $test.InputPath             | Should Be "F:\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
@@ -105,7 +105,7 @@ Describe "Read-ParametersFromJSON" {
     It "Long filename file&preset interaction" {
         $UserParams.JSONParamPath = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND\param_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_END.json"
         $UserParams.LoadParamPresetName = "long"
-        $test = Read-ParametersFromJSON -UserParams $UserParams -Renew 1
+        $test = Read-JsonParameters -UserParams $UserParams -Renew 1
         $test | Should BeOfType hashtable
         $test.LoadParamPresetName | Should Be "long"
         $test.InputPath             | Should Be "F:\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
@@ -116,7 +116,7 @@ Describe "Read-ParametersFromJSON" {
     Context "Test the returned values" {
         $UserParams.JSONParamPath = "$BlaDrive\In_Test\param_uncomplicated.json"
         $UserParams.LoadParamPresetName = "bla"
-        $test = Read-ParametersFromJSON -UserParams $UserParams -Renew 1
+        $test = Read-JsonParameters -UserParams $UserParams -Renew 1
         It "InputPath" {
             $test.InputPath     | Should BeOfType string
             $test.InputPath     | Should Be "F:\ooBar"
@@ -406,7 +406,7 @@ Describe "Test-UserValues" {
             $test | Should Be 0
         }
         It "Preventstandby (TODO: Make this work)" {
-            # $test = (Read-ParametersFromJSON -UserParams $UserParams -Renew 1).Preventstandby
+            # $test = (Read-JsonParameters -UserParams $UserParams -Renew 1).Preventstandby
             # $test | Should BeOfType int
             # $test | Should Be 112
         }
@@ -741,12 +741,10 @@ Describe "Show-Parameters" {
         }
         $script:Preventstandby = 0
     }
-    It "Throws when no/wrong param" {
-        {Show-Parameters} | Should Throw
-        {Show-Parameters -UserParams @{}} | Should Throw
+    It "Does (not) throw" {
+        {Show-Parameters} | Should Not Throw
+        {Show-Parameters -UserParams @{}} | Should Not Throw
         {Show-Parameters -UserParams 123} | Should Throw
-    }
-    It "Does not throw when param is correct" {
         {Show-Parameters -UserParams $UserParams} | Should not Throw
     }
     It "No problems with SpecChars" {
@@ -759,7 +757,7 @@ Describe "Show-Parameters" {
     }
 }
 
-Describe "Write-Parameters" {
+Describe "Write-JsonParameters" {
     Mock Write-ColorOut {}
     # Mock Start-Everything {}
     # Mock Start-GUI {}
@@ -804,20 +802,18 @@ Describe "Write-Parameters" {
     Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x -aoa -bb0 -pdefault -sccUTF-8 -spf2 `"$($PSScriptRoot)\media_copytool_TESTFILES.7z`" `"-o.\`" " -WindowStyle Minimized -Wait
     Pop-Location
 
-    It "Throws when no/wrong param" {
-        {Write-Parameters} | Should Throw
-        {Write-Parameters -UserParams @{}} | Should Throw
-        {Write-Parameters -UserParams 123} | Should Throw
+    It "Throw when no/wrong param" {
+        {Write-JsonParameters} | Should Throw
+        {Write-JsonParameters -UserParams @{}} | Should Throw
+        {Write-JsonParameters -UserParams 123} | Should Throw
     }
-    It "Returns `$false if JSON cannot be made" {
+    It "Return `$false if JSON cannot be made" {
         $UserParams.JSONParamPath = "\\0.0.0.0\noparam.json"
-        $test = Write-Parameters -UserParams $UserParams
-        $test | Should Be $false
+        {Write-JsonParameters -UserParams $UserParams} | Should Throw
     }
     Context "Work correctly with valid param" {
-        It "Return `$true when param is correct" {
-            $test = Write-Parameters -UserParams $UserParams
-            $test | Should Be $true
+        It "Returns nothing when param is correct" {
+            {Write-JsonParameters -UserParams $UserParams} | Should Not Throw
         }
         It "Replace only preset" {
             [array]$inter = @([PSCustomObject]@{
@@ -850,14 +846,12 @@ Describe "Write-Parameters" {
             $jsonparams | Out-Null
             [System.IO.File]::WriteAllText($UserParams.JSONParamPath, $jsonparams)
             Start-Sleep -Milliseconds 25
-            $test = Write-Parameters -UserParams $UserParams
-            $test | Should Be $true
+            {Write-JsonParameters -UserParams $UserParams} | Should Not Throw
         }
         It "Add `"BLA`"" {
             $UserParams.SaveParamPresetName = "BLA"
 
-            $test = Write-Parameters -UserParams $UserParams
-            $test | Should Be $true
+            {Write-JsonParameters -UserParams $UserParams} | Should Not Throw
 
             $test = Get-Content -LiteralPath $UserParams.JSONParamPath -Encoding UTF8 -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
             $bla = @("default","BLA")
@@ -890,8 +884,7 @@ Describe "Write-Parameters" {
         }
         It "Create a new JSON" {
             Remove-Item -LiteralPath $UserParams.JSONParamPath
-            $test = Write-Parameters -UserParams $UserParams
-            $test | Should Be $true
+            {Write-JsonParameters -UserParams $UserParams} | Should Not Throw
             $test = @(Get-Content -LiteralPath $UserParams.JSONParamPath -Encoding UTF8 -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop)
             ,$test | Should BeOfType array
 
@@ -954,8 +947,7 @@ Describe "Write-Parameters" {
         $UserParams.JSONParamPath = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©\param specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©.json"
         $UserParams.SaveParamPresetName = "bla"
 
-        $test = Write-Parameters -UserParams $UserParams
-        $test | Should Be $true
+        {Write-JsonParameters -UserParams $UserParams} | Should Not Throw
 
         $test = Get-Content -LiteralPath $UserParams.JSONParamPath -Encoding UTF8 -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
         ,$test | Should BeOfType array
@@ -1153,7 +1145,7 @@ Describe "Get-InFiles" {
     }
 }
 
-Describe "Read-HistFile" {
+Describe "Read-JsonHistory" {
     Mock Write-ColorOut {}
     # Mock Start-Everything {}
     # Mock Start-GUI {}
@@ -1172,7 +1164,7 @@ Describe "Read-HistFile" {
 
     Context "Work properly" {
         It "Get array from regular histfile"{
-            $test = @(Read-HistFile -UserParams $UserParams)
+            $test = @(Read-JsonHistory -UserParams $UserParams)
             ,$test | Should BeOfType array
             $test[3].InName | Should Be "file_single.CR4"
             $test[3].Date   | Should Be 1520874103
@@ -1181,7 +1173,7 @@ Describe "Read-HistFile" {
         }
         It "Get array even if just one file is found" {
             $UserParams.HistFilePath = "$BlaDrive\In_Test\hist_simpleset.json"
-            $test = @(Read-HistFile -UserParams $UserParams)
+            $test = @(Read-JsonHistory -UserParams $UserParams)
             ,$test | Should BeOfType array
             $test.InName | Should Be "file_uncomplicated.CR2"
             $test.Date | Should Be 1531127676
@@ -1191,48 +1183,48 @@ Describe "Read-HistFile" {
         It "Return empty array for empty histfile" {
             Mock Read-Host {return 1}
             $UserParams.HistFilePath = "$BlaDrive\In_Test\hist_empty.json"
-            $test = @(Read-HistFile -UserParams $UserParams)
+            $test = @(Read-JsonHistory -UserParams $UserParams)
             ,$test | Should BeOfType array
             $test | Should Be @()
         }
         It "Throw if user does not want to work with empty histfile" {
             Mock Read-Host {return 0}
             $UserParams.HistFilePath = "$BlaDrive\In_Test\hist_empty.json"
-            {Read-HistFile -UserParams $UserParams} | Should Throw
+            {Read-JsonHistory -UserParams $UserParams} | Should Throw
         }
         It "Return array for broken histfile" {
             $UserParams.HistFilePath = "$BlaDrive\In_Test\hist_broken.json"
             Mock Read-Host {return 1}
-            $test = @(Read-HistFile -UserParams $UserParams)
+            $test = @(Read-JsonHistory -UserParams $UserParams)
             ,$test | Should BeOfType array
             $test | Should Be @()
         }
         It "Throw if user does not want to work with broken histfile" {
             Mock Read-Host {return 0}
             $UserParams.HistFilePath = "$BlaDrive\In_Test\hist_broken.json"
-            {Read-HistFile -UserParams $UserParams} | Should Throw
+            {Read-JsonHistory -UserParams $UserParams} | Should Throw
         }
         It "Return empty array for no histfile" {
             Mock Read-Host {return 1}
             $UserParams.HistFilePath = "$BlaDrive\In_Test\nohistfile.json"
-            $test = @(Read-HistFile -UserParams $UserParams)
+            $test = @(Read-JsonHistory -UserParams $UserParams)
             ,$test | Should BeOfType array
             $test | Should Be @()
         }
         It "Throw if user does not want to work with no histfile" {
             Mock Read-Host {return 0}
             $UserParams.HistFilePath = "$BlaDrive\In_Test\nohistfile.json"
-            {Read-HistFile -UserParams $UserParams} | Should Throw
+            {Read-JsonHistory -UserParams $UserParams} | Should Throw
         }
         It "Throw if params are wrong/missing" {
-            {Read-HistFile} | Should Throw
-            {Read-HistFile -UserParams 123} | Should Throw
-            {Read-HistFile -UserParams @{}} | Should Throw
+            {Read-JsonHistory} | Should Throw
+            {Read-JsonHistory -UserParams 123} | Should Throw
+            {Read-JsonHistory -UserParams @{}} | Should Throw
         }
     }
     It "No problems with SpecChars" {
         $UserParams.HistFilePath = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©\hist specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©.json"
-        $test = @(Read-HistFile -UserParams $UserParams)
+        $test = @(Read-JsonHistory -UserParams $UserParams)
         ,$test | Should BeOfType array
         $test = $test | Where-Object {$_.InName -eq "file specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©.jpg"}
         $test.InName | Should Be "file specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©.jpg"
@@ -1242,7 +1234,7 @@ Describe "Read-HistFile" {
     }
     It "No problems with long paths" {
         $UserParams.HistFilePath = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND\hist_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_tEND.json"
-        $test = @(Read-HistFile -UserParams $UserParams)
+        $test = @(Read-JsonHistory -UserParams $UserParams)
         ,$test | Should BeOfType array
         $test = $test | Where-Object {$_.InName -eq "file specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©.jpg"}
         $test.InName | Should Be "file specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©.jpg"
@@ -1281,7 +1273,7 @@ Describe "Test-DupliHist" {
     Context "Working normal" {
         It "Return array with correct params, find duplicates" {
             $InFiles = @(Get-InFiles -UserParams $UserParams)
-            $HistFiles = @(Read-HistFile -UserParams $UserParams)
+            $HistFiles = @(Read-JsonHistory -UserParams $UserParams)
             $test = @(Test-DupliHist -InFiles $InFiles -HistFiles $HistFiles -UserParams $UserParams)
             ,$test | Should BeOfType array
             $test.Length | Should Be 0
@@ -1289,7 +1281,7 @@ Describe "Test-DupliHist" {
         It "Return array with correct params, don't false-positive things" {
             $UserParams.HistFilePath = "$BlaDrive\In_Test\hist_uncomplicated_nodup.json"
             $InFiles = @(Get-InFiles -UserParams $UserParams)
-            $HistFiles = @(Read-HistFile -UserParams $UserParams)
+            $HistFiles = @(Read-JsonHistory -UserParams $UserParams)
             $test = @(Test-DupliHist -InFiles $InFiles -HistFiles $HistFiles -UserParams $UserParams)
             ,$test | Should BeOfType array
             $test.Length | Should Be 24
@@ -1297,7 +1289,7 @@ Describe "Test-DupliHist" {
         It "Works with `$AcceptTimeDiff (1/2)" {
             $UserParams.AcceptTimeDiff = 1
             $InFiles = @(Get-InFiles -UserParams $UserParams)
-            $HistFiles = @(Read-HistFile -UserParams $UserParams)
+            $HistFiles = @(Read-JsonHistory -UserParams $UserParams)
             $test = @(Test-DupliHist -InFiles $InFiles -HistFiles $HistFiles -UserParams $UserParams)
             ,$test | Should BeOfType array
             $test.Length | Should Be 0
@@ -1306,7 +1298,7 @@ Describe "Test-DupliHist" {
             $UserParams.AcceptTimeDiff = 1
             $UserParams.HistFilePath = "$BlaDrive\In_Test\hist_uncomplicated_accepttime.json"
             $InFiles = @(Get-InFiles -UserParams $UserParams)
-            $HistFiles = @(Read-HistFile -UserParams $UserParams)
+            $HistFiles = @(Read-JsonHistory -UserParams $UserParams)
             $test = @(Test-DupliHist -InFiles $InFiles -HistFiles $HistFiles -UserParams $UserParams)
             ,$test | Should BeOfType array
             $test.Length | Should Be 20
@@ -1321,7 +1313,7 @@ Describe "Test-DupliHist" {
             "Blabla" | Out-File "$BlaDrive\In_Test\NEWFILE.jpg" -Encoding utf8
 
             $InFiles = @(Get-InFiles -UserParams $UserParams)
-            $HistFiles = @(Read-HistFile -UserParams $UserParams)
+            $HistFiles = @(Read-JsonHistory -UserParams $UserParams)
             $test = @(Test-DupliHist -InFiles $InFiles -HistFiles $HistFiles -UserParams $UserParams)
             ,$test | Should BeOfType array
             $test.Length | Should Be 1
@@ -1336,7 +1328,7 @@ Describe "Test-DupliHist" {
         $UserParams.HistFilePath = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©\hist specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©.json"
 
         $InFiles = @(Get-InFiles -UserParams $UserParams)
-        $HistFiles = @(Read-HistFile -UserParams $UserParams)
+        $HistFiles = @(Read-JsonHistory -UserParams $UserParams)
 
         $test = @(Test-DupliHist -InFiles $InFiles -HistFiles $HistFiles -UserParams $UserParams)
         ,$test | Should BeOfType array
@@ -1348,7 +1340,7 @@ Describe "Test-DupliHist" {
         $UserParams.HistFilePath = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND\hist_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_tEND.json"
 
         $InFiles = @(Get-InFiles -UserParams $UserParams)
-        $HistFiles = @(Read-HistFile -UserParams $UserParams)
+        $HistFiles = @(Read-JsonHistory -UserParams $UserParams)
 
         $test = @(Test-DupliHist -InFiles $InFiles -HistFiles $HistFiles -UserParams $UserParams)
         ,$test | Should BeOfType array
@@ -2119,7 +2111,7 @@ Describe "Test-CopiedFiles"{
     }
 }
 
-Describe "Write-HistFile"{
+Describe "Write-JsonHistory"{
     Mock Write-ColorOut {}
     # Mock Start-Everything {}
     # Mock Start-GUI {}

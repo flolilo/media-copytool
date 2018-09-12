@@ -518,12 +518,12 @@ Function Get-CurrentDate(){
 # ==================================================================================================
 
 # DEFINITION: Get parameters from JSON file:
-Function Read-ParametersFromJSON(){
+Function Read-JsonParameters(){
     param(
         [ValidateNotNullOrEmpty()]
-        [hashtable]$UserParams = $(throw 'UserParams is required by Read-ParametersFromJSON'),
+        [hashtable]$UserParams = $(throw 'UserParams is required by Read-JsonParameters'),
         [ValidateRange(0,1)]
-        [int]$Renew = $(throw 'Renew is required by Read-ParametersFromJSON')
+        [int]$Renew = $(throw 'Renew is required by Read-JsonParameters')
     )
     Write-ColorOut "$(Get-CurrentDate)  --  Getting parameter-values..." -ForegroundColor Cyan
 
@@ -829,7 +829,7 @@ Function Start-GUI(){
                     [string]$UserParams.LoadParamPresetName = $jsonparams.ParamPresetName
                 }
                 $Form.Close()
-                Read-ParametersFromJSON -UserParams $UserParams -Renew 1
+                Read-JsonParameters -UserParams $UserParams -Renew 1
                 Start-Sleep -Milliseconds 2
                 Start-GUI -GUIPath $GUIPath -UserParams $UserParams
             })
@@ -1251,7 +1251,6 @@ Function Test-UserValues(){
 # DEFINITION: Show parameters on the console, then exit:
 Function Show-Parameters(){
     param(
-        [ValidateNotNullOrEmpty()]
         [hashtable]$UserParams = $(Write-ColorOut 'UserParams is required by Show-Parameters' -ForegroundColor Magenta)
     )
     Write-ColorOut "Parameters:" -ForegroundColor Green
@@ -1290,7 +1289,7 @@ Function Show-Parameters(){
 }
 
 # DEFINITION: If checked, remember values for future use:
-Function Write-Parameters(){
+Function Write-JsonParameters(){
     param(
         [ValidateNotNullOrEmpty()]
         [hashtable]$UserParams = $(throw 'UserParams is required by Show-Parameters')
@@ -1530,10 +1529,10 @@ Function Get-InFiles(){
 }
 
 # DEFINITION: Get History-File:
-Function Read-HistFile(){
+Function Read-JsonHistory(){
     param(
         [ValidateNotNullOrEmpty()]
-        [hashtable]$UserParams = $(throw 'UserParams is required by Read-HistFile')
+        [hashtable]$UserParams = $(throw 'UserParams is required by Read-JsonHistory')
     )
     Write-ColorOut "$(Get-CurrentDate)  --  Checking for history-file, importing values..." -ForegroundColor Cyan
 
@@ -2318,12 +2317,12 @@ Function Test-CopiedFiles(){
 }
 
 # DEFINITION: Write new files' attributes to history-file:
-Function Write-HistFile(){
+Function Write-JsonHistory(){
     param(
         [ValidateNotNullOrEmpty()]
-        [array]$InFiles =           $(throw 'InFiles is required by Write-HistFile'),
+        [array]$InFiles =           $(throw 'InFiles is required by Write-JsonHistory'),
         [ValidateNotNullOrEmpty()]
-        [hashtable]$UserParams =    $(throw 'UserParams is required by Write-HistFile')
+        [hashtable]$UserParams =    $(throw 'UserParams is required by Write-JsonHistory')
     )
     Write-ColorOut "$(Get-CurrentDate)  --  Write attributes of successfully copied files to history-file..." -ForegroundColor Cyan
 
@@ -2422,7 +2421,7 @@ Function Start-Everything(){
         # DEFINITION: If enabled, remember parameters:
         if($UserParams.RememberInPath -ne 0 -or $UserParams.RememberOutPath -ne 0 -or $UserParams.RememberMirrorPath -ne 0 -or $UserParams.RememberSettings -ne 0){
             try{
-                Write-Parameters -UserParams $UserParams
+                Write-JsonParameters -UserParams $UserParams
             }catch{
                 Invoke-Close
             }
@@ -2453,10 +2452,10 @@ Function Start-Everything(){
         [array]$histfiles = @()
         if($UserParams.UseHistFile -eq 1){
             try{
-                [array]$histfiles = @(Read-HistFile -UserParams $UserParams)
+                [array]$histfiles = @(Read-JsonHistory -UserParams $UserParams)
                 Invoke-Pause
             }catch{
-                Write-ColorOut "Read-HistFile failed" -ForegroundColor Red
+                Write-ColorOut "Read-JsonHistory failed" -ForegroundColor Red
                 break
             }
         }
@@ -2599,9 +2598,9 @@ Function Start-Everything(){
         }
         if($UserParams.WriteHistFile -ne "no"){
             try{
-                Write-HistFile -InFiles $inputfiles -UserParams $UserParams
+                Write-JsonHistory -InFiles $inputfiles -UserParams $UserParams
             }catch{
-                Write-ColorOut "Write-HistFile failed" -ForegroundColor Red
+                Write-ColorOut "Write-JsonHistory failed" -ForegroundColor Red
                 break
             }
             Invoke-Pause
@@ -2725,7 +2724,7 @@ Function Start-Everything(){
 
 # DEFINITION: Start-up:
     try{
-        [hashtable]$UserParams = Read-ParametersFromJSON -UserParams $UserParams -Renew 0
+        [hashtable]$UserParams = Read-JsonParameters -UserParams $UserParams -Renew 0
     }catch{
         Throw 'Could not read Parameters from JSON.'
         Start-Sleep -Seconds 2
