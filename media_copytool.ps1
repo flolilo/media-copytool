@@ -1882,46 +1882,9 @@ Function Protect-OutFileOverwrite(){
 
     [datetime]$unixOrigin = New-Object -Type DateTime -ArgumentList 1970, 1, 1, 0, 0, 0, 0
     $regexCounter = [regex]'%c.%'
-
-    for($i=0; $i -lt $InFiles.Length; $i++){
-        # Subfolder renaming style:
-        if($InFiles[$i].OutSubfolder.Length -lt 1 -and $UserParams.OutputSubfolderStyle.Length -ne 0){
-            #no subfolder:
-            if($UserParams.OutputSubfolderStyle.Length -eq 0 -or $UserParams.OutputSubfolderStyle -match '^\s*$'){
-                $InFiles[$i].OutSubfolder = ""
-            # Subfolder per date
-            }elseif($UserParams.OutputSubfolderStyle -notmatch '^%n%$'){
-                [string]$backconvert = ($unixOrigin.AddSeconds($InFiles[$i].Date)).ToString("yyyy-MM-dd_HH-mm-ss")
-                $InFiles[$i].OutSubfolder = "\" + $($UserParams.OutputSubfolderStyle.Replace("%y4%","$($backconvert.Substring(0,4))").Replace("%y2%","$($backconvert.Substring(2,2))").Replace("%mo%","$($backconvert.Substring(5,2))").Replace("%d%","$($backconvert.Substring(8,2))").Replace("%h%","$($backconvert.Substring(11,2))").Replace("%mi%","$($backconvert.Substring(14,2))").Replace("%s%","$($backconvert.Substring(17,2))").Replace("%n%","$($InFiles[$i].InSubFolder)")) -Replace '\ $',''
-                for($k=0; $k -lt $regexCounter.matches($InFiles[$i].OutSubfolder).count; $k++){
-                    $match = [regex]::Match($InFiles[$i].OutSubfolder, '%c.%')
-                    $match = $InFiles[$i].OutSubfolder.Substring($match.Index+2,1)
-                    $InFiles[$i].OutSubfolder = $regexCounter.Replace($InFiles[$i].OutSubfolder, "$("{0:D$match}" -f ($i+1))", 1)
-                }
-            }else{
-                # subfolder per name
-                $InFiles[$i].OutSubFolder = "\$($InFiles[$i].OutSubFolder)" -Replace '\ $',''
-            }
-        }
-
-        # File renaming style:
-        if($UserParams.OutputFileStyle -notmatch '^%n%$' -or $UserParams.OutputFileStyle.Length -gt 0){
-            [string]$backconvert = ($unixOrigin.AddSeconds($InFiles[$i].Date)).ToString("yyyy-MM-dd_HH-mm-ss")
-            $InFiles[$i].OutBaseName = $UserParams.OutputFileStyle.Replace("%y4%","$($backconvert.Substring(0,4))").Replace("%y2%","$($backconvert.Substring(2,2))").Replace("%mo%","$($backconvert.Substring(5,2))").Replace("%d%","$($backconvert.Substring(8,2))").Replace("%h%","$($backconvert.Substring(11,2))").Replace("%mi%","$($backconvert.Substring(14,2))").Replace("%s%","$($backconvert.Substring(17,2))").Replace("%n%","$($InFiles[$i].InBaseName)")
-            for($k=0; $k -lt $regexCounter.matches($InFiles[$i].OutBaseName).count; $k++){
-                $match = [regex]::Match($InFiles[$i].OutBaseName, '%c.%')
-                $match = $InFiles[$i].OutBaseName.Substring($match.Index+2,1)
-                $InFiles[$i].OutBaseName = $regexCounter.Replace($InFiles[$i].OutBaseName, "$("{0:D$match}" -f ($i+1))", 1)
-            }
-        }else{
-            $InFiles[$i].OutBaseName = $InFiles[$i].InBaseName
-        }
-    }
-    $InFiles | Out-Null
-
     [array]$allpaths = @()
-
     $sw = [diagnostics.stopwatch]::StartNew()
+
     for($i=0; $i -lt $InFiles.Length; $i++){
         if($sw.Elapsed.TotalMilliseconds -ge 750 -or $i -eq 0){
             Write-Progress -Activity "Prevent overwriting existing files..." -PercentComplete $($i / $InFiles.Length * 100) -Status "File # $($i + 1) / $($InFiles.Length) - $($InFiles[$i].name)"
@@ -1930,6 +1893,44 @@ Function Protect-OutFileOverwrite(){
         }
         if($InFiles[$i].ToCopy -eq 1){
             [int]$maxpathlength = (255 - 7 - $InFiles[$i].Extension.Length)
+
+        # Subfolder renaming style:
+        if($InFiles[$i].OutSubfolder -eq "" -and $UserParams.OutputSubfolderStyle.Length -ne 0){
+            #no subfolder:
+            if($UserParams.OutputSubfolderStyle.Length -eq 0 -or $UserParams.OutputSubfolderStyle -match '^\s*$'){
+                $InFiles[$i].OutSubfolder = ""
+            # Subfolder per date
+            }elseif($UserParams.OutputSubfolderStyle -notmatch '^%n%$'){
+                [string]$backconvert = ($unixOrigin.AddSeconds($InFiles[$i].Date)).ToString("yyyy-MM-dd_HH-mm-ss")
+                $InFiles[$i].OutSubfolder = "\" + $($UserParams.OutputSubfolderStyle.Replace("%y4%","$($backconvert.Substring(0,4))").Replace("%y2%","$($backconvert.Substring(2,2))").Replace("%mo%","$($backconvert.Substring(5,2))").Replace("%d%","$($backconvert.Substring(8,2))").Replace("%h%","$($backconvert.Substring(11,2))").Replace("%mi%","$($backconvert.Substring(14,2))").Replace("%s%","$($backconvert.Substring(17,2))").Replace("%n%","$($InFiles[$i].InSubFolder)")) -Replace '\ $',''
+                $inter = $InFiles[$i].OutSubfolder
+                for($k=0; $k -lt $regexCounter.matches($InFiles[$i].OutSubfolder).count; $k++){
+                    $match = [regex]::Match($inter, '%c.%')
+                    $match = $inter.Substring($match.Index+2,1)
+                    $inter = $regexCounter.Replace($inter, "$("{0:D$match}" -f ($i+1))", 1)
+                }
+                $InFiles[$i].OutSubfolder = $inter
+            }else{
+                # subfolder per name
+                $InFiles[$i].OutSubFolder = "\$($InFiles[$i].InSubFolder)" -Replace '\ $',''
+            }
+        }
+
+        # File renaming style:
+        if($UserParams.OutputFileStyle -notmatch '^%n%$' -or $UserParams.OutputFileStyle.Length -gt 0){
+            [string]$backconvert = ($unixOrigin.AddSeconds($InFiles[$i].Date)).ToString("yyyy-MM-dd_HH-mm-ss")
+            $InFiles[$i].OutBaseName = $UserParams.OutputFileStyle.Replace("%y4%","$($backconvert.Substring(0,4))").Replace("%y2%","$($backconvert.Substring(2,2))").Replace("%mo%","$($backconvert.Substring(5,2))").Replace("%d%","$($backconvert.Substring(8,2))").Replace("%h%","$($backconvert.Substring(11,2))").Replace("%mi%","$($backconvert.Substring(14,2))").Replace("%s%","$($backconvert.Substring(17,2))").Replace("%n%","$($InFiles[$i].InBaseName)")
+            $inter = $InFiles[$i].OutBaseName
+            for($k=0; $k -lt $regexCounter.matches($InFiles[$i].OutBaseName).count; $k++){
+                $match = [regex]::Match($inter, '%c.%')
+                $match = $inter.Substring($match.Index+2,1)
+                $inter = $regexCounter.Replace($inter, "$("{0:D$match}" -f ($i+1))", 1)
+            }
+            $InFiles[$i].OutBaseName = $inter
+        }else{
+            $InFiles[$i].OutBaseName = $InFiles[$i].InBaseName
+        }
+
 
             # restrict subfolder path length:
             if($InFiles[$i].OutSubfolder.Length -gt 255){

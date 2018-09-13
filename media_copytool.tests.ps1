@@ -1068,81 +1068,6 @@ Describe "Get-InFiles" {
             $test.length    | Should Be (Get-ChildItem -Path $($UserParams.InputPath -Replace '\\$','\\\*') -Exclude $UserParams.FormatInExclude -File -Recurse).count
         }
     }
-    Context "OutputSubfolderStyle" {
-        BeforeEach {
-            $UserParams.FormatInExclude = @("*.CR2")
-        }
-        It "none (`"`")" {
-            $UserParams.OutputSubfolderStyle = ""
-            $test = @(Get-InFiles -UserParams $UserParams)
-            ,$test | Should BeOfType array
-            $test[0].OutSubfolder   | Should Be ""
-            $test[11].OutSubfolder  | Should Be ""
-
-            $UserParams.OutputSubfolderStyle = " "
-            $test = @(Get-InFiles -UserParams $UserParams)
-            ,$test | Should BeOfType array
-            $test[0].OutSubfolder   | Should Be ""
-            $test[11].OutSubfolder  | Should Be ""
-        }
-        It "unchanged (`"%n%`")" {
-            $UserParams.OutputSubfolderStyle = "%n%"
-            $test = @(Get-InFiles -UserParams $UserParams)
-            ,$test | Should BeOfType array
-            $test[0].OutSubfolder   | Should Be "\"
-            $test[8].OutSubfolder   | Should Be "\folder_uncomplicated"
-
-            $UserParams.OutputSubfolderStyle = "%n% "
-            $test = @(Get-InFiles -UserParams $UserParams)
-            ,$test | Should BeOfType array
-            $test[0].OutSubfolder   | Should Be "\"
-            $test[8].OutSubfolder   | Should Be "\folder_uncomplicated"
-        }
-        It "%y4%-%mo%-%d%" {
-            $UserParams.OutputSubfolderStyle = "%y4%-%mo%-%d%"
-            $test = @(Get-InFiles -UserParams $UserParams)
-            ,$test | Should BeOfType array
-            $test[0].OutSubfolder   | Should Be "\2018-08-11"
-            $test[11].OutSubfolder  | Should Be "\2018-07-27"
-        }
-        It "(%y4%_%mo%_%d%) BLA" {
-            $UserParams.OutputSubfolderStyle = "(%y4%_%mo%_%d%) BLA"
-            $test = @(Get-InFiles -UserParams $UserParams)
-            ,$test | Should BeOfType array
-            $test[0].OutSubfolder   | Should Be "\(2018_08_11) BLA"
-            $test[11].OutSubfolder  | Should Be "\(2018_07_27) BLA"
-        }
-        It "%y4%.%mo%.%d% %n% (TODO: Why 2nd test 8th item?)" {
-            $UserParams.OutputSubfolderStyle = "%y4%.%mo%.%d% %n%"
-            $test = @(Get-InFiles -UserParams $UserParams)
-            ,$test | Should BeOfType array
-            $test[0].OutSubfolder   | Should Be "\2018.08.11"
-            $test[8].OutSubfolder   | Should Be "\2018.07.27 folder_uncomplicated" #
-        }
-        It "%y4%%mo%%d% %y2%BLA" {
-            $UserParams.OutputSubfolderStyle = "%y4%%mo%%d% %y2%BLA"
-            $test = @(Get-InFiles -UserParams $UserParams)
-            ,$test | Should BeOfType array
-            $test[0].OutSubfolder   | Should Be "\20180811 18BLA"
-            $test[11].OutSubfolder  | Should Be "\20180727 18BLA"
-        }
-        It "%y2%-%mo%-%d%" {
-            $UserParams.OutputSubfolderStyle = "%y2%-%mo%-%d%"
-            $test = @(Get-InFiles -UserParams $UserParams)
-            ,$test | Should BeOfType array
-            $test[0].OutSubfolder   | Should Be "\18-08-11"
-            $test[11].OutSubfolder  | Should Be "\18-07-27"
-        }
-    }
-    It "OutputFileStyle" {
-        $UserParams.FormatInExclude = @("*.cr2")
-        $UserParams.OutputFileStyle = "BLA_%c3% %n% %y4%-%mo%-%d%_%h%-%mi%-%s%_%y2% %n% %c1% %y4%-%mo%-%d%_%h%-%mi%-%s%"
-        $test = @(Get-InFiles -UserParams $UserParams)
-        ,$test | Should BeOfType array
-        $test[0].InBaseName | Should Be "BLA_001 file specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ© 2018-08-11_09-14-51_18 file specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ© 1 2018-08-11_09-14-51"
-        $test[1].InBaseName | Should Be "BLA_002 file_uncomplicated 2018-07-09_09-14-36_18 file_uncomplicated 2 2018-07-09_09-14-36"
-        $test[11].InBaseName | Should Be "BLA_012 file_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_thEND 2018-07-27_09-14-20_18 file_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_thEND 12 2018-07-27_09-14-20"
-    }
 }
 
 Describe "Read-JsonHistory" {
@@ -1168,8 +1093,8 @@ Describe "Read-JsonHistory" {
             ,$test | Should BeOfType array
             $test[3].InName | Should Be "file_single.CR4"
             $test[3].Date   | Should Be 1520874103
-            $test[3].size   | Should Be 990
-            $test[3].InHash   | Should Be "3A3514D39089FAF261CAF7EC50CB06D44021C424"
+            $test[3].Size   | Should Be 990
+            $test[3].Hash   | Should Be "3A3514D39089FAF261CAF7EC50CB06D44021C424"
         }
         It "Get array even if just one file is found" {
             $UserParams.HistFilePath = "$BlaDrive\In_Test\hist_simpleset.json"
@@ -1177,8 +1102,8 @@ Describe "Read-JsonHistory" {
             ,$test | Should BeOfType array
             $test.InName | Should Be "file_uncomplicated.CR2"
             $test.Date | Should Be 1531127676
-            $test.size | Should Be 540
-            $test.InHash | Should Be "0EDB0FA60F13FFE645FA3C502D46707F68232561"
+            $test.Size | Should Be 540
+            $test.Hash | Should Be "0EDB0FA60F13FFE645FA3C502D46707F68232561"
         }
         It "Return empty array for empty histfile" {
             Mock Read-Host {return 1}
@@ -1229,8 +1154,8 @@ Describe "Read-JsonHistory" {
         $test = $test | Where-Object {$_.InName -eq "file specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©.jpg"}
         $test.InName | Should Be "file specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©.jpg"
         $test.Date   | Should Be 1535793091
-        $test.size   | Should Be 1342
-        $test.InHash   | Should Be "1D2E6B753FBFB23FB8C4D636DBD8A09547328870"
+        $test.Size   | Should Be 1342
+        $test.Hash   | Should Be "1D2E6B753FBFB23FB8C4D636DBD8A09547328870"
     }
     It "No problems with long paths" {
         $UserParams.HistFilePath = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND\hist_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_tEND.json"
@@ -1239,8 +1164,8 @@ Describe "Read-JsonHistory" {
         $test = $test | Where-Object {$_.InName -eq "file specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©.jpg"}
         $test.InName | Should Be "file specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©.jpg"
         $test.Date   | Should Be 1535793091
-        $test.size   | Should Be 1342
-        $test.InHash   | Should Be "1D2E6B753FBFB23FB8C4D636DBD8A09547328870"
+        $test.Size   | Should Be 1342
+        $test.Hash   | Should Be "1D2E6B753FBFB23FB8C4D636DBD8A09547328870"
     }
 }
 
@@ -1618,7 +1543,7 @@ Describe "Test-DiskSpace"{
         $test | Should BeOfType boolean
     }
     It "Test with small volume" {
-        if((Test-Path -Path "A:\")){
+        if((Test-Path -Path "A:\") -eq $true){
             $UserParams.OutputPath = "A:\Out_Test"
             $InFiles = @(Get-InFiles -UserParams $UserParams)
             $test = Test-DiskSpace -InFiles $InFiles -UserParams $UserParams
@@ -1672,7 +1597,7 @@ Describe "Protect-OutFileOverwrite" {
             (Compare-Object $InFiles $test -Property Extension -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
             (Compare-Object $InFiles $test -Property Size -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
             (Compare-Object $InFiles $test -Property Date -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
-            (Compare-Object $InFiles $test -Property OutSubfolder -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property OutSubfolder -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
             (Compare-Object $InFiles $test -Property OutPath -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
             (Compare-Object $InFiles $test -Property OutName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
             (Compare-Object $InFiles $test -Property OutBaseName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
@@ -1712,7 +1637,7 @@ Describe "Protect-OutFileOverwrite" {
             (Compare-Object $InFiles $test -Property Extension -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
             (Compare-Object $InFiles $test -Property Size -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
             (Compare-Object $InFiles $test -Property Date -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
-            (Compare-Object $InFiles $test -Property OutSubfolder -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property OutSubfolder -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
             (Compare-Object $InFiles $test -Property OutPath -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
             (Compare-Object $InFiles $test -Property OutName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
             (Compare-Object $InFiles $test -Property OutBaseName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
@@ -1797,6 +1722,9 @@ Describe "Protect-OutFileOverwrite" {
             $UserParams.InputSubfolderSearch = 0
             $UserParams.OutputSubfolderStyle = ""
             Get-ChildItem -LiteralPath "$BlaDrive\In_Test" -Recurse | Copy-Item -Destination "$BlaDrive\Out_Test" -Recurse -ErrorAction SilentlyContinue
+            New-Item -Path "$($UserParams.OutputPath)\file_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_---me_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_thEND.cr2"  -ItemType File
+            New-Item -Path "$($UserParams.OutputPath)\file_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_---me_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_thEND.jpg"  -ItemType File
+
 
             $InFiles = @(Get-InFiles -UserParams $UserParams)
             $NewFiles = $InFiles | Select-Object *
@@ -1816,17 +1744,20 @@ Describe "Protect-OutFileOverwrite" {
             (Compare-Object $InFiles $test -Property Hash -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
             (Compare-Object $InFiles $test -Property ToCopy -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
             $counter = 0
-            foreach($i in $test.OutPath){
-                if($i -match $([regex]::Escape("$($("$($UserParams.OutputPath)$($InFiles[$i].OutSubfolder)").Replace("\\","\").Replace("\\","\"))"))){$counter++}
+            for($i=0; $i -lt $test.Length; $i++){
+                if($test[$i].OutPath -match $([regex]::Escape("$($("$($UserParams.OutputPath)$($test[$i].OutSubfolder)").Replace("\\","\").Replace("\\","\"))"))){
+                    $counter++
+                }
             }
             $counter | Should be $InFiles.Length
             $counter = 0
             $wrong = 0
+            $test | Format-List -Property OutName | Out-Host
             foreach($i in $test.OutName){
                 if($i -match '^.*_OutCopy\d\....$'){$counter++}
                 if($i -match '^.*_InCopy\d.*$'){$wrong++}
             }
-            $counter | Should be $([math]::Floor(($InFiles.Length)))
+            $counter | Should be $test.Length
             $wrong  | Should be 0
             $counter = 0
             $wrong = 0
@@ -1834,7 +1765,7 @@ Describe "Protect-OutFileOverwrite" {
                 if($i -match '^.*_OutCopy\d$'){$counter++}
                 if($i -match '^.*_InCopy\d.*'){$wrong++}
             }
-            $counter | Should be $([math]::Floor(($InFiles.Length)))
+            $counter | Should be $InFiles.Length
             $wrong  | Should be 0
         }
         It "Add both _InCopyXY and _OutCopyXY if appropriate" {
@@ -1896,7 +1827,7 @@ Describe "Protect-OutFileOverwrite" {
             (Compare-Object $InFiles $test -Property Extension -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
             (Compare-Object $InFiles $test -Property Size -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
             (Compare-Object $InFiles $test -Property Date -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
-            (Compare-Object $InFiles $test -Property OutSubfolder -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property OutSubfolder -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
             (Compare-Object $InFiles $test -Property OutPath -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
             (Compare-Object $InFiles $test -Property OutName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
             (Compare-Object $InFiles $test -Property OutBaseName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
@@ -1937,7 +1868,7 @@ Describe "Protect-OutFileOverwrite" {
             (Compare-Object $InFiles $test -Property Extension -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
             (Compare-Object $InFiles $test -Property Size -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
             (Compare-Object $InFiles $test -Property Date -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
-            (Compare-Object $InFiles $test -Property OutSubfolder -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property OutSubfolder -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
             (Compare-Object $InFiles $test -Property OutPath -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
             (Compare-Object $InFiles $test -Property OutName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
             (Compare-Object $InFiles $test -Property OutBaseName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
@@ -1977,7 +1908,7 @@ Describe "Protect-OutFileOverwrite" {
             (Compare-Object $InFiles $test -Property Extension -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
             (Compare-Object $InFiles $test -Property Size -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
             (Compare-Object $InFiles $test -Property Date -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
-            (Compare-Object $InFiles $test -Property OutSubfolder -IncludeEqual -ExcludeDifferent -PassThru).count | Should be $InFiles.Length
+            (Compare-Object $InFiles $test -Property OutSubfolder -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
             (Compare-Object $InFiles $test -Property OutPath -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
             (Compare-Object $InFiles $test -Property OutName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
             (Compare-Object $InFiles $test -Property OutBaseName -IncludeEqual -ExcludeDifferent -PassThru).count | Should be 0
@@ -2002,6 +1933,84 @@ Describe "Protect-OutFileOverwrite" {
             }
             $counter | Should be 0
         }
+    }
+    Context "OutputSubfolderStyle" {
+        BeforeEach {
+            $UserParams.FormatInExclude = @("*.CR2")
+            $NewFiles = @(Get-InFiles -UserParams $UserParams)
+        }
+
+        It "none (`"`")" {
+            $UserParams.OutputSubfolderStyle = ""
+            $test = @(Protect-OutFileOverwrite -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+            ,$test | Should BeOfType array
+            $test[0].OutSubfolder   | Should Be ""
+            $test[11].OutSubfolder  | Should Be ""
+
+            $UserParams.OutputSubfolderStyle = " "
+            $test = @(Protect-OutFileOverwrite -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+            ,$test | Should BeOfType array
+            $test[0].OutSubfolder   | Should Be ""
+            $test[11].OutSubfolder  | Should Be ""
+        }
+        It "unchanged (`"%n%`")" {
+            $UserParams.OutputSubfolderStyle = "%n%"
+            $test = @(Protect-OutFileOverwrite -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+            ,$test | Should BeOfType array
+            $test[0].OutSubfolder   | Should Be "\"
+            $test[8].OutSubfolder   | Should Be "\folder_uncomplicated"
+
+            $UserParams.OutputSubfolderStyle = "%n% "
+            $test = @(Protect-OutFileOverwrite -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+            ,$test | Should BeOfType array
+            $test[0].OutSubfolder   | Should Be "\"
+            $test[8].OutSubfolder   | Should Be "\folder_uncomplicated"
+        }
+        It "%y4%-%mo%-%d%" {
+            $UserParams.OutputSubfolderStyle = "%y4%-%mo%-%d%"
+            $test = @(Protect-OutFileOverwrite -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+            ,$test | Should BeOfType array
+            $test[0].OutSubfolder   | Should Be "\2018-08-11"
+            $test[11].OutSubfolder  | Should Be "\2018-07-27"
+        }
+        It "(%y4%_%mo%_%d%) BLA" {
+            $UserParams.OutputSubfolderStyle = "(%y4%_%mo%_%d%) BLA"
+            $test = @(Protect-OutFileOverwrite -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+            ,$test | Should BeOfType array
+            $test[0].OutSubfolder   | Should Be "\(2018_08_11) BLA"
+            $test[11].OutSubfolder  | Should Be "\(2018_07_27) BLA"
+        }
+        It "%y4%.%mo%.%d% %n% (TODO: Why 2nd test 8th item?)" {
+            $UserParams.OutputSubfolderStyle = "%y4%.%mo%.%d% %n%"
+            $test = @(Protect-OutFileOverwrite -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+            ,$test | Should BeOfType array
+            $test[0].OutSubfolder   | Should Be "\2018.08.11"
+            $test[8].OutSubfolder   | Should Be "\2018.07.27 folder_uncomplicated" #
+        }
+        It "%y4%%mo%%d% %y2%BLA" {
+            $UserParams.OutputSubfolderStyle = "%y4%%mo%%d% %y2%BLA"
+            $test = @(Protect-OutFileOverwrite -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+            ,$test | Should BeOfType array
+            $test[0].OutSubfolder   | Should Be "\20180811 18BLA"
+            $test[11].OutSubfolder  | Should Be "\20180727 18BLA"
+        }
+        It "%y2%-%mo%-%d%" {
+            $UserParams.OutputSubfolderStyle = "%y2%-%mo%-%d%"
+            $test = @(Protect-OutFileOverwrite -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+            ,$test | Should BeOfType array
+            $test[0].OutSubfolder   | Should Be "\18-08-11"
+            $test[11].OutSubfolder  | Should Be "\18-07-27"
+        }
+    }
+    It "OutputFileStyle" {
+        $UserParams.FormatInExclude = @("*.cr2")
+        $UserParams.OutputFileStyle = "BLA_%c3% %n% %y4%-%mo%-%d%_%h%-%mi%-%s%_%y2% %n% %c1% %y4%-%mo%-%d%_%h%-%mi%-%s%"
+        $NewFiles = @(Get-InFiles -UserParams $UserParams)
+        $test = @(Protect-OutFileOverwrite -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+        ,$test | Should BeOfType array
+        $test[0].OutBaseName | Should Be "BLA_001 file specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ© 2018-08-11_09-14-51_18 file specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ© 1 2018-08-11_09-14-51"
+        $test[1].OutBaseName | Should Be "BLA_002 file_uncomplicated 2018-07-09_09-14-36_18 file_uncomplicated 2 2018-07-09_09-14-36"
+        $test[11].OutBaseName | Should Be "BLA_012 file_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all---mon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_thEND 12 2018-07-27_09-14-20"
     }
 }
 
