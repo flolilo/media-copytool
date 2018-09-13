@@ -1169,7 +1169,7 @@ Describe "Read-JsonHistory" {
             $test[3].InName | Should Be "file_single.CR4"
             $test[3].Date   | Should Be 1520874103
             $test[3].size   | Should Be 990
-            $test[3].hash   | Should Be "3A3514D39089FAF261CAF7EC50CB06D44021C424"
+            $test[3].InHash   | Should Be "3A3514D39089FAF261CAF7EC50CB06D44021C424"
         }
         It "Get array even if just one file is found" {
             $UserParams.HistFilePath = "$BlaDrive\In_Test\hist_simpleset.json"
@@ -1178,7 +1178,7 @@ Describe "Read-JsonHistory" {
             $test.InName | Should Be "file_uncomplicated.CR2"
             $test.Date | Should Be 1531127676
             $test.size | Should Be 540
-            $test.hash | Should Be "0EDB0FA60F13FFE645FA3C502D46707F68232561"
+            $test.InHash | Should Be "0EDB0FA60F13FFE645FA3C502D46707F68232561"
         }
         It "Return empty array for empty histfile" {
             Mock Read-Host {return 1}
@@ -1230,7 +1230,7 @@ Describe "Read-JsonHistory" {
         $test.InName | Should Be "file specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©.jpg"
         $test.Date   | Should Be 1535793091
         $test.size   | Should Be 1342
-        $test.hash   | Should Be "1D2E6B753FBFB23FB8C4D636DBD8A09547328870"
+        $test.InHash   | Should Be "1D2E6B753FBFB23FB8C4D636DBD8A09547328870"
     }
     It "No problems with long paths" {
         $UserParams.HistFilePath = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND\hist_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_tEND.json"
@@ -1240,7 +1240,7 @@ Describe "Read-JsonHistory" {
         $test.InName | Should Be "file specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©.jpg"
         $test.Date   | Should Be 1535793091
         $test.size   | Should Be 1342
-        $test.hash   | Should Be "1D2E6B753FBFB23FB8C4D636DBD8A09547328870"
+        $test.InHash   | Should Be "1D2E6B753FBFB23FB8C4D636DBD8A09547328870"
     }
 }
 
@@ -1484,26 +1484,26 @@ Describe "Get-InFileHash" {
             $InFiles = @(Get-InFiles -UserParams $UserParams)
             $test = @(Get-InFileHash -InFiles $InFiles)
             ,$test | Should BeOfType array
-            foreach($i in $test.Hash){
+            foreach($i in $test.InHash){
                 $i | Should Not Be ("ZYX")
             }
         }
         It "No re-hashing of files" {
             $InFiles = @(Get-InFiles -UserParams $UserParams)
-            $InFiles | ForEach-Object {$_.Hash = "123"}
+            $InFiles | ForEach-Object {$_.InHash = "123"}
             $test = @(Get-InFileHash -InFiles $InFiles)
             ,$test | Should BeOfType array
-            foreach($i in $test.Hash){
+            foreach($i in $test.InHash){
                 $i | Should Be ("123")
             }
         }
         It "Work even if one file already has a hash" {
             $InFiles = @(Get-InFiles -UserParams $UserParams)
-            $InFiles[2].Hash = "TEST"
+            $InFiles[2].InHash = "TEST"
             $test = @(Get-InFileHash -InFiles $InFiles)
             ,$test | Should BeOfType array
-            $Test[2].Hash | Should Be "TEST"
-            $test = $test | Where-Object {$_.Hash -match '^ZYX$'}
+            $Test[2].InHash | Should Be "TEST"
+            $test = $test | Where-Object {$_.InHash -match '^ZYX$'}
             $test.Length | Should Be 0
         }
     }
@@ -1513,7 +1513,7 @@ Describe "Get-InFileHash" {
         $InFiles = @(Get-InFiles -UserParams $UserParams)
         $test = @(Get-InFileHash -InFiles $InFiles)
         ,$test | Should BeOfType array
-        foreach($i in $test.Hash){
+        foreach($i in $test.InHash){
             $i | Should Not Be ("ZYX")
         }
     }
@@ -1523,7 +1523,7 @@ Describe "Get-InFileHash" {
         $InFiles = @(Get-InFiles -UserParams $UserParams)
         $test = @(Get-InFileHash -InFiles $InFiles)
         ,$test | Should BeOfType array
-        foreach($i in $test.Hash){
+        foreach($i in $test.InHash){
             $i | Should Not Be ("ZYX")
         }
     }

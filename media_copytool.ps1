@@ -1449,17 +1449,19 @@ Function Get-InFiles(){
             $counter++
             [PSCustomObject]@{
                 InFullName = $_.FullName
+                InSubfolder = $($(Split-Path -Parent -Path $_.FullName).Replace("$($UserParams.InputPath)","")) -Replace('^\\','')
                 InPath = (Split-Path -Path $_.FullName -Parent)
                 InName = $_.Name
                 InBaseName = $_.BaseName
                 Extension = $_.Extension
                 Size = $_.Length
                 Date = ([DateTimeOffset]$_.LastWriteTimeUtc).ToUnixTimeSeconds()
-                OutSubfolder = $($(Split-Path -Parent -Path $_.FullName).Replace("$($UserParams.InputPath)","")) -Replace('^\\','')
-                OutPath = "ZYX"
-                OutName = "ZYX"
-                OutBaseName = "ZYX"
-                Hash = "ZYX"
+                OutSubfolder = ""
+                OutPath = ""
+                OutName = ""
+                OutBaseName = ""
+                InHash = "ZYX"
+                OutHash = "ZYX"
                 ToCopy = 1
             }
         } -End {
@@ -1478,44 +1480,8 @@ Function Get-InFiles(){
     $InFiles = $InFiles | Sort-Object -Property InFullName
     $InFiles | Out-Null
 
-    # Subfolder renaming style:
-        #no subfolder:
-    if($UserParams.OutputSubfolderStyle.Length -eq 0 -or $UserParams.OutputSubfolderStyle -match '^\s*$'){
-        foreach($i in $InFiles){
-            $i.OutSubfolder = ""
-        }
-        # Subfolder per date
-    }elseif($UserParams.OutputSubfolderStyle -notmatch '^%n%$'){
-        [datetime]$unixOrigin = New-Object -Type DateTime -ArgumentList 1970, 1, 1, 0, 0, 0, 0
-        for($i=0; $i -lt $InFiles.Length; $i++){
-            [string]$backconvert = ($unixOrigin.AddSeconds($InFiles[$i].Date)).ToString("yyyy-MM-dd_HH-mm-ss")
-            $InFiles[$i].OutSubfolder = "\" + $($UserParams.OutputSubfolderStyle.Replace("%y4%","$($backconvert.Substring(0,4))").Replace("%y2%","$($backconvert.Substring(2,2))").Replace("%mo%","$($backconvert.Substring(5,2))").Replace("%d%","$($backconvert.Substring(8,2))").Replace("%h%","$($backconvert.Substring(11,2))").Replace("%mi%","$($backconvert.Substring(14,2))").Replace("%s%","$($backconvert.Substring(17,2))").Replace("%n%","$($InFiles[$i].OutSubFolder)")) -Replace '\ $',''
-        }
-    }else{
-        # subfolder per name
-        foreach($i in $InFiles){
-            $i.OutSubFolder = "\$($i.OutSubFolder)" -Replace '\ $',''
-        }
-    }
-    # File renaming style:
-    if($UserParams.OutputFileStyle -notmatch '^%n%$'){
-        [datetime]$unixOrigin = New-Object -Type DateTime -ArgumentList 1970, 1, 1, 0, 0, 0, 0
-        $regexCounter = [regex]'%c.%'
-        for($i=0; $i -lt $InFiles.Length; $i++){
-            [string]$backconvert = ($unixOrigin.AddSeconds($InFiles[$i].Date)).ToString("yyyy-MM-dd_HH-mm-ss")
-            $InFiles[$i].InBaseName = $UserParams.OutputFileStyle.Replace("%y4%","$($backconvert.Substring(0,4))").Replace("%y2%","$($backconvert.Substring(2,2))").Replace("%mo%","$($backconvert.Substring(5,2))").Replace("%d%","$($backconvert.Substring(8,2))").Replace("%h%","$($backconvert.Substring(11,2))").Replace("%mi%","$($backconvert.Substring(14,2))").Replace("%s%","$($backconvert.Substring(17,2))").Replace("%n%","$($InFiles[$i].InBaseName)")
-            $inter = $InFiles[$i].InBaseName
-            for($k=0; $k -lt $regexCounter.matches($InFiles[$i].InBaseName).count; $k++){
-                $match = [regex]::Match($inter, '%c.%')
-                $match = $inter.Substring($match.Index+2,1)
-                $inter = $regexCounter.Replace($inter, "$("{0:D$match}" -f ($i+1))", 1)
-            }
-            $InFiles[$i].InBaseName = $inter
-        }
-    }
-
     if($script:InfoPreference -gt 1){
-        if((Read-Host "    Show all found files? Positive answers: $PositiveAnswers") -in $PositiveAnswers){
+        if((Read-Host "    Show all found files? Positive answers: $script:PositiveAnswers") -in $script:PositiveAnswers){
             for($i=0; $i -lt $InFiles.Length; $i++){
                 Write-ColorOut "$($InFiles[$i].InFullName.Replace($UserParams.InputPath,"."))" -ForegroundColor Gray -Indentation 4
             }
@@ -1557,19 +1523,16 @@ Function Read-JsonHistory(){
         $files_history | Out-Null
 
         if($script:InfoPreference -gt 1){
-            if((Read-Host "    Show found history-values? Positive answers: $PositiveAnswers") -in $PositiveAnswers){
+            if((Read-Host "    Show found history-values? Positive answers: $script:PositiveAnswers") -in $script:PositiveAnswers){
                 Write-ColorOut "Found values: $($files_history.Length)" -ForegroundColor Yellow -Indentation 4
-                Write-ColorOut "Name`t`tDate`t`tSize`t`tHash" -Indentation 4
-                for($i = 0; $i -lt $files_history.Length; $i++){
-                    Write-ColorOut "$($files_history[$i].InName)`t$($files_history[$i].Date)`t$($files_history[$i].Size)`t$($files_history[$i].Hash)" -ForegroundColor Gray -Indentation 4
-                }
+                $files_history | Format-Table -AutoSize | Out-Host
             }
         }
 
         if("null" -in $files_history -or $files_history.InName.Length -lt 1 -or ($files_history.Length -gt 1 -and (($files_history.InName.Length -ne $files_history.Date.Length) -or ($files_history.InName.Length -ne $files_history.Size.Length) -or ($files_history.InName.Length -ne $files_history.Hash.Length) -or ($files_history.InName -contains $null) -or ($files_history.Date -contains $null) -or ($files_history.Size -contains $null) -or ($files_history.Hash -contains $null)))){
             Write-ColorOut "Some values in the history-file $($UserParams.HistFilePath) seem wrong - it's safest to delete the whole file." -ForegroundColor Magenta -Indentation 4
             Write-ColorOut "InNames: $($files_history.InName.Length) Dates: $($files_history.Date.Length) Sizes: $($files_history.Size.Length) Hashes: $($files_history.Hash.Length)" -Indentation 4
-            if((Read-Host "    Is that okay? Positive answers: $PositiveAnswers") -in $PositiveAnswers){
+            if((Read-Host "    Is that okay? Positive answers: $script:PositiveAnswers") -in $script:PositiveAnswers){
                 return @()
             }else{
                 Write-ColorOut "`r`n`tAborting.`r`n" -ForegroundColor Magenta
@@ -1582,7 +1545,7 @@ Function Read-JsonHistory(){
         }
     }else{
         Write-ColorOut "History-File $($UserParams.HistFilePath) could not be found. This means it's possible that duplicates get copied." -ForegroundColor Magenta -Indentation 4
-        if((Read-Host "    Is that okay? Positive answers: $PositiveAnswers") -in $PositiveAnswers){
+        if((Read-Host "    Is that okay? Positive answers: $script:PositiveAnswers") -in $script:PositiveAnswers){
             return @()
         }else{
             Write-ColorOut "`r`n`tAborting.`r`n" -ForegroundColor Magenta
@@ -1622,10 +1585,10 @@ Function Test-DupliHist(){
             -and $InFiles[$i].Size -eq $HistFiles[$h].Size `
             -and (($UserParams.AcceptTimeDiff -eq 0 -and $InFiles[$i].Date -eq $HistFiles[$h].Date) -or ($UserParams.AcceptTimeDiff -eq 1 -and ([math]::Sqrt([math]::pow(($InFiles[$i].Date - $HistFiles[$h].Date), 2))) -le $script:TimeDiff))){
                 if($UserParams.HistCompareHashes -eq 1){
-                    if($InFiles[$i].Hash -match '^ZYX.*$') {
-                        $InFiles[$i].Hash = (Get-FileHash -LiteralPath $InFiles[$i].InFullName -Algorithm SHA1 | Select-Object -ExpandProperty Hash)
+                    if($InFiles[$i].InHash -match '^ZYX.*$') {
+                        $InFiles[$i].InHash = (Get-FileHash -LiteralPath $InFiles[$i].InFullName -Algorithm SHA1 | Select-Object -ExpandProperty Hash)
                     }
-                    if($InFiles[$i].Hash -eq $HistFiles[$h].Hash) {
+                    if($InFiles[$i].InHash -eq $HistFiles[$h].Hash) {
                         $InFiles[$i].ToCopy = 0
                         break
                     }else {
@@ -1656,8 +1619,8 @@ Function Test-DupliHist(){
             if($inter.Length -gt 0){
                 if(($UserParams.AcceptTimeDiff -eq 1 -and ([math]::Sqrt([math]::pow(($InFiles[$i].Date - $inter.Date), 2))) -le $script:TimeDiff) -or ($UserParams.AcceptTimeDiff -eq 0 -and $InFiles[$i].Date -eq $inter.Date)){
                     if($UserParams.HistCompareHashes -eq 1){
-                        $InFiles[$i].Hash = Get-FileHash -LiteralPath $InFiles[$i].InFullName -Algorithm SHA1 | Select-Object -ExpandProperty Hash
-                        if($InFiles[$i].Hash -in $inter.Hash){
+                        $InFiles[$i].InHash = Get-FileHash -LiteralPath $InFiles[$i].InFullName -Algorithm SHA1 | Select-Object -ExpandProperty Hash
+                        if($InFiles[$i].InHash -in $inter.InHash){
                             $InFiles[$i].ToCopy = 0
                         }
                     }else{
@@ -1670,7 +1633,7 @@ Function Test-DupliHist(){
     #>
 
     if($script:InfoPreference -gt 1){
-        if((Read-Host "    Show result? Positive answers: $PositiveAnswers") -in $PositiveAnswers){
+        if((Read-Host "    Show result? Positive answers: $script:PositiveAnswers") -in $script:PositiveAnswers){
             Write-ColorOut "`r`n`tFiles to skip / process:" -ForegroundColor Yellow
             for($i=0; $i -lt $InFiles.Length; $i++){
                 if($InFiles[$i].ToCopy -eq 1){
@@ -1765,11 +1728,11 @@ Function Test-DupliOut(){
                 if($InFiles[$i].InName -eq $files_duplicheck[$h].InName `
                 -and $InFiles[$i].Size -eq $files_duplicheck[$h].Size `
                 -and (($UserParams.AcceptTimeDiff -eq 0 -and $InFiles[$i].Date -eq $files_duplicheck[$h].Date) -or ($UserParams.AcceptTimeDiff -eq 1 -and ([math]::Sqrt([math]::pow(($InFiles[$i].Date - $files_duplicheck[$h].Date), 2))) -le $script:TimeDiff))){
-                    if($InFiles[$i].Hash -match '^ZYX.*$') {
-                        $InFiles[$i].Hash = (Get-FileHash -LiteralPath $InFiles[$i].InFullName -Algorithm SHA1 | Select-Object -ExpandProperty Hash)
+                    if($InFiles[$i].InHash -match '^ZYX.*$') {
+                        $InFiles[$i].InHash = (Get-FileHash -LiteralPath $InFiles[$i].InFullName -Algorithm SHA1 | Select-Object -ExpandProperty Hash)
                     }
                     $files_duplicheck[$h].Hash = (Get-FileHash -LiteralPath $files_duplicheck[$h].InFullName -Algorithm SHA1 | Select-Object -ExpandProperty Hash)
-                    if($InFiles[$i].Hash -eq $files_duplicheck[$h].Hash) {
+                    if($InFiles[$i].InHash -eq $files_duplicheck[$h].Hash) {
                         $InFiles[$i].ToCopy = 0
                         $dupliindex_out++
                         break
@@ -1783,7 +1746,7 @@ Function Test-DupliOut(){
             }
 
             if($script:InformationPreference -gt 1){
-                if((Read-Host "    Show all files? Positive answers: $PositiveAnswers") -in $PositiveAnswers){
+                if((Read-Host "    Show all files? Positive answers: $script:PositiveAnswers") -in $script:PositiveAnswers){
                     Write-ColorOut "`r`n`tFiles to skip / process:" -ForegroundColor Yellow
                     for($i=0; $i -lt $InFiles.Length; $i++){
                         if($InFiles[$i].ToCopy -eq 1){
@@ -1819,13 +1782,13 @@ Function Get-InFileHash(){
     )
     Write-ColorOut "$(Get-CurrentDate)  --  Calculate remaining hashes..." -ForegroundColor Cyan
 
-    if("ZYX" -in $InFiles.Hash){
-        $InFiles | Where-Object {$_.Hash -match '^ZYX.*$'} | Start-RSJob -Name "GetHashRest" -FunctionsToLoad Write-ColorOut -ScriptBlock {
+    if("ZYX" -in $InFiles.InHash){
+        $InFiles | Where-Object {$_.InHash -match '^ZYX.*$'} | Start-RSJob -Name "GetHashRest" -FunctionsToLoad Write-ColorOut -ScriptBlock {
             try{
-                $_.Hash = (Get-FileHash -LiteralPath $_.InFullName -Algorithm SHA1 -ErrorAction Stop | Select-Object -ExpandProperty Hash)
+                $_.InHash = (Get-FileHash -LiteralPath $_.InFullName -Algorithm SHA1 -ErrorAction Stop | Select-Object -ExpandProperty Hash)
             }catch{
                 Write-ColorOut "Failed to get hash of `"$($_.InFullName)`"" -ForegroundColor Red -Indentation 4
-                $_.Hash = "ZYXGetHashRestWRONG"
+                $_.InHash = "ZYXGetHashRestWRONG"
             }
         } | Wait-RSJob -ShowProgress | Receive-RSJob
         Get-RSJob -Name "GetHashRest" | Remove-RSJob
@@ -1917,6 +1880,45 @@ Function Protect-OutFileOverwrite(){
         return $InString
     }
 
+    [datetime]$unixOrigin = New-Object -Type DateTime -ArgumentList 1970, 1, 1, 0, 0, 0, 0
+    $regexCounter = [regex]'%c.%'
+
+    for($i=0; $i -lt $InFiles.Length; $i++){
+        # Subfolder renaming style:
+        if($InFiles[$i].OutSubfolder.Length -lt 1 -and $UserParams.OutputSubfolderStyle.Length -ne 0){
+            #no subfolder:
+            if($UserParams.OutputSubfolderStyle.Length -eq 0 -or $UserParams.OutputSubfolderStyle -match '^\s*$'){
+                $InFiles[$i].OutSubfolder = ""
+            # Subfolder per date
+            }elseif($UserParams.OutputSubfolderStyle -notmatch '^%n%$'){
+                [string]$backconvert = ($unixOrigin.AddSeconds($InFiles[$i].Date)).ToString("yyyy-MM-dd_HH-mm-ss")
+                $InFiles[$i].OutSubfolder = "\" + $($UserParams.OutputSubfolderStyle.Replace("%y4%","$($backconvert.Substring(0,4))").Replace("%y2%","$($backconvert.Substring(2,2))").Replace("%mo%","$($backconvert.Substring(5,2))").Replace("%d%","$($backconvert.Substring(8,2))").Replace("%h%","$($backconvert.Substring(11,2))").Replace("%mi%","$($backconvert.Substring(14,2))").Replace("%s%","$($backconvert.Substring(17,2))").Replace("%n%","$($InFiles[$i].InSubFolder)")) -Replace '\ $',''
+                for($k=0; $k -lt $regexCounter.matches($InFiles[$i].OutSubfolder).count; $k++){
+                    $match = [regex]::Match($InFiles[$i].OutSubfolder, '%c.%')
+                    $match = $InFiles[$i].OutSubfolder.Substring($match.Index+2,1)
+                    $InFiles[$i].OutSubfolder = $regexCounter.Replace($InFiles[$i].OutSubfolder, "$("{0:D$match}" -f ($i+1))", 1)
+                }
+            }else{
+                # subfolder per name
+                $InFiles[$i].OutSubFolder = "\$($InFiles[$i].OutSubFolder)" -Replace '\ $',''
+            }
+        }
+
+        # File renaming style:
+        if($UserParams.OutputFileStyle -notmatch '^%n%$' -or $UserParams.OutputFileStyle.Length -gt 0){
+            [string]$backconvert = ($unixOrigin.AddSeconds($InFiles[$i].Date)).ToString("yyyy-MM-dd_HH-mm-ss")
+            $InFiles[$i].OutBaseName = $UserParams.OutputFileStyle.Replace("%y4%","$($backconvert.Substring(0,4))").Replace("%y2%","$($backconvert.Substring(2,2))").Replace("%mo%","$($backconvert.Substring(5,2))").Replace("%d%","$($backconvert.Substring(8,2))").Replace("%h%","$($backconvert.Substring(11,2))").Replace("%mi%","$($backconvert.Substring(14,2))").Replace("%s%","$($backconvert.Substring(17,2))").Replace("%n%","$($InFiles[$i].InBaseName)")
+            for($k=0; $k -lt $regexCounter.matches($InFiles[$i].OutBaseName).count; $k++){
+                $match = [regex]::Match($InFiles[$i].OutBaseName, '%c.%')
+                $match = $InFiles[$i].OutBaseName.Substring($match.Index+2,1)
+                $InFiles[$i].OutBaseName = $regexCounter.Replace($InFiles[$i].OutBaseName, "$("{0:D$match}" -f ($i+1))", 1)
+            }
+        }else{
+            $InFiles[$i].OutBaseName = $InFiles[$i].InBaseName
+        }
+    }
+    $InFiles | Out-Null
+
     [array]$allpaths = @()
 
     $sw = [diagnostics.stopwatch]::StartNew()
@@ -1926,68 +1928,63 @@ Function Protect-OutFileOverwrite(){
             $sw.Reset()
             $sw.Start()
         }
+        if($InFiles[$i].ToCopy -eq 1){
+            [int]$maxpathlength = (255 - 7 - $InFiles[$i].Extension.Length)
 
-        [int]$maxpathlength = (255 - $InFiles[$i].Extension.Length)
+            # restrict subfolder path length:
+            if($InFiles[$i].OutSubfolder.Length -gt 255){
+                $InFiles[$i].OutSubfolder = $(Get-ShorterPath -InString $InFiles[$i].OutSubfolder -UserParams $UserParams -maxpathlength 255)
+            }
+            $InFiles[$i].OutPath = $("$($OutputPath)$($InFiles[$i].OutSubfolder)").Replace("\\","\").Replace("\\","\")
 
-        # restrict subfolder path length:
-        if($InFiles[$i].OutSubfolder.Length -gt 255){
-            $InFiles[$i].OutSubfolder = $(Get-ShorterPath -InString $InFiles[$i].OutSubfolder -UserParams $UserParams -maxpathlength 255)
-        }
-        # create outpath:
-        $InFiles[$i].OutPath = $("$($OutputPath)$($InFiles[$i].OutSubfolder)").Replace("\\","\").Replace("\\","\")
-        $InFiles[$i].OutBaseName = $InFiles[$i].InBaseName
-        # restrict length of file names (found multiple times here):
-        if($InFiles[$i].OutBaseName.Length -gt $maxpathlength){
-            $InFiles[$i].OutBaseName = $(Get-ShorterPath -InString $InFiles[$i].OutBaseName -UserParams $UserParams -maxpathlength $maxpathlength)
-        }
-        # check for files with same name from input:
-        [int]$j = 1
-        [int]$k = 1
-        while($true){
-            [string]$check = "$($InFiles[$i].OutPath)\$($InFiles[$i].OutBaseName)$($InFiles[$i].Extension)"
-            if($check -notin $allpaths){
-                if((Test-Path -LiteralPath $check -PathType Leaf) -eq $false -or $UserParams.OverwriteExistingFiles -eq 1){
-                    $allpaths += $check
-                    break
-                }else{
-                    if($k -eq 1){
-                        $InFiles[$i].OutBaseName = "$($InFiles[$i].OutBaseName)_OutCopy$k"
-                        if($InFiles[$i].OutBaseName.Length -gt $maxpathlength){
-                            $InFiles[$i].OutBaseName = $(Get-ShorterPath -InString $InFiles[$i].OutBaseName -UserParams $UserParams -maxpathlength $maxpathlength)
-                        }
+            # restrict length of file names (found multiple times here):
+            if($InFiles[$i].OutBaseName.Length -gt $maxpathlength){
+                $InFiles[$i].OutBaseName = $(Get-ShorterPath -InString $InFiles[$i].OutBaseName -UserParams $UserParams -maxpathlength $maxpathlength)
+            }
+
+            # check for files with same name from input:
+            [int]$j = 1
+            [int]$k = 1
+            while($true){
+                [string]$check = "$($InFiles[$i].OutPath)\$($InFiles[$i].OutBaseName)$($InFiles[$i].Extension)"
+                if($check -notin $allpaths){
+                    if($UserParams.OverwriteExistingFiles -eq 1 -or (Test-Path -LiteralPath $check -PathType Leaf) -eq $false){
+                        $allpaths += $check
+                        break
                     }else{
-                        $InFiles[$i].OutBaseName = $InFiles[$i].OutBaseName -replace "_OutCopy$($k - 1)","_OutCopy$k"
+                        if($k -eq 1){
+                            $InFiles[$i].OutBaseName = "$($InFiles[$i].OutBaseName)_OutCopy$k"
+                        }else{
+                            $InFiles[$i].OutBaseName = $InFiles[$i].OutBaseName -replace "_OutCopy$($k - 1)","_OutCopy$k"
+                        }
                         if($InFiles[$i].OutBaseName.Length -gt $maxpathlength){
                             $InFiles[$i].OutBaseName = $(Get-ShorterPath -InString $InFiles[$i].OutBaseName -UserParams $UserParams -maxpathlength $maxpathlength)
                         }
+                        $k++
+                        if($script:InfoPreference -gt 0){
+                            Write-ColorOut $InFiles[$i].OutBaseName -ForegroundColor Gray -Indentation 4 #VERBOSE
+                        }
+                        continue
                     }
-                    $k++
+                }else{
+                    if($j -eq 1){
+                        $InFiles[$i].OutBaseName = "$($InFiles[$i].OutBaseName)_InCopy$j"
+                    }else{
+                        $InFiles[$i].OutBaseName = $InFiles[$i].OutBaseName -replace "_InCopy$($j - 1)","_InCopy$j"
+                    }
+                    if($InFiles[$i].OutBaseName.Length -gt $maxpathlength){
+                        $InFiles[$i].OutBaseName = $(Get-ShorterPath -InString $InFiles[$i].OutBaseName -UserParams $UserParams -maxpathlength $maxpathlength)
+                    }
+                    $j++
                     if($script:InfoPreference -gt 0){
-                        $InFiles[$i].OutBaseName | Out-Host #VERBOSE
+                        Write-ColorOut $InFiles[$i].OutBaseName -ForegroundColor Gray -Indentation 4 #VERBOSE
                     }
                     continue
                 }
-            }else{
-                if($j -eq 1){
-                    $InFiles[$i].OutBaseName = "$($InFiles[$i].OutBaseName)_InCopy$j"
-                    if($InFiles[$i].OutBaseName.Length -gt $maxpathlength){
-                        $InFiles[$i].OutBaseName = $(Get-ShorterPath -InString $InFiles[$i].OutBaseName -UserParams $UserParams -maxpathlength $maxpathlength)
-                    }
-                }else{
-                    $InFiles[$i].OutBaseName = $InFiles[$i].OutBaseName -replace "_InCopy$($j - 1)","_InCopy$j"
-                    if($InFiles[$i].OutBaseName.Length -gt $maxpathlength){
-                        $InFiles[$i].OutBaseName = $(Get-ShorterPath -InString $InFiles[$i].OutBaseName -UserParams $UserParams -maxpathlength $maxpathlength)
-                    }
-                }
-                $j++
-                if($script:InfoPreference -gt 0){
-                    $InFiles[$i].OutBaseName | Out-Host #VERBOSE
-                }
-                continue
             }
+            $InFiles[$i].OutName = "$($InFiles[$i].OutBaseName)$($InFiles[$i].Extension)"
+            # $InFiles[$i] | Format-List -Property InFullName,OutBaseName,OutName,OutPath | Out-Host #VERBOSE
         }
-        $InFiles[$i].OutName = "$($InFiles[$i].OutBaseName)$($InFiles[$i].Extension)"
-        # $InFiles[$i] | Format-List -Property InFullName,OutBaseName,OutName,OutPath | Out-Host #VERBOSE
     }
     Write-Progress -Activity "Prevent overwriting existing files..." -Status "Done!" -Completed
 
@@ -2008,15 +2005,17 @@ Function Protect-OutFileOverwrite(){
     }
 
     if($script:InfoPreference -gt 1){
-        if((Read-Host "    Show all names? Positive answers: $PositiveAnswers") -in $PositiveAnswers){
+        if((Read-Host "    Show all names? Positive answers: $script:PositiveAnswers") -in $script:PositiveAnswers){
             [int]$indent = 0
-            for($i=0; $i -lt $InFiles.Length; $i++){
-                Write-ColorOut "    $($InFiles[$i].OutPath.Replace($OutputPath,"."))\$($InFiles[$i].OutName)`t`t" -NoNewLine -ForegroundColor Gray
-                if($indent -lt 2){
-                    $indent++
-                }else{
-                    Write-ColorOut " "
-                    $indent = 0
+            foreach($i in $InFiles){
+                if($i.ToCopy -eq 1){
+                    Write-ColorOut "    $($i.OutPath.Replace($OutputPath,"."))\$($i.OutName)`t`t" -NoNewLine -ForegroundColor Gray
+                    if($indent -lt 2){
+                        $indent++
+                    }else{
+                        Write-ColorOut " "
+                        $indent = 0
+                    }
                 }
             }
         }
@@ -2052,9 +2051,7 @@ Function Copy-InFiles(){
     [string]$rc_inter_inpath = ""
     [string]$rc_inter_outpath = ""
     [string]$rc_inter_files = ""
-    # setting up xcopy:
-    # [array]$xc_command = @()
-    # [string]$xc_suffix = " /Q /J /Y"
+    # setting up Copy-LongItem:
     [array]$ps_files = @()
 
     for($i=0; $i -lt $InFiles.length; $i++){
@@ -2063,26 +2060,25 @@ Function Copy-InFiles(){
             if($rc_inter_inpath.Length -eq 0 -or $rc_inter_outpath.Length -eq 0 -or $rc_inter_files.Length -eq 0){
                 $rc_inter_inpath = "`"$($InFiles[$i].InPath)`""
                 $rc_inter_outpath = "`"$($InFiles[$i].OutPath)`""
-                $rc_inter_files = "`"$($InFiles[$i].OutName)`" "
+                $rc_inter_files = "`"$($InFiles[$i].InName)`" "
             # if in-path and out-path stay the same (between files)...
             }elseif("`"$($InFiles[$i].InPath)`"" -eq $rc_inter_inpath -and "`"$($InFiles[$i].OutPath)`"" -eq $rc_inter_outpath){
                 # if command-length is within boundary:
-                if($($rc_inter_inpath.Length + $rc_inter_outpath.Length + $rc_inter_files.Length + $InFiles[$i].OutName.Length) -lt 8100){
-                    $rc_inter_files += "`"$($InFiles[$i].OutName)`" "
+                if($($rc_inter_inpath.Length + $rc_inter_outpath.Length + $rc_inter_files.Length + $InFiles[$i].InName.Length) -lt 8100){
+                    $rc_inter_files += "`"$($InFiles[$i].InName)`" "
                 }else{
                     $rc_command += "$rc_inter_inpath $rc_inter_outpath $rc_inter_files $rc_suffix"
-                    $rc_inter_files = "`"$($InFiles[$i].OutName)`" "
+                    $rc_inter_files = "`"$($InFiles[$i].InName)`" "
                 }
             # if in-path and out-path DON'T stay the same (between files):
             }else{
                 $rc_command += "$rc_inter_inpath $rc_inter_outpath $rc_inter_files $rc_suffix"
                 $rc_inter_inpath = "`"$($InFiles[$i].InPath)`""
                 $rc_inter_outpath = "`"$($InFiles[$i].OutPath)`""
-                $rc_inter_files = "`"$($InFiles[$i].OutName)`" "
+                $rc_inter_files = "`"$($InFiles[$i].InName)`" "
             }
         # if NOT qualified for robocopy:
         }else{
-            # $xc_command += "`"$($InFiles[$i].InFullName)`" `"$($InFiles[$i].OutPath)\$($InFiles[$i].OutName)*`" $xc_suffix"
             $ps_files += $InFiles[$i]
         }
     }
@@ -2155,31 +2151,6 @@ Function Copy-InFiles(){
         Start-Sleep -Seconds 5
     }
     Start-Sleep -Milliseconds 250
-
-    <#
-        # start xcopy:
-        $sw = [diagnostics.stopwatch]::StartNew()
-        [int]$counter=0
-        for($i=0; $i -lt $xc_command.Length; $i++){
-            while($counter -ge $script:ThreadCount){
-                $counter = @(Get-Process -Name xcopy -ErrorAction SilentlyContinue).count
-                Start-Sleep -Milliseconds 10
-            }
-            if($sw.Elapsed.TotalMilliseconds -ge 750 -or $i -eq 0){
-                Write-Progress -Activity "Starting Xcopy.." -PercentComplete $($i / $xc_command.Length * 100) -Status "File # $($i + 1) / $($xc_command.Length)"
-                $sw.Reset()
-                $sw.Start()
-            }
-            $xc_command[$i] | Out-Host
-            Start-Process xcopy -ArgumentList $xc_command[$i] -NoNewWindow # -WindowStyle Hidden
-            $counter++
-        }
-        while($counter -gt 0){
-            $counter = @(Get-Process -Name xcopy -ErrorAction SilentlyContinue).count
-            Start-Sleep -Milliseconds 25
-        }
-        Write-Progress -Activity "Starting Xcopy.." -Status "Done!" -Completed
-    #>
 }
 
 # DEFINITION: Starting 7zip:
@@ -2258,55 +2229,64 @@ Function Test-CopiedFiles(){
         [string]$inter = "$($_.OutPath)\$($_.OutName)"
         if((Test-Path -LiteralPath $inter -PathType Leaf) -eq $true){
             try{
-                $hash = Get-FileHash -LiteralPath $inter -Algorithm SHA1 -ErrorAction Stop | Select-Object -ExpandProperty Hash
+                $_.OutHash = Get-FileHash -LiteralPath $inter -Algorithm SHA1 -ErrorAction Stop | Select-Object -ExpandProperty Hash
             }catch{
-                Write-ColorOut "Could not calculate Hash of $($_.FullName)" -ForegroundColor Red -Indentation 4
-                $hash = "VerifyHashWRONG"
-            }
-            if($_.Hash -ne $hash){
-                Write-ColorOut "Broken:`t$inter" -ForegroundColor Red -Indentation 4
-                try{
-                    Rename-LongItem -Path $inter -NewName "$($inter)_broken" -ErrorAction Stop
-                }catch{
-                    Write-ColorOut "Renaming $inter failed." -ForegroundColor Magenta -Indentation 4
-                }
-            }else{
-                $_.ToCopy = 0
-                if((Test-Path -LiteralPath "$($inter)_broken" -PathType Leaf) -eq $true){
-                    try{
-                        Remove-LongItem -Path "$($inter)_broken" -ErrorAction Stop
-                    }catch{
-                        Write-ColorOut "Removing $($inter)_broken failed." -ForegroundColor Magenta -Indentation 4
-                    }
-                }
+                Write-ColorOut "Could not calculate Hash of $inter." -ForegroundColor Red -Indentation 4
+                $_.OutHash = "ZYXFail"
             }
         }else{
-            Write-ColorOut "Missing:`t$inter" -ForegroundColor Red -Indentation 4
-            try{
-                New-LongItem -ItemType File -Path "$($inter)_broken" -ErrorAction Stop | Out-Null
-            }catch{
-                Write-ColorOut "Creating $($inter)_broken failed." -ForegroundColor Magenta -Indentation 4
-            }
+            $_.OutHash = "ZYXMiss"
         }
     } | Wait-RSJob -ShowProgress | Receive-RSJob
     Get-RSJob -Name "VerifyHash" | Remove-RSJob
+
+    for($i=0; $i -lt $InFiles.Length; $i++){
+        if($InFiles[$i].ToCopy -eq 1){
+            [string]$inter = "$($InFiles[$i].OutPath)\$($InFiles[$i].OutName)"
+            if($InFiles[$i].OutHash -eq "ZYXMiss"){
+                try{
+                    Write-ColorOut "Missing:`t$inter" -ForegroundColor Red -Indentation 4
+                    New-LongItem -Path "$($inter -Replace '(\.[^.]*)$',"_broken$($InFiles[$i].Extension)")" -ItemType File -ErrorAction Stop | Out-Null
+                }catch{
+                    Write-ColorOut "Could not create $($inter -Replace '(\.[^.]*)$',"_broken$($InFiles[$i].Extension)")!" -ForegroundColor Magenta -Indentation 4
+                }
+            }elseif($InFiles[$i].InHash -ne $InFiles[$i].OutHash){
+                Write-ColorOut "Broken:`t$inter" -ForegroundColor Red -Indentation 4
+                try{
+                    Rename-LongItem -Path $inter -NewName "$($inter -Replace '(\.[^.]*)$',"_broken$($InFiles[$i].Extension)")" -Force:$true -Confirm:$false -ErrorAction Stop | Out-Null
+                }catch{
+                    Write-ColorOut "Renaming $($inter -Replace '(\.[^.]*)$',"_broken$($InFiles[$i].Extension)") failed." -ForegroundColor Magenta -Indentation 4
+                }
+            }else{
+                $InFiles[$i].ToCopy = 0
+                if((Test-Path -LiteralPath $($inter -Replace '(\.[^.]*)$',"_broken$($InFiles[$i].Extension)") -PathType Leaf) -eq $true){
+                    try{
+                        Remove-LongItem -Path $($inter -Replace '(\.[^.]*)$',"_broken$($InFiles[$i].Extension)") -ErrorAction Stop | Out-Null
+                    }catch{
+                        Write-ColorOut "Removing $($inter -Replace '(\.[^.]*)$',"_broken$($InFiles[$i].Extension)") failed." -ForegroundColor Magenta -Indentation 4
+                    }
+                }
+            }
+        }
+    }
+    $InFiles | Out-Null
 
     [int]$verified = 0
     [int]$unverified = 0
     [int]$inter=0
     if($script:InfoPreference -gt 1){
-        [int]$inter = Read-Host "    Show files? Positive answers: $PositiveAnswers"
+        [int]$inter = Read-Host "    Show files? Positive answers: $script:PositiveAnswers"
     }
     for($i=0; $i -lt $InFiles.Length; $i++){
-        if($InFiles[$i].tocopy -eq 1){
+        if($InFiles[$i].ToCopy -eq 1){
             $unverified++
-            if($inter -in $PositiveAnswers){
-                Write-ColorOut "$($InFiles[$i].outname)" -ForegroundColor Red -Indentation 4
+            if($inter -in $script:PositiveAnswers){
+                Write-ColorOut "$($InFiles[$i].OutName)`t- $($InFiles[$i].InHash) != $($InFiles[$i].OutHash)" -ForegroundColor Red -Indentation 4
             }
         }else{
             $verified++
-            if($inter -in $PositiveAnswers){
-                Write-ColorOut $InFiles[$i].outname -ForegroundColor Green -Indentation 4
+            if($inter -in $script:PositiveAnswers){
+                Write-ColorOut "$($InFiles[$i].OutName)`t- $($InFiles[$i].InHash) = $($InFiles[$i].OutHash)" -ForegroundColor Green -Indentation 4
             }
         }
     }
@@ -2332,13 +2312,13 @@ Function Write-JsonHistory(){
             N = $_.InName
             D = $_.Date
             S = $_.Size
-            H = $_.Hash
+            H = $_.InHash
         }
     })
 
     if($UserParams.WriteHistFile -eq "Yes" -and (Test-Path -LiteralPath $UserParams.HistFilePath -PathType Leaf) -eq $true){
         try{
-            $JSON = Get-Content -LiteralPath $UserParams.HistFilePath -Raw -Encoding UTF8 | ConvertFrom-Json
+            $JSON = Get-Content -LiteralPath $UserParams.HistFilePath -Raw -Encoding UTF8 -ErrorAction Stop | ConvertFrom-Json
         }catch{
             Write-ColorOut "Could not load $($UserParams.HistFilePath)." -ForegroundColor Red -Indentation 4
             Pause
@@ -2346,10 +2326,10 @@ Function Write-JsonHistory(){
         $JSON | Out-Null
         $results += $JSON | ForEach-Object {
             [PSCustomObject]@{
-                N = $_.InName
-                D = $_.Date
-                S = $_.Size
-                H = $_.Hash
+                N = $_.N
+                D = $_.D
+                S = $_.S
+                H = $_.H
             }
         }
     }
@@ -2363,6 +2343,11 @@ Function Write-JsonHistory(){
             }
         }
     }
+
+    if($script:InfoPreference -gt 1 -and (Read-Host "    Show files? Positive answers: $script:PositiveAnswers") -in $script:PositiveAnswers){
+        $results | Format-Table -AutoSize | Out-Host
+    }
+
     $results = $results | Sort-Object -Property N,D,S,H -Unique | ConvertTo-Json
     $results | Out-Null
 
@@ -2535,10 +2520,10 @@ Function Start-Everything(){
 
         # DEFINITION: Copy stuff and check it:
         $j = 0
-        while(1 -in $inputfiles.tocopy){
+        while(1 -in $inputfiles.ToCopy){
             if($j -gt 0){
                 Write-ColorOut "Some of the copied files are corrupt. Attempt re-copying them?" -ForegroundColor Magenta
-                if((Read-Host " Positive answers: $PositiveAnswers") -notin $PositiveAnswers){
+                if((Read-Host " Positive answers: $script:PositiveAnswers") -notin $script:PositiveAnswers){
                     Write-ColorOut "Aborting." -ForegroundColor Cyan
                     Start-Sleep -Seconds 2
                     break
@@ -2578,7 +2563,7 @@ Function Start-Everything(){
                 Invoke-Pause
                 $j++
             }else{
-                foreach($instance in $inputfiles.tocopy){
+                foreach($instance in $inputfiles.ToCopy){
                     $instance = 0
                 }
             }
@@ -2643,7 +2628,7 @@ Function Start-Everything(){
                 while(1 -in $inputfiles.tocopy){
                     if($j -gt 1){
                         Write-ColorOut "Some of the copied files are corrupt. Attempt re-copying them?" -ForegroundColor Magenta
-                        if((Read-Host "Positive answers: $PositiveAnswers") -notin $PositiveAnswers){
+                        if((Read-Host "Positive answers: $script:PositiveAnswers") -notin $script:PositiveAnswers){
                             break
                         }
                     }
