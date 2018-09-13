@@ -2046,7 +2046,7 @@ Describe "Copy-InFiles"{
             $InFiles = @(Get-InFiles -UserParams $UserParams)
             $NewFiles = $InFiles | Select-Object *
             $test = @(Protect-OutFileOverwrite -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
-            $bla = Copy-InFiles -UserParams $UserParams -InFiles $test
+            Copy-InFiles -UserParams $UserParams -InFiles $test
             (Compare-Object -ReferenceObject $(Get-LongChildItem -Path "$($UserParams.InputPath)" -Include *.cr2,*.jpg,*.cr3 -Recurse) -DifferenceObject $(Get-LongChildItem -Path "$($UserParams.OutputPath)" -Include *.cr2,*.jpg,*.cr3 -Recurse) -Property Size,LastWriteTime -ErrorAction SilentlyContinue).count | Should Be 0
         }
         It "Overwrite old files" {
@@ -2114,8 +2114,118 @@ Describe "Test-CopiedFiles"{
     Mock Write-ColorOut {}
     # Mock Start-Everything {}
     # Mock Start-GUI {}
-    It "Verify newly copied files (TODO: everything.)"{
+    $BlaDrive = "$TestDrive\media-copytool_TEST"
+    BeforeEach {
+        [hashtable]$UserParams = @{
+            InputPath =             "$BlaDrive\In_Test"
+            OutputPath =            "$BlaDrive\Out_Test"
+            FormatPreference =      "include"
+            FormatInExclude =       @("*.cr2","*.jpg","*.cr3")
+            OutputFileStyle =       "%n%"
+            OutputSubfolderStyle =  "%y4%-%mo%-%d%"
+            InputSubfolderSearch =  1
+            OverwriteExistingFiles = 0
+            EnableLongPaths =       1
+        }
+    }
+    New-Item -ItemType Directory -Path $BlaDrive
+    Push-Location $BlaDrive
+    Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x -aoa -bb0 -pdefault -sccUTF-8 -spf2 `"$($PSScriptRoot)\media_copytool_TESTFILES.7z`" `"-o.\`" " -WindowStyle Minimized -Wait
+    Pop-Location
 
+    It "Throws w/o param" {
+        {Test-CopiedFiles} | Should Throw
+        {Test-CopiedFiles -InFiles @()} | Should Throw
+        {Test-CopiedFiles -InFiles 123} | Should Throw
+    }
+    It "If copied correctly..."{
+        $InFiles = @(Get-InFiles -UserParams $UserParams)
+        $NewFiles = Get-InFileHash -InFiles $InFiles -UserParams $UserParams
+        $test = @(Protect-OutFileOverwrite -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+        Copy-InFiles -UserParams $UserParams -InFiles $test
+        Start-Sleep -Milliseconds 10
+        $test = @(Test-CopiedFiles -InFiles $test)
+        ,$test | Should BeOfType array
+        $test.ToCopy | Should Not Contain 1
+    }
+    It "If missing..."{
+        $InFiles = @(Get-InFiles -UserParams $UserParams)
+        $NewFiles = Get-InFileHash -InFiles $InFiles -UserParams $UserParams
+        $test = @(Protect-OutFileOverwrite -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+        Copy-InFiles -UserParams $UserParams -InFiles $test
+        Get-ChildItem $UserParams.OutputPath -Recurse -File | Remove-Item -Recurse
+        Start-Sleep -Milliseconds 10
+        $test = @(Test-CopiedFiles -InFiles $test)
+        ,$test | Should BeOfType array
+        $test.ToCopy | Should Not Contain 0
+    }
+    It "If Hash is wrong" {
+        Get-ChildItem $UserParams.OutputPath -Recurse -File | Remove-Item -Recurse
+        $InFiles = @(Get-InFiles -UserParams $UserParams)
+        $NewFiles = @(Get-InFileHash -InFiles $InFiles -UserParams $UserParams)
+        foreach($i in $NewFiles){
+            $i.InHash = "123456ABC"
+        }
+        $test = @(Protect-OutFileOverwrite -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+        Copy-InFiles -UserParams $UserParams -InFiles $test
+        Start-Sleep -Milliseconds 10
+        $test = @(Test-CopiedFiles -InFiles $test)
+        ,$test | Should BeOfType array
+        $test.ToCopy | Should Not Contain 0
+    }
+    It "SpecChar" {
+        $UserParams.InputPath = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
+        $UserParams.OutputPath = "$BlaDrive\Out_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
+        # Get-ChildItem $UserParams.OutputPath -Recurse -File | Remove-Item -Recurse
+        $InFiles = @(Get-InFiles -UserParams $UserParams)
+        $NewFiles = Get-InFileHash -InFiles $InFiles -UserParams $UserParams
+        $test = @(Protect-OutFileOverwrite -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+        Copy-InFiles -UserParams $UserParams -InFiles $test
+        Start-Sleep -Milliseconds 10
+        $test = @(Test-CopiedFiles -InFiles $test)
+        ,$test | Should BeOfType array
+        $test.ToCopy | Should Not Contain 1
+    }
+    It "Long name" {
+
+        $UserParams.InputPath = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
+        $UserParams.OutputPath = "$BlaDrive\Out_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
+        Get-ChildItem $UserParams.OutputPath -Recurse -File | Remove-Item -Recurse
+        $InFiles = @(Get-InFiles -UserParams $UserParams)
+        $NewFiles = Get-InFileHash -InFiles $InFiles -UserParams $UserParams
+        $test = @(Protect-OutFileOverwrite -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+        Copy-InFiles -UserParams $UserParams -InFiles $test
+        Start-Sleep -Milliseconds 10
+        $test = @(Test-CopiedFiles -InFiles $test)
+        ,$test | Should BeOfType array
+        $test.ToCopy | Should Not Contain 1
+    }
+    It "Single file" {
+        $UserParams.InputPath = "$BlaDrive\In_Test"
+        $UserParams.OutputPath = "$BlaDrive\Out_Test"
+        Get-ChildItem $UserParams.OutputPath -Recurse -File | Remove-Item -Recurse
+        $UserParams.FormatInExclude = @("*.cr4")
+        $InFiles = @(Get-InFiles -UserParams $UserParams)
+        $NewFiles = Get-InFileHash -InFiles $InFiles -UserParams $UserParams
+        $test = @(Protect-OutFileOverwrite -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+        Copy-InFiles -UserParams $UserParams -InFiles $test
+        Start-Sleep -Milliseconds 10
+        $test = @(Test-CopiedFiles -InFiles $test)
+        ,$test | Should BeOfType array
+        $test.ToCopy | Should Not Contain 1
+
+        Get-ChildItem $UserParams.OutputPath -Recurse -File | Remove-Item -Recurse
+        $InFiles = @(Get-InFiles -UserParams $UserParams)
+        $NewFiles = Get-InFileHash -InFiles $InFiles -UserParams $UserParams
+        foreach($i in $NewFiles){
+            $i.InHash = "123456ABC"
+        }
+        $test = @(Protect-OutFileOverwrite -InFiles $NewFiles -UserParams $UserParams -Mirror 0)
+        Copy-InFiles -UserParams $UserParams -InFiles $test
+        Start-Sleep -Milliseconds 10
+        $test = @(Test-CopiedFiles -InFiles $test)
+        ,$test | Should BeOfType array
+        $test.ToCopy | Should Not Contain 0
     }
 }
 
