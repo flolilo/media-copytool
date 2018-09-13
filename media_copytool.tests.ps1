@@ -1752,7 +1752,6 @@ Describe "Protect-OutFileOverwrite" {
             $counter | Should be $InFiles.Length
             $counter = 0
             $wrong = 0
-            $test | Format-List -Property OutName | Out-Host
             foreach($i in $test.OutName){
                 if($i -match '^.*_OutCopy\d\....$'){$counter++}
                 if($i -match '^.*_InCopy\d.*$'){$wrong++}

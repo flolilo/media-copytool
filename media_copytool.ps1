@@ -2701,7 +2701,7 @@ Function Start-Everything(){
 # ==============================================================================
 # ==================================================================================================
 
-# (COMMENT THIS BLOCK FOR PESTER)
+<# (COMMENT THIS BLOCK FOR PESTER)
 # DEFINITION: Console banner
     Write-ColorOut "                            flolilo's Media-Copytool                            " -ForegroundColor DarkCyan -BackgroundColor Gray
     Write-ColorOut "                          $VersionNumber           " -ForegroundColor DarkMagenta -BackgroundColor DarkGray -NoNewLine
