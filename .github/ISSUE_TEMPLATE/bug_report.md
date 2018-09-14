@@ -5,8 +5,8 @@ about: Create a report to help us improve
 ---
 
 **This is a...**
-[ ] Bug
-[ ] Feature request
+ - [ ] Bug
+ - [ ] Feature request
 
 **Describe the bug/request:**
 
@@ -24,9 +24,10 @@ about: Create a report to help us improve
 4. 
 
 **Desktop (please complete the following information):**
- - OS: 
- - PowerShell version:
- - PSAlphaFS version:
- - PoshRSJob version: 
+ - *OS*: 
+ - *PowerShell version*:
+ - *PSAlphaFS version*:
+ - *PoshRSJob version*: 
 
 **Additional context**
+
