@@ -1,31 +1,53 @@
 Todo:
-    [ ] Allow y/n and yes/no as answers (instead/additional to 1/0). @low 
-    [ ] making my own implementation of [`RSJob`](https://github.com/proxb/PoshRSJob) with [`Write-ProgressEx`](https://github.com/mazzy-ax/Write-ProgressEx) (if it isn't too heavy on performance) @low 
+    [ ] Check impact of file buffering through `Copy-LongItem` and `Write-FileSystemCache` @low
+    [ ] Add support for multiple input-folders, since w/ `AvoidIdenticalFiles`, two camera-cards could be checked at once.
+    [ ] Create GUI in C#, call CLI-only, param-only PoSh-script with it (i.e. `media-copytool.exe` opens GUI, then passes values to `media-copytool.ps1`)
+    [ ] Separate GUI from rest of the script: GUI starts script with parameters. (2nd script) @high
+    [ ] trying a custom implementation of [`RSJob`](https://github.com/proxb/PoshRSJob) with [`Write-ProgressEx`](https://github.com/mazzy-ax/Write-ProgressEx) (if it isn't too heavy on performance) @low
     [ ] test [`PSThreadJob`](https://github.com/PaulHigin/PSThreadJob) performance. @low
+    [ ] Deutsche Übersetzung (sinnvollerweise erst mit Message-Variablen, daher in weiter Ferne) @low
+To test (for bugs/regresses):
+    [x] Create a all-round Pester-script @high @done(18-09-14 04:58)
+    [x] Make sure that only allowed names are used for files & folders. @done(18-09-14 04:58)
+        [x] https://msdn.microsoft.com/en-us/library/windows/desktop/aa365247(v=vs.85).aspx & https://cosmoskey.blogspot.co.at/2009/09/powershell-function-convert.html @critical @done(18-09-14 04:59)
+    [x] look for alternative to xcopy (e.g. `Copy-LongItem` and `Write-FileSystemCache`) @done(18-09-14 04:58)
+    [x] Maybe recall `$Debug` to something like `$InfoPreference`? @low @done(18-09-14 04:57)
+    [x] Option to ignore 3 seconds in difference in `LastWriteTime` (i.e. different cards with same files) @done(18-09-14 04:57)
+        [x] Go for UNIX-Times? https://stackoverflow.com/questions/10781697/convert-unix-time-with-powershell @done(18-09-14 04:57)
+    [x] History-File: Go for `N`, `D`, `S`, `H` for field names @done(18-09-14 04:57)
+    [x] Delete interactive mode. @low @done(18-09-14 04:57)
+        [x] Rename `-GUI_CLI_direct`. @done(18-09-14 04:57)
+    [x] Allow `y`/`n` and `yes`/`no` as answers (additional to `1`/`0`). @done(18-09-14 04:57)
+    [-] Remove zipping mirror option (too complicated to maintain) @low @cancelled(18-05-07 16:45)
+        [x] Cross it out, but leave it there, as it may be revived again later on. @done(18-09-14 04:57)
+    [x] implement `%foo%` instead of `yyyy-mm-dd`-stuff. @done(18-09-14 04:58)
+        [x] Create a prefix-/suffix-option for renaming both subfolders and files. @done(18-09-14 04:58)
+        [x] for this, sorting the files by name will be in order. @done(18-09-14 04:58)
+    [x] remove preset-formats and change system to all/only/except. @done(18-09-14 04:58)
+    [x] (mainly) use `throw` instead of `return $false` for errors inside the script. @done(18-09-14 04:58)
+    [ ] Separate GUI from rest of the script: GUI starts script with parameters. (same script) @high
+Done:
+    [-] History-File: Convert Size & Date to HEX? (useless) @cancelled(18-09-09 13:16)
     [x] Option to verify everything after copying when not checking for duplis. @done (18.2.2018, 21:40:59)
-    [ ] Create a prefix-/suffix-option for renaming both subfolders and files. @low 
-    [ ] remove preset-formats and change system to all/only/except.
-    [x] rename $($PSScriptRoot) in history-path. @high @done (4.2.2018, 17:48:11)
-    [x] Evaluate if option for overwriting existing files would make sense @high @done (29.11.2017, 16:52:10)
+    [x] rename `$($PSScriptRoot)` in history-path. @high @done (4.2.2018, 17:48:11)
+    [x] Evaluate if option to overwrite already existing files makes sense @high @done (29.11.2017, 16:52:10)
     [x] Remove `$ThreadCount` from parameters, as it is no longer needed @low @done (29.11.2017, 15:32:49)
     [x] Check free space on drive before copying. (https://docs.microsoft.com/de-de/powershell/module/Microsoft.PowerShell.Diagnostics/Get-Counter?view=powershell-5.1) @high @done (29.11.2017, 16:52:08)
-    [ ] Creating a Pester-script
     [x] Making all `for`-loops multithreaded (where possible) @done (29.11.2017, 15:03:04)
-    [x] Evaluating the usefulness of Posh-RSJob (Cuntributions are welcome!) @done (29.11.2017, 15:03:04)
+    [x] Evaluating the usefulness of `Posh-RSJob` (Cuntributions are welcome!) @done (29.11.2017, 15:03:04)
     [x] GUI with tabs instead of dropdowns @done (29.11.2017, 15:03:02)
     [x] Option to deactivate copy-verification, thus enabling fast copying. @done (29.11.2017, 15:03:02)
     [x] Option to just Robocopy files over in their original subfolders (so like `robocopy InputPath OutputPath /MIR`) @done (29.11.2017, 15:03:01)
     [x] More subfolder-styles @done (29.11.2017, 15:03:00)
     [x] Reaming files by date @done (29.11.2017, 15:02:59)
     [x] Checking if the volume exists if output-path(s) are not found (instead of looking for the parent directory) @done (29.11.2017, 15:02:58)
-    [x] Multithreading Get-FileHash operations @done (29.11.2017, 15:02:56)
+    [x] Multithreading `Get-FileHash` operations @done (29.11.2017, 15:02:56)
     [x] Allowing special characters like brackets in Paths @done (29.11.2017, 15:02:53)
     [x] Option to create a zip-archive for mirror-copying @done (29.11.2017, 15:02:52)
     [x] Option to unmount USB drives after finishing (first) copy (done with limitations) @done (29.11.2017, 15:42:57)
-    [x] Option to avoid copying a file that exists more than once in the input more than one time. (E.g. .\DCIM\File_1.jpeg & .\DCIM\Sub\File_1.jpeg -> .\Out\File_1.jpeg) @done (29.11.2017, 15:02:45)
+    [x] Option to avoid copying a file that exists more than once in the input more than one time. (E.g. `.\DCIM\File_1.jpeg` & `.\DCIM\Sub\File_1.jpeg` -> `.\Out\File_1.jpeg`) @done (29.11.2017, 15:02:45)
     [x] Making the output look nice(r) and especially make errors more transparent to users @low @done (29.11.2017, 15:02:37)
     [x] Multithreading the GUI @done (29.11.2017, 15:02:31)
     [-] Creating a second JSON-file @cancelled (29.11.2017, 15:02:19)
         [x] Include looked up files in output-path into history-file. @done (29.11.2017, 15:02:19)
     [x] Only one JSON-Parameter-file, but with preset-arrays @done (29.11.2017, 15:02:17)
-    [ ] Deutsche Übersetzung (sinnvollerweise erst mit Message-Variablen, daher in weiter Ferne)
