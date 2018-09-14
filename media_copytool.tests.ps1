@@ -2136,7 +2136,6 @@ Describe "Test-CopiedFiles"{
     It "Throws w/o param" {
         {Test-CopiedFiles} | Should Throw
         {Test-CopiedFiles -InFiles @()} | Should Throw
-        {Test-CopiedFiles -InFiles 123} | Should Throw
     }
     It "If copied correctly..."{
         $InFiles = @(Get-InFiles -UserParams $UserParams)
@@ -2233,8 +2232,251 @@ Describe "Write-JsonHistory"{
     Mock Write-ColorOut {}
     # Mock Start-Everything {}
     # Mock Start-GUI {}
-    It "Write new file-attributes to history-file (TODO: everything.)"{
+    $BlaDrive = "$TestDrive\media-copytool_TEST"
+    BeforeEach {
+        [hashtable]$UserParams = @{
+            InputPath =             "$BlaDrive\In_Test"
+            OutputPath =            "$BlaDrive\Out_Test"
+            HistFilePath =          "$BlaDrive\HistTest.json"
+            FormatPreference =      "include"
+            FormatInExclude =       @("*.cr2","*.jpg","*.cr3")
+            OutputFileStyle =       "%n%"
+            OutputSubfolderStyle =  "%y4%-%mo%-%d%"
+            InputSubfolderSearch =  1
+            OverwriteExistingFiles = 0
+            EnableLongPaths =       1
+            WriteHistFile = "yes"
+        }
+        $invalidChars = "[{0}]" -f [RegEx]::Escape($([IO.Path]::GetInvalidFileNameChars() -join '' -replace '\\',''))
+    }
+    New-Item -ItemType Directory -Path $BlaDrive
+    Push-Location $BlaDrive
+    Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x -aoa -bb0 -pdefault -sccUTF-8 -spf2 `"$($PSScriptRoot)\media_copytool_TESTFILES.7z`" `"-o.\`" " -WindowStyle Minimized -Wait
+    Pop-Location
 
+    It "Throws w/o param" {
+        {Write-JsonHistory} | Should Throw
+        {Write-JsonHistory -InFiles @()} | Should Throw
+        {Write-JsonHistory -InFiles 123 -UserParams} | Should Throw
+        {Write-JsonHistory -UserParams 123} | Should Throw
+        {Write-JsonHistory -InFiles 123} | Should Throw
+        {Write-JsonHistory -InFiles @("a","b") -UserParams $UserParams} | Should Not Throw
+    }
+    It "Write new file-attributes to history-file (mutliple).)"{
+        Remove-Item $UserParams.HistFilePath
+        $InFiles = @(Get-InFiles -UserParams $UserParams)
+        $NewFiles = Get-InFileHash -InFiles $InFiles -UserParams $UserParams
+        for($i=0; $i -lt $NewFiles.Length; $i++){
+            $NewFiles[$i].ToCopy = 0
+        }
+        {Write-JsonHistory -InFiles $NewFiles -UserParams $UserParams} | Should Not Throw
+        $JSONFile = Get-Content -LiteralPath $UserParams.HistFilePath -Raw -Encoding UTF8 -ErrorAction Stop | ConvertFrom-JSON -ErrorAction Stop
+        $JSONFile | Out-Null
+        [array]$files_history = $JSONFile | ForEach-Object {
+            [PSCustomObject]@{
+                N = $_.N
+                D = $_.D
+                S = $_.S
+                H = $_.H
+            }
+        }
+        $files_history | Out-Null
+        $files_history.N.Length | Should Be ($NewFiles | Sort-Object -Property InName,Date,Size,InHash -Unique).Length
+        $files_history.D.Length | Should Be ($NewFiles | Sort-Object -Property InName,Date,Size,InHash -Unique).Length
+        $files_history.S.Length | Should Be ($NewFiles | Sort-Object -Property InName,Date,Size,InHash -Unique).Length
+        $files_history.H.Length | Should Be ($NewFiles | Sort-Object -Property InName,Date,Size,InHash -Unique).Length
+        $files_history.N | Should Not Contain $invalidChars
+        $files_history.D | Should Match '^[0-9]*$'
+        $files_history.S | Should Match '^[0-9]*$'
+        $files_history.H | Should Match '^[0-9a-f]*$'
+        $files_history.N | Should Not contain $null
+        $files_history.D | Should Not contain $null
+        $files_history.S | Should Not contain $null
+        $files_history.H | Should Not contain $null
+    }
+    It "Write new file-attributes to history-file (single).)"{
+        Remove-Item $UserParams.HistFilePath
+        Start-Sleep -Milliseconds 10
+        $InFiles = @(Get-InFiles -UserParams $UserParams)
+        $NewFiles = Get-InFileHash -InFiles $InFiles -UserParams $UserParams
+        $NewFiles[1].ToCopy = 0
+        {Write-JsonHistory -InFiles $NewFiles -UserParams $UserParams} | Should Not Throw
+        Start-Sleep -Milliseconds 10
+        $JSONFile = Get-Content -LiteralPath $UserParams.HistFilePath -Raw -Encoding UTF8 -ErrorAction Stop | ConvertFrom-JSON -ErrorAction Stop
+        $JSONFile | Out-Null
+        [array]$files_history = $JSONFile | ForEach-Object {
+            [PSCustomObject]@{
+                N = $_.N
+                D = $_.D
+                S = $_.S
+                H = $_.H
+            }
+        }
+        $files_history | Out-Null
+        $files_history.Length | Should Be 1
+        $files_history.N.Length | Should BeGreaterthan 0
+        $files_history.D.Length | Should BeGreaterthan 0
+        $files_history.S.Length | Should BeGreaterthan 0
+        $files_history.H.Length | Should BeGreaterthan 0
+        $files_history.N | Should Not Contain $invalidChars
+        $files_history.D | Should Match '^[0-9]*$'
+        $files_history.S | Should Match '^[0-9]*$'
+        $files_history.H | Should Match '^[0-9a-f]*$'
+        $files_history.N | Should Not contain $null
+        $files_history.D | Should Not contain $null
+        $files_history.S | Should Not contain $null
+        $files_history.H | Should Not contain $null
+    }
+    It "SpecChar Hist-File.)"{
+        $UserParams.HistFilePath = "$BlaDrive\HistTest specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©.json"
+        $InFiles = @(Get-InFiles -UserParams $UserParams)
+        $NewFiles = Get-InFileHash -InFiles $InFiles -UserParams $UserParams
+        for($i=0; $i -lt $NewFiles.Length; $i++){
+            $NewFiles[$i].ToCopy = 0
+        }
+        {Write-JsonHistory -InFiles $NewFiles -UserParams $UserParams} | Should Not Throw
+        $JSONFile = Get-Content -LiteralPath $UserParams.HistFilePath -Raw -Encoding UTF8 -ErrorAction Stop | ConvertFrom-JSON -ErrorAction Stop
+        $JSONFile | Out-Null
+        [array]$files_history = $JSONFile | ForEach-Object {
+            [PSCustomObject]@{
+                N = $_.N
+                D = $_.D
+                S = $_.S
+                H = $_.H
+            }
+        }
+        $files_history | Out-Null
+        $files_history.N.Length | Should Be ($NewFiles | Sort-Object -Property InName,Date,Size,InHash -Unique).Length
+        $files_history.D.Length | Should Be ($NewFiles | Sort-Object -Property InName,Date,Size,InHash -Unique).Length
+        $files_history.S.Length | Should Be ($NewFiles | Sort-Object -Property InName,Date,Size,InHash -Unique).Length
+        $files_history.H.Length | Should Be ($NewFiles | Sort-Object -Property InName,Date,Size,InHash -Unique).Length
+        $files_history.N | Should Not Contain $invalidChars
+        $files_history.D | Should Match '^[0-9]*$'
+        $files_history.S | Should Match '^[0-9]*$'
+        $files_history.H | Should Match '^[0-9a-f]*$'
+        $files_history.N | Should Not contain $null
+        $files_history.D | Should Not contain $null
+        $files_history.S | Should Not contain $null
+        $files_history.H | Should Not contain $null
+    }
+    It "Long-named Hist-File.)"{
+        $UserParams.HistFilePath = "$BlaDrive\Hist_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_tEND.json"
+        $InFiles = @(Get-InFiles -UserParams $UserParams)
+        $NewFiles = Get-InFileHash -InFiles $InFiles -UserParams $UserParams
+        for($i=0; $i -lt $NewFiles.Length; $i++){
+            $NewFiles[$i].ToCopy = 0
+        }
+        {Write-JsonHistory -InFiles $NewFiles -UserParams $UserParams} | Should Not Throw
+        $JSONFile = Get-Content -LiteralPath $UserParams.HistFilePath -Raw -Encoding UTF8 -ErrorAction Stop | ConvertFrom-JSON -ErrorAction Stop
+        $JSONFile | Out-Null
+        [array]$files_history = $JSONFile | ForEach-Object {
+            [PSCustomObject]@{
+                N = $_.N
+                D = $_.D
+                S = $_.S
+                H = $_.H
+            }
+        }
+        $files_history | Out-Null
+        $files_history.N.Length | Should Be ($NewFiles | Sort-Object -Property InName,Date,Size,InHash -Unique).Length
+        $files_history.D.Length | Should Be ($NewFiles | Sort-Object -Property InName,Date,Size,InHash -Unique).Length
+        $files_history.S.Length | Should Be ($NewFiles | Sort-Object -Property InName,Date,Size,InHash -Unique).Length
+        $files_history.H.Length | Should Be ($NewFiles | Sort-Object -Property InName,Date,Size,InHash -Unique).Length
+        $files_history.N | Should Not Contain $invalidChars
+        $files_history.D | Should Match '^[0-9]*$'
+        $files_history.S | Should Match '^[0-9]*$'
+        $files_history.H | Should Match '^[0-9a-f]*$'
+        $files_history.N | Should Not contain $null
+        $files_history.D | Should Not contain $null
+        $files_history.S | Should Not contain $null
+        $files_history.H | Should Not contain $null
+    }
+    It "Overwrite" {
+        Remove-Item $UserParams.HistFilePath
+        $UserParams.WriteHistFile = "overwrite"
+        $UserParams.FormatInExclude = @("*.cr3")
+        $InFiles = @(Get-InFiles -UserParams $UserParams)
+        $NewFiles = @(Get-InFileHash -InFiles $InFiles -UserParams $UserParams)
+        for($i=0; $i -lt $NewFiles.Length; $i++){
+            $NewFiles[$i].ToCopy = 0
+        }
+        {Write-JsonHistory -InFiles $NewFiles -UserParams $UserParams} | Should Not Throw
+
+        $UserParams.FormatInExclude = @("*.cr4")
+        $InFiles = @(Get-InFiles -UserParams $UserParams)
+        $NewFiles = @(Get-InFileHash -InFiles $InFiles -UserParams $UserParams)
+        for($i=0; $i -lt $NewFiles.Length; $i++){
+            $NewFiles[$i].ToCopy = 0
+        }
+        {Write-JsonHistory -InFiles $NewFiles -UserParams $UserParams} | Should Not Throw
+        Start-Sleep -Milliseconds 10
+        $JSONFile = Get-Content -LiteralPath $UserParams.HistFilePath -Raw -Encoding UTF8 -ErrorAction Stop | ConvertFrom-JSON -ErrorAction Stop
+        $JSONFile | Out-Null
+        [array]$files_history = $JSONFile | ForEach-Object {
+            [PSCustomObject]@{
+                N = $_.N
+                D = $_.D
+                S = $_.S
+                H = $_.H
+            }
+        }
+        $files_history | Out-Null
+        $files_history | Format-List | Out-Host
+        $files_history.Length | Should Be 1
+        $files_history.N.Length | Should BeGreaterthan 0
+        $files_history.D.Length | Should BeGreaterthan 0
+        $files_history.S.Length | Should BeGreaterthan 0
+        $files_history.H.Length | Should BeGreaterthan 0
+        $files_history.N | Should Not Contain $invalidChars
+        $files_history.D | Should Match '^[0-9]*$'
+        $files_history.S | Should Match '^[0-9]*$'
+        $files_history.H | Should Match '^[0-9a-f]*$'
+        $files_history.N | Should Not contain $null
+        $files_history.D | Should Not contain $null
+        $files_history.S | Should Not contain $null
+        $files_history.H | Should Not contain $null
+    }
+    It "Append" {
+        Remove-Item $UserParams.HistFilePath
+        $UserParams.FormatInExclude = @("*.cr3")
+        $InFiles = @(Get-InFiles -UserParams $UserParams)
+        $NewFiles = @(Get-InFileHash -InFiles $InFiles -UserParams $UserParams)
+        for($i=0; $i -lt $NewFiles.Length; $i++){
+            $NewFiles[$i].ToCopy = 0
+        }
+        {Write-JsonHistory -InFiles $NewFiles -UserParams $UserParams} | Should Not Throw
+
+        $UserParams.FormatInExclude = @("*.cr4")
+        $InFiles2 = @(Get-InFiles -UserParams $UserParams)
+        $NewFiles2 = @(Get-InFileHash -InFiles $InFiles2 -UserParams $UserParams)
+        for($i=0; $i -lt $NewFiles2.Length; $i++){
+            $NewFiles2[$i].ToCopy = 0
+        }
+        {Write-JsonHistory -InFiles $NewFiles2 -UserParams $UserParams} | Should Not Throw
+        $JSONFile = Get-Content -LiteralPath $UserParams.HistFilePath -Raw -Encoding UTF8 -ErrorAction Stop | ConvertFrom-JSON -ErrorAction Stop
+        $JSONFile | Out-Null
+        [array]$files_history = $JSONFile | ForEach-Object {
+            [PSCustomObject]@{
+                N = $_.N
+                D = $_.D
+                S = $_.S
+                H = $_.H
+            }
+        }
+        $files_history | Out-Null
+        $files_history.Length | Should Be 2
+        $files_history.N.Length | Should BeGreaterthan 0
+        $files_history.D.Length | Should BeGreaterthan 0
+        $files_history.S.Length | Should BeGreaterthan 0
+        $files_history.H.Length | Should BeGreaterthan 0
+        $files_history.N | Should Not Contain $invalidChars
+        $files_history.D | Should Match '^[0-9]*$'
+        $files_history.S | Should Match '^[0-9]*$'
+        $files_history.H | Should Match '^[0-9a-f]*$'
+        $files_history.N | Should Not contain $null
+        $files_history.D | Should Not contain $null
+        $files_history.S | Should Not contain $null
+        $files_history.H | Should Not contain $null
     }
 }
 

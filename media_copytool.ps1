@@ -8,9 +8,9 @@
         Supports multithreading via Boe Prox's PoshRSJob-cmdlet (https://github.com/proxb/PoshRSJob)
         Supports long file paths via PSAlphaFS (https://github.com/v2kiran/PSAlphaFS)
     .NOTES
-        Version:        1.0.0 (ALPHA)
+        Version:        1.0.0 (Beta)
         Author:         flolilo
-        Creation Date:  XXXX-XX-XX
+        Creation Date:  2018-09-14
         Legal stuff: This program is free software. It comes without any warranty, to the extent permitted by
         applicable law. Most of the script was written by myself (or heavily modified by me when searching for solutions
         on the WWW). However, some parts are copies or modifications of very genuine code - see
@@ -48,8 +48,8 @@
         Cannot be specified in mc_parameters.json.
         Valid range: 0 (deactivate), 1 (activate)
         If enabled, it remembers all parameters (excl. '-Remember*', '-ShowParams', and '-*Path') for future script-executions.
-    .PARAMETER Debug
-    Cannot be specified in mc_parameters.json.
+    .PARAMETER InfoPreference
+        Cannot be specified in mc_parameters.json.
         Gives more verbose so one can see what is happening (and where it goes wrong).
         Valid options:
             0 - no debug (default)
@@ -57,100 +57,110 @@
             2 - pause after every function, option to show files and their status
             3 - ???
     .PARAMETER InputPath
+        Can be set in mc_parameters.json.
         Path from which files will be copied.
     .PARAMETER OutputPath
+        Can be set in mc_parameters.json.
         Path to copy the files to.
     .PARAMETER MirrorEnable
+        Can be set in mc_parameters.json.
         Valid range: 0 (deactivate), 1 (activate)
         If enabled, it enables copying to a second output-path that is specified with -MirrorPath.
     .PARAMETER MirrorPath
+        Can be set in mc_parameters.json.
         Second path to which files will  be copied. Only used if -MirrorEnable is set to 1
-    .PARAMETER PresetFormats
-        Preset formats for some common file-types.
-        Valid options:
-            "Can"   - *.CR2 + *.CR3
-            "Nik"   - *.NRW + *.NEF
-            "Son"   - *.ARW
-            "Jpg"   - *.JPG + *.JPEG
-            "Inter" - *.DNG + *.TIF
-            "Mov"   - *.MP4 + *.MOV
-            "Aud"   - *.WAV + *.MP3 + *.M4A
-        For multiple choices, separate them with commata, e.g. '-PresetFormats "Can","Nik"'.
-    .PARAMETER CustomFormatsEnable
-        Valid range: 0 (deactivate), 1 (activate)
-        If enabled, it enables the use of custom formats specified with -CustomFormats.
-    .PARAMETER CustomFormats
-        User-defined, custom search-terms. Asterisks * are wildcards.
-        Examples:
-            "*" will look for all files inside -InputPath
-            "media*" will look for all files inside -InputPath that start with "media", regardless their extension. E.g. media_copytool.ps1, media123.ini,...
-        Specify your terms inside quotes and separate multiple entries with commata.
+    .PARAMETER FormatPreference
+        Can be set in mc_parameters.json.
+        Set if you want to searc for all files, only certain files, or to exclude certain files in the input-path.
+        Valid settings: "all","include","exclude"
+    .PARAMETER FormatInExclude
+        Can be set in mc_parameters.json.
+        If -FormatPreference is set to "include" or "exclude", specify your formats here with wildcards and as array, e.g. @("*.cr2","*.jpg")
     .PARAMETER OutputSubfolderStyle
+        Can be set in mc_parameters.json.
         Creation-style of subfolders for files in -OutputPath. The date will be taken from the file's last edit time.
         Valid options:
-            "none"          -   No subfolders in -OutputPath.
-            "unchanged"     -   Take the original subfolder-structure and copy it (like Robocopy's /MIR)
-            "yyyy-MM-dd"    -   E.g. 2017-01-31
-            "yyyy_MM_dd"    -   E.g. 2017_01_31
-            "yyyy.MM.dd"    -   E.g. 2017.01.31
-            "yyyyMMdd"      -   E.g. 20170131
-            "yy-MM-dd"      -   E.g. 17-01-31
-            "yy_MM_dd"      -   E.g. 17_01_31
-            "yy.MM.dd"      -   E.g. 17.01.31
-            "yyMMdd"        -   E.g. 170131
+            ""          -   No subfolders in -OutputPath.
+            "%n%"     -   Take the original subfolder-structure and copy it (like Robocopy's /MIR)
+            "%y4%-%mo%-%d%"    -   E.g. 2017-01-31
+            "%y4%_%mo%_%d%"    -   E.g. 2017_01_31
+            "%y4%.%mo%.%d%"    -   E.g. 2017.01.31
+            "%y4%%mo%%d%"      -   E.g. 20170131
+            "%y2%-%mo%-%d%"      -   E.g. 17-01-31
+            "%y2%_%mo%_%d%"      -   E.g. 17_01_31
+            "%y2%.%mo%.%d%"      -   E.g. 17.01.31
+            "%y2%%mo%%d%"        -   E.g. 170131
     .PARAMETER OutputFileStyle
+        Can be set in mc_parameters.json.
         Renaming-style for input-files. The date and time will be taken from the file's last edit time.
         Valid options:
-            "unchanged"         -   Original file-name will be used.
-            "yyyy-MM-dd_HH-mm-ss"  -   E.g. 2017-01-31_13-59-58.ext
-            "yyyyMMdd_HHmmss"     -   E.g. 20170131_135958.ext
-            "yyyyMMddHHmmss"      -   E.g. 20170131135958.ext
-            "yy-MM-dd_HH-mm-ss"    -   E.g. 17-01-31_13-59-58.ext
-            "yyMMdd_HHmmss"       -   E.g. 170131_135958.ext
-            "yyMMddHHmmss"        -   E.g. 170131135958.ext
-            "HH-mm-ss"          -   E.g. 13-59-58.ext
-            "HH_mm_ss"          -   E.g. 13_59_58.ext
-            "HHmmss"            -   E.g. 135958.ext
+            "%n%"         -   Original file-name will be used.
+            "%y4%-%mo%-%d%_%h%-%mi%-%s%"  -   E.g. 2017-01-31_13-59-58.ext
+            "%y4%%mo%%d%_%h%%mi%%s%"     -   E.g. 20170131_135958.ext
+            "%y4%%mo%%d%%h%%mi%%s%"      -   E.g. 20170131135958.ext
+            "%y2%-%mo%-%d%_%h%-%mi%-%s%"    -   E.g. 17-01-31_13-59-58.ext
+            "%y2%%mo%%d%_%h%%mi%%s%"       -   E.g. 170131_135958.ext
+            "%y2%%mo%%d%%h%%mi%%s%"        -   E.g. 170131135958.ext
+            "%h%-%mi%-%s%"          -   E.g. 13-59-58.ext
+            "%h%_%mi%_%s%"          -   E.g. 13_59_58.ext
+            "%h%%mi%%s%"            -   E.g. 135958.ext
     .PARAMETER HistFilePath
+        Can be set in mc_parameters.json.
         Path to the JSON-file that represents the history-file.
     .PARAMETER UseHistFile
+        Can be set in mc_parameters.json.
         Valid range: 0 (deactivate), 1 (activate)
         The history-file is a fast way to rule out the creation of duplicates by comparing the files from -InputPath against the values stored earlier.
         If enabled, it will use the history-file to prevent duplicates.
     .PARAMETER WriteHistFile
+        Can be set in mc_parameters.json.
         The history-file is a fast way to rule out the creation of duplicates by comparing the files from -InputPath against the values stored earlier.
         Valid options:
             "No"        -   New values will NOT be added to the history-file, the old values will remain.
             "Yes"       -   Old + new values will be added to the history-file, with old values still saved.
             "Overwrite" -   Old values will be deleted, new values will be written. Best to use after the card got formatted, as it will make the history-file smaller and therefore faster.
     .PARAMETER HistCompareHashes
+        Can be set in mc_parameters.json.
         Valid range: 0 (deactivate), 1 (activate)
         If enabled, it additionally checks for duplicates in the history-file via hash-calculation of all input-files (slow!)
-    .PARAMETER InputSubfolderSearch
-        Valid range: 0 (deactivate), 1 (activate)
-        If enabled, it enables file-search in subfolders of the input-path.
     .PARAMETER CheckOutputDupli
+        Can be set in mc_parameters.json.
         Valid range: 0 (deactivate), 1 (activate)
         If enabled, it checks for already copied files in the output-path (and its subfolders).
+    .PARAMETER AvoidIdenticalFiles
+        Can be set in mc_parameters.json.
+        Valid range: 0 (deactivate), 1 (activate)
+        If enabled, identical files from the input-path will only get copied once.
+    .PARAMETER AcceptTimeDiff
+        Can be set in mc_parameters.json.
+        Valid range: 0 (deactivate), 1 (activate)
+        If enabled, it 3 seconds of time difference will not be considered a difference. Useful if you use multiple cards in your camera.
+    .PARAMETER InputSubfolderSearch
+        Can be set in mc_parameters.json.
+        Valid range: 0 (deactivate), 1 (activate)
+        If enabled, it enables file-search in subfolders of the input-path.
+    .PARAMETER VerifyCopies
+        Can be set in mc_parameters.json.
+        Valid range: 0 (deactivate), 1 (activate)
+        If enabled, copied files will be checked for their integrity via SHA1-hashes. Disabling will increase speed, but there is no absolute guarantee that your files are copied correctly.
     .PARAMETER OverwriteExistingFiles
+        Can be set in mc_parameters.json.
         Valid range: 0 (deactivate), 1 (activate)
         If enabled, existing files will be overwritten. If disabled, new files will get a unique name.
     .PARAMETER EnableLongPaths
+        Can be set in mc_parameters.json.
         Valid range: 0 (deactivate), 1 (activate)
         If enabled, file names will not be restricted to Windows' usual 260 character limit. USE ONLY WITH WIN 10 WITH LONG PATHS ENABLED!
-    .PARAMETER VerifyCopies
-        Valid range: 0 (deactivate), 1 (activate)
-        If enabled, copied files will be checked for their integrity via SHA1-hashes. Disabling will increase speed, but there is no absolute guarantee that your files are copied correctly.
-    .PARAMETER AvoidIdenticalFiles
-        Valid range: 0 (deactivate), 1 (activate)
-        If enabled, identical files from the input-path will only get copied once.
     .PARAMETER ZipMirror
+        DEPRECATED/Unsupported. Can be set in mc_parameters.json.
         Valid range: 0 (deactivate), 1 (activate)
         Only enabled if -EnableMirror is enabled, too. Creates a zip-archive for archiving. Name will be <actual time>_Mirror.zip
     .PARAMETER UnmountInputDrive
+        Can be set in mc_parameters.json.
         Valid range: 0 (deactivate), 1 (activate)
         If enabled, safely removes the input-drive after finishing copying & verifying. Only use with external drives!
     .PARAMETER PreventStandby
+        Can be set in mc_parameters.json.
         Valid range: 0 (deactivate), 1 (activate)
         If enabled, automatic standby or shutdown is prevented as long as media-copytool is running.
 
@@ -172,7 +182,7 @@
         media_copytool.ps1 -EnableGUI 1
     .EXAMPLE
         Copy Canon's Raw-Files, Movies, JPEGs from G:\ to D:\Backup and prevent the computer from ging to standby:
-        media_copytool.ps1 -PresetFormats "Can","Mov","Jpg" .InputPath "G:\" -OutputPath "D:\Backup" -PreventStandby 1
+        media_copytool.ps1 -FormatPreference "include" -FormatInExclude @("*.jpg","*.mov")" .InputPath "G:\" -OutputPath "D:\Backup" -PreventStandby 1
 #>
 param(
     [int]$ShowParams =              0,
@@ -198,13 +208,13 @@ param(
     [int]$UseHistFile =             -1,
     [string]$WriteHistFile =        "",
     [int]$HistCompareHashes =       -1,
-    [int]$InputSubfolderSearch =    -1,
     [int]$CheckOutputDupli =        -1,
+    [int]$AvoidIdenticalFiles =     -1,
     [int]$AcceptTimeDiff =          -1,
+    [int]$InputSubfolderSearch =    -1,
     [int]$VerifyCopies =            -1,
     [int]$OverwriteExistingFiles =  -1,
     [int]$EnableLongPaths =         -1,
-    [int]$AvoidIdenticalFiles =     -1,
     [int]$ZipMirror =               -1,
     [int]$UnmountInputDrive =       -1,
     [int]$PreventStandby =          -1
@@ -233,13 +243,13 @@ param(
         UseHistFile =               $UseHistFile
         WriteHistFile =             $WriteHistFile
         HistCompareHashes =         $HistCompareHashes
-        InputSubfolderSearch =      $InputSubfolderSearch
         CheckOutputDupli =          $CheckOutputDupli
+        AvoidIdenticalFiles =       $AvoidIdenticalFiles
         AcceptTimeDiff =            $AcceptTimeDiff
+        InputSubfolderSearch =      $InputSubfolderSearch
         VerifyCopies =              $VerifyCopies
         OverwriteExistingFiles =    $OverwriteExistingFiles
         EnableLongPaths =           $EnableLongPaths
-        AvoidIdenticalFiles =       $AvoidIdenticalFiles
         ZipMirror =                 $ZipMirror
         UnmountInputDrive =         $UnmountInputDrive
     }
@@ -328,7 +338,7 @@ param(
     $OutputEncoding = New-Object -TypeName System.Text.UTF8Encoding
     [Console]::InputEncoding = New-Object -TypeName System.Text.UTF8Encoding
 # DEFINITION: Set current date and version number:
-    $VersionNumber = "v1.0.0 (ALPHA) - XXXX-XX-XX"
+    $VersionNumber = "v1.0.0 (Beta) - 2018-09-14"
 
 # ==================================================================================================
 # ==============================================================================
@@ -1512,7 +1522,7 @@ Function Read-JsonHistory(){
             throw 'Could not load $UserParams.HistFilePath.'
         }
         $JSONFile | Out-Null
-        $files_history = $JSONFile | ForEach-Object {
+        $files_history += $JSONFile | ForEach-Object {
             [PSCustomObject]@{
                 InName = $_.N
                 Date = $_.D
@@ -2701,7 +2711,7 @@ Function Start-Everything(){
 # ==============================================================================
 # ==================================================================================================
 
-<# (COMMENT THIS BLOCK FOR PESTER)
+# (COMMENT THIS BLOCK FOR PESTER)
 # DEFINITION: Console banner
     Write-ColorOut "                            flolilo's Media-Copytool                            " -ForegroundColor DarkCyan -BackgroundColor Gray
     Write-ColorOut "                          $VersionNumber           " -ForegroundColor DarkMagenta -BackgroundColor DarkGray -NoNewLine
