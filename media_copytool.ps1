@@ -282,27 +282,15 @@ param(
 
 # DEFINITION: Get all error-outputs in English:
     [Threading.Thread]::CurrentThread.CurrentUICulture = 'en-US'
-
 # DEFINITION: Set default ErrorAction to Stop:
     # CREDIT: https://stackoverflow.com/a/21260623/8013879
     if($InfoPreference -eq 0){
-
-# DEFINITION: Hopefully avoiding errors by wrong encoding now:
-    $OutputEncoding = New-Object -TypeName System.Text.UTF8Encoding
-    [Console]::InputEncoding = New-Object -TypeName System.Text.UTF8Encoding
-# DEFINITION: Set default ErrorAction to Stop: CREDIT: https://stackoverflow.com/a/21260623/8013879
-    if($Debug -eq 0){
-
         $PSDefaultParameterValues = @{}
         $PSDefaultParameterValues += @{'*:ErrorAction' = 'Stop'}
         $ErrorActionPreference = 'Stop'
     }
 
-
 # DEFINITION: Load PoshRSJob & PSAlphaFS:
-
-# DEFINITION: Load PoshRSJob:
-
     try{
         Import-Module -Name "PoshRSJob" -NoClobber -Global -ErrorAction Stop
     }catch{
@@ -324,7 +312,6 @@ param(
             Exit
         }
     }
-
     try{
         Import-Module -Name "PSAlphaFS" -NoClobber -Global -ErrorAction Stop
     }catch{
@@ -353,10 +340,6 @@ param(
 # DEFINITION: Set current date and version number:
     $VersionNumber = "v1.0.0 (Beta) - 2018-09-14"
 
-# DEFINITION: Set current date and version number:
-    $VersionNumber = "v0.8.12 (Beta) - 2018-02-24"
-
-
 # ==================================================================================================
 # ==============================================================================
 #    Defining generic functions:
@@ -371,12 +354,7 @@ Function Write-ColorOut(){
         .DESCRIPTION
             Using the [Console]-commands to make everything faster.
         .NOTES
-
             Date: 2018-03-11
-
-
-            Date: 2018-05-22
-
 
         .PARAMETER Object
             String to write out
@@ -439,11 +417,7 @@ Function Start-Sound(){
         .DESCRIPTION
             Uses SoundPlayer and Windows's own WAVs to play sounds.
         .NOTES
-
             Date: 2018-02-25
-
-            Date: 2018-03-12
-
 
         .PARAMETER Success
             1 plays Windows's "tada"-sound, 0 plays Windows's "chimes"-sound.
@@ -454,11 +428,7 @@ Function Start-Sound(){
             For fail: Start-Sound -Success 0
     #>
     param(
-
         [int]$Success = $(Write-ColorOut "-Success is needed by Start-Sound!" -ForegroundColor Magenta)
-
-        [int]$Success = $(return $false)
-
     )
 
     try{
