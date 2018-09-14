@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 
 
+## 1.0.0 - 2018-09-04
+## ALL-NEW VERSION
+
+- **If you are interested in all changes: https://github.com/flolilo/media-copytool/pull/3/files**
+
+### Added
+- Pester-Script
+- Option for long paths
+- Freestyle renaming options like %y4%
+- Option to accept small differences in files' edit times
+
+### Changed
+- Unfortunately, I lost track. I will try to do better next time, I swear!
+
+
 ## 0.8.12 - 2018-02-24
 ### Changed
 - Some functions still used `Exit` - changed them all to `Invoke-Close`
@@ -149,7 +164,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - Some parts about multithreading the last parts: as they all take longer when multithreaded, these parts are commented out. (They were a lot of work, that's why they stay there.)
-- `Write-ColorOut` now has a parameter `-Indentation` which will change the `LeftCursor`-position. 
+- `Write-ColorOut` now has a parameter `-Indentation` which will change the `LeftCursor`-position.
 
 
 ## 0.7.7. - 2017-09-19
@@ -253,7 +268,7 @@ All notable changes to this project will be documented in this file.
 ## 0.6.3 - 2017-08-21
 ### Changed
 - Changed most `-Path`s to `-LiteralPath`s - therefore, brackets should work now in paths.
-- Fixed encoding issues for good: `Start-Remembering` now works, too. 
+- Fixed encoding issues for good: `Start-Remembering` now works, too.
 
 ### Removed
 - All special character detectors (because they now should work).
@@ -272,7 +287,7 @@ All notable changes to this project will be documented in this file.
 
 
 ## 0.6.1 - 2017-08-19
-#### Same code as [0.5-branch's 0.5.2 (2017-08-19)](https://github.com/flolilo/media-copytool/blob/0.5---without-RSJob/CHANGELOG.md), except from using PoshRSJob instead of preventsleep.ps1 
+#### Same code as [0.5-branch's 0.5.2 (2017-08-19)](https://github.com/flolilo/media-copytool/blob/0.5---without-RSJob/CHANGELOG.md), except from using PoshRSJob instead of preventsleep.ps1
 
 ### Changed
 - Fixing error in function `Start-Remembering` that would result in messing up the parameter-variables
