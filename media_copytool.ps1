@@ -2,13 +2,13 @@
 
 <#
     .SYNOPSIS
-        Copy (and verify) user-defined filetypes from A to B (and optionally C).
+        Copy (and verify) user-defined filetypes from A (and B) to Y (and optionally Z).
     .DESCRIPTION
-        Uses Windows' Robocopy and Xcopy for file-copy, then uses PowerShell's Get-FileHash (SHA1) for verifying that files were copied without errors.
-        Supports multithreading via Boe Prox's PoshRSJob-cmdlet (https://github.com/proxb/PoshRSJob)
-        Supports long file paths via PSAlphaFS (https://github.com/v2kiran/PSAlphaFS)
+        Uses Windows' Robocopy and Copy-LongFile for file-copy, then uses PowerShell's Get-FileHash (SHA1) for verifying that files were copied without errors.
+        CREDIT: Supports multithreading via Boe Prox's PoshRSJob-cmdlet (https://github.com/proxb/PoshRSJob)
+        CREDIT: Supports long file paths via PSAlphaFS (https://github.com/v2kiran/PSAlphaFS)
     .NOTES
-        Version:        1.0.0 (Beta)
+        Version:        1.0.1 (Beta)
         Author:         flolilo
         Creation Date:  2018-09-14
         Legal stuff: This program is free software. It comes without any warranty, to the extent permitted by
@@ -58,7 +58,7 @@
             3 - ???
     .PARAMETER InputPath
         Can be set in mc_parameters.json.
-        Path from which files will be copied.
+        Path(s) from which files will be copied.
     .PARAMETER OutputPath
         Can be set in mc_parameters.json.
         Path to copy the files to.
@@ -196,7 +196,7 @@ param(
     [int]$RememberSettings =        0,
     [int]$InfoPreference =          1,
     # From here on, parameters can be set both via parameters and via JSON file(s).
-    [string]$InputPath =            "",
+    [array]$InputPath =             @(),
     [string]$OutputPath =           "",
     [int]$MirrorEnable =            -1,
     [string]$MirrorPath =           "",
@@ -338,7 +338,7 @@ param(
     $OutputEncoding = New-Object -TypeName System.Text.UTF8Encoding
     [Console]::InputEncoding = New-Object -TypeName System.Text.UTF8Encoding
 # DEFINITION: Set current date and version number:
-    $VersionNumber = "v1.0.0 (Beta) - 2018-09-14"
+    $VersionNumber = "v1.0.1 (Beta) - 2018-09-14"
 
 # ==================================================================================================
 # ==============================================================================
@@ -563,7 +563,7 @@ Function Read-JsonParameters(){
                 [string]$UserParams.SaveParamPresetName = $UserParams.LoadParamPresetName
             }
             if($UserParams.InputPath.Length -eq 0 -or $Renew -eq 1){
-                [string]$UserParams.InputPath = $jsonparams.InputPath
+                [array]$UserParams.InputPath = @($jsonparams.InputPath)
             }
             if($UserParams.OutputPath.Length -eq 0 -or $Renew -eq 1){
                 [string]$UserParams.OutputPath = $jsonparams.OutputPath
@@ -578,7 +578,7 @@ Function Read-JsonParameters(){
                 [string]$UserParams.FormatPreference = $jsonparams.FormatPreference
             }
             if($UserParams.FormatInExclude.Length -eq 0 -or $Renew -eq 1){
-                [array]$UserParams.FormatInExclude = $jsonparams.FormatInExclude
+                [array]$UserParams.FormatInExclude = @($jsonparams.FormatInExclude)
             }
             if($UserParams.OutputSubfolderStyle.Length -eq 0 -or $Renew -eq 1){
                 [string]$UserParams.OutputSubfolderStyle = $jsonparams.OutputSubfolderStyle
@@ -779,7 +779,7 @@ Function Start-GUI(){
             $GUIParams.TeBx_SavePreset.Text =            $UserParams.SaveParamPresetName
 
             # DEFINITION: In-, out-, mirrorpath:
-                $GUIParams.TeBx_Input.Text =             $UserParams.InputPath
+                $GUIParams.TeBx_Input.Text =             $UserParams.InputPath -join "|"
                 $GUIParams.ChBx_RememberIn.IsChecked =   $UserParams.RememberInPath
                 $GUIParams.TeBx_Output.Text =            $UserParams.OutputPath
                 $GUIParams.ChBx_RememberOut.IsChecked =  $UserParams.RememberOutPath
@@ -827,12 +827,12 @@ Function Start-GUI(){
                     $GUIParams.ChBx_UnmountInputDrive.IsChecked =        $UserParams.UnmountInputDrive
                     $GUIParams.ChBx_PreventStandby.IsChecked =           $script:PreventStandby
                     $GUIParams.ChBx_RememberSettings.IsChecked =         $UserParams.RememberSettings
-                # DEFINITION: Load-Preset-Button:
-                    $GUIParams.Butn_LoadPreset.Add_Click({
-                        if($jsonparams.ParamPresetName -is [array]){
-                            for($i=0; $i -lt $jsonparams.ParamPresetName.Length; $i++){
-                                if($i -eq $GUIParams.CoBx_LoadPreset.SelectedIndex){
-                                    [string]$UserParams.LoadParamPresetName = $jsonparams.ParamPresetName[$i]
+        # DEFINITION: Load-Preset-Button:
+            $GUIParams.Butn_LoadPreset.Add_Click({
+                if($jsonparams.ParamPresetName -is [array]){
+                    for($i=0; $i -lt $jsonparams.ParamPresetName.Length; $i++){
+                        if($i -eq $GUIParams.CoBx_LoadPreset.SelectedIndex){
+                            [string]$UserParams.LoadParamPresetName = $jsonparams.ParamPresetName[$i]
                         }
                     }
                 }else{
@@ -877,11 +877,14 @@ Function Start-GUI(){
             })
     # DEFINITION: Start-Button:
             $GUIParams.Butn_Start.Add_Click({
+                [array]$UserParams.FormatInExclude = @()
+                $separator = "|"
+                $option = [System.StringSplitOptions]::RemoveEmptyEntries
                 # $SaveParamPresetName
                 $UserParams.SaveParamPresetName = $($GUIParams.TeBx_SavePreset.Text.ToLower() -Replace '[^A-Za-z0-9_+-]','')
                 $UserParams.SaveParamPresetName = $UserParams.SaveParamPresetName.Substring(0, [math]::Min($UserParams.SaveParamPresetName.Length, 64))
                 # $InputPath
-                $UserParams.InputPath =     $GUIParams.TeBx_Input.Text
+                $UserParams.InputPath =     $GUIParams.TeBx_Input.Text.Replace(" ",'').Split($separator,$option)
                 # $OutputPath
                 $UserParams.OutputPath =    $GUIParams.TeBx_Output.Text
                 # $MirrorEnable
@@ -900,13 +903,10 @@ Function Start-GUI(){
                     elseif($GUIParams.RaBn_Exclude.IsChecked -eq  $true){"exclude"}
                 )
                 # $FormatInExclude
-                [array]$UserParams.FormatInExclude = @()
-                $separator = "|"
-                $option = [System.StringSplitOptions]::RemoveEmptyEntries
                 $UserParams.FormatInExclude = $(
                     if($GUIParams.RaBn_All.IsChecked -eq          $true){@("*")}
                     elseif($GUIParams.RaBn_Include.IsChecked -eq  $true){
-                        $GUIParams.TeBx_Include.Text.Replace(" ",'').Split($separator,$option)
+                        $GUIParams.TeBx_Include.Text.Split($separator,$option)
                     }
                     elseif($GUIParams.RaBn_Exclude.IsChecked -eq  $true){
                         $GUIParams.TeBx_Exclude.Text.Replace(" ",'').Split($separator,$option)
@@ -1027,6 +1027,7 @@ Function Start-GUI(){
 }
 
 # DEFINITION: Get values from Params, then check the main input- and outputfolder:
+# TODO: Array for InputPath
 Function Test-UserValues(){
     param(
         [ValidateNotNullOrEmpty()]
@@ -1034,23 +1035,28 @@ Function Test-UserValues(){
     )
     Write-ColorOut "$(Get-CurrentDate)  --  Getting user-values..." -ForegroundColor Cyan
 
-    # DEFINITION: $InputPath
-        $invalidChars = "[{0}]" -f [RegEx]::Escape($([IO.Path]::GetInvalidFileNameChars() -join '' -replace '\\',''))
-        $separator = '\:\\'
-        $inter = $UserParams.InputPath -Split $separator
-        $inter[1] = $inter[1] -Replace $invalidChars
-        $UserParams.InputPath = $inter -join "$([regex]::Unescape($separator))"
-        if($UserParams.InputPath -match '^.{3,}\\$'){
-            $UserParams.InputPath = $UserParams.InputPath -Replace '\\$',''
-        }
+    $invalidChars = "[{0}]" -f [RegEx]::Escape($([IO.Path]::GetInvalidFileNameChars() -join '' -replace '\\',''))
+    $separator = '\:\\'
 
-        if($UserParams.InputPath.Length -lt 2 -or (Test-Path -LiteralPath $UserParams.InputPath -PathType Container -ErrorAction SilentlyContinue) -eq $false){
-            Write-ColorOut "Input-path $($UserParams.InputPath) could not be found." -ForegroundColor Red -Indentation 4
-            throw 'Input-path $UserParams.InputPath could not be found.'
+    # DEFINITION: $InputPath
+        if($UserParams.InputPath.GetType().Name -ne "Object[]"){
+            Write-ColorOut "Invalid choice of -InputPath. ($($UserParams.InputPath.GetType().Name))" -ForegroundColor Red -Indentation 4
+            throw 'Invalid choice of -InputPath.'
+        }
+        for($i=0; $i -lt $UserParams.InputPath.Length; $i++){
+            $inter = $UserParams.InputPath[$i] -Split $separator
+            $inter[1] = $inter[1] -Replace $invalidChars
+            $UserParams.InputPath[$i] = $inter -join "$([regex]::Unescape($separator))"
+            if($UserParams.InputPath[$i] -match '^.{3,}\\$'){
+                $UserParams.InputPath[$i]= $UserParams.InputPath[$i] -Replace '\\$',''
+            }
+
+            if($UserParams.InputPath[$i].Length -lt 2 -or (Test-Path -LiteralPath $UserParams.InputPath[$i] -PathType Container -ErrorAction SilentlyContinue) -eq $false){
+                Write-ColorOut "Input-path $($UserParams.InputPath[$i]) could not be found." -ForegroundColor Red -Indentation 4
+                throw 'Input-path could not be found.'
+            }
         }
     # DEFINITION: $OutputPath
-        $invalidChars = "[{0}]" -f [RegEx]::Escape($([IO.Path]::GetInvalidFileNameChars() -join '' -replace '\\',''))
-        $separator = '\:\\'
         $inter = $UserParams.OutputPath -Split $separator
         $inter[1] = $inter[1] -Replace $invalidChars
         $UserParams.OutputPath = $inter -join "$([regex]::Unescape($separator))"
@@ -1058,7 +1064,7 @@ Function Test-UserValues(){
             $UserParams.OutputPath = $UserParams.OutputPath -Replace '\\$',''
         }
 
-        if($UserParams.OutputPath -eq $UserParams.InputPath){
+        if($UserParams.OutputPath -in $UserParams.InputPath){
             Write-ColorOut "Output-path $($UserParams.OutputPath) is the same as input-path." -ForegroundColor Red -Indentation 4
             throw 'Output-path $UserParams.OutputPath is the same as input-path.'
         }
@@ -1087,8 +1093,6 @@ Function Test-UserValues(){
             throw 'Invalid choice of -MirrorEnable.'
         }
     # DEFINITION: $MirrorPath
-        $invalidChars = "[{0}]" -f [RegEx]::Escape($([IO.Path]::GetInvalidFileNameChars() -join '' -replace '\\',''))
-        $separator = '\:\\'
         [array]$inter = $UserParams.MirrorPath -Split $separator
         $inter[1] = $inter[1] -Replace $invalidChars
         $UserParams.MirrorPath = $inter -join "$([regex]::Unescape($separator))"
@@ -1097,7 +1101,7 @@ Function Test-UserValues(){
         }
 
         if($UserParams.MirrorEnable -eq 1){
-            if($UserParams.MirrorPath -eq $UserParams.InputPath -or $UserParams.MirrorPath -eq $UserParams.OutputPath){
+            if($UserParams.MirrorPath -in $UserParams.InputPath -or $UserParams.MirrorPath -eq $UserParams.OutputPath){
                 Write-ColorOut "Additional output-path $($UserParams.MirrorPath) is the same as input- or output-path." -ForegroundColor Red -Indentation 4
                 throw 'Additional output-path $UserParams.MirrorPath is the same as input- or output-path.'
             }
@@ -1444,41 +1448,43 @@ Function Get-InFiles(){
     )
     [int]$counter = 1
     for($i=0;$i -lt $allChosenFormats.Length; $i++){
-        if($sw.Elapsed.TotalMilliseconds -ge 750 -or $counter -eq 1){
-            Write-Progress -Id 1 -Activity "Find files in $($UserParams.InputPath)..." -PercentComplete $((($i* 100) / $($allChosenFormats.Length))) -Status "Format #$($i + 1) / $($allChosenFormats.Length)"
-            $sw.Reset()
-            $sw.Start()
-        }
-
-        $InFiles += Get-ChildItem -LiteralPath $UserParams.InputPath -Filter $allChosenFormats[$i] -Recurse:$UserParams.InputSubfolderSearch -File | ForEach-Object -Process {
+        foreach($k in $UserParams.InputPath){
             if($sw.Elapsed.TotalMilliseconds -ge 750 -or $counter -eq 1){
-                Write-Progress -Id 2 -Activity "Looking for files..." -PercentComplete -1 -Status "File #$counter - $($_.FullName.Replace("$($UserParams.InputPath)",'.'))"
+                Write-Progress -Id 1 -Activity "Find files in $($k)..." -PercentComplete $((($i* 100) / $($allChosenFormats.Length))) -Status "Format #$($i + 1) / $($allChosenFormats.Length)"
                 $sw.Reset()
                 $sw.Start()
             }
-            $counter++
-            [PSCustomObject]@{
-                InFullName = $_.FullName
-                InSubfolder = $($(Split-Path -Parent -Path $_.FullName).Replace("$($UserParams.InputPath)","")) -Replace('^\\','')
-                InPath = (Split-Path -Path $_.FullName -Parent)
-                InName = $_.Name
-                InBaseName = $_.BaseName
-                Extension = $_.Extension
-                Size = $_.Length
-                Date = ([DateTimeOffset]$_.LastWriteTimeUtc).ToUnixTimeSeconds()
-                OutSubfolder = ""
-                OutPath = ""
-                OutName = ""
-                OutBaseName = ""
-                InHash = "ZYX"
-                OutHash = "ZYX"
-                ToCopy = 1
+
+            $InFiles += Get-ChildItem -LiteralPath $k -Filter $allChosenFormats[$i] -Recurse:$UserParams.InputSubfolderSearch -File | ForEach-Object -Process {
+                if($sw.Elapsed.TotalMilliseconds -ge 750 -or $counter -eq 1){
+                    Write-Progress -Id 2 -Activity "Looking for files..." -PercentComplete -1 -Status "File #$counter - $($_.FullName.Replace("$($k)",'.'))"
+                    $sw.Reset()
+                    $sw.Start()
+                }
+                $counter++
+                [PSCustomObject]@{
+                    InFullName = $_.FullName
+                    InSubfolder = $($(Split-Path -Parent -Path $_.FullName).Replace("$($k)","")) -Replace('^\\','')
+                    InPath = (Split-Path -Path $_.FullName -Parent)
+                    InName = $_.Name
+                    InBaseName = $_.BaseName
+                    Extension = $_.Extension
+                    Size = $_.Length
+                    Date = ([DateTimeOffset]$_.LastWriteTimeUtc).ToUnixTimeSeconds()
+                    OutSubfolder = ""
+                    OutPath = ""
+                    OutName = ""
+                    OutBaseName = ""
+                    InHash = "ZYX"
+                    OutHash = "ZYX"
+                    ToCopy = 1
+                }
+            } -End {
+                Write-Progress -Id 2 -Activity "Looking for files..." -Status "Done!" -Completed
             }
-        } -End {
-            Write-Progress -Id 2 -Activity "Looking for files..." -Status "Done!" -Completed
         }
     }
-    Write-Progress -Id 1 -Activity "Find files in $($UserParams.InputPath)..." -Status "Done!" -Completed
+    Write-Progress -Id 1 -Activity "Find files in $($k)..." -Status "Done!" -Completed
     $sw.Reset()
 
     if($UserParams.FormatPreference -in @("exclude","ex")){
@@ -1813,15 +1819,34 @@ Function Get-InFileHash(){
 Function Clear-IdenticalInFiles(){
     param(
         [ValidateNotNullOrEmpty()]
-        [array]$InFiles = $(throw 'InFiles is required by Clear-IdenticalInFiles')
+        [array]$InFiles = $(throw 'InFiles is required by Clear-IdenticalInFiles'),
+        [ValidateNotNullOrEmpty()]
+        [hashtable]$UserParams =    $(throw 'UserParams is required by Test-DupliOut')
     )
     Write-ColorOut "$(Get-CurrentDate)  --  Avoid identical input-files..." -ForegroundColor Cyan
 
-    [array]$inter = ($InFiles | Sort-Object -Property InName,Date,Size,Hash -Unique)
+    [array]$inter = @($InFiles | Sort-Object -Property InName,Date,Size,InHash -Unique)
+    $inter | Out-Null
+    if($UserParams.AcceptTimeDiff -eq 1){
+        for($i=0; $i -lt $inter.Length; $i++){
+            for($h=0; $h -lt $inter.Length; $h++){
+                if($h -ne $i -and $inter[$i].ToCopy -eq 1 -and $inter[$h].ToCopy -eq 1){
+                    if($inter[$i].InName -eq $inter[$h].InName `
+                    -and $inter[$i].Size -eq $inter[$h].Size `
+                    -and ($UserParams.AcceptTimeDiff -eq 1 -and ([math]::Sqrt([math]::pow(($inter[$i].Date - $inter[$h].Date), 2))) -le $script:TimeDiff) `
+                    -and $inter[$i].InHash -eq $inter[$h].InHash){
+                        $inter[$i].ToCopy = 0
+                    }
+                }
+            }
+        }
+        [array]$inter = @($inter | Where-Object {$_.ToCopy -ne 0})
+        $inter | Out-Null
+    }
     if($inter.Length -ne $InFiles.Length){
-        [array]$InFiles = ($inter)
+        [array]$InFiles = @($inter)
         Write-ColorOut "$($InFiles.Length - $inter.Length) identical files were found in the input-path - only copying one of each." -ForegroundColor Magenta -Indentation 4
-        Start-Sleep -Seconds 3
+        Start-Sleep -Seconds 2
     }
     $script:resultvalues.identicalFiles = $($InFiles.Length - $inter.Length)
     $script:resultvalues.copyfiles = $InFiles.Length
@@ -2036,6 +2061,7 @@ Function Protect-OutFileOverwrite(){
 }
 
 # DEFINITION: Copy Files:
+# TODO: Array for InputPath
 Function Copy-InFiles(){
     param(
         [ValidateNotNullOrEmpty()]
@@ -2505,7 +2531,7 @@ Function Start-Everything(){
             }
             Invoke-Pause
             try{
-                [array]$inputfiles = Clear-IdenticalInFiles -InFiles $inputfiles
+                [array]$inputfiles = Clear-IdenticalInFiles -InFiles $inputfiles -UserParams $UserParams
             }catch{
                 Write-ColorOut "Clear-IdenticalInFiles failed" -ForegroundColor Red
                 break
@@ -2583,6 +2609,7 @@ Function Start-Everything(){
         if($UserParams.UnmountInputDrive -eq 1){
             # CREDIT: https://serverfault.com/a/580298
             # TODO: Find a solution that works with all drives.
+            # TODO: Array for InputPath
             try{
                 $driveEject = New-Object -comObject Shell.Application
                 $driveEject.Namespace(17).ParseName($(Split-Path -Qualifier -Path $UserParams.InputPath)).InvokeVerb("Eject")

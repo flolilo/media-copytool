@@ -2,7 +2,9 @@
     {
         "ParamPresetName":  "default",
         "ParamPresetValues":  {
-                                  "InputPath":  "F:\\DCIM",
+                                  "InputPath":  [
+                                                      "F:\\DCIM"
+                                                ],
                                   "OutputPath":  "D:\\MyPictures",
                                   "MirrorEnable":  0,
                                   "MirrorPath":  "E:\\Backup",
@@ -31,7 +33,10 @@
     {
         "ParamPresetName":  "speed",
         "ParamPresetValues":  {
-                                  "InputPath":  "F:\\DCIM",
+                                  "InputPath":  [
+                                                      "F:\\DCIM",
+                                                      "C:\\"
+                                                ],
                                   "OutputPath":  "D:\\MyPictures",
                                   "MirrorEnable":  0,
                                   "MirrorPath":  "E:\\Backup",
@@ -60,7 +65,9 @@
     {
         "ParamPresetName":  "backup",
         "ParamPresetValues":  {
-                                  "InputPath":  "F:\\DCIM",
+                                  "InputPath":  [
+                                                      "F:\\DCIM"
+                                                ],
                                   "OutputPath":  "D:\\MyPictures",
                                   "MirrorEnable":  1,
                                   "MirrorPath":  "E:\\Backup",

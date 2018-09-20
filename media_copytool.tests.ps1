@@ -26,7 +26,7 @@ Describe "Read-JsonParameters" {
             RememberMirrorPath =    0
             RememberSettings =      0
             # DEFINITION: From here on, parameters can be set both via parameters and via JSON file(s).
-            InputPath =             ""
+            InputPath =             @("")
             OutputPath =            ""
             MirrorEnable =          -1
             MirrorPath =            ""
@@ -233,7 +233,7 @@ Describe "Test-UserValues" {
             RememberMirrorPath =    0
             RememberSettings =      0
             # DEFINITION: From here on, parameters can be set both via parameters and via JSON file(s).
-            InputPath =             "$BlaDrive\In_Test"
+            InputPath =             @("$BlaDrive\In_Test")
             OutputPath =            "$BlaDrive\Out_Test"
             MirrorEnable =          1
             MirrorPath =            "$BlaDrive\Mirr_Test"
@@ -267,27 +267,56 @@ Describe "Test-UserValues" {
             $test = Test-UserValues -UserParams $UserParams
             $test | Should BeOfType hashtable
         }
-        It "InputPath" {
-            $test = (Test-UserValues -UserParams $UserParams).InputPath
-            $test | Should BeOfType string
-            $test | Should Be "$BlaDrive\In_Test"
+        Context "InputPath" {
+            It "Single" {
+                $test = (Test-UserValues -UserParams $UserParams).InputPath
+                ,$test | Should BeOfType array
+                $test | Should Be "$BlaDrive\In_Test"
+            }
+            It "Multiple" {
+                $UserParams.InputPath = @("$BlaDrive\In_Test\","C:\")
+                $test = (Test-UserValues -UserParams $UserParams).InputPath
+                ,$test | Should BeOfType array
+                $test[0] | Should Be "$BlaDrive\In_Test"
+                $test[1] | Should Be "C:\"
+            }
+            It "trailing backslash - Single" {
+                $test = (Test-UserValues -UserParams $UserParams).InputPath
+                ,$test | Should BeOfType array
+                $test | Should Be "$BlaDrive\In_Test"
+            }
+            It "trailing backslash - Multiple" {
+                $UserParams.InputPath = @("$BlaDrive\In_Test\","C:\Windows\")
+                $test = (Test-UserValues -UserParams $UserParams).InputPath
+                ,$test | Should BeOfType array
+                $test[0] | Should Be "$BlaDrive\In_Test"
+                $test[1] | Should Be "C:\Windows"
+            }
+            It "Does not delete trailing slash at volumes" {
+                $UserParams.InputPath = @("C:\")
+                $test = (Test-UserValues -UserParams $UserParams).InputPath
+                ,$test | Should BeOfType array
+                $test | Should Be "C:\"
+            }
         }
-        It "InputPath - trailing backslash" {
-            $UserParams.InputPath = "$BlaDrive\In_Test\"
-            $test = (Test-UserValues -UserParams $UserParams).InputPath
-            $test | Should BeOfType string
-            $test | Should Be "$BlaDrive\In_Test"
-        }
-        It "OutputPath" {
-            $test = (Test-UserValues -UserParams $UserParams).OutputPath
-            $test | Should BeOfType string
-            $test | Should Be "$BlaDrive\Out_Test"
-        }
-        It "OutputPath - trailing backslash" {
-            $UserParams.OutputPath = "$BlaDrive\Out_Test\"
-            $test = (Test-UserValues -UserParams $UserParams).OutputPath
-            $test | Should BeOfType string
-            $test | Should Be "$BlaDrive\Out_Test"
+        Context "OutputPath" {
+            It "Regular" {
+                $test = (Test-UserValues -UserParams $UserParams).OutputPath
+                $test | Should BeOfType string
+                $test | Should Be "$BlaDrive\Out_Test"
+            }
+            It "trailing backslash" {
+                $UserParams.OutputPath = "$BlaDrive\Out_Test\"
+                $test = (Test-UserValues -UserParams $UserParams).OutputPath
+                $test | Should BeOfType string
+                $test | Should Be "$BlaDrive\Out_Test"
+            }
+            It "Does not delete trailing slash at volumes" {
+                $UserParams.OutputPath = "C:\"
+                $test = (Test-UserValues -UserParams $UserParams).OutputPath
+                $test | Should BeOfType string
+                $test | Should Be "C:\"
+            }
         }
         It "MirrorEnable" {
             $test = (Test-UserValues -UserParams $UserParams).MirrorEnable
@@ -412,54 +441,74 @@ Describe "Test-UserValues" {
         }
     }
     Context "If anything is wrong, throw" {
-        It "InputPath is non-existing" {
-            $UserParams.InputPath = "$BlaDrive\NONE"
-            {Test-UserValues -UserParams $UserParams} | Should Throw
+        Context "InputPath" {
+            It "is not an array" {
+                $UserParams.InputPath = "$BlaDrive\NONE"
+                {Test-UserValues -UserParams $UserParams} | Should Throw
+            }
+            It "is non-existing" {
+                $UserParams.InputPath = @("$BlaDrive\NONE")
+                {Test-UserValues -UserParams $UserParams} | Should Throw
+            }
+            It "is too short" {
+                $UserParams.InputPath = @("A")
+                {Test-UserValues -UserParams $UserParams} | Should Throw
+            }
         }
-        It "InputPath is too short" {
-            $UserParams.InputPath = "A"
-            {Test-UserValues -UserParams $UserParams} | Should Throw
+        Context "OutputPath" {
+            It "same as InputPath (single input)" {
+                $UserParams.InputPath = @("$BlaDrive\In_Test")
+                $UserParams.OutputPath = "$BlaDrive\In_Test"
+                {Test-UserValues -UserParams $UserParams} | Should Throw
+            }
+            It "same as InputPath (multiple inputs)" {
+                $UserParams.InputPath = @("$BlaDrive\In_Test","C:\")
+                $UserParams.OutputPath = "$BlaDrive\In_Test"
+                {Test-UserValues -UserParams $UserParams} | Should Throw
+            }
+            It "is non-existing" {
+                $UserParams.OutputPath = "\\0.0.0.0"
+                {Test-UserValues -UserParams $UserParams} | Should Throw
+            }
+            It "is too short" {
+                $UserParams.OutputPath = "A"
+                {Test-UserValues -UserParams $UserParams} | Should Throw
+            }
         }
-        It "OutputPath same as InputPath" {
-            $UserParams.InputPath = "$BlaDrive\In_Test"
-            $UserParams.OutputPath = "$BlaDrive\In_Test"
-            {Test-UserValues -UserParams $UserParams} | Should Throw
-        }
-        It "OutputPath is non-existing" {
-            $UserParams.OutputPath = "\\0.0.0.0"
-            {Test-UserValues -UserParams $UserParams} | Should Throw
-        }
-        It "OutputPath is too short" {
-            $UserParams.OutputPath = "A"
-            {Test-UserValues -UserParams $UserParams} | Should Throw
-        }
-        It "MirrorEnable is wrong" {
-            $UserParams.MirrorEnable = -1
-            {Test-UserValues -UserParams $UserParams} | Should Throw
-            $UserParams.MirrorEnable = "hallo"
-            {Test-UserValues -UserParams $UserParams} | Should Throw
-            $UserParams.MirrorEnable = 11
-            {Test-UserValues -UserParams $UserParams} | Should Throw
-        }
-        It "MirrorPath same as InputPath" {
-            $UserParams.InputPath = "$BlaDrive\In_Test"
-            $UserParams.MirrorPath = "$BlaDrive\In_Test"
-            {Test-UserValues -UserParams $UserParams} | Should Throw
-        }
-        It "MirrorPath same as OutputPath" {
-            $UserParams.MirrorPath = "$BlaDrive\Out_Test"
-            $UserParams.OutputPath = "$BlaDrive\Out_Test"
-            {Test-UserValues -UserParams $UserParams} | Should Throw
-        }
-        It "MirrorPath is non-existing" {
-            $UserParams.MirrorEnable = 1
-            $UserParams.MirrorPath = "\\0.0.0.0"
-            {Test-UserValues -UserParams $UserParams} | Should Throw
-        }
-        It "MirrorPath is too short" {
-            $UserParams.MirrorEnable = 1
-            $UserParams.MirrorPath = "A"
-            {Test-UserValues -UserParams $UserParams} | Should Throw
+        Context "MirrorEnable" {
+            It "MirrorEnable is wrong" {
+                $UserParams.MirrorEnable = -1
+                {Test-UserValues -UserParams $UserParams} | Should Throw
+                $UserParams.MirrorEnable = "hallo"
+                {Test-UserValues -UserParams $UserParams} | Should Throw
+                $UserParams.MirrorEnable = 11
+                {Test-UserValues -UserParams $UserParams} | Should Throw
+            }
+            It "MirrorPath same as InputPath (single)" {
+                $UserParams.InputPath = @("$BlaDrive\In_Test")
+                $UserParams.MirrorPath = "$BlaDrive\In_Test"
+                {Test-UserValues -UserParams $UserParams} | Should Throw
+            }
+            It "MirrorPath same as InputPath (multiple)" {
+                $UserParams.InputPath = @("$BlaDrive\In_Test","C:\")
+                $UserParams.MirrorPath = "$BlaDrive\In_Test"
+                {Test-UserValues -UserParams $UserParams} | Should Throw
+            }
+            It "MirrorPath same as OutputPath" {
+                $UserParams.MirrorPath = "$BlaDrive\Out_Test"
+                $UserParams.OutputPath = "$BlaDrive\Out_Test"
+                {Test-UserValues -UserParams $UserParams} | Should Throw
+            }
+            It "MirrorPath is non-existing" {
+                $UserParams.MirrorEnable = 1
+                $UserParams.MirrorPath = "\\0.0.0.0"
+                {Test-UserValues -UserParams $UserParams} | Should Throw
+            }
+            It "MirrorPath is too short" {
+                $UserParams.MirrorEnable = 1
+                $UserParams.MirrorPath = "A"
+                {Test-UserValues -UserParams $UserParams} | Should Throw
+            }
         }
         It "FormatPreference is wrong" {
             $UserParams.FormatPreference = -1
@@ -637,7 +686,7 @@ Describe "Test-UserValues" {
     Context "Special characters" {
         It "Find existing folders" {
             $UserParams.JSONParamPath   = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©\param specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©.json"
-            $UserParams.InputPath       = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
+            $UserParams.InputPath       = @("$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©")
             $UserParams.OutputPath      = "$BlaDrive\Out_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
             $UserParams.MirrorPath      = "$BlaDrive\Mirr_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
             $UserParams.HistFilePath    = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©\hist specChar.(]){[}à°^âaà``$öäüß'#+,;-Æ©.json"
@@ -656,7 +705,7 @@ Describe "Test-UserValues" {
             # (Get-ChildItem "$BlaDrive\Mirr_Test" -Recurse -ErrorAction SilentlyContinue).Count  | Out-Host
 
             $UserParams.JSONParamPath   = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©\param specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©.json"
-            $UserParams.InputPath       = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
+            $UserParams.InputPath       = @("$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©")
             $UserParams.OutputPath      = "$BlaDrive\Out_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
             $UserParams.MirrorPath      = "$BlaDrive\Mirr_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
             $UserParams.HistFilePath    = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©\hist specChar.(]){[}à°^âaà``$öäüß'#+,;-Æ©.json"
@@ -669,7 +718,7 @@ Describe "Test-UserValues" {
     Context "Long paths" {
         It "Find existing folders" {
             $UserParams.JSONParamPath   = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND\param_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_END.json"
-            $UserParams.InputPath       = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
+            $UserParams.InputPath       = @("$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND")
             $UserParams.OutputPath      = "$BlaDrive\Out_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
             $UserParams.MirrorPath      = "$BlaDrive\Mirr_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
             $UserParams.HistFilePath    = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND\hist_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_tEND.json"
@@ -681,14 +730,14 @@ Describe "Test-UserValues" {
             $test.MirrorPath    | Should Be $UserParams.MirrorPath
             $test.HistFilePath  | Should Be $UserParams.HistFilePath
         }
-        It "Create non-existing folders (TODO: Test with short paths)" {
+        It "Create non-existing folders" {
             Get-ChildItem "$BlaDrive\Out_Test" -Recurse     | Remove-Item
             Get-ChildItem "$BlaDrive\Mirr_Test" -Recurse    | Remove-Item
             # (Get-ChildItem "$BlaDrive\Out_Test" -Recurse -ErrorAction SilentlyContinue).Count   | Out-Host
             # (Get-ChildItem "$BlaDrive\Mirr_Test" -Recurse -ErrorAction SilentlyContinue).Count  | Out-Host
             $UserParams.EnableLongPaths = 1
             $UserParams.JSONParamPath   = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND\param_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_END.json"
-            $UserParams.InputPath       = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
+            $UserParams.InputPath       = @("$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND")
             $UserParams.OutputPath      = "$BlaDrive\Out_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
             $UserParams.MirrorPath      = "$BlaDrive\Mirr_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
             $UserParams.HistFilePath    = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND\hist_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_tEND.json"
@@ -717,7 +766,7 @@ Describe "Show-Parameters" {
             RememberMirrorPath =    0
             RememberSettings =      0
             # DEFINITION: From here on, parameters can be set both via parameters and via JSON file(s).
-            InputPath =             "$BlaDrive\In_Test"
+            InputPath =             @("$BlaDrive\In_Test")
             OutputPath =            "$BlaDrive\Out_Test"
             MirrorEnable =          1
             MirrorPath =            "$BlaDrive\Mirr_Test"
@@ -749,7 +798,7 @@ Describe "Show-Parameters" {
     }
     It "No problems with SpecChars" {
         $UserParams.JSONParamPath = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©\param specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©.json"
-        $UserParams.InputPath = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
+        $UserParams.InputPath = @("$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©")
         $UserParams.OutputPath = "$BlaDrive\Out_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
         $UserParams.MirrorPath = "$BlaDrive\Mirr_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
         $UserParams.HistFilePath = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©\hist specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©.json"
@@ -773,7 +822,7 @@ Describe "Write-JsonParameters" {
             RememberOutPath =       1
             RememberMirrorPath =    1
             RememberSettings =      1
-            InputPath =             "$BlaDrive\In_Test"
+            InputPath =             @("$BlaDrive\In_Test")
             OutputPath =            "$BlaDrive\Out_Test"
             MirrorEnable =          1
             MirrorPath =            "$BlaDrive\Mirr_Test"
@@ -987,7 +1036,7 @@ Describe "Get-InFiles" {
     $BlaDrive = "$TestDrive\media-copytool_TEST"
     BeforeEach {
         [hashtable]$UserParams = @{
-            InputPath = "$BlaDrive\In_Test"
+            InputPath = @("$BlaDrive\In_Test")
             InputSubfolderSearch = 1
             FormatPreference = "include"
             FormatInExclude = @("*.JPG")
@@ -1001,10 +1050,16 @@ Describe "Get-InFiles" {
     Pop-Location
 
     Context "Basic functions" {
-        It "Return array if successful" {
+        It "Return array if successful (single)" {
             $test = @(Get-InFiles -UserParams $UserParams)
             ,$test          | Should BeOfType array
             $test.length    | Should Be (Get-ChildItem -LiteralPath $UserParams.InputPath -Filter $UserParams.FormatInExclude[0] -Recurse).count
+        }
+        It "Return array if successful (multiple)" {
+            $UserParams.InputPath = @("$BlaDrive\In_Test","$BlaDrive\In_Test")
+            $test = @(Get-InFiles -UserParams $UserParams)
+            ,$test          | Should BeOfType array
+            $test.length    | Should Be ((Get-ChildItem -LiteralPath $UserParams.InputPath[0] -Filter $UserParams.FormatInExclude[0] -Recurse).count * 2)
         }
         It "Return array even if only one file is found" {
             $UserParams.FormatInExclude = @("*.cr3")
@@ -1020,7 +1075,7 @@ Describe "Get-InFiles" {
         It "No problems with SpecChars" {
             $script:input_recurse = $false
             $UserParams.FormatInExclude = @("*")
-            $UserParams.InputPath = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
+            $UserParams.InputPath = @("$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©")
             $test = @(Get-InFiles -UserParams $UserParams)
             ,$test          | Should BeOfType array
             $test.length    | Should Be 8
@@ -1033,7 +1088,7 @@ Describe "Get-InFiles" {
         It "No problems with Long paths" {
             $script:input_recurse = $false
             $UserParams.FormatInExclude = @("*")
-            $UserParams.InputPath = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
+            $UserParams.InputPath = @("$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND")
             $test = @(Get-InFiles -UserParams $UserParams)
             ,$test          | Should BeOfType array
             $test.length    | Should Be 8
@@ -1046,7 +1101,7 @@ Describe "Get-InFiles" {
     }
     Context "Include, All, Exclude" {
         It "All" {
-            $UserParams.InputPath = "$BlaDrive\In_Test"
+            $UserParams.InputPath = @("$BlaDrive\In_Test")
             $UserParams.FormatPreference = "all"
             $UserParams.FormatInExclude = @("*.JPG")
             $test = @(Get-InFiles -UserParams $UserParams)
@@ -1176,7 +1231,7 @@ Describe "Test-DupliHist" {
     $BlaDrive = "$TestDrive\media-copytool_TEST"
     BeforeEach {
         [hashtable]$UserParams = @{
-            InputPath =             "$BlaDrive\In_Test"
+            InputPath =             @("$BlaDrive\In_Test")
             OutputPath =            "$BlaDrive\Out_Test"
             FormatPreference =      "include"
             FormatInExclude =       @("*.cr2","*.jpg")
@@ -1248,7 +1303,7 @@ Describe "Test-DupliHist" {
         }
     }
     It "No problems with SpecChars" {
-        $UserParams.InputPath = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
+        $UserParams.InputPath = @("$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©")
         $UserParams.OutputPath = "$BlaDrive\Out_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
         $UserParams.HistFilePath = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©\hist specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©.json"
 
@@ -1260,7 +1315,7 @@ Describe "Test-DupliHist" {
         $test.length | Should Be 0
     }
     It "No problems with long paths" {
-        $UserParams.InputPath = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
+        $UserParams.InputPath = @("$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND")
         $UserParams.OutputPath = "$BlaDrive\Out_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
         $UserParams.HistFilePath = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND\hist_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_before_tEND.json"
 
@@ -1280,7 +1335,7 @@ Describe "Test-DupliOut" {
     $BlaDrive = "$TestDrive\media-copytool_TEST"
     BeforeEach {
         [hashtable]$UserParams = @{
-            InputPath =             "$BlaDrive\In_Test"
+            InputPath =             @("$BlaDrive\In_Test")
             OutputPath =            "$BlaDrive\Out_Test"
             FormatPreference =      "include"
             FormatInExclude =       @("*.cr2","*.jpg")
@@ -1356,7 +1411,7 @@ Describe "Test-DupliOut" {
         Get-ChildItem -LiteralPath "$BlaDrive\Out_Test" -Recurse | Remove-Item -Recurse
         Get-ChildItem -LiteralPath "$BlaDrive\In_Test" -Recurse -Directory | Copy-Item -Destination "$BlaDrive\Out_Test"
 
-        $UserParams.InputPath = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
+        $UserParams.InputPath = @("$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©")
         $UserParams.OutputPath = "$BlaDrive\Out_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
 
         $InFiles = @(Get-InFiles -UserParams $UserParams)
@@ -1365,7 +1420,7 @@ Describe "Test-DupliOut" {
         $test.length | Should Be 6
     }
     It "No problems with long paths" {
-        $UserParams.InputPath = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
+        $UserParams.InputPath = @("$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND")
         $UserParams.OutputPath = "$BlaDrive\Out_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
 
         $InFiles = @(Get-InFiles -UserParams $UserParams)
@@ -1382,7 +1437,7 @@ Describe "Get-InFileHash" {
     $BlaDrive = "$TestDrive\media-copytool_TEST"
     BeforeEach {
         [hashtable]$UserParams = @{
-            InputPath =             "$BlaDrive\In_Test"
+            InputPath =             @("$BlaDrive\In_Test")
             OutputPath =            "$BlaDrive\Out_Test"
             FormatPreference =      "include"
             FormatInExclude =       @("*.cr2","*.jpg")
@@ -1400,7 +1455,7 @@ Describe "Get-InFileHash" {
     Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x -aoa -bb0 -pdefault -sccUTF-8 -spf2 `"$($PSScriptRoot)\media_copytool_TESTFILES.7z`" `"-o.\`" " -WindowStyle Minimized -Wait
     Pop-Location
 
-    Context "Works as planned" {
+    Context "Works as planned (TODO: Array)" {
         It "Throw if no/wrong parameter" {
             {Get-InFileHash} | Should Throw
             {Get-InFileHash -InFiles @()} | Should Throw
@@ -1433,7 +1488,7 @@ Describe "Get-InFileHash" {
         }
     }
     It "No problems with SpecChars" {
-        $UserParams.InputPath = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
+        $UserParams.InputPath = @("$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©")
 
         $InFiles = @(Get-InFiles -UserParams $UserParams)
         $test = @(Get-InFileHash -InFiles $InFiles)
@@ -1443,7 +1498,7 @@ Describe "Get-InFileHash" {
         }
     }
     It "No problems with long paths" {
-        $UserParams.InputPath = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
+        $UserParams.InputPath = @("$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND")
 
         $InFiles = @(Get-InFiles -UserParams $UserParams)
         $test = @(Get-InFileHash -InFiles $InFiles)
@@ -1461,7 +1516,7 @@ Describe "Clear-IdenticalInFiles" {
     $BlaDrive = "$TestDrive\media-copytool_TEST"
     BeforeEach {
         [hashtable]$UserParams = @{
-            InputPath =             "$BlaDrive\In_Test"
+            InputPath =             @("$BlaDrive\In_Test")
             OutputPath =            "$BlaDrive\Out_Test"
             FormatPreference =      "include"
             FormatInExclude =       @("*.cr2","*.jpg","*.cr3")
@@ -1472,6 +1527,7 @@ Describe "Clear-IdenticalInFiles" {
             WriteHistFile =         "yes"
             HistCompareHashes =     1
             InputSubfolderSearch =  1
+            AcceptTimeDiff =        0
         }
     }
     New-Item -ItemType Directory -Path $BlaDrive
@@ -1486,9 +1542,54 @@ Describe "Clear-IdenticalInFiles" {
         }
         It "Works as it should" {
             $InFiles = @(Get-InFiles -UserParams $UserParams)
-            $test = @(Clear-IdenticalInFiles -InFiles $InFiles)
+            $test = @(Clear-IdenticalInFiles -InFiles $InFiles -UserParams $UserParams)
             ,$test | Should BeOfType array
             $test.Length | Should Be 7
+        }
+        It "Works as it should w/ multiple inputs" {
+            $UserParams.InputPath = @("$BlaDrive\In_Test","$BlaDrive\In_Test")
+            $InFiles = @(Get-InFiles -UserParams $UserParams)
+            $InFiles = @(Get-InFileHash -InFiles $InFiles)
+            $InFiles.Length | Should Be ((Get-ChildItem -Path "$BlaDrive\In_Test" -File -Include $UserParams.FormatInExclude -Recurse).count * 2)
+            $test = @(Clear-IdenticalInFiles -InFiles $InFiles -UserParams $UserParams)
+            ,$test | Should BeOfType array
+            $test.Length | Should Be 7
+        }
+        Context "AcceptTimeDiff" {
+            It "0" {
+                $UserParams.AcceptTimeDiff = 0
+                $UserParams.InputPath = @("$BlaDrive\In_Test")
+                $InFiles = @(Get-InFiles -UserParams $UserParams)
+                $InFiles2 = @(Get-InFiles -UserParams $UserParams)
+                for($i=0; $i -lt $InFiles2.Length; $i++){
+                    $InFiles2[$i].Date += 2
+                }
+                $InFiles2 | Out-Null
+                $InFiles += @($InFiles2)
+                $InFiles | Out-Null
+                $InFiles = @(Get-InFileHash -InFiles $InFiles)
+                $InFiles.Length | Should Be ((Get-ChildItem -Path "$BlaDrive\In_Test" -File -Include $UserParams.FormatInExclude -Recurse).count * 2)
+                $test = @(Clear-IdenticalInFiles -InFiles $InFiles -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test.Length | Should Be (7*2)
+            }
+            It "1" {
+                $UserParams.AcceptTimeDiff = 1
+                $UserParams.InputPath = @("$BlaDrive\In_Test")
+                $InFiles = @(Get-InFiles -UserParams $UserParams)
+                $InFiles2 = @(Get-InFiles -UserParams $UserParams)
+                for($i=0; $i -lt $InFiles2.Length; $i++){
+                    $InFiles2[$i].Date += 2
+                }
+                $InFiles2 | Out-Null
+                $InFiles += @($InFiles2)
+                $InFiles | Out-Null
+                $InFiles = @(Get-InFileHash -InFiles $InFiles)
+                $InFiles.Length | Should Be ((Get-ChildItem -Path "$BlaDrive\In_Test" -File -Include $UserParams.FormatInExclude -Recurse).count * 2)
+                $test = @(Clear-IdenticalInFiles -InFiles $InFiles -UserParams $UserParams)
+                ,$test | Should BeOfType array
+                $test.Length | Should Be 7
+            }
         }
     }
 }
@@ -1500,7 +1601,7 @@ Describe "Test-DiskSpace"{
     $BlaDrive = "$TestDrive\media-copytool_TEST"
     BeforeEach {
         [hashtable]$UserParams = @{
-            InputPath =             "$BlaDrive\In_Test"
+            InputPath =             @("$BlaDrive\In_Test")
             OutputPath =            "$BlaDrive\Out_Test"
             FormatPreference =      "include"
             FormatInExclude =       @("*.cr2","*.jpg","*.cr3")
@@ -1530,14 +1631,14 @@ Describe "Test-DiskSpace"{
         }
     }
     It "No problems with SpecChars" {
-        $UserParams.InputPath = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
+        $UserParams.InputPath = @("$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©")
         $InFiles = @(Get-InFiles -UserParams $UserParams)
         $test = Test-DiskSpace -InFiles $InFiles -UserParams $UserParams
         $test | Should BeOfType boolean
         $test | Should Be $true
     }
     It "No problems with long paths" {
-        $UserParams.InputPath = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
+        $UserParams.InputPath = @("$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND")
         $InFiles = @(Get-InFiles -UserParams $UserParams)
         $test = Test-DiskSpace -InFiles $InFiles -UserParams $UserParams
         $test | Should BeOfType boolean
@@ -1562,7 +1663,7 @@ Describe "Protect-OutFileOverwrite" {
     $BlaDrive = "$TestDrive\media-copytool_TEST"
     BeforeEach {
         [hashtable]$UserParams = @{
-            InputPath =             "$BlaDrive\In_Test"
+            InputPath =             @("$BlaDrive\In_Test")
             OutputPath =            "$BlaDrive\Out_Test"
             FormatPreference =      "include"
             FormatInExclude =       @("*.cr2","*.jpg","*.cr3")
@@ -1578,7 +1679,7 @@ Describe "Protect-OutFileOverwrite" {
     Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x -aoa -bb0 -pdefault -sccUTF-8 -spf2 `"$($PSScriptRoot)\media_copytool_TESTFILES.7z`" `"-o.\`" " -WindowStyle Minimized -Wait
     Pop-Location
 
-    Context "Works as planned" {
+    Context "Works as planned (TODO: Array)" {
         It "Throw if no/wrong parameter" {
             {Protect-OutFileOverwrite} | Should Throw
             {Protect-OutFileOverwrite -InFiles @()} | Should Throw
@@ -2020,7 +2121,7 @@ Describe "Copy-InFiles"{
     $BlaDrive = "$TestDrive\media-copytool_TEST"
     BeforeEach {
         [hashtable]$UserParams = @{
-            InputPath =             "$BlaDrive\In_Test"
+            InputPath =             @("$BlaDrive\In_Test")
             OutputPath =            "$BlaDrive\Out_Test"
             FormatPreference =      "include"
             FormatInExclude =       @("*.cr2","*.jpg","*.cr3")
@@ -2080,7 +2181,7 @@ Describe "Copy-InFiles"{
             (Get-LongChildItem $UserParams.OutputPath -File -Include *.cr2,*.jpg,*.cr3 -Recurse | ? {$_.FullName -match '^.*_OutCopy\d.*$'}).Length | Should Be ($test.Length)
         }
         It "Special Characters" {
-            $UserParams.InputPath = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
+            $UserParams.InputPath = @("$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©")
             $UserParams.OutputPath = "$BlaDrive\Out_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
             $InFiles = @(Get-InFiles -UserParams $UserParams)
             $NewFiles = $InFiles | Select-Object *
@@ -2089,7 +2190,7 @@ Describe "Copy-InFiles"{
             (Compare-Object -ReferenceObject $(Get-LongChildItem -Path "$($UserParams.InputPath)" -Include *.cr2,*.jpg,*.cr3 -Recurse) -DifferenceObject $(Get-LongChildItem -Path "$($UserParams.OutputPath)" -Include *.cr2,*.jpg,*.cr3 -Recurse) -Property Size,LastWriteTime -ErrorAction SilentlyContinue).count | Should Be 0
         }
         It "Long paths" {
-            $UserParams.InputPath = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
+            $UserParams.InputPath = @("$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND")
             $UserParams.OutputPath = "$BlaDrive\Out_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
             $InFiles = @(Get-InFiles -UserParams $UserParams)
             $NewFiles = $InFiles | Select-Object *
@@ -2099,7 +2200,6 @@ Describe "Copy-InFiles"{
         }
     }
 }
-
 
 Describe "Compress-InFiles"{
     Mock Write-ColorOut {}
@@ -2117,7 +2217,7 @@ Describe "Test-CopiedFiles"{
     $BlaDrive = "$TestDrive\media-copytool_TEST"
     BeforeEach {
         [hashtable]$UserParams = @{
-            InputPath =             "$BlaDrive\In_Test"
+            InputPath =             @("$BlaDrive\In_Test")
             OutputPath =            "$BlaDrive\Out_Test"
             FormatPreference =      "include"
             FormatInExclude =       @("*.cr2","*.jpg","*.cr3")
@@ -2173,7 +2273,7 @@ Describe "Test-CopiedFiles"{
         $test.ToCopy | Should Not Contain 0
     }
     It "SpecChar" {
-        $UserParams.InputPath = "$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
+        $UserParams.InputPath = @("$BlaDrive\In_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©")
         $UserParams.OutputPath = "$BlaDrive\Out_Test\folder specChar.(]){[}à°^âaà`````$öäüß'#!%&=´@€+,;-Æ©"
         # Get-ChildItem $UserParams.OutputPath -Recurse -File | Remove-Item -Recurse
         $InFiles = @(Get-InFiles -UserParams $UserParams)
@@ -2187,7 +2287,7 @@ Describe "Test-CopiedFiles"{
     }
     It "Long name" {
 
-        $UserParams.InputPath = "$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
+        $UserParams.InputPath = @("$BlaDrive\In_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND")
         $UserParams.OutputPath = "$BlaDrive\Out_Test\folder_with_long_name_to_exceed_characters_regrets_collect_like_old_friends_here_to_relive_your_darkest_moments_all_of_the_ghouls_come_out_to_play_every_demon_wants_his_pound_of_flesh_i_like_to_keep_some_things_to_myself_it_s_always_darkest_beforeEND"
         Get-ChildItem $UserParams.OutputPath -Recurse -File | Remove-Item -Recurse
         $InFiles = @(Get-InFiles -UserParams $UserParams)
@@ -2200,7 +2300,7 @@ Describe "Test-CopiedFiles"{
         $test.ToCopy | Should Not Contain 1
     }
     It "Single file" {
-        $UserParams.InputPath = "$BlaDrive\In_Test"
+        $UserParams.InputPath = @("$BlaDrive\In_Test")
         $UserParams.OutputPath = "$BlaDrive\Out_Test"
         Get-ChildItem $UserParams.OutputPath -Recurse -File | Remove-Item -Recurse
         $UserParams.FormatInExclude = @("*.cr4")
@@ -2235,7 +2335,7 @@ Describe "Write-JsonHistory"{
     $BlaDrive = "$TestDrive\media-copytool_TEST"
     BeforeEach {
         [hashtable]$UserParams = @{
-            InputPath =             "$BlaDrive\In_Test"
+            InputPath =             @("$BlaDrive\In_Test")
             OutputPath =            "$BlaDrive\Out_Test"
             HistFilePath =          "$BlaDrive\HistTest.json"
             FormatPreference =      "include"

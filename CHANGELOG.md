@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 
 
+## 1.0.1 - 2018-09-04
+### Changed
+- `Clear-IdenticalInFiles()` now works correctly with `-AcceptTimeDiff=1`
+- `-InputPath` now can include multiple inputs.
+
+
 ## 1.0.0 - 2018-09-04
 ## ALL-NEW VERSION
 
