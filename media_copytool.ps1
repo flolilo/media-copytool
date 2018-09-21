@@ -1843,13 +1843,14 @@ Function Clear-IdenticalInFiles(){
         [array]$inter = @($inter | Where-Object {$_.ToCopy -ne 0})
         $inter | Out-Null
     }
-    if($inter.Length -ne $InFiles.Length){
-        [array]$InFiles = @($inter)
-        Write-ColorOut "$(($InFiles.Length - $inter.Length)) identical files were found in the input-path - only copying one of each." -ForegroundColor Magenta -Indentation 4
-        Start-Sleep -Seconds 2
-    }
+
     $script:resultvalues.identicalFiles = $($InFiles.Length - $inter.Length)
     $script:resultvalues.copyfiles = $InFiles.Length
+    if($inter.Length -ne $InFiles.Length){
+        Write-ColorOut "$(($InFiles.Length - $inter.Length)) identical files were found in the input-path - only copying one of each." -ForegroundColor Magenta -Indentation 4
+        [array]$InFiles = @($inter)
+        Start-Sleep -Seconds 2
+    }
 
     return $InFiles
 }
