@@ -884,7 +884,7 @@ Function Start-GUI(){
                 $UserParams.SaveParamPresetName = $($GUIParams.TeBx_SavePreset.Text.ToLower() -Replace '[^A-Za-z0-9_+-]','')
                 $UserParams.SaveParamPresetName = $UserParams.SaveParamPresetName.Substring(0, [math]::Min($UserParams.SaveParamPresetName.Length, 64))
                 # $InputPath
-                $UserParams.InputPath =     $GUIParams.TeBx_Input.Text.Replace(" ",'').Split($separator,$option)
+                $UserParams.InputPath =     @($GUIParams.TeBx_Input.Text.Replace(" ",'').Split($separator,$option))
                 # $OutputPath
                 $UserParams.OutputPath =    $GUIParams.TeBx_Output.Text
                 # $MirrorEnable
@@ -906,10 +906,10 @@ Function Start-GUI(){
                 $UserParams.FormatInExclude = $(
                     if($GUIParams.RaBn_All.IsChecked -eq          $true){@("*")}
                     elseif($GUIParams.RaBn_Include.IsChecked -eq  $true){
-                        $GUIParams.TeBx_Include.Text.Split($separator,$option)
+                        @($GUIParams.TeBx_Include.Text.Split($separator,$option))
                     }
                     elseif($GUIParams.RaBn_Exclude.IsChecked -eq  $true){
-                        $GUIParams.TeBx_Exclude.Text.Replace(" ",'').Split($separator,$option)
+                        @($GUIParams.TeBx_Exclude.Text.Replace(" ",'').Split($separator,$option))
                     }
                 )
                 # $OutputSubfolderStyle
@@ -1845,7 +1845,7 @@ Function Clear-IdenticalInFiles(){
     }
     if($inter.Length -ne $InFiles.Length){
         [array]$InFiles = @($inter)
-        Write-ColorOut "$($InFiles.Length - $inter.Length) identical files were found in the input-path - only copying one of each." -ForegroundColor Magenta -Indentation 4
+        Write-ColorOut "$(($InFiles.Length - $inter.Length)) identical files were found in the input-path - only copying one of each." -ForegroundColor Magenta -Indentation 4
         Start-Sleep -Seconds 2
     }
     $script:resultvalues.identicalFiles = $($InFiles.Length - $inter.Length)
