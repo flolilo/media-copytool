@@ -1,6 +1,6 @@
 <!--
     Description:    This is the GUI for media_copytool.ps1
-    Date:           2018-05-08
+    Date:           2018-10-14
     Author:         flolilo
 -->
 <Window x:Class="MediaCopytool.MainWindow"
@@ -154,7 +154,7 @@
                     <TextBox x:Name="TeBx_Include"
                         Text="TeBx_Include" FontFamily="Consolas,Segoe UI,Arial" ToolTip="*.ext1|*.ext2|*.ext3"
                         IsEnabled="{Binding IsChecked, ElementName=RadioButtonInclude, Mode=OneWay}"
-                        VerticalContentAlignment="Center" VerticalScrollBarVisibility="Disabled" TextWrapping="Wrap"
+                        VerticalContentAlignment="Center" VerticalScrollBarVisibility="Disabled"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,42,0,0"
                         Panel.ZIndex="1"
                         Height="18" Width="140"
@@ -167,7 +167,7 @@
                     <TextBox x:Name="TeBx_Exclude"
                         Text="TeBx_Exclude" FontFamily="Consolas,Segoe UI,Arial" ToolTip="*.ext1|*.ext2|*.ext3"
                         IsEnabled="{Binding IsChecked, ElementName=RadioButtonExclude, Mode=OneWay}"
-                        VerticalContentAlignment="Center" VerticalScrollBarVisibility="Disabled" TextWrapping="Wrap"
+                        VerticalContentAlignment="Center" VerticalScrollBarVisibility="Disabled"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,63,0,0"
                         Panel.ZIndex="1"
                         Height="18" Width="140"
@@ -221,7 +221,7 @@
                     />
                     <TextBox x:Name="TeBx_OutSubStyle"
                         Text="TeBx_OutSubStyle" FontFamily="Consolas,Segoe UI,Arial" ToolTip="Define your favorite subfolder-style. %n% keeps subfolder structure, an empty field means no subfolders."
-                        VerticalContentAlignment="Center" VerticalScrollBarVisibility="Disabled" TextWrapping="Wrap"
+                        VerticalContentAlignment="Center" VerticalScrollBarVisibility="Disabled"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="270,24,0,0"
                         Height="23" Width="215"
                     />
@@ -246,7 +246,7 @@
                     />
                     <TextBox x:Name="TeBx_OutFileStyle"
                         Text="TeBx_OutFileStyle" FontFamily="Consolas,Segoe UI,Arial" ToolTip="Choose your favorite style for renaming the input-files."
-                        VerticalContentAlignment="Center" VerticalScrollBarVisibility="Disabled" TextWrapping="Wrap"
+                        VerticalContentAlignment="Center" VerticalScrollBarVisibility="Disabled"
                         VerticalAlignment="Top" HorizontalAlignment="Left" Margin="270,200,0,0"
                         Height="23" Width="215"
                     />
