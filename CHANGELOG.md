@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.0.2 - 2019-03-02
+### Changed
+- Removed `Unverified`-counter (`verified` should do)
+- `Copied`-counter now acknowledges input-duplicates (if 6 out of 12 files are duplicates (say: memcard A and B are checked simultaneously), then now it will show `Copied: 6` instead of `12`.)
+
 
 ## 1.0.1 - 2018-09-04
 ### Changed

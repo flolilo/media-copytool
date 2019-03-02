@@ -1,4 +1,5 @@
 Todo:
+    [x] duplicates from input are counted fully in "copied:" @done(19-03-02 12:17)
     [ ] Option to set first number of counter.
     [ ] Check impact of file buffering through `Copy-LongItem` and `Write-FileSystemCache` @low
     [ ] Create GUI in C#, call CLI-only, param-only PoSh-script with it (i.e. `media-copytool.exe` opens GUI, then passes values to `media-copytool.ps1`)

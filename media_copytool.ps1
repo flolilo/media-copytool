@@ -8,9 +8,9 @@
         CREDIT: Supports multithreading via Boe Prox's PoshRSJob-cmdlet (https://github.com/proxb/PoshRSJob)
         CREDIT: Supports long file paths via PSAlphaFS (https://github.com/v2kiran/PSAlphaFS)
     .NOTES
-        Version:        1.0.1 (Beta)
+        Version:        1.0.2 (Beta)
         Author:         flolilo
-        Creation Date:  2018-09-14
+        Creation Date:  2019-03-02
         Legal stuff: This program is free software. It comes without any warranty, to the extent permitted by
         applicable law. Most of the script was written by myself (or heavily modified by me when searching for solutions
         on the WWW). However, some parts are copies or modifications of very genuine code - see
@@ -194,7 +194,7 @@ param(
     [int]$RememberOutPath =         0,
     [int]$RememberMirrorPath =      0,
     [int]$RememberSettings =        0,
-    [int]$InfoPreference =          1,
+    [int]$InfoPreference =          0,
     # From here on, parameters can be set both via parameters and via JSON file(s).
     [array]$InputPath =             @(),
     [string]$OutputPath =           "",
@@ -338,7 +338,7 @@ param(
     $OutputEncoding = New-Object -TypeName System.Text.UTF8Encoding
     [Console]::InputEncoding = New-Object -TypeName System.Text.UTF8Encoding
 # DEFINITION: Set current date and version number:
-    $VersionNumber = "v1.0.1 (Beta) - 2018-09-14"
+    $VersionNumber = "v1.0.2 (Beta) - 2019-03-02"
 
 # ==================================================================================================
 # ==============================================================================
@@ -383,30 +383,32 @@ Function Write-ColorOut(){
         [int]$Indentation=0
     )
 
-    if($ForegroundColor.Length -ge 3){
-        $old_fg_color = [Console]::ForegroundColor
-        [Console]::ForegroundColor = $ForegroundColor
-    }
-    if($BackgroundColor.Length -ge 3){
-        $old_bg_color = [Console]::BackgroundColor
-        [Console]::BackgroundColor = $BackgroundColor
-    }
-    if($Indentation -gt 0){
-        [Console]::CursorLeft = $Indentation
-    }
 
-    if($NoNewLine -eq $false){
-        [Console]::WriteLine($Object)
-    }else{
-        [Console]::Write($Object)
-    }
+        if($ForegroundColor.Length -ge 3){
+            $old_fg_color = [Console]::ForegroundColor
+            [Console]::ForegroundColor = $ForegroundColor
+        }
+        if($BackgroundColor.Length -ge 3){
+            $old_bg_color = [Console]::BackgroundColor
+            [Console]::BackgroundColor = $BackgroundColor
+        }
+        if($Indentation -gt 0){
+            [Console]::CursorLeft = $Indentation
+        }
 
-    if($ForegroundColor.Length -ge 3){
-        [Console]::ForegroundColor = $old_fg_color
-    }
-    if($BackgroundColor.Length -ge 3){
-        [Console]::BackgroundColor = $old_bg_color
-    }
+        if($NoNewLine -eq $false){
+            [Console]::WriteLine($Object)
+        }else{
+            [Console]::Write($Object)
+        }
+
+        if($ForegroundColor.Length -ge 3){
+            [Console]::ForegroundColor = $old_fg_color
+        }
+        if($BackgroundColor.Length -ge 3){
+            [Console]::BackgroundColor = $old_bg_color
+        }
+    #>
 }
 
 # DEFINITION: For the auditory experience:
@@ -1439,7 +1441,15 @@ Function Get-InFiles(){
 
     # pre-defining variables:
     [array]$InFiles = @()
-    $script:resultvalues = @{}
+    $script:resultvalues = @{
+        ingoing = 0
+        dupliHist = 0
+        dupliOut = 0
+        identicalFiles = 0
+        copyFiles = 0
+        unverified = 0
+        verified = 0
+    }
 
     # Search files and get some information about them:
     [array]$allChosenFormats = $(
@@ -1845,9 +1855,8 @@ Function Clear-IdenticalInFiles(){
     }
 
     $script:resultvalues.identicalFiles = $($InFiles.Length - $inter.Length)
-    $script:resultvalues.copyfiles = $InFiles.Length
     if($inter.Length -ne $InFiles.Length){
-        Write-ColorOut "$(($InFiles.Length - $inter.Length)) identical files were found in the input-path - only copying one of each." -ForegroundColor Magenta -Indentation 4
+        Write-ColorOut "$($script:resultvalues.identicalFiles) identical files were found in the input-path - only copying one of each." -ForegroundColor Yellow -Indentation 4
         [array]$InFiles = @($inter)
         Start-Sleep -Seconds 2
     }
@@ -2310,14 +2319,12 @@ Function Test-CopiedFiles(){
     $InFiles | Out-Null
 
     [int]$verified = 0
-    [int]$unverified = 0
     [int]$inter=0
     if($script:InfoPreference -gt 1){
         [int]$inter = Read-Host "    Show files? Positive answers: $script:PositiveAnswers"
     }
     for($i=0; $i -lt $InFiles.Length; $i++){
         if($InFiles[$i].ToCopy -eq 1){
-            $unverified++
             if($inter -in $script:PositiveAnswers){
                 Write-ColorOut "$($InFiles[$i].OutName)`t- $($InFiles[$i].InHash) != $($InFiles[$i].OutHash)" -ForegroundColor Red -Indentation 4
             }
@@ -2328,7 +2335,6 @@ Function Test-CopiedFiles(){
             }
         }
     }
-    $script:resultvalues.unverified = $unverified
     $script:resultvalues.verified = $verified
 
     return $InFiles
@@ -2424,6 +2430,7 @@ Function Start-Everything(){
     }
 
     while($true){
+
         # DEFINITION: Test User-Values:
         try{
             $UserParams = Test-UserValues -UserParams $UserParams
@@ -2433,7 +2440,6 @@ Function Start-Everything(){
             break
         }
         Invoke-Pause
-
         # DEFINITION: Show parameters, then close:
         if($UserParams.ShowParams -ne 0){
             Show-Parameters -UserParams $UserParams
@@ -2540,7 +2546,8 @@ Function Start-Everything(){
             Invoke-Pause
         }
 
-        Write-ColorOut "Files left after dupli-check(s):`t$($script:resultvalues.ingoing - $script:resultvalues.duplihist - $script:resultvalues.dupliout - $script:resultvalues.identicalFiles) = $($script:resultvalues.copyfiles)" -ForegroundColor Yellow -Indentation 4
+        $script:resultvalues.copyfiles = ($script:resultvalues.ingoing - $script:resultvalues.duplihist - $script:resultvalues.dupliout - $script:resultvalues.identicalFiles)
+        Write-ColorOut "Files left after dupli-check(s):`t$($script:resultvalues.copyfiles)" -ForegroundColor Yellow -Indentation 4
 
         # DEFINITION: Get free space:
         try{
@@ -2705,12 +2712,11 @@ Function Start-Everything(){
     Write-ColorOut "Copied:`t$($script:resultvalues.copyfiles)`tfiles." -ForegroundColor Yellow -Indentation 4
     if($UserParams.VerifyCopies -eq 1){
         Write-ColorOut "Verified:`t$($script:resultvalues.verified)`tfiles." -ForegroundColor Green -Indentation 4
-        Write-ColorOut "Unverified:`t$($script:resultvalues.unverified)`tfiles." -ForegroundColor DarkRed -Indentation 4
     }
     Write-ColorOut "                                                                               A" -BackgroundColor DarkGray -ForegroundColor DarkGray
     Write-ColorOut "                                                                               A`r`n" -BackgroundColor Gray -ForegroundColor Gray
 
-    if($script:resultvalues.unverified -eq 0){
+    if($script:resultvalues.verified -eq $script:resultvalues.copyfiles){
         Start-Sound -Success 1
     }else{
         Start-Sound -Success 0
